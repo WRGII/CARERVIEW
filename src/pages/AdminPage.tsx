@@ -18,7 +18,7 @@ export const AdminPage: React.FC = () => {
   if (loading) {
     return <Loading message="Validating admin access..." />
   }
-
+  
  // --- START TEMPORARY BYPASS FOR INITIAL ADMIN TOKEN GENERATION ---
 // IMPORTANT: REMOVE OR COMMENT OUT THESE LINES AFTER GENERATING YOUR FIRST ADMIN TOKEN
 let isAdmin = false;
