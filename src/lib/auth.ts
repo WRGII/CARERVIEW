@@ -1,46 +1,27 @@
+// src/lib/auth.ts
 import { supabase } from './supabase'
-import type { AccessToken } from './supabase'
 
-let currentTokenId: string | null = null
-
-export const setTokenContext = async (tokenId: string): Promise<void> => {
-  currentTokenId = tokenId
-  await supabase.rpc('set_token_id', { token_uuid: tokenId })
+export type SessionToken = {
+  tokenId: string
+  role: 'admin' | 'caregiver'
 }
 
-export const getCurrentTokenId = (): string | null => {
-  return currentTokenId
+export const validateToken = async (rawToken: string): Promise<SessionToken | null> => {
+  // Ask the DB to validate the RAW token (it hashes inside Postgres)
+  const { data, error } = await supabase.rpc('app.validate_token', { _raw_token: rawToken })
+  if (error || !data || !data[0]?.valid) return null
+
+  const { token_id, role } = data[0] as { token_id: string; role: 'admin' | 'caregiver'; valid: boolean }
+
+  // Set session GUCs so RLS policies recognize this session’s role
+  await supabase.rpc('app.set_token_context', { p_token_id: token_id, p_role: role })
+
+  return { tokenId: token_id, role }
 }
 
-export const validateToken = async (token: string): Promise<AccessToken | null> => {
-  try {
-    // In a real implementation, this would hash the token and look it up
-    // For now, we'll simulate this by directly querying with the token
-    const { data, error } = await supabase
-      .from('access_tokens')
-      .select('*')
-      .eq('token_hash', token)
-      .eq('is_active', true)
-      .single()
-
-    if (error || !data) {
-      return null
-    }
-
-    // Check if token is expired
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      return null
-    }
-
-    await setTokenContext(data.id)
-    return data
-  } catch {
-    return null
-  }
-}
-
+// Always URL-encode in case tokens contain + or /
 export const generateInviteLink = (role: 'admin' | 'caregiver', token: string): string => {
   const baseUrl = window.location.origin
   const path = role === 'admin' ? '/admin' : '/caregiver'
-  return `${baseUrl}${path}?token=${token}`
+  return `${baseUrl}${path}?token=${encodeURIComponent(token)}`
 }
