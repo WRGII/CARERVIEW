@@ -24,7 +24,7 @@ export const AdminPage: React.FC = () => {
 let isAdmin = false;
 if (token && token.role === 'admin') {
   isAdmin = true;
-} else if (!token && !error) { // If no token and no error from useAuth, assume temporary bypass for initial setup
+} else if (error === 'No access token provided' || (!token && !error)) { // MODIFIED LINE
   isAdmin = true; // Temporarily allow access
   console.warn("Admin authentication bypassed for initial token generation. Remember to revert this change!");
 }
