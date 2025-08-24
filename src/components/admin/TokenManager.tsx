@@ -35,50 +35,35 @@ export const TokenManager: React.FC = () => {
   })
 
   const createToken = useMutation({
-    mutationFn: async (role: 'admin' | 'caregiver') => {
-      setCreateTokenError(null)
-      const token = generateToken()
-      const tokenHash = await hashToken(token)
+  mutationFn: async (role: 'admin' | 'caregiver') => {
+    setCreateTokenError(null)
+    const token = generateToken()
+    const tokenHash = await hashToken(token)
 
-      const { data, error } = await supabase
-        .from('access_tokens')
-        .insert({
-          token_hash: tokenHash,
-          role
-        })
-        .select()
-        .single()
+    const { data, error } = await supabase
+      .from('access_tokens')
+      .insert({
+        token_hash: tokenHash,
+        role
+      })
+      .select()
+      .single()
 
-      if (error) {
-        throw new Error(`Failed to create token: ${error.message}`)
-      }
-
-      return { ...data, plainToken: token }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-tokens'] })
-      // Keep form open to show generated token
-    },
-    onError: (err) => {
-      setCreateTokenError(err.message)
+    if (error) {
+      throw new Error(`Failed to create token: ${error.message}`)
     }
-  })
 
-  const deactivateToken = useMutation({
-    mutationFn: async (tokenId: string) => {
-      const { error } = await supabase
-        .from('access_tokens')
-        .update({ is_active: false })
-        .eq('id', tokenId)
+    return { ...data, plainToken: token }
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-tokens'] })
+    // Keep form open to show generated token
+  },
+  onError: (err) => {
+    setCreateTokenError(err.message)
+  }
+})
 
-      if (error) {
-        throw new Error(`Failed to deactivate token: ${error.message}`)
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-tokens'] })
-    }
-  })
 
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text)
