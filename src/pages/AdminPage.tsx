@@ -34,7 +34,6 @@ if (!isAdmin) {
 }
 // --- END TEMPORARY BYPASS ---
 
-
   const renderContent = () => {
     switch (currentView) {
       case 'import':
