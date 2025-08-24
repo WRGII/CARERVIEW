@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -8,32 +8,48 @@ import { ExcelImport } from '../components/admin/ExcelImport'
 import { TokenManager } from '../components/admin/TokenManager'
 import { AggregateData } from '../components/admin/AggregateData'
 import { Upload, Link, BarChart3 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 type AdminView = 'dashboard' | 'import' | 'tokens'
 
 export const AdminPage: React.FC = () => {
-  const { token, loading, error } = useAuth()
+  const { token, loading, error } = useAuth() // must return { tokenId, role, ... } when valid
   const [currentView, setCurrentView] = useState<AdminView>('dashboard')
+  const [ctxReady, setCtxReady] = useState(false)
 
+  // 1) Show spinner while validating the URL token
   if (loading) {
     return <Loading message="Validating admin access..." />
   }
-  
- // --- START TEMPORARY BYPASS FOR INITIAL ADMIN TOKEN GENERATION ---
-// IMPORTANT: REMOVE OR COMMENT OUT THESE LINES AFTER GENERATING YOUR FIRST ADMIN TOKEN
-let isAdmin = false;
-if (token && token.role === 'admin') {
-  isAdmin = true;
-} else if (error === 'No access token provided' || (!token && !error)) { // MODIFIED LINE
-  isAdmin = true; // Temporarily allow access
-  console.warn("Admin authentication bypassed for initial token generation. Remember to revert this change!");
-}
 
-if (!isAdmin) {
-  return <ErrorMessage message={error || 'Access denied. Invalid administrator token.'} />
-}
-// --- END TEMPORARY BYPASS ---
+  // 2) Hard deny when there is no valid admin token
+  if (error || !token || token.role !== 'admin') {
+    return <ErrorMessage message={error || 'Access denied. Invalid administrator token.'} />
+  }
 
+  // 3) Once we have a valid admin token, set the DB session context (Step 5A)
+  useEffect(() => {
+    let cancelled = false
+    const init = async () => {
+      try {
+        await supabase.rpc('app.set_token_context', {
+          p_token_id: token.tokenId,  // UUID of access_tokens row
+          p_role: token.role          // 'admin'
+        })
+        if (!cancelled) setCtxReady(true)
+      } catch (e) {
+        console.error('Failed to set token context', e)
+      }
+    }
+    init()
+    return () => { cancelled = true }
+  }, [token?.tokenId, token?.role])
+
+  if (!ctxReady) {
+    return <Loading message="Preparing secure admin session..." />
+  }
+
+  // 4) Render the admin app
   const renderContent = () => {
     switch (currentView) {
       case 'import':
