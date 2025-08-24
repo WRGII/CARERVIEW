@@ -3,7 +3,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useCreateObservation } from '../hooks/useObservations'
 import { useCategories } from '../hooks/useCategories'
 import { useLegend } from '../hooks/useLegend'
-import { getCurrentTokenId } from '../lib/auth'
 import { exportToPDF, exportToDOCX } from '../lib/exports'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -37,7 +36,7 @@ export const CaregiverPage: React.FC = () => {
   }
 
   const handleCreateObservation = async () => {
-    const tokenId = getCurrentTokenId()
+    const tokenId = token?.tokenId
     if (!tokenId) return
 
     try {
