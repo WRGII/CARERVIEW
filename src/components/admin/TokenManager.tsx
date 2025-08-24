@@ -8,12 +8,14 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Loading } from '../ui/Loading'
 import { Copy, Plus, Trash2, Link } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import type { AccessToken } from '../../lib/supabase'
 
 export const TokenManager: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newTokenRole, setNewTokenRole] = useState<'admin' | 'caregiver'>('caregiver')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const [createTokenError, setCreateTokenError] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data: tokens, isLoading } = useQuery({
@@ -34,6 +36,7 @@ export const TokenManager: React.FC = () => {
 
   const createToken = useMutation({
     mutationFn: async (role: 'admin' | 'caregiver') => {
+      setCreateTokenError(null)
       const token = generateToken()
       const tokenHash = await hashToken(token)
 
@@ -54,7 +57,10 @@ export const TokenManager: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-tokens'] })
-      setShowCreateForm(false)
+      // Keep form open to show generated token
+    },
+    onError: (err) => {
+      setCreateTokenError(err.message)
     }
   })
 
@@ -92,7 +98,11 @@ export const TokenManager: React.FC = () => {
             <h3 className="text-lg font-semibold text-slate-900">Access Token Management</h3>
             <Button
               variant="primary"
-              onClick={() => setShowCreateForm(true)}
+              onClick={() => {
+                setShowCreateForm(true)
+                setCreateTokenError(null)
+                createToken.reset()
+              }}
               className="flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
@@ -133,6 +143,12 @@ export const TokenManager: React.FC = () => {
                     Cancel
                   </Button>
                 </div>
+                {createTokenError && (
+                  <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+                    <AlertCircle className="w-5 h-5" />
+                    <span>Error: {createTokenError}</span>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
