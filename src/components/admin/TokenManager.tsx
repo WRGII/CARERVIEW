@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import { generateToken, hashToken } from '../../lib/utils'
 import { generateInviteLink } from '../../lib/auth'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
