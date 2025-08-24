@@ -38,33 +38,27 @@ export const TokenManager: React.FC = () => {
   mutationFn: async (role: 'admin' | 'caregiver') => {
     setCreateTokenError(null)
 
-    // 1) Generate the RAW token and its HASH (RAW shown once in UI; HASH stored in DB)
-    const raw = generateToken()
-    const tokenHash = await hashToken(raw)
-
-    // 2) Call the SECURITY DEFINER RPC (bypasses RLS safely, checks admin via session GUCs)
-    const { data, error } = await supabase.rpc('app.create_token', {
+    // Let the DB generate + hash the token; returns RAW once
+    const { data, error } = await supabase.rpc('app.generate_token', {
       _role: role,
-      _display_name: null, // or pass a name field if you add it to the form
-      _email: null,        // or pass an email if you add it to the form
-      _token_hash: tokenHash
+      _display_name: null, // optional, wire inputs if you add them
+      _email: null
     })
 
-    if (error) {
-      throw new Error(`Failed to create token: ${error.message}`)
-    }
+    if (error) throw new Error(`Failed to create token: ${error.message}`)
+    const row = data?.[0]
+    if (!row?.raw_token || !row?.token_id) throw new Error('Token not returned')
 
-    // 3) RPC returns the new token id (UUID). For the success card we only need role + RAW.
-    return { id: data as string, role, plainToken: raw }
+    return { id: row.token_id as string, role, plainToken: row.raw_token as string }
   },
   onSuccess: () => {
-    // Refresh list of active tokens
     queryClient.invalidateQueries({ queryKey: ['admin-tokens'] })
   },
   onError: (err: any) => {
     setCreateTokenError(err.message || String(err))
   }
 })
+
 
 
   const copyToClipboard = async (text: string) => {
