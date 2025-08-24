@@ -19,9 +19,21 @@ export const AdminPage: React.FC = () => {
     return <Loading message="Validating admin access..." />
   }
 
-  if (error || !token || token.role !== 'admin') {
-    return <ErrorMessage message={error || 'Access denied. Invalid administrator token.'} />
-  }
+ // --- START TEMPORARY BYPASS FOR INITIAL ADMIN TOKEN GENERATION ---
+// IMPORTANT: REMOVE OR COMMENT OUT THESE LINES AFTER GENERATING YOUR FIRST ADMIN TOKEN
+let isAdmin = false;
+if (token && token.role === 'admin') {
+  isAdmin = true;
+} else if (!token && !error) { // If no token and no error from useAuth, assume temporary bypass for initial setup
+  isAdmin = true; // Temporarily allow access
+  console.warn("Admin authentication bypassed for initial token generation. Remember to revert this change!");
+}
+
+if (!isAdmin) {
+  return <ErrorMessage message={error || 'Access denied. Invalid administrator token.'} />
+}
+// --- END TEMPORARY BYPASS ---
+
 
   const renderContent = () => {
     switch (currentView) {
