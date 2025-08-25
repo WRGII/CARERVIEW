@@ -1,4 +1,4 @@
-# FAMOBS - Functional Assessment and Monitoring Observation System
+# CarerView - Functional Assessment and Monitoring Observation System
 
 A production-ready web application for caregivers to record observation scores across ADA/OT-aligned ADL & IADL categories.
 

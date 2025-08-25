@@ -16,7 +16,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, role }) => {
             <div className="flex items-center">
               <Activity className="w-8 h-8 text-blue-600 mr-3" />
               <div>
-                <h1 className="text-xl font-bold text-slate-900">FAMOBS</h1>
+                <h1 className="text-xl font-bold text-slate-900">CarerView</h1>
                 <p className="text-sm text-slate-500 capitalize">{role} Portal</p>
               </div>
             </div>

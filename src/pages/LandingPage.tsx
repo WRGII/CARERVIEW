@@ -11,7 +11,7 @@ export const LandingPage: React.FC = () => {
             <Activity className="w-16 h-16 text-blue-600" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            FAMOBS
+            CarerView
           </h1>
           <p className="text-xl text-slate-600 mb-8">
             Functional Assessment and Monitoring Observation System
@@ -90,7 +90,7 @@ export const LandingPage: React.FC = () => {
               Access Required
             </h2>
             <p className="text-slate-600 mb-6">
-              You need a valid access token to use FAMOBS. Contact your administrator 
+              You need a valid access token to use CarerView. Contact your administrator 
               for an invite link to get started.
             </p>
             <div className="space-y-2 text-sm text-slate-500">

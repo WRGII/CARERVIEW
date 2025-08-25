@@ -26,7 +26,7 @@ export const exportToDOCX = async (
         new Paragraph({
           children: [
             new TextRun({
-              text: 'FAMOBS Observation Report',
+              text: 'CarerView Observation Report',
               bold: true,
               size: 32
             })
