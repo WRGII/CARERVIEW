@@ -1,6 +1,5 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell } from 'docx'
 import { saveAs } from 'file-saver'
-import { pdf } from '@react-pdf/renderer'
 import type { ObservationWithResponses, CategoryWithQuestions, Legend } from './supabase'
 
 export const exportToPDF = async (
