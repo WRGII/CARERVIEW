@@ -8,7 +8,7 @@ export type SessionToken = {
 
 export const validateToken = async (rawToken: string): Promise<SessionToken | null> => {
   // Ask the DB to validate the RAW token (it hashes inside Postgres)
-  const { data, error } = await supabase.rpc('app.validate_token', { _raw_token: rawToken })
+  const { data, error } = await supabase.rpc('validate_token', { _raw_token: rawToken })
   if (error || !data || !data[0]?.valid) return null
 
   const { token_id, role } = data[0] as { token_id: string; role: 'admin' | 'caregiver'; valid: boolean }
