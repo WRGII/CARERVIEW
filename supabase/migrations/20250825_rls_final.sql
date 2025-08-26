@@ -85,4 +85,3 @@ CREATE POLICY "responses_admin_select" ON "public"."responses"
   USING ((app.get_current_role() = 'admin'::text));
 
 COMMIT;
-chore(db): add final RLS & policy migration
