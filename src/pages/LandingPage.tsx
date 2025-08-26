@@ -170,8 +170,6 @@ export const LandingPage: React.FC = () => {
               )}
             </form>
 
-            <p className="text-xs text-slate-500 text-center mt-6">
-              Your email <span className="font-medium">william.griffith@grifii.com</span> becomes <span className="font-medium">Administrator</span>. All others become <span className="font-medium">Caregiver</span>.
             </p>
           </div>
         </div>
