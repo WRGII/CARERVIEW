@@ -91,7 +91,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Professional Reports</h3>
               </div>
               <p className="text-slate-600">
-                Export observations to PDF or DOCX with full scoring details and clean formatting.
+                Export observations to with full details and clean formatting.
               </p>
             </CardContent>
           </Card>
@@ -157,7 +157,7 @@ export const LandingPage: React.FC = () => {
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2">
-                    Access Caregiver/Admin <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    Access Caregiver Account <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 )}
               </button>
