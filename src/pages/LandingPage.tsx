@@ -17,7 +17,7 @@ export const LandingPage: React.FC = () => {
     setErr(null)
 
     // Schema-qualified RPCs (matches Supabase backend)
-    const { data, error } = await supabase.rpc('app.bootstrap_login', {
+    const { data, error } = await supabase.rpc('bootstrap_login', {
       _display_name: name,
       _email: email,
     })
