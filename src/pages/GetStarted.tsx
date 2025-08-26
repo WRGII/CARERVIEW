@@ -45,7 +45,7 @@ export default function GetStarted() {
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
         <label>
           <div style={{ fontSize: 14, marginBottom: 4 }}>Display name</div>
-        <input
+          <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
