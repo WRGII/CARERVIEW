@@ -30,7 +30,7 @@ export default function GetStarted() {
     if (!token || !role) { setErr('Login failed — missing token or role.'); return }
 
     const dest = role === 'admin' ? '/admin' : '/caregiver'
-    window.location.href = `${dest}?token=${encodeURIComponent(token)}`
+    window.location.href = \`${dest}?token=${encodeURIComponent(token)}`
   }
 
   return (
