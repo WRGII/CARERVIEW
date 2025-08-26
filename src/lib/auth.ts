@@ -14,7 +14,7 @@ export const validateToken = async (rawToken: string): Promise<SessionToken | nu
   const { token_id, role } = data[0] as { token_id: string; role: 'admin' | 'caregiver'; valid: boolean }
 
   // Set session GUCs so RLS policies recognize this session’s role
-  await supabase.rpc('app.set_token_context', { p_token_id: token_id, p_role: role })
+  await supabase.rpc('set_token_context', { p_token_id: token_id, p_role: role })
 
   return { tokenId: token_id, role }
 }
