@@ -13,8 +13,8 @@ export async function establishSessionFromToken(): Promise<{ role: string; token
   const token = url.searchParams.get('token')
   if (!token) throw new Error('Missing token in URL')
 
-  // 1) Validate token
-  const { data: vData, error: vErr } = await supabase.rpc('validate_token', { _raw_token: token })
+  // 1) Validate token (schema-qualified)
+  const { data: vData, error: vErr } = await supabase.rpc('app.validate_token', { _raw_token: token })
   if (vErr) throw new Error(vErr.message)
 
   const row: ValidateRow | undefined = Array.isArray(vData) ? vData[0] : (vData as any)
@@ -25,7 +25,7 @@ export async function establishSessionFromToken(): Promise<{ role: string; token
   if (!tokenId || !role) throw new Error('Token context missing token_id or role')
 
   // 2) Set DB session context for RLS
-  const { error: sErr } = await supabase.rpc('set_token_context', { p_token_id: tokenId, p_role: role })
+  const { error: sErr } = await supabase.rpc('app.set_token_context', { p_token_id: tokenId, p_role: role })
   if (sErr) throw new Error(sErr.message)
 
   return { role, tokenId }
