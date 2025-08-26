@@ -44,11 +44,11 @@ export const LandingPage: React.FC = () => {
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">CareView</h1>
           <p className="text-xl text-slate-600 mb-6">
-            Functional Assessment and Monitoring Observation System
+            Functional Assessment System
           </p>
           <p className="text-lg text-slate-700 max-w-2xl mx-auto">
-            A professional platform for caregivers to record observation scores across
-            ADA/OT-aligned ADL & IADL categories with secure, token-based access.
+            For family and professional caregivers to record observation across
+            ADA and OT-aligned ADL & IADL categories.
           </p>
         </div>
 
@@ -77,7 +77,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Database-Driven</h3>
               </div>
               <p className="text-slate-600">
-                All categories, questions, and scoring definitions live in Supabase with real-time updates.
+                All categories, questions, and scoring definitions live in secure database with real-time updates.
               </p>
             </CardContent>
           </Card>
