@@ -38,7 +38,7 @@ export const TokenManager: React.FC = () => {
     setCreateTokenError(null)
 
     // Let the DB generate + hash the token; returns RAW once
-    const { data, error } = await supabase.rpc('app.generate_token', {
+    const { data, error } = await supabase.rpc('generate_token', {
       _role: role,
       _display_name: null, // optional, wire inputs if you add them
       _email: null
