@@ -40,7 +40,7 @@ export default function GetStarted() {
 
   return (
     <div style={{ maxWidth: 460, margin: '3rem auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ marginBottom: '1rem' }}>CareView — Sign In</h1>
+      <h1 style={{ marginBottom: '1rem' }}>CarerView — Sign In</h1>
       <p style={{ margin: '0 0 1rem' }}>Enter your name and email to continue.</p>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
         <label>
