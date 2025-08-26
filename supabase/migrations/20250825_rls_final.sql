@@ -58,7 +58,7 @@ CREATE POLICY "categories_admin_select" ON "public"."categories"
 DROP POLICY IF EXISTS "legend_admin_select" ON "public"."legend";
 CREATE POLICY "legend_admin_select" ON "public"."legend"
   FOR SELECT TO PUBLIC
-  USING ((app.get_current_role" = 'admin'::text));
+  USING ((app.get_current_role() = 'admin'::text));
 
 -- =========================
 -- public.observations
