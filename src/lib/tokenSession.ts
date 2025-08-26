@@ -17,7 +17,8 @@ export async function establishSessionFromToken(): Promise<{ role: string; token
   const { data: vData, error: vErr } = await supabase.rpc('app.validate_token', { _raw_token: token })
   if (vErr) throw new Error(vErr.message)
 
-  const row: ValidateRow | undefined = Array.isArray(vData) ? vData[0] : (vData as any)
+  const const { data: vData, error: vErr } = await supabase.rpc('validate_token', { _raw_token: token })
+: ValidateRow | undefined = Array.isArray(vData) ? vData[0] : (vData as any)
   if (!row || !row.valid) throw new Error('Invalid or expired token')
 
   const tokenId = row.token_id || row.tokenId || row.tokenid
