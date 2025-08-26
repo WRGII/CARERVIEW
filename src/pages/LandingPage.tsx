@@ -42,7 +42,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center justify-center mb-6">
             <Activity className="w-16 h-16 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">CareView</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">CarerView</h1>
           <p className="text-xl text-slate-600 mb-6">
             Functional Assessment System
           </p>
