@@ -13,13 +13,12 @@ export async function establishSessionFromToken(): Promise<{ role: string; token
   const token = url.searchParams.get('token')
   if (!token) throw new Error('Missing token in URL')
 
-  // 1) Validate token (schema-qualified)
-  const { data: vData, error: vErr } = await supabase.rpc('app.validate_token', { _raw_token: token })
-  if (vErr) throw new Error(vErr.message)
+  // 1) Validate token
+const { data: vData, error: vErr } = await supabase.rpc('validate_token', { _raw_token: token })
+if (vErr) throw new Error(vErr.message)
 
-  const const { data: vData, error: vErr } = await supabase.rpc('validate_token', { _raw_token: token })
-: ValidateRow | undefined = Array.isArray(vData) ? vData[0] : (vData as any)
-  if (!row || !row.valid) throw new Error('Invalid or expired token')
+const row: ValidateRow | undefined = Array.isArray(vData) ? vData[0] : (vData as any)
+if (!row || !row.valid) throw new Error('Invalid or expired token')
 
   const tokenId = row.token_id || row.tokenId || row.tokenid
   const role = row.role
