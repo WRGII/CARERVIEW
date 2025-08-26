@@ -170,7 +170,6 @@ export const LandingPage: React.FC = () => {
               )}
             </form>
 
-            </p>
           </div>
         </div>
       </div>
