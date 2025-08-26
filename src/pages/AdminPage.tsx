@@ -29,7 +29,7 @@ export const AdminPage: React.FC = () => {
     let cancelled = false;
     (async () => {
       try {
-        await supabase.rpc('app.set_token_context', {
+        await supabase.rpc('set_token_context', {
           p_token_id: token.tokenId,
           p_role: token.role,
         });
