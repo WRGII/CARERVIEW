@@ -1,3 +1,4 @@
+```tsx
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Activity, Shield, Users, FileCheck, CheckCircle, ArrowRight } from 'lucide-react'
@@ -169,3 +170,4 @@ export default function GetStarted() {
     </div>
   )
 }
+```
