@@ -47,7 +47,7 @@ export const LandingPage: React.FC = () => {
             Functional Assessment System
           </p>
           <p className="text-lg text-slate-700 max-w-2xl mx-auto">
-            For family and professional caregivers to record observation across
+            For family and professional caregivers to record daily observations across
             ADA and OT-aligned ADL & IADL categories.
           </p>
         </div>
