@@ -49,6 +49,8 @@ export interface Observation {
   token_id: string
   patient_name: string
   observation_date: string
+  date_of_observation: string
+  mode_of_observation: 'In Person' | 'Voice Call' | 'Video Call'
   notes: string
   created_at: string
   updated_at: string

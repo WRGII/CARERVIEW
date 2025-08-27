@@ -42,8 +42,43 @@ export default function ObservationForm() {
   }, [])
 
   const [patientName, setPatientName] = useState('')
+  const [dateOfObservation, setDateOfObservation] = useState('')
+  const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
+  const [dateError, setDateError] = useState('')
+
+  // Date validation function
+  const validateDate = (dateString: string): boolean => {
+    if (!dateString) return false
+    
+    // Check MM/DD/YYYY format
+    const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/
+    if (!dateRegex.test(dateString)) return false
+    
+    // Check if it's a valid date
+    const [month, day, year] = dateString.split('/').map(Number)
+    const date = new Date(year, month - 1, day)
+    return date.getFullYear() === year && 
+           date.getMonth() === month - 1 && 
+           date.getDate() === day
+  }
+
+  const handleDateChange = (value: string) => {
+    setDateOfObservation(value)
+    if (value && !validateDate(value)) {
+      setDateError('Please enter a valid date in MM/DD/YYYY format')
+    } else {
+      setDateError('')
+    }
+  }
+
+  // Convert MM/DD/YYYY to YYYY-MM-DD for database
+  const formatDateForDB = (dateString: string): string => {
+    if (!dateString || !validateDate(dateString)) return ''
+    const [month, day, year] = dateString.split('/').map(Number)
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+  }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['v_category_questions'],
@@ -96,6 +131,18 @@ export default function ObservationForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting) return
+    
+    // Validate required fields
+    if (!dateOfObservation) {
+      setDateError('Date of observation is required')
+      return
+    }
+    
+    if (!validateDate(dateOfObservation)) {
+      setDateError('Please enter a valid date in MM/DD/YYYY format')
+      return
+    }
+    
     setSubmitting(true)
 
     try {
@@ -110,10 +157,15 @@ export default function ObservationForm() {
         if (typeof score === 'number') responseRows.push({ question_id: qid, score })
       }
 
+      // Format date for database
+      const formattedDate = formatDateForDB(dateOfObservation)
+
       // 2) Single secure RPC: validate token, set context, insert obs + responses
       const { data, error } = await supabase.rpc('app.caregiver_create_observation', {
         _raw_token: rawToken,
         _patient_name: patientName || null,
+        _date_of_observation: formattedDate,
+        _mode_of_observation: modeOfObservation,
         _notes: notes || null,
         _responses: responseRows, // Supabase will send as JSON → maps to jsonb
       })
@@ -153,6 +205,42 @@ export default function ObservationForm() {
               className="w-full px-3 py-2 rounded-lg border"
               placeholder="Enter patient name"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Date of Observation <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={dateOfObservation}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className={`w-full px-3 py-2 rounded-lg border ${
+                dateError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
+              } focus:outline-none focus:ring-2`}
+              placeholder="MM/DD/YYYY"
+              required
+            />
+            {dateError && (
+              <p className="text-red-600 text-sm mt-1">{dateError}</p>
+            )}
+            <p className="text-slate-500 text-xs mt-1">
+              Please enter the date in MM/DD/YYYY format (e.g., 12/25/2024)
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Mode of Observation <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={modeOfObservation}
+              onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="In Person">In Person</option>
+              <option value="Voice Call">Voice Call</option>
+              <option value="Video Call">Video Call</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
