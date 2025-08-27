@@ -110,7 +110,7 @@ export default function ObservationForm() {
       if (rErr) { alert(rErr.message); return }
     }
 
-    // 3) Back to caregiver dashboard (keep token)
+    // 3) Back to Caregiver dashboard (keep token)
     const url = new URL(window.location.href)
     const token = url.searchParams.get('token') || ''
     window.location.href = `/caregiver?token=${encodeURIComponent(token)}`
