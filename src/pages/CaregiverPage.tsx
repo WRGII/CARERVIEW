@@ -89,7 +89,59 @@ export const CaregiverPage: React.FC = () => {
   const renderContent = () => {
     switch (viewMode) {
       case 'form':
-        if (!currentObservationId) return null
+        if (!currentObservationId) {
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setViewMode('list')}
+                  className="flex items-center space-x-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to List</span>
+                </Button>
+                <h2 className="text-xl font-semibold text-slate-900">Create New Observation</h2>
+              </div>
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold text-slate-900">Create New Observation</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Input
+                      label="Patient Name (Optional)"
+                      value={newPatientName}
+                      onChange={(e) => setNewPatientName(e.target.value)}
+                      placeholder="Enter patient name or identifier"
+                    />
+                    <Input
+                      label="Notes (Optional)"
+                      value={newObservationNotes}
+                      onChange={(e) => setNewObservationNotes(e.target.value)}
+                      placeholder="Add any initial notes about this observation"
+                    />
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="primary"
+                        onClick={handleCreateObservation}
+                        disabled={createObservation.isPending}
+                      >
+                        Create Observation
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setViewMode('list')}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )
+        }
         return (
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -137,52 +189,16 @@ export const CaregiverPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
               <Button
                 variant="primary"
-                onClick={() => setViewMode('form')}
+                onClick={() => {
+                  setCurrentObservationId(null)
+                  setViewMode('form')
+                }}
                 className="flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>New Observation</span>
               </Button>
             </div>
-
-            {viewMode === 'form' && !currentObservationId && (
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold text-slate-900">Create New Observation</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Input
-                      label="Patient Name (Optional)"
-                      value={newPatientName}
-                      onChange={(e) => setNewPatientName(e.target.value)}
-                      placeholder="Enter patient name or identifier"
-                    />
-                    <Input
-                      label="Notes (Optional)"
-                      value={newObservationNotes}
-                      onChange={(e) => setNewObservationNotes(e.target.value)}
-                      placeholder="Add any initial notes about this observation"
-                    />
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="primary"
-                        onClick={handleCreateObservation}
-                        disabled={createObservation.isPending}
-                      >
-                        Create Observation
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setViewMode('list')}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             <ObservationList
               onViewObservation={handleViewObservation}
