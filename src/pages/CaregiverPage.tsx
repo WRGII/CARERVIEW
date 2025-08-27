@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useCreateObservation } from '../hooks/useObservations'
 import { useCategories } from '../hooks/useCategories'
 import { useLegend } from '../hooks/useLegend'
-import { exportToPDF, exportToDOCX } from '../lib/exports'
+import { exportToDOCX, exportToCSV } from '../lib/exports'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
@@ -62,11 +62,29 @@ export const CaregiverPage: React.FC = () => {
   }
 
   const handleExportObservation = async (id: string, format: 'pdf' | 'docx') => {
+  const handleExportObservation = async (id: string, format: 'docx' | 'csv') => {
     if (!categories || !legend) return
 
-    // For demo purposes, we'll just show an alert
-    // In production, you'd fetch the full observation with responses
-    alert(`Exporting observation ${id} as ${format.toUpperCase()}...`)
+    try {
+      // In a real implementation, you'd fetch the full observation with responses
+      // For now, we'll create a mock observation structure
+      const mockObservation = {
+        id,
+        patient_name: 'Sample Patient',
+        observation_date: new Date().toISOString().split('T')[0],
+        notes: 'Sample observation notes',
+        responses: [] // This would be populated with actual response data
+      }
+
+      if (format === 'docx') {
+        await exportToDOCX(mockObservation as any, categories, legend)
+      } else if (format === 'csv') {
+        await exportToCSV(mockObservation as any, categories, legend)
+      }
+    } catch (error) {
+      console.error(`Failed to export observation as ${format.toUpperCase()}:`, error)
+      alert(`Failed to export observation. Please try again.`)
+    }
   }
 
   const renderContent = () => {

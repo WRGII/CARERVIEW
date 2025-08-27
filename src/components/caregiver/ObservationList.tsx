@@ -69,20 +69,20 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onExportObservation(observation.id, 'pdf')}
-                  className="flex items-center space-x-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>PDF</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => onExportObservation(observation.id, 'docx')}
                   className="flex items-center space-x-2"
                 >
                   <Download className="w-4 h-4" />
                   <span>DOCX</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onExportObservation(observation.id, 'csv')}
+                  className="flex items-center space-x-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>CSV</span>
                 </Button>
               </div>
             </div>
