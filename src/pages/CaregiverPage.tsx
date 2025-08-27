@@ -61,7 +61,6 @@ export const CaregiverPage: React.FC = () => {
     setViewMode('view')
   }
 
-  const handleExportObservation = async (id: string, format: 'pdf' | 'docx') => {
   const handleExportObservation = async (id: string, format: 'docx' | 'csv') => {
     if (!categories || !legend) return
 
