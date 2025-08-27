@@ -6,12 +6,11 @@ import { Layout } from '../components/common/Layout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Button } from '../components/ui/Button';
-import { ExcelImport } from '../components/admin/ExcelImport';
 import { TokenManager } from '../components/admin/TokenManager';
 import { AggregateData } from '../components/admin/AggregateData';
 import { Upload, Link, BarChart3 } from 'lucide-react';
 
-type AdminView = 'dashboard' | 'import' | 'tokens';
+type AdminView = 'dashboard' | 'tokens';
 
 export const AdminPage: React.FC = () => {
   const { token, loading, error } = useAuth(); // returns { tokenId, role }
@@ -45,8 +44,6 @@ export const AdminPage: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'import':
-        return <ExcelImport />;
       case 'tokens':
         return <TokenManager />;
       default:
@@ -66,14 +63,6 @@ export const AdminPage: React.FC = () => {
           >
             <BarChart3 className="w-4 h-4" />
             <span>Dashboard</span>
-          </Button>
-          <Button
-            variant={currentView === 'import' ? 'primary' : 'ghost'}
-            onClick={() => setCurrentView('import')}
-            className="flex items-center space-x-2"
-          >
-            <Upload className="w-4 h-4" />
-            <span>Excel Import</span>
           </Button>
           <Button
             variant={currentView === 'tokens' ? 'primary' : 'ghost'}
