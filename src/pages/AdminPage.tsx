@@ -1,5 +1,6 @@
 // src/pages/AdminPage.tsx
 import React, { useEffect, useState } from 'react';
+import { establishSessionFromToken } from '../lib/tokenSession'
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { Layout } from '../components/common/Layout';
