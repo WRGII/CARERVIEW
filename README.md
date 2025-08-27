@@ -12,7 +12,6 @@ A production-ready web application for caregivers to record observation scores a
 - **Observation History**: View and manage all recorded observations
 
 ### For Administrators
-- **Excel Import**: Bulk import categories, questions, and legend from Excel files
 - **Token Management**: Generate and manage secure access tokens
 - **Aggregate Analytics**: View system-wide statistics and trends
 - **Data Oversight**: Monitor caregiver activity and observation patterns
@@ -48,25 +47,13 @@ All data is stored in Supabase with proper RLS policies:
 
 1. **Setup Supabase**: Click "Connect to Supabase" and run the migrations
 2. **Environment Variables**: Configure your Supabase URL and keys
-3. **Import Data**: Use the Excel import feature to populate categories and questions
-4. **Generate Tokens**: Create invite links for caregivers and administrators
 
-## Excel Import Format
 
-The Excel import expects three sheets:
 
-### ADLs Sheet
-- `name`: Category name
-- `ada_definition`: ADA definition
-- `ot_definition`: OT definition
-- `questions`: Array of question texts
 
-### IADLs Sheet
-- Same format as ADLs sheet
 
-### Legend Sheet
-- `score`: Numeric score (0-10)
-- `description`: Score meaning
+3. **Generate Tokens**: Create invite links for caregivers and administrators
+4. **Setup Categories**: Categories and questions are managed through the database
 
 ## Access URLs
 
