@@ -25,16 +25,31 @@ export const ObservationForm: React.FC<ObservationFormProps> = ({
 
   const saveResponse = useSaveResponse()
   const saveBulkResponses = useSaveBulkResponses()
+  
+  // Debug logging
+  console.log('ObservationForm rendered with observationId:', observationId)
+  console.log('Categories loading:', categoriesLoading)
+  console.log('Legend loading:', legendLoading)
+  console.log('Categories data:', categories)
+  console.log('Legend data:', legend)
 
   if (categoriesLoading || legendLoading) {
+    console.log('Still loading categories or legend...')
     return <Loading message="Loading observation form..." />
   }
 
   if (!categories || !legend) {
+    console.log('Categories or legend is null/undefined')
+    console.log('Categories:', categories)
+    console.log('Legend:', legend)
     return <div>Failed to load form data</div>
   }
+  
+  console.log('Categories loaded successfully:', categories.length, 'categories')
+  console.log('Legend loaded successfully:', legend.length, 'legend items')
 
   if (!observationId) {
+    console.log('No observationId provided')
     return (
       <Card>
         <CardContent>

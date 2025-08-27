@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { useCreateObservation } from '../hooks/useObservations'
+import { useCreateObservation, useObservation } from '../hooks/useObservations'
 import { useCategories } from '../hooks/useCategories'
 import { useLegend } from '../hooks/useLegend'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
+import { supabase } from '../lib/supabase'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
@@ -38,6 +39,10 @@ export const CaregiverPage: React.FC = () => {
   const handleCreateObservation = async () => {
     const tokenId = token?.tokenId
     if (!tokenId) return
+    
+    console.log('Creating observation with tokenId:', tokenId)
+    console.log('Patient name:', newPatientName.trim())
+    console.log('Notes:', newObservationNotes.trim())
 
     try {
       const observation = await createObservation.mutateAsync({
@@ -46,9 +51,14 @@ export const CaregiverPage: React.FC = () => {
         observation_date: new Date().toISOString().split('T')[0],
         notes: newObservationNotes.trim()
       })
+      
+      console.log('Observation created successfully:', observation)
+      console.log('Setting currentObservationId to:', observation.id)
 
       setCurrentObservationId(observation.id)
       setViewMode('form')
+      console.log('Updated viewMode to: form')
+      console.log('Updated currentObservationId to:', observation.id)
       setNewPatientName('')
       setNewObservationNotes('')
     } catch (err) {
@@ -63,22 +73,46 @@ export const CaregiverPage: React.FC = () => {
 
   const handleExportObservation = async (id: string, format: 'docx' | 'csv') => {
     if (!categories || !legend) return
+    
+    console.log('Exporting observation:', id, 'in format:', format)
 
     try {
-      // In a real implementation, you'd fetch the full observation with responses
-      // For now, we'll create a mock observation structure
-      const mockObservation = {
-        id,
-        patient_name: 'Sample Patient',
-        observation_date: new Date().toISOString().split('T')[0],
-        notes: 'Sample observation notes',
-        responses: [] // This would be populated with actual response data
+      // Fetch the complete observation with responses, questions, and categories
+      const { data: observation, error: obsError } = await supabase
+        .from('observations')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (obsError) {
+        throw new Error(`Failed to fetch observation: ${obsError.message}`)
       }
 
+      const { data: responses, error: resError } = await supabase
+        .from('responses')
+        .select(`
+          *,
+          question:questions(*,
+            category:categories(*)
+          )
+        `)
+        .eq('observation_id', id)
+
+      if (resError) {
+        throw new Error(`Failed to fetch responses: ${resError.message}`)
+      }
+
+      const observationWithResponses = {
+        ...observation,
+        responses: responses || []
+      }
+
+      console.log('Fetched observation for export:', observationWithResponses)
+
       if (format === 'docx') {
-        await exportToDOCX(mockObservation as any, categories, legend)
+        await exportToDOCX(observationWithResponses as any, categories, legend)
       } else if (format === 'csv') {
-        await exportToCSV(mockObservation as any, categories, legend)
+        await exportToCSV(observationWithResponses as any, categories, legend)
       }
     } catch (error) {
       console.error(`Failed to export observation as ${format.toUpperCase()}:`, error)
