@@ -9,13 +9,6 @@ import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Button } from '../components/ui/Button';
 import { TokenManager } from '../components/admin/TokenManager';
 import { AggregateData } from '../components/admin/AggregateData';
-useEffect(() => {
-  // Validate token and call app.set_token_context(token_id, role)
-  establishSessionFromToken().catch((e) => {
-    console.error('Failed to establish admin DB context:', e)
-  })
-}, [])
-
 import { Upload, Link, BarChart3 } from 'lucide-react';
 
 type AdminView = 'dashboard' | 'tokens';
