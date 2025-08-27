@@ -1,8 +1,8 @@
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { CaregiverPage } from './pages/CaregiverPage'
 import { AdminPage } from './pages/AdminPage'
+import { CaregiverPage } from './pages/CaregiverPage'
 import { LandingPage } from './pages/LandingPage'
 
 const queryClient = new QueryClient({
