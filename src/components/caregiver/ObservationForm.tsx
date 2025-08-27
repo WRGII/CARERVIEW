@@ -10,7 +10,7 @@ import { Save, SaveAll, Info } from 'lucide-react'
 import type { Question, CategoryWithQuestions } from '../../lib/supabase'
 
 interface ObservationFormProps {
-  observationId: string
+  observationId: string | null
   existingResponses?: Record<string, number>
 }
 
@@ -32,6 +32,18 @@ export const ObservationForm: React.FC<ObservationFormProps> = ({
 
   if (!categories || !legend) {
     return <div>Failed to load form data</div>
+  }
+
+  if (!observationId) {
+    return (
+      <Card>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-slate-600">No observation selected. Please create or select an observation to continue.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   const handleScoreChange = (questionId: string, score: number) => {

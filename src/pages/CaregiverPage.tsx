@@ -89,20 +89,20 @@ export const CaregiverPage: React.FC = () => {
   const renderContent = () => {
     switch (viewMode) {
       case 'form':
-        if (!currentObservationId) {
-          return (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setViewMode('list')}
-                  className="flex items-center space-x-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to List</span>
-                </Button>
-                <h2 className="text-xl font-semibold text-slate-900">Create New Observation</h2>
-              </div>
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setViewMode('list')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to List</span>
+              </Button>
+              <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
+            </div>
+            {!currentObservationId ? (
               <Card>
                 <CardHeader>
                   <h3 className="text-lg font-semibold text-slate-900">Create New Observation</h3>
@@ -139,23 +139,9 @@ export const CaregiverPage: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )
-        }
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setViewMode('list')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to List</span>
-              </Button>
-              <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
-            </div>
-            <ObservationForm observationId={currentObservationId} />
+            ) : (
+              <ObservationForm observationId={currentObservationId} />
+            )}
           </div>
         )
 
@@ -173,12 +159,10 @@ export const CaregiverPage: React.FC = () => {
               </Button>
               <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
             </div>
-            {currentObservationId && (
-              <ObservationForm 
-                observationId={currentObservationId}
-                // In a real implementation, you'd pass existing responses here
-              />
-            )}
+            <ObservationForm 
+              observationId={currentObservationId}
+              // In a real implementation, you'd pass existing responses here
+            />
           </div>
         )
 
