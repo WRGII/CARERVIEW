@@ -8,7 +8,7 @@ A production-ready web application for caregivers to record observation scores a
 - **Secure Token Access**: Access via private invite links without passwords
 - **Interactive Scoring**: 1-10 sliders with per-question and bulk save options
 - **ADA/OT Definitions**: Accessible tooltips with professional definitions
-- **Export Capabilities**: PDF and DOCX exports for individual observations
+- **Export Capabilities**: DOCX and CSV exports for individual observations
 - **Observation History**: View and manage all recorded observations
 
 ### For Administrators
