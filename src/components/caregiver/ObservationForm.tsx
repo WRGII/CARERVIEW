@@ -22,8 +22,9 @@ type Cat = {
 }
 
 export default function ObservationForm() {
-  // Ensure DB RLS context is set from the token before querying
+  // Ensure DB RLS context is set from the token before querying the view
   const [ready, setReady] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -35,7 +36,9 @@ export default function ObservationForm() {
         if (mounted) setReady(false)
       }
     })()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const [patientName, setPatientName] = useState('')
@@ -61,7 +64,7 @@ export default function ObservationForm() {
 
   const cats = useMemo<Cat[]>(() => {
     const map = new Map<string, Cat>()
-    ;(data || []).forEach(r => {
+    ;(data || []).forEach((r) => {
       if (!map.has(r.category_id)) {
         map.set(r.category_id, {
           id: r.category_id,
@@ -78,42 +81,53 @@ export default function ObservationForm() {
       })
     })
     const arr = Array.from(map.values())
-    arr.sort((a, b) => (a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type)))
-    arr.forEach(c => c.questions.sort((a, b) => a.order - b.order))
+    arr.sort((a, b) =>
+      a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type)
+    )
+    arr.forEach((c) => c.questions.sort((a, b) => a.order - b.order))
     return arr
   }, [data])
 
   function setScore(qid: string, val: string) {
     const v = val === '' ? undefined : Number(val)
-    setAnswers(prev => ({ ...prev, [qid]: v }))
+    setAnswers((prev) => ({ ...prev, [qid]: v }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
 
-    // 1) Create observation
-    const { data: obs, error: oErr } = await supabase
-      .from('observations')
-      .insert([{ patient_name: patientName || null, notes: notes || null }])
-      .select('id')
-      .single()
-    if (oErr) { alert(oErr.message); return }
-    const observationId = obs.id as string
+    try {
+      // 0) get raw token from URL
+      const url = new URL(window.location.href)
+      const rawToken = url.searchParams.get('token')
+      if (!rawToken) throw new Error('Missing token')
 
-    // 2) Insert responses for answered questions
-    const rows: { observation_id: string; question_id: string; score: number }[] = []
-    for (const [qid, score] of Object.entries(answers)) {
-      if (typeof score === 'number') rows.push({ observation_id: observationId, question_id: qid, score })
+      // 1) Build responses payload for the RPC
+      const responseRows: { question_id: string; score: number }[] = []
+      for (const [qid, score] of Object.entries(answers)) {
+        if (typeof score === 'number') responseRows.push({ question_id: qid, score })
+      }
+
+      // 2) Single secure RPC: validate token, set context, insert obs + responses
+      const { data, error } = await supabase.rpc('app.caregiver_create_observation', {
+        _raw_token: rawToken,
+        _patient_name: patientName || null,
+        _notes: notes || null,
+        _responses: responseRows, // Supabase will send as JSON → maps to jsonb
+      })
+
+      if (error) throw new Error(error.message)
+
+      // 3) Back to Caregiver dashboard (keep token)
+      window.location.href = `/caregiver?token=${encodeURIComponent(rawToken)}`
+    } catch (err) {
+      console.error('Failed to create observation:', err)
+      alert(`Failed to create observation: ${(err as Error).message}`)
+    } finally {
+      setSubmitting(false)
     }
-    if (rows.length > 0) {
-      const { error: rErr } = await supabase.from('responses').insert(rows)
-      if (rErr) { alert(rErr.message); return }
-    }
-
-    // 3) Back to Caregiver dashboard (keep token)
-    const url = new URL(window.location.href)
-    const token = url.searchParams.get('token') || ''
-    window.location.href = `/caregiver?token=${encodeURIComponent(token)}`
   }
 
   if (!ready) {
@@ -130,7 +144,9 @@ export default function ObservationForm() {
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
         <div className="grid gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Patient Name (Optional)
+            </label>
             <input
               value={patientName}
               onChange={(e) => setPatientName(e.target.value)}
@@ -139,7 +155,9 @@ export default function ObservationForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Notes (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Notes (Optional)
+            </label>
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -153,44 +171,50 @@ export default function ObservationForm() {
       <div className="space-y-6">
         {isLoading && <div className="text-slate-500">Loading questions…</div>}
         {error && <div className="text-red-700">Error: {(error as any).message}</div>}
-        {!isLoading && !error && cats.map(cat => (
-          <div key={cat.id} className="bg-white border rounded-xl">
-            <div className="px-4 py-3 border-b bg-slate-50">
-              <div className="font-semibold text-slate-900">
-                {cat.name} <span className="text-slate-500 text-sm">({cat.type})</span>
+        {!isLoading &&
+          !error &&
+          cats.map((cat) => (
+            <div key={cat.id} className="bg-white border rounded-xl">
+              <div className="px-4 py-3 border-b bg-slate-50">
+                <div className="font-semibold text-slate-900">
+                  {cat.name}{' '}
+                  <span className="text-slate-500 text-sm">({cat.type})</span>
+                </div>
               </div>
-            </div>
-            <div className="p-4">
-              <div className="space-y-4">
-                {cat.questions.map(q => (
-                  <div key={q.id} className="grid md:grid-cols-12 items-center gap-3">
-                    <div className="md:col-span-9 text-slate-800">{q.text}</div>
-                    <div className="md:col-span-3">
-                      <select
-                        value={answers[q.id] ?? ''}
-                        onChange={(e) => setScore(q.id, e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border"
-                      >
-                        <option value="">Select score…</option>
-                        {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
+              <div className="p-4">
+                <div className="space-y-4">
+                  {cat.questions.map((q) => (
+                    <div key={q.id} className="grid md:grid-cols-12 items-center gap-3">
+                      <div className="md:col-span-9 text-slate-800">{q.text}</div>
+                      <div className="md:col-span-3">
+                        <select
+                          value={answers[q.id] ?? ''}
+                          onChange={(e) => setScore(q.id, e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border"
+                        >
+                          <option value="">Select score…</option>
+                          {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          disabled={submitting}
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
         >
-          Create Observation
+          {submitting ? 'Saving…' : 'Create Observation'}
         </button>
         <a
           href={`/caregiver${window.location.search}`}
