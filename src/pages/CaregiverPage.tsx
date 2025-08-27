@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useCreateObservation, useObservation } from '../hooks/useObservations'
 import { useCategories } from '../hooks/useCategories'
@@ -23,10 +24,24 @@ export const CaregiverPage: React.FC = () => {
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
   const [newPatientName, setNewPatientName] = useState('')
   const [newObservationNotes, setNewObservationNotes] = useState('')
+  const [contextSet, setContextSet] = useState(false)
 
   const createObservation = useCreateObservation()
   const { data: categories } = useCategories()
   const { data: legend } = useLegend()
+
+  // Ensure session context is established for RLS
+  useEffect(() => {
+    if (token) {
+      (async () => {
+        try {
+          await establishSessionFromToken()
+        } catch (err) {
+          console.error('Failed to establish session context:', err)
+        }
+      })()
+    }
+  }, [token])
 
   if (loading) {
     return <Loading message="Validating access..." />
@@ -34,36 +49,6 @@ export const CaregiverPage: React.FC = () => {
 
   if (error || !token || token.role !== 'caregiver') {
     return <ErrorMessage message={error || 'Access denied. Invalid caregiver token.'} />
-  }
-
-  const handleCreateObservation = async () => {
-    const tokenId = token?.tokenId
-    if (!tokenId) return
-    
-    console.log('Creating observation with tokenId:', tokenId)
-    console.log('Patient name:', newPatientName.trim())
-    console.log('Notes:', newObservationNotes.trim())
-
-    try {
-      const observation = await createObservation.mutateAsync({
-        token_id: tokenId,
-        patient_name: newPatientName.trim(),
-        observation_date: new Date().toISOString().split('T')[0],
-        notes: newObservationNotes.trim()
-      })
-      
-      console.log('Observation created successfully:', observation)
-      console.log('Setting currentObservationId to:', observation.id)
-
-      setCurrentObservationId(observation.id)
-      setViewMode('form')
-      console.log('Updated viewMode to: form')
-      console.log('Updated currentObservationId to:', observation.id)
-      setNewPatientName('')
-      setNewObservationNotes('')
-    } catch (err) {
-      console.error('Failed to create observation:', err)
-    }
   }
 
   const handleViewObservation = (id: string) => {
@@ -136,46 +121,7 @@ export const CaregiverPage: React.FC = () => {
               </Button>
               <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
             </div>
-            {!currentObservationId ? (
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold text-slate-900">Create New Observation</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Input
-                      label="Patient Name (Optional)"
-                      value={newPatientName}
-                      onChange={(e) => setNewPatientName(e.target.value)}
-                      placeholder="Enter patient name or identifier"
-                    />
-                    <Input
-                      label="Notes (Optional)"
-                      value={newObservationNotes}
-                      onChange={(e) => setNewObservationNotes(e.target.value)}
-                      placeholder="Add any initial notes about this observation"
-                    />
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="primary"
-                        onClick={handleCreateObservation}
-                        disabled={createObservation.isPending}
-                      >
-                        Create Observation
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setViewMode('list')}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <ObservationForm observationId={currentObservationId} />
-            )}
+            <ObservationForm />
           </div>
         )
 
@@ -193,10 +139,12 @@ export const CaregiverPage: React.FC = () => {
               </Button>
               <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
             </div>
-            <ObservationForm 
-              observationId={currentObservationId}
-              // In a real implementation, you'd pass existing responses here
-            />
+            {currentObservationId && (
+              <div className="bg-white border rounded-xl p-6">
+                <p className="text-slate-600">Viewing observation {currentObservationId}</p>
+                <p className="text-sm text-slate-500 mt-2">View functionality will be implemented in a future update.</p>
+              </div>
+            )}
           </div>
         )
 
@@ -208,7 +156,6 @@ export const CaregiverPage: React.FC = () => {
               <Button
                 variant="primary"
                 onClick={() => {
-                  setCurrentObservationId(null)
                   setViewMode('form')
                 }}
                 className="flex items-center space-x-2"

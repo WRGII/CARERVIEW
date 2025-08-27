@@ -1,221 +1,185 @@
-import React, { useState } from 'react'
-import { useCategories } from '../../hooks/useCategories'
-import { useLegend } from '../../hooks/useLegend'
-import { useSaveResponse, useSaveBulkResponses } from '../../hooks/useResponses'
-import { Card, CardContent, CardHeader } from '../ui/Card'
-import { Button } from '../ui/Button'
-import { Slider } from '../ui/Slider'
-import { Loading } from '../ui/Loading'
-import { Save, SaveAll, Info } from 'lucide-react'
-import type { Question, CategoryWithQuestions } from '../../lib/supabase'
+import React, { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../../lib/supabaseClient'
 
-interface ObservationFormProps {
-  observationId: string | null
-  existingResponses?: Record<string, number>
+type Row = {
+  category_id: string
+  category_name: string
+  type: 'ADL' | 'IADL'
+  category_order: number
+  question_id: string
+  question_order: number
+  question_text: string
 }
 
-export const ObservationForm: React.FC<ObservationFormProps> = ({
-  observationId,
-  existingResponses = {}
-}) => {
-  const { data: categories, isLoading: categoriesLoading } = useCategories()
-  const { data: legend, isLoading: legendLoading } = useLegend()
-  const [scores, setScores] = useState<Record<string, number>>(existingResponses)
-  const [showTooltips, setShowTooltips] = useState<Record<string, boolean>>({})
+type Cat = {
+  id: string
+  name: string
+  type: 'ADL' | 'IADL'
+  order: number
+  questions: { id: string; text: string; order: number }[]
+}
 
-  const saveResponse = useSaveResponse()
-  const saveBulkResponses = useSaveBulkResponses()
-  
-  // Debug logging
-  console.log('ObservationForm rendered with observationId:', observationId)
-  console.log('Categories loading:', categoriesLoading)
-  console.log('Legend loading:', legendLoading)
-  console.log('Categories data:', categories)
-  console.log('Legend data:', legend)
+export default function ObservationForm() {
+  // Basic info (these replace the old fields on the page)
+  const [patientName, setPatientName] = useState('')
+  const [notes, setNotes] = useState('')
 
-  if (categoriesLoading || legendLoading) {
-    console.log('Still loading categories or legend...')
-    return <Loading message="Loading observation form..." />
-  }
+  // answers keyed by question_id -> number | undefined
+  const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
 
-  if (!categories || !legend) {
-    console.log('Categories or legend is null/undefined')
-    console.log('Categories:', categories)
-    console.log('Legend:', legend)
-    return <div>Failed to load form data</div>
-  }
-  
-  console.log('Categories loaded successfully:', categories.length, 'categories')
-  console.log('Legend loaded successfully:', legend.length, 'legend items')
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['v_category_questions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_category_questions')
+        .select('category_id,category_name,type,category_order,question_id,question_order,question_text')
+        .order('type', { ascending: true })
+        .order('category_order', { ascending: true })
+        .order('question_order', { ascending: true })
+      if (error) throw new Error(error.message)
+      return (data || []) as Row[]
+    },
+  })
 
-  if (!observationId) {
-    console.log('No observationId provided')
-    return (
-      <Card>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-slate-600">No observation selected. Please create or select an observation to continue.</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const handleScoreChange = (questionId: string, score: number) => {
-    setScores(prev => ({ ...prev, [questionId]: score }))
-  }
-
-  const handleSaveQuestion = async (questionId: string) => {
-    const score = scores[questionId]
-    if (!score) return
-
-    await saveResponse.mutateAsync({
-      observation_id: observationId,
-      question_id: questionId,
-      score
+  const cats = useMemo<Cat[]>(() => {
+    const map = new Map<string, Cat>()
+    ;(data || []).forEach(r => {
+      if (!map.has(r.category_id)) {
+        map.set(r.category_id, {
+          id: r.category_id,
+          name: r.category_name,
+          type: r.type,
+          order: r.category_order ?? 0,
+          questions: [],
+        })
+      }
+      map.get(r.category_id)!.questions.push({
+        id: r.question_id,
+        text: r.question_text,
+        order: r.question_order ?? 0,
+      })
     })
+    const arr = Array.from(map.values())
+    arr.sort((a, b) => (a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type)))
+    arr.forEach(c => c.questions.sort((a, b) => a.order - b.order))
+    return arr
+  }, [data])
+
+  function setScore(qid: string, val: string) {
+    const v = val === '' ? undefined : Number(val)
+    setAnswers(prev => ({ ...prev, [qid]: v }))
   }
 
-  const handleSaveCategory = async (category: CategoryWithQuestions) => {
-    const categoryResponses = category.questions
-      .filter(q => scores[q.id])
-      .map(q => ({
-        observation_id: observationId,
-        question_id: q.id,
-        score: scores[q.id]
-      }))
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
 
-    if (categoryResponses.length === 0) return
+    try {
+      // 1) Create observation (RLS should use token context from your token session guard)
+      const { data: obs, error: oErr } = await supabase
+        .from('observations')
+        .insert([{ patient_name: patientName || null, notes: notes || null }])
+        .select('id')
+        .single()
+      if (oErr) throw new Error(oErr.message)
+      const observationId = obs.id as string
 
-    await saveBulkResponses.mutateAsync(categoryResponses)
-  }
+      // 2) Build responses for answered questions only
+      const rows: { observation_id: string; question_id: string; score: number }[] = []
+      for (const [qid, score] of Object.entries(answers)) {
+        if (typeof score === 'number') {
+          rows.push({ observation_id: observationId, question_id: qid, score })
+        }
+      }
 
-  const toggleTooltip = (categoryId: string) => {
-    setShowTooltips(prev => ({ ...prev, [categoryId]: !prev[categoryId] }))
-  }
+      if (rows.length > 0) {
+        const { error: rErr } = await supabase.from('responses').insert(rows)
+        if (rErr) throw new Error(rErr.message)
+      }
 
-  const getLegendDescription = (score: number): string => {
-    const legendItem = legend.find(l => l.score === score)
-    return legendItem?.description || ''
+      // 3) Redirect back to caregiver dashboard (preserve token in URL)
+      const url = new URL(window.location.href)
+      const token = url.searchParams.get('token') || ''
+      window.location.href = `/caregiver?token=${encodeURIComponent(token)}`
+    } catch (error) {
+      console.error('Failed to create observation:', error)
+      alert(`Failed to create observation: ${(error as Error).message}`)
+    }
   }
 
   return (
-    <div className="space-y-8">
-      {/* Legend Reference */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-slate-900">Scoring Reference</h3>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-            {legend.map(item => (
-              <div key={item.score} className="flex items-center space-x-2">
-                <span className="font-medium text-blue-600 w-6">{item.score}:</span>
-                <span className="text-slate-700">{item.description}</span>
-              </div>
-            ))}
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="bg-white border rounded-xl p-6">
+        <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
+        <div className="grid gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name (Optional)</label>
+            <input
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border"
+              placeholder="Enter patient name"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Notes (Optional)</label>
+            <input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border"
+              placeholder="Enter any notes"
+            />
+          </div>
+        </div>
+      </div>
 
-      {/* Categories and Questions */}
-      {categories.map(category => (
-        <Card key={category.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <h3 className="text-xl font-semibold text-slate-900">
-                  {category.name} ({category.type})
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleTooltip(category.id)}
-                  className="p-1"
-                >
-                  <Info className="w-4 h-4" />
-                </Button>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleSaveCategory(category)}
-                disabled={saveBulkResponses.isPending}
-                className="flex items-center space-x-2"
-              >
-                <SaveAll className="w-4 h-4" />
-                <span>Save All in Category</span>
-              </Button>
+      <div className="space-y-6">
+        {isLoading && <div className="text-slate-500">Loading questions…</div>}
+        {error && <div className="text-red-700">Error: {(error as any).message}</div>}
+        {!isLoading && !error && cats.map(cat => (
+          <div key={cat.id} className="bg-white border rounded-xl">
+            <div className="px-4 py-3 border-b bg-slate-50">
+              <div className="font-semibold text-slate-900">{cat.name} <span className="text-slate-500 text-sm">({cat.type})</span></div>
             </div>
-            
-            {showTooltips[category.id] && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">ADA Definition:</h4>
-                    <p className="text-slate-700">{category.ada_definition}</p>
+            <div className="p-4">
+              <div className="space-y-4">
+                {cat.questions.map(q => (
+                  <div key={q.id} className="grid md:grid-cols-12 items-center gap-3">
+                    <div className="md:col-span-9 text-slate-800">{q.text}</div>
+                    <div className="md:col-span-3">
+                      <select
+                        value={answers[q.id] ?? ''}
+                        onChange={(e) => setScore(q.id, e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border"
+                      >
+                        <option value="">Select score…</option>
+                        {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-slate-900 mb-2">OT Definition:</h4>
-                    <p className="text-slate-700">{category.ot_definition}</p>
-                  </div>
-                </div>
+                ))}
               </div>
-            )}
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-6">
-              {category.questions.map(question => (
-                <div key={question.id} className="space-y-4">
-                  <h4 className="text-lg font-medium text-slate-800">
-                    {question.question_text}
-                  </h4>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-1">
-                      <Slider
-                        value={scores[question.id] || 5}
-                        onChange={(value) => handleScoreChange(question.id, value)}
-                        min={1}
-                        max={10}
-                      />
-                    </div>
-                    <div className="w-20 text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {scores[question.id] || 5}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Score
-                      </div>
-                    </div>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleSaveQuestion(question.id)}
-                      disabled={saveResponse.isPending}
-                      className="flex items-center space-x-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Save</span>
-                    </Button>
-                  </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-                  {scores[question.id] && (
-                    <div className="text-sm text-slate-600 bg-blue-50 p-3 rounded-lg">
-                      <strong>Score {scores[question.id]}:</strong> {getLegendDescription(scores[question.id])}
-                    </div>
-                  )}
-                  
-                  {question !== category.questions[category.questions.length - 1] && (
-                    <hr className="border-slate-200" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700"
+        >
+          Create Observation
+        </button>
+        <a
+          href={`/caregiver${window.location.search}`}
+          className="px-4 py-2 rounded-lg border hover:bg-slate-50"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
   )
 }
