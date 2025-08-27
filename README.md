@@ -1,6 +1,6 @@
-# CarerView - Functional Assessment and Monitoring Observation System
+# CarerView - Daily Functional Assessment and Observation System
 
-A production-ready web application for caregivers to record observation scores across ADA/OT-aligned ADL & IADL categories.
+For family and professional caregivers to record daily observations uting ADA and OT-aligned ADL & IADL categories.
 
 ## Features
 
