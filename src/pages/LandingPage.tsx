@@ -48,7 +48,7 @@ export const LandingPage: React.FC = () => {
           </p>
           <p className="text-lg text-slate-700 max-w-2xl mx-auto">
             For family and professional caregivers to record daily observations across
-            ADA and OT-aligned ADL & IADL categories.
+            ADA and OT-aligned Activities of Daily Living categories.
           </p>
         </div>
 
