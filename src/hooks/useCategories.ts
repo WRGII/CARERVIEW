@@ -1,6 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
-import type { CategoryWithQuestions } from '../lib/supabase'
+import { supabase } from '../lib/supabaseClient'
+
+// Define types locally
+interface Category {
+  id: string
+  name: string
+  type: 'ADL' | 'IADL'
+  ada_definition: string
+  ot_definition: string
+  sort_order: number
+  created_at: string
+}
+
+interface Question {
+  id: string
+  category_id: string
+  question_text: string
+  sort_order: number
+  created_at: string
+}
+
+interface CategoryWithQuestions extends Category {
+  questions: Question[]
+}
 
 export const useCategories = () => {
   return useQuery({

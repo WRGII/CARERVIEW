@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 
@@ -117,7 +117,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     mutationFn: async (observationData: any) => {
       if (!user) throw new Error('User not authenticated')
 
-      // Create observation
+      // Create observation with user.id
       const { data: observation, error: obsError } = await supabase
         .from('observations')
         .insert({
@@ -135,7 +135,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
       if (obsError) throw obsError
 
-      // Create responses
+      // Create responses for selected scores
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
         .map(([questionId, score]) => ({

@@ -1,6 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
-import type { Legend } from '../lib/supabase'
+import { supabase } from '../lib/supabaseClient'
+
+interface Legend {
+  id: string
+  score: number
+  description: string
+  created_at: string
+}
 
 export const useLegend = () => {
   return useQuery({

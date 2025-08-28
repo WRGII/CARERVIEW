@@ -1,6 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
-import type { Response } from '../lib/supabase'
+import { supabase } from '../lib/supabaseClient'
+
+interface Response {
+  id: string
+  observation_id: string
+  question_id: string
+  score: number
+  notes: string
+  created_at: string
+  updated_at: string
+}
 
 export const useSaveResponse = () => {
   const queryClient = useQueryClient()

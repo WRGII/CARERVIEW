@@ -15,8 +15,12 @@ export const AdminPage: React.FC = () => {
 
   if (loading) return <Loading message="Loading admin dashboard..." />
 
-  if (error || !user || !user.profile || user.profile.role !== 'admin') {
-    return <ErrorMessage message={error || 'Access denied. Administrator access required.'} />
+  if (error || !user) {
+    return <ErrorMessage message={error || 'Authentication required.'} />
+  }
+
+  if (!user.profile || user.profile.role !== 'admin') {
+    return <ErrorMessage message="Admin access required." />
   }
 
   const renderContent = () => {

@@ -1,6 +1,50 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx'
 import { saveAs } from 'file-saver'
-import type { ObservationWithResponses, CategoryWithQuestions, Legend } from './supabase'
+
+// Define types locally
+interface Legend {
+  id: string
+  score: number
+  description: string
+  created_at: string
+}
+
+interface Category {
+  id: string
+  name: string
+  type: 'ADL' | 'IADL'
+  ada_definition: string
+  ot_definition: string
+  sort_order: number
+  created_at: string
+}
+
+interface Question {
+  id: string
+  category_id: string
+  question_text: string
+  sort_order: number
+  created_at: string
+}
+
+interface CategoryWithQuestions extends Category {
+  questions: Question[]
+}
+
+interface ObservationWithResponses {
+  id: string
+  user_id: string
+  patient_name: string
+  observation_date: string
+  date_of_observation: string
+  mode_of_observation: 'In Person' | 'Voice Call' | 'Video Call'
+  notes: string
+  caregiver_name: string
+  caregiver_email: string
+  created_at: string
+  updated_at: string
+  responses: any[]
+}
 
 export const exportToDOCX = async (
   observation: ObservationWithResponses,

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
 import { signUp, signIn } from '../lib/auth'
 import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
@@ -8,7 +9,6 @@ export const LandingPage: React.FC = () => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<'admin' | 'caregiver'>('caregiver')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,20 +19,51 @@ export const LandingPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        await signUp(email, password, name, role)
-        // Redirect based on role
-        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
-      } else {
-        const { user } = await signIn(email, password)
-        // Get user profile to determine role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single()
+        // Sign up with display name in metadata
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name: name
+            }
+          }
+        })
         
-        const userRole = profile?.role || 'caregiver'
-        window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
+        // Immediately sign in after signup
+        const { data: signInData } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+
+        if (signInData.user) {
+          // Get user profile to determine role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', signInData.user.id)
+            .single()
+          
+          const userRole = profile?.role || 'caregiver'
+          window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
+        }
+      } else {
+        const { data } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+        
+        if (data.user) {
+          // Get user profile to determine role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .single()
+          
+          const userRole = profile?.role || 'caregiver'
+          window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed')
@@ -195,20 +226,6 @@ export const LandingPage: React.FC = () => {
                   className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
                 />
               </label>
-
-              {isSignUp && (
-                <label className="block text-sm font-semibold text-slate-700">
-                  Role
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as 'admin' | 'caregiver')}
-                    className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900"
-                  >
-                    <option value="caregiver">Caregiver</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                </label>
-              )}
 
               <button
                 type="submit"

@@ -1,7 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './useAuth'
-import type { Observation, ObservationWithResponses } from '../lib/supabase'
+
+// Define types locally since we removed the supabase types file
+interface Observation {
+  id: string
+  user_id: string
+  patient_name: string
+  observation_date: string
+  date_of_observation: string
+  mode_of_observation: 'In Person' | 'Voice Call' | 'Video Call'
+  notes: string
+  caregiver_name: string
+  caregiver_email: string
+  created_at: string
+  updated_at: string
+}
+
+interface ObservationWithResponses extends Observation {
+  responses: any[]
+}
 
 export const useObservations = () => {
   const { user } = useAuth()

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/supabaseClient'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Loading } from '../ui/Loading'
 import { BarChart3, Users, FileText, TrendingUp } from 'lucide-react'

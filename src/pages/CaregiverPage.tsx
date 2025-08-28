@@ -19,8 +19,12 @@ export const CaregiverPage: React.FC = () => {
     return <Loading message="Loading caregiver dashboard..." />
   }
 
-  if (error || !user || !user.profile || user.profile.role !== 'caregiver') {
-    return <ErrorMessage message={error || 'Access denied. Caregiver access required.'} />
+  if (error || !user) {
+    return <ErrorMessage message={error || 'Authentication required.'} />
+  }
+
+  if (!user.profile) {
+    return <ErrorMessage message="Profile not found. Please contact support." />
   }
 
   const handleViewObservation = (id: string) => {

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Activity, LogOut } from 'lucide-react'
-import { signOut } from '../../lib/auth'
+import { supabase } from '../../lib/supabaseClient'
 import type { AuthUser } from '../../lib/auth'
 import { Button } from '../ui/Button'
 
@@ -13,7 +13,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
   const handleSignOut = async () => {
     try {
-      await signOut()
+      await supabase.auth.signOut()
       window.location.href = '/'
     } catch (error) {
       console.error('Sign out error:', error)
