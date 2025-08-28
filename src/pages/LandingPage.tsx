@@ -79,7 +79,8 @@ export const LandingPage: React.FC = () => {
             <Activity className="w-16 h-16 text-blue-600" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">CarerView</h1>
-          <p className="text-xl text-slate-600 mb-6">Daily - Weekly - Monthly - A functional assessment system made easy</p>
+          <p className="text-xl text-slate-600 mb-6">Daily - Weekly - Monthly
+A functional assessment system made easy</p>
           <p className="text-lg text-slate-700 max-w-2xl mx-auto">
             For family and professional caregivers to record daily observations across ADA and OT-aligned
             Activities of Daily Living categories.
