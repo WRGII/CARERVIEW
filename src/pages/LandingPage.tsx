@@ -117,7 +117,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Database-Driven</h3>
               </div>
               <p className="text-slate-600">
-                All categories, questions, and scoring definitions live in secure database with real-time updates.
+                All observations live in an accessible database with real-time updates.
               </p>
             </CardContent>
           </Card>
