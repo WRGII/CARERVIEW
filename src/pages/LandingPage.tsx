@@ -1,8 +1,23 @@
+// src/pages/LandingPage.tsx
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { signUp, signIn } from '../lib/auth'
 import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
+
+type ProfileRow = { role?: 'admin' | 'caregiver' | null }
+
+async function fetchProfileRoleWithRetry(userId: string, tries = 6, delayMs = 300): Promise<'admin' | 'caregiver' | null> {
+  for (let i = 0; i < tries; i++) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId) // IMPORTANT: profiles.id = auth.users.id
+      .single<ProfileRow>()
+    if (!error && data) return (data.role ?? null) as any
+    await new Promise(res => setTimeout(res, delayMs))
+  }
+  return null
+}
 
 export const LandingPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(true)
@@ -19,51 +34,38 @@ export const LandingPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        // Sign up with display name in metadata
-        await supabase.auth.signUp({
+        // 1) Sign up with display name in user metadata
+        const { error: signUpErr } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: {
-              display_name: name
-            }
-          }
+          options: { data: { display_name: name } },
         })
-        
-        // Immediately sign in after signup
-        const { data: signInData } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        })
+        if (signUpErr) throw signUpErr
 
-        if (signInData.user) {
-          // Get user profile to determine role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', signInData.user.id)
-            .single()
-          
-          const userRole = profile?.role || 'caregiver'
-          window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
-        }
-      } else {
-        const { data } = await supabase.auth.signInWithPassword({
+        // 2) Immediately sign in (email confirmations are off for MVP)
+        const { data: signInData, error: siErr } = await supabase.auth.signInWithPassword({
           email,
-          password
+          password,
         })
-        
-        if (data.user) {
-          // Get user profile to determine role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .single()
-          
-          const userRole = profile?.role || 'caregiver'
-          window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
-        }
+        if (siErr) throw siErr
+        const u = signInData.user
+        if (!u) throw new Error('No user returned after sign in')
+
+        // 3) Wait for the profiles row (trigger may be slightly delayed)
+        const role = (await fetchProfileRoleWithRetry(u.id)) ?? 'caregiver'
+        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
+      } else {
+        // Sign in
+        const { data, error: siErr } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (siErr) throw siErr
+        const u = data.user
+        if (!u) throw new Error('No user returned after sign in')
+
+        const role = (await fetchProfileRoleWithRetry(u.id)) ?? 'caregiver'
+        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed')
