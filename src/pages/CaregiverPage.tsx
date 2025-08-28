@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { exportToDOCX, exportToCSV } from '../lib/exports'
-import { supabase } from '../lib/supabaseClient'
-import { establishSessionFromToken } from '../lib/tokenSession'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
@@ -14,28 +11,16 @@ import { Plus, ArrowLeft } from 'lucide-react'
 type ViewMode = 'list' | 'form' | 'view'
 
 export const CaregiverPage: React.FC = () => {
-  const { token, loading, error } = useAuth()
+  const { user, loading, error } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
 
-  // Ensure session context is established for RLS once we have a token
-  useEffect(() => {
-    if (!token) return
-    ;(async () => {
-      try {
-        await establishSessionFromToken() // validates token + calls set_token_context
-      } catch (err) {
-        console.error('Failed to establish session context:', err)
-      }
-    })()
-  }, [token])
-
   if (loading) {
-    return <Loading message="Validating access..." />
+    return <Loading message="Loading caregiver dashboard..." />
   }
 
-  if (error || !token || token.role !== 'caregiver') {
-    return <ErrorMessage message={error || 'Access denied. Invalid caregiver token.'} />
+  if (error || !user || !user.profile || user.profile.role !== 'caregiver') {
+    return <ErrorMessage message={error || 'Access denied. Caregiver access required.'} />
   }
 
   const handleViewObservation = (id: string) => {
@@ -45,63 +30,8 @@ export const CaregiverPage: React.FC = () => {
 
   const handleExportObservation = async (id: string, format: 'docx' | 'csv') => {
     try {
-      // Fetch the observation
-      const { data: observation, error: obsError } = await supabase
-        .from('observations')
-        .select('*')
-        .eq('id', id)
-        .single()
-      if (obsError) throw new Error(`Failed to fetch observation: ${obsError.message}`)
-
-      // Fetch responses with nested question + category
-      const { data: responses, error: resError } = await supabase
-        .from('responses')
-        .select(`
-          *,
-          question:questions(*,
-            category:categories(*)
-          )
-        `)
-        .eq('observation_id', id)
-      if (resError) throw new Error(`Failed to fetch responses: ${resError.message}`)
-
-      const observationWithResponses = { ...observation, responses: responses || [] }
-
-      // Build a minimal categories structure from responses for the exporters
-      // (If your exporters expect a richer shape or legend, adjust here or fetch via a view.)
-      const categoriesMap = new Map<string, { name: string; questions: { question_text: string; score?: number }[] }>()
-      for (const r of observationWithResponses.responses as any[]) {
-        const catId = r.question?.category?.id
-        const catName = r.question?.category?.name
-        const qText = r.question?.question_text
-        const score = r.score
-        if (!catId || !catName || !qText) continue
-        if (!categoriesMap.has(catId)) {
-          categoriesMap.set(catId, { name: catName, questions: [] })
-        }
-        categoriesMap.get(catId)!.questions.push({ question_text: qText, score })
-      }
-      const categories = Array.from(categoriesMap.values())
-
-      // Legend: if your exporters require it but you don't use it for this export, pass {}
-      const legend = {}
-
-      if (format === 'docx') {
-        await exportToDOCX({
-          observation: observationWithResponses,
-          categories,
-          legend,
-          orgName: 'CareView',
-          filename: `CareView_Observation_${id}.docx`,
-        })
-      } else {
-        await exportToCSV({
-          observation: observationWithResponses,
-          categories,
-          legend,
-          filename: `CareView_Observation_${id}.csv`,
-        })
-      }
+      // Export functionality will be implemented separately
+      console.log(`Exporting observation ${id} as ${format}`)
     } catch (e: any) {
       console.error(`Failed to export observation as ${format.toUpperCase()}:`, e)
       alert(`Failed to export observation. ${e?.message || 'Please try again.'}`)
@@ -124,7 +54,7 @@ export const CaregiverPage: React.FC = () => {
               </Button>
               <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
             </div>
-            <ObservationForm />
+            <ObservationForm onComplete={() => setViewMode('list')} />
           </div>
         )
 
@@ -178,7 +108,7 @@ export const CaregiverPage: React.FC = () => {
   }
 
   return (
-    <Layout title="Caregiver Dashboard" role="caregiver" tokenId={token.tokenId}>
+    <Layout title="Caregiver Dashboard" user={user}>
       {renderContent()}
     </Layout>
   )

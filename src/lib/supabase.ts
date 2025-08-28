@@ -10,13 +10,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
-export interface AccessToken {
+export interface Profile {
   id: string
-  token_hash: string
+  user_id: string
   role: 'admin' | 'caregiver'
+  display_name: string
+  email: string
   created_at: string
-  expires_at?: string
-  is_active: boolean
+  updated_at: string
 }
 
 export interface Legend {
@@ -46,7 +47,7 @@ export interface Question {
 
 export interface Observation {
   id: string
-  token_id: string
+  user_id: string
   patient_name: string
   observation_date: string
   date_of_observation: string

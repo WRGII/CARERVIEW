@@ -1,37 +1,44 @@
 import React, { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { signUp, signIn } from '../lib/auth'
 import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 
-type BootRow = { raw_token?: string; role?: 'admin' | 'caregiver' }
-
 export const LandingPage: React.FC = () => {
+  const [isSignUp, setIsSignUp] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'admin' | 'caregiver'>('caregiver')
   const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setErr(null)
+    setError(null)
 
-    // Schema-qualified RPCs (matches Supabase backend)
-    const { data, error } = await supabase.rpc('bootstrap_login', {
-      _display_name: name,
-      _email: email,
-    })
-
-    setLoading(false)
-    if (error) { setErr(error.message); return }
-
-    const row: BootRow | undefined = Array.isArray(data) ? data[0] : (data as any)
-    const token = row?.raw_token
-    const role = row?.role
-    if (!token || !role) { setErr('Login failed — missing token or role.'); return }
-
-    const dest = role === 'admin' ? '/admin' : '/caregiver'
-    window.location.href = `${dest}?token=${encodeURIComponent(token)}`
+    try {
+      if (isSignUp) {
+        await signUp(email, password, name, role)
+        // Redirect based on role
+        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
+      } else {
+        const { user } = await signIn(email, password)
+        // Get user profile to determine role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single()
+        
+        const userRole = profile?.role || 'caregiver'
+        window.location.href = userRole === 'admin' ? '/admin' : '/caregiver'
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -63,7 +70,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Secure Access</h3>
               </div>
               <p className="text-slate-600">
-                Token-based access with role-aware controls for administrators and caregivers.
+                Email and password authentication with role-based access controls.
               </p>
             </CardContent>
           </Card>
@@ -91,7 +98,7 @@ export const LandingPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-slate-900">Professional Reports</h3>
               </div>
               <p className="text-slate-600">
-                Export observations to with full details and clean formatting.
+                Export observations with full details and clean formatting.
               </p>
             </CardContent>
           </Card>
@@ -111,27 +118,59 @@ export const LandingPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Registration card */}
+        {/* Auth form */}
         <div className="max-w-2xl mx-auto">
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+            <div className="flex justify-center mb-6">
+              <div className="flex bg-slate-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(true)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    isSignUp
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(false)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                    !isSignUp
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+
             <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-              Get Started
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h2>
             <p className="text-slate-600 mb-6 text-center">
-              Enter your details to access your dashboard. Your email decides your role.
+              {isSignUp 
+                ? 'Enter your details to create your account'
+                : 'Sign in to access your dashboard'
+              }
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              <label className="block text-sm font-semibold text-slate-700">
-                Display Name
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  placeholder="Enter your full name"
-                  className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
-                />
-              </label>
+              {isSignUp && (
+                <label className="block text-sm font-semibold text-slate-700">
+                  Display Name
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Enter your full name"
+                    className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
+                  />
+                </label>
+              )}
 
               <label className="block text-sm font-semibold text-slate-700">
                 Email Address
@@ -145,6 +184,32 @@ export const LandingPage: React.FC = () => {
                 />
               </label>
 
+              <label className="block text-sm font-semibold text-slate-700">
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
+                />
+              </label>
+
+              {isSignUp && (
+                <label className="block text-sm font-semibold text-slate-700">
+                  Role
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as 'admin' | 'caregiver')}
+                    className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900"
+                  >
+                    <option value="caregiver">Caregiver</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </label>
+              )}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -153,23 +218,23 @@ export const LandingPage: React.FC = () => {
                 {loading ? (
                   <span className="inline-flex items-center gap-3">
                     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Preparing dashboard…
+                    {isSignUp ? 'Creating account…' : 'Signing in…'}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-2">
-                    Access Caregiver Account <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    {isSignUp ? 'Create Account' : 'Sign In'} 
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 )}
               </button>
 
-              {err && (
+              {error && (
                 <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
                   <p className="text-red-800 font-medium">Error</p>
-                  <p className="text-red-700 text-sm mt-1">{err}</p>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
                 </div>
               )}
             </form>
-
           </div>
         </div>
       </div>

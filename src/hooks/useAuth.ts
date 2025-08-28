@@ -1,49 +1,71 @@
-// src/hooks/useAuth.ts
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { validateToken, type SessionToken } from '../lib/auth'
+import { supabase } from '../lib/supabase'
+import type { AuthUser } from '../lib/auth'
 
 export const useAuth = () => {
-  const [token, setToken] = useState<SessionToken | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const location = useLocation()
 
   useEffect(() => {
-    const run = async () => {
-      console.log('useAuth: Starting authentication process')
-      setLoading(true)
-      setError(null)
-
-      const params = new URLSearchParams(location.search)
-      const raw = params.get('token')
-      console.log('useAuth: Raw token from URL:', raw ? 'present' : 'missing')
-      if (!raw) {
-        setError('No access token provided')
-        setLoading(false)
-        return
-      }
-
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        console.log('useAuth: Validating token...')
-        const t = await validateToken(raw)
-        console.log('useAuth: Token validation result:', t)
-        if (!t) {
-          setError('Invalid or expired access token')
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // Fetch profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single()
+
+          if (profileError) {
+            console.warn('Failed to fetch profile:', profileError)
+            setUser(session.user as AuthUser)
+          } else {
+            setUser({ ...session.user, profile } as AuthUser)
+          }
         } else {
-          setToken(t) // { tokenId, role }
-          console.log('useAuth: Token set successfully:', t)
+          setUser(null)
         }
-      } catch {
-        console.error('useAuth: Token validation failed')
-        setError('Failed to validate access token')
+      } catch (err) {
+        setError('Failed to get session')
+        console.error('Auth error:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    run()
-  }, [location.search])
+    getInitialSession()
 
-  return { token, loading, error }
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          // Fetch profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single()
+
+          if (profileError) {
+            console.warn('Failed to fetch profile:', profileError)
+            setUser(session.user as AuthUser)
+          } else {
+            setUser({ ...session.user, profile } as AuthUser)
+          }
+        } else {
+          setUser(null)
+        }
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { user, loading, error }
 }

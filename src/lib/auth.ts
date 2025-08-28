@@ -1,32 +1,67 @@
-// src/lib/auth.ts
 import { supabase } from './supabase'
+import type { User } from '@supabase/supabase-js'
 
-export type SessionToken = {
-  tokenId: string
+export interface Profile {
+  id: string
+  user_id: string
   role: 'admin' | 'caregiver'
+  display_name: string
+  email: string
+  created_at: string
+  updated_at: string
 }
 
-export const validateToken = async (rawToken: string): Promise<SessionToken | null> => {
-  console.log('validateToken: Starting validation for token')
-  // Ask the DB to validate the RAW token (it hashes inside Postgres)
-  const { data, error } = await supabase.rpc('validate_token', { _raw_token: rawToken })
-  console.log('validateToken: RPC validate_token result:', { data, error })
-  if (error || !data || !data[0]?.valid) return null
-
-  const { token_id, role } = data[0] as { token_id: string; role: 'admin' | 'caregiver'; valid: boolean }
-  console.log('validateToken: Extracted token_id and role:', { token_id, role })
-
-  // Set session GUCs so RLS policies recognize this session’s role
-  console.log('validateToken: Setting token context...')
-  await supabase.rpc('set_token_context', { p_token_id: token_id, p_role: role })
-  console.log('validateToken: Token context set successfully')
-
-  return { tokenId: token_id, role }
+export interface AuthUser extends User {
+  profile?: Profile
 }
 
-// Always URL-encode in case tokens contain + or /
-export const generateInviteLink = (role: 'admin' | 'caregiver', token: string): string => {
-  const baseUrl = window.location.origin
-  const path = role === 'admin' ? '/admin' : '/caregiver'
-  return `${baseUrl}${path}?token=${encodeURIComponent(token)}`
+export const signUp = async (email: string, password: string, displayName: string, role: 'admin' | 'caregiver' = 'caregiver') => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        display_name: displayName,
+        role: role
+      }
+    }
+  })
+
+  if (error) throw error
+  return data
+}
+
+export const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) throw error
+  return data
+}
+
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+}
+
+export const getCurrentUser = async (): Promise<AuthUser | null> => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) return null
+
+  // Fetch profile
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (error) {
+    console.warn('Failed to fetch profile:', error)
+    return user as AuthUser
+  }
+
+  return { ...user, profile } as AuthUser
 }
