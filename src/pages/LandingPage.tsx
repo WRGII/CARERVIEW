@@ -142,7 +142,7 @@ export const LandingPage: React.FC = () => {
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <Activity className="w-6 h-6 text-orange-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">ADA/OT Aligned</h3>
+                <h3 className="text-lg font-semibold text-slate-900">ADA and OT Aligned</h3>
               </div>
               <p className="text-slate-600">
                 Purpose-built for ADL & IADL assessments with standardized definitions.
