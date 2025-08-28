@@ -1,3 +1,4 @@
+// src/pages/AdminPage.tsx
 import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
@@ -13,7 +14,6 @@ export default function AdminPage() {
   const { loading, error, user, profile } = useAuth()
   const [currentView, setCurrentView] = useState<AdminView>('dashboard')
 
-  // Guards (App also has route guards, but this is a friendly fallback)
   if (loading) return <Loading message="Loading admin dashboard..." />
   if (error) return <ErrorMessage message={error} />
   if (!user || !profile) return <ErrorMessage message="Authentication required." />
