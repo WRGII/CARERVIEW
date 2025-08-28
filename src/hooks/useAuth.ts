@@ -1,71 +1,51 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import type { AuthUser } from '../lib/auth'
 
-export const useAuth = () => {
-  const [user, setUser] = useState<AuthUser | null>(null)
+type Profile = { id: string; display_name: string; role: 'admin'|'caregiver'; disabled: boolean }
+
+export function useAuth() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+    let mounted = true
+    ;(async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session?.user) {
-          // Fetch profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single()
-
-          if (profileError) {
-            console.warn('Failed to fetch profile:', profileError)
-            setUser(session.user as AuthUser)
-          } else {
-            setUser({ ...session.user, profile } as AuthUser)
-          }
-        } else {
-          setUser(null)
+        const { data: { session }, error: sErr } = await supabase.auth.getSession()
+        if (sErr) throw sErr
+        const u = session?.user ?? null
+        if (!u) {
+          if (mounted) { setUser(null); setProfile(null) }
+          return
         }
-      } catch (err) {
-        setError('Failed to get session')
-        console.error('Auth error:', err)
+        if (mounted) setUser(u)
+        // fetch profile
+        const { data: rows, error: pErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', u.id)
+          .limit(1)
+        if (pErr) throw pErr
+        const p = rows?.[0] ?? null
+        if (mounted) setProfile(p)
+      } catch (e: any) {
+        if (mounted) setError(e.message || 'Auth error')
       } finally {
-        setLoading(false)
+        if (mounted) setLoading(false)
       }
-    }
+    })()
 
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          // Fetch profile
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single()
-
-          if (profileError) {
-            console.warn('Failed to fetch profile:', profileError)
-            setUser(session.user as AuthUser)
-          } else {
-            setUser({ ...session.user, profile } as AuthUser)
-          }
-        } else {
-          setUser(null)
-        }
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
+    const sub = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null
+      setUser(u)
+      if (!u) setProfile(null)
+    })
+    return () => { mounted = false; sub.data.subscription.unsubscribe() }
   }, [])
 
-  return { user, loading, error }
+  return { loading, error, user, profile }
 }
