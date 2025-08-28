@@ -42,11 +42,15 @@ export default function ObservationForm() {
   }, [])
 
   const [patientName, setPatientName] = useState('')
+  const [caregiverName, setCaregiverName] = useState('')
+  const [caregiverEmail, setCaregiverEmail] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
   const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
   const [dateError, setDateError] = useState('')
+  const [caregiverNameError, setCaregiverNameError] = useState('')
+  const [caregiverEmailError, setCaregiverEmailError] = useState('')
 
   // Date validation function
   const validateDate = (dateString: string): boolean => {
@@ -78,6 +82,34 @@ export default function ObservationForm() {
     if (!dateString || !validateDate(dateString)) return ''
     const [month, day, year] = dateString.split('/').map(Number)
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+  }
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+    return emailRegex.test(email)
+  }
+
+  const handleCaregiverNameChange = (value: string) => {
+    setCaregiverName(value)
+    if (value.trim() === '') {
+      setCaregiverNameError('Caregiver name is required')
+    } else if (value.trim().length < 2) {
+      setCaregiverNameError('Caregiver name must be at least 2 characters')
+    } else {
+      setCaregiverNameError('')
+    }
+  }
+
+  const handleCaregiverEmailChange = (value: string) => {
+    setCaregiverEmail(value)
+    if (value.trim() === '') {
+      setCaregiverEmailError('Caregiver email is required')
+    } else if (!validateEmail(value)) {
+      setCaregiverEmailError('Please enter a valid email address')
+    } else {
+      setCaregiverEmailError('')
+    }
   }
 
   const { data, isLoading, error } = useQuery({
@@ -133,13 +165,35 @@ export default function ObservationForm() {
     if (submitting) return
     
     // Validate required fields
-    if (!dateOfObservation) {
-      setDateError('Date of observation is required')
-      return
+    let hasErrors = false
+    
+    if (!caregiverName.trim()) {
+      setCaregiverNameError('Caregiver name is required')
+      hasErrors = true
+    } else if (caregiverName.trim().length < 2) {
+      setCaregiverNameError('Caregiver name must be at least 2 characters')
+      hasErrors = true
     }
     
-    if (!validateDate(dateOfObservation)) {
+    if (!caregiverEmail.trim()) {
+      setCaregiverEmailError('Caregiver email is required')
+      hasErrors = true
+    } else if (!validateEmail(caregiverEmail)) {
+      setCaregiverEmailError('Please enter a valid email address')
+      hasErrors = true
+    }
+    
+    if (!dateOfObservation) {
+      setDateError('Date of observation is required')
+      hasErrors = true
+    }
+    
+    if (dateOfObservation && !validateDate(dateOfObservation)) {
       setDateError('Please enter a valid date in MM/DD/YYYY format')
+      hasErrors = true
+    }
+    
+    if (hasErrors) {
       return
     }
     
@@ -163,6 +217,8 @@ export default function ObservationForm() {
       // 2) Single secure RPC: validate token, set context, insert obs + responses
       const { data, error } = await supabase.rpc('app.caregiver_create_observation', {
         _raw_token: rawToken,
+        _caregiver_name: caregiverName.trim(),
+        _caregiver_email: caregiverEmail.trim(),
         _patient_name: patientName || null,
         _date_of_observation: formattedDate,
         _mode_of_observation: modeOfObservation,
@@ -197,7 +253,43 @@ export default function ObservationForm() {
         <div className="grid gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Patient Name (Optional)
+              Caregiver Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={caregiverName}
+              onChange={(e) => handleCaregiverNameChange(e.target.value)}
+              className={`w-full px-3 py-2 rounded-lg border ${
+                caregiverNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
+              } focus:outline-none focus:ring-2`}
+              placeholder="Enter your full name"
+              required
+            />
+            {caregiverNameError && (
+              <p className="text-red-600 text-sm mt-1">{caregiverNameError}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Caregiver Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={caregiverEmail}
+              onChange={(e) => handleCaregiverEmailChange(e.target.value)}
+              className={`w-full px-3 py-2 rounded-lg border ${
+                caregiverEmailError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
+              } focus:outline-none focus:ring-2`}
+              placeholder="Enter your email address"
+              required
+            />
+            {caregiverEmailError && (
+              <p className="text-red-600 text-sm mt-1">{caregiverEmailError}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Patient Name
             </label>
             <input
               value={patientName}

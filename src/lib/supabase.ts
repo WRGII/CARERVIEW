@@ -52,6 +52,8 @@ export interface Observation {
   date_of_observation: string
   mode_of_observation: 'In Person' | 'Voice Call' | 'Video Call'
   notes: string
+  caregiver_name: string
+  caregiver_email: string
   created_at: string
   updated_at: string
 }
