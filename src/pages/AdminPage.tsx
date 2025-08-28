@@ -9,29 +9,18 @@ import { BarChart3 } from 'lucide-react'
 
 type AdminView = 'dashboard'
 
-export const AdminPage: React.FC = () => {
-  const { user, loading, error } = useAuth()
+export default function AdminPage() {
+  const { loading, error, user, profile } = useAuth()
   const [currentView, setCurrentView] = useState<AdminView>('dashboard')
 
+  // Guards (App also has route guards, but this is a friendly fallback)
   if (loading) return <Loading message="Loading admin dashboard..." />
-
-  if (error || !user) {
-    return <ErrorMessage message={error || 'Authentication required.'} />
-  }
-
-  if (!user.profile || user.profile.role !== 'admin') {
-    return <ErrorMessage message="Admin access required." />
-  }
-
-  const renderContent = () => {
-    switch (currentView) {
-      default:
-        return <AggregateData />
-    }
-  }
+  if (error) return <ErrorMessage message={error} />
+  if (!user || !profile) return <ErrorMessage message="Authentication required." />
+  if (profile.role !== 'admin') return <ErrorMessage message="Admin access required." />
 
   return (
-    <Layout title="Administrator Dashboard" user={user}>
+    <Layout title="Administrator Dashboard">
       <div className="space-y-6">
         {/* Navigation */}
         <div className="flex space-x-4 border-b border-slate-200 pb-4">
@@ -46,7 +35,7 @@ export const AdminPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        {renderContent()}
+        {currentView === 'dashboard' && <AggregateData />}
       </div>
     </Layout>
   )
