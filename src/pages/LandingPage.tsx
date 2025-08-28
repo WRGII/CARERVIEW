@@ -44,7 +44,7 @@ export const LandingPage: React.FC = () => {
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-4">CarerView</h1>
           <p className="text-xl text-slate-600 mb-6">
-            Functional Assessment System
+            Daily Functional Assessment System Made Easy
           </p>
           <p className="text-lg text-slate-700 max-w-2xl mx-auto">
             For family and professional caregivers to record daily observations across
