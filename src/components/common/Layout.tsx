@@ -1,13 +1,19 @@
 import React from 'react'
 import { Activity } from 'lucide-react'
+import { useCaregiverInfo } from '../../hooks/useCaregiverInfo'
 
 interface LayoutProps {
   children: React.ReactNode
   title: string
   role: 'admin' | 'caregiver'
+  tokenId?: string
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, title, role }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, title, role, tokenId }) => {
+  const { data: caregiverInfo, isLoading: caregiverLoading } = useCaregiverInfo(
+    role === 'caregiver' ? tokenId || null : null
+  )
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white shadow-sm border-b border-slate-200">
@@ -17,7 +23,20 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, role }) => {
               <Activity className="w-8 h-8 text-blue-600 mr-3" />
               <div>
                 <h1 className="text-xl font-bold text-slate-900">CarerView</h1>
-                <p className="text-sm text-slate-500 capitalize">{role} Portal</p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-slate-500 capitalize">{role} Portal</p>
+                  {role === 'caregiver' && caregiverInfo && !caregiverLoading && (
+                    <>
+                      <span className="text-slate-300">•</span>
+                      <div className="text-sm text-slate-600">
+                        <span className="font-medium">{caregiverInfo.display_name}</span>
+                        {caregiverInfo.email && (
+                          <span className="text-slate-500 ml-1">({caregiverInfo.email})</span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <div className="text-right">

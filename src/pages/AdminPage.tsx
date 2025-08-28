@@ -53,7 +53,7 @@ export const AdminPage: React.FC = () => {
   };
 
   return (
-    <Layout title="Administrator Dashboard" role="admin">
+    <Layout title="Administrator Dashboard" role="admin" tokenId={token.tokenId}>
       <div className="space-y-6">
         {/* Navigation */}
         <div className="flex space-x-4 border-b border-slate-200 pb-4">

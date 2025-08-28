@@ -178,7 +178,7 @@ export const CaregiverPage: React.FC = () => {
   }
 
   return (
-    <Layout title="Caregiver Dashboard" role="caregiver">
+    <Layout title="Caregiver Dashboard" role="caregiver" tokenId={token.tokenId}>
       {renderContent()}
     </Layout>
   )
