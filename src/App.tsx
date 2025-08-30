@@ -25,7 +25,9 @@ function AdminGuard({ children }: { children: JSX.Element }) {
 function CaregiverGuard({ children }: { children: JSX.Element }) {
   const { loading, user, profile } = useAuth()
   if (loading) return <div className="p-6">Loading…</div>
-  if (!user || !profile) return <Navigate to="/" replace />
+  if (!user) return <Navigate to="/" replace />
+  // Soften this: don't redirect signed-in users to "/" while profile is still null.
+  if (!profile) return <div className="p-6">Preparing your caregiver workspace…</div>
   if (profile.disabled) return <div className="p-6 text-red-600">Account disabled.</div>
   return children
 }
