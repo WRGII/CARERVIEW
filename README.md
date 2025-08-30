@@ -1,18 +1,17 @@
-# CarerView - Daily Functional Assessment and Observation System
+# CarerView - Daily functional assessment system made easy!
 
-For family and professional caregivers to record daily observations uting ADA and OT-aligned ADL & IADL categories.
+For family and professional caregivers to record daily observations using ADA and OT-aligned categories.
 
 ## Features
 
 ### For Caregivers
-- **Secure Token Access**: Access via private invite links without passwords
 - **Interactive Scoring**: 1-10 sliders with per-question and bulk save options
 - **ADA/OT Definitions**: Accessible tooltips with professional definitions
+- **ADA/OT Categories and Questions**: Guiding the Caregiver through daily observations step-by-step.
 - **Export Capabilities**: DOCX and CSV exports for individual observations
 - **Observation History**: View and manage all recorded observations
 
 ### For Administrators
-- **Token Management**: Generate and manage secure access tokens
 - **Aggregate Analytics**: View system-wide statistics and trends
 - **Data Oversight**: Monitor caregiver activity and observation patterns
 
@@ -29,7 +28,6 @@ For family and professional caregivers to record daily observations uting ADA an
 
 All data is stored in Supabase with proper RLS policies:
 
-- `access_tokens` - Token-based access management
 - `legend` - Score meanings (0-10 scale)
 - `categories` - ADL/IADL categories with definitions
 - `questions` - Assessment questions linked to categories
@@ -38,27 +36,16 @@ All data is stored in Supabase with proper RLS policies:
 
 ## Security Model
 
-- **No Authentication**: Uses secure token-based access only
 - **Row Level Security**: All data isolated by token_id
 - **Token Hashing**: Tokens are hashed before storage
 - **Role-Based Access**: Separate permissions for admins and caregivers
 
 ## Getting Started
 
-1. **Setup Supabase**: Click "Connect to Supabase" and run the migrations
-2. **Environment Variables**: Configure your Supabase URL and keys
-
-
-
-
-
-3. **Generate Tokens**: Create invite links for caregivers and administrators
-4. **Setup Categories**: Categories and questions are managed through the database
-
-## Access URLs
-
-- **Administrators**: `/admin?token=your_admin_token`
-- **Caregivers**: `/caregiver?token=your_caregiver_token`
+1. **Setup Supabase**: COMPLETED
+2. **Environment Variables**: COMPLETED
+3. **Setup Categories**: COMPLETED
+4. **Setup Questions**: COMPLETED
 
 ## Development
 
@@ -69,10 +56,8 @@ npm run build  # Build for production
 
 ## Deployment
 
-The application is configured for Netlify deployment with:
+The application is Bolt publishing for MVP deployment with:
 - Automatic Supabase integration
-- Serverless functions for token validation
 - Environment variable management
-- Custom domain support
 
-Built with ❤️ for professional caregiving assessment.
+Built with ❤️ for family and professional caregiving assessment.
