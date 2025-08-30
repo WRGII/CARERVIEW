@@ -19,7 +19,9 @@ export function useAuth() {
   const [user, setUser] = useState<any>(null)           // Supabase session.user
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
-  const ADMIN_EMAIL = 'william.griffith@grifii.com'
+
+  // Make admin comparison case-insensitive to avoid false negatives
+  const ADMIN_EMAIL = 'william.griffith@grifii.com'.toLowerCase()
 
   async function upsertProfile(userId: string, email: string | null) {
     const { data, error } = await supabase
@@ -82,8 +84,9 @@ export function useAuth() {
       const prof = await upsertProfile(userId, emailAddr)
       setProfile(prof)
 
-      // email-based guard avoids race with DB trigger updating role
-      setIsAdmin(emailAddr === ADMIN_EMAIL)
+      // Email-based guard avoids race with DB trigger updating role.
+      // Compare in lower-case to prevent casing issues.
+      setIsAdmin((emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
     } catch (e: any) {
       console.error(e)
       setError(e.message ?? 'Failed to load auth/profile')
