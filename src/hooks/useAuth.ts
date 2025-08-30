@@ -3,85 +3,6 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 type Role = 'admin' | 'caregiver'
-export type Profile = {
-  id: string
-  display_name: string | null
-  role: Role
-  disabled: boolean
-}
-
-export function useAuth() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-
-  // Single loader that we can call on mount and on every auth change
-  const load = async (session: any | null) => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const u = session?.user ?? null
-      setUser(u)
-
-      if (!u) {
-        setProfile(null)
-        return
-      }
-
-      // profiles.id == auth.users.id (NOT user_id)
-      const { data, error: pErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', u.id)
-        .single()
-
-      if (pErr) throw pErr
-      setProfile(data as Profile)
-    } catch (e: any) {
-      setError(e?.message || 'Auth error')
-      setProfile(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    let active = true
-
-    // Initial session load
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!active) return
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-      load(data.session)
-    })
-
-    // Listen for sign-in / sign-out / token refresh and reload profile
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return
-      load(session)
-    })
-
-    return () => {
-      active = false
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  return { loading, error, user, profile }
-}
-// src/hooks/useAuth.ts
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-
-type Role = 'admin' | 'caregiver'
 
 export type Profile = {
   id: string              // mirrors auth.users.id
@@ -111,7 +32,7 @@ export function useAuth() {
     if (error) throw error
 
     if (!data) {
-      // Insert default caregiver profile (DB trigger will enforce admin for ADMIN_EMAIL)
+      // Insert default caregiver profile (DB trigger enforces admin for ADMIN_EMAIL)
       const insert = {
         id: userId,
         email,
@@ -158,4 +79,48 @@ export function useAuth() {
       }
 
       const userId: string = nextUser.id
-      const email: string
+      const email: string | null = nextUser.email ?? null
+
+      const prof = await upsertProfile(userId, email)
+      setProfile(prof)
+
+      // Frontend guard: compute admin by email (DB trigger already enforces role)
+      const admin = email === ADMIN_EMAIL
+      setIsAdmin(admin)
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message ?? 'Failed to load auth/profile')
+      setProfile(null)
+      setIsAdmin(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    let active = true
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
+      load(data.session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return
+      load(session)
+    })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const role: Role = isAdmin ? 'admin' : (profile?.role ?? 'caregiver')
+  const email: string | null = profile?.email ?? user?.email ?? null
+  const userId: string | null = user?.id ?? null
+
+  return { loading, error, user, userId, email, profile, role, isAdmin }
+}
