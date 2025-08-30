@@ -1,7 +1,7 @@
 // src/pages/AdminPage.tsx
 import React from 'react'
 import { useAuth } from '../hooks/useAuth'
-import AggregateData from '../components/admin/AggregateData'
+import { AggregateData } from '../components/admin/AggregateData' // <-- named import
 
 export default function AdminPage() {
   const { user, isAdmin, loading, error } = useAuth()
