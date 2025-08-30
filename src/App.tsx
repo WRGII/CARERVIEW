@@ -59,3 +59,63 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+// src/App.tsx
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useAuth } from './hooks/useAuth'
+
+// Use default imports to avoid named/default drift
+import LandingPage from './pages/LandingPage'
+import AdminPage from './pages/AdminPage'
+import CaregiverPage from './pages/CaregiverPage'
+import ResetPassword from './pages/ResetPassword'
+
+const queryClient = new QueryClient()
+
+function AdminGuard({ children }: { children: React.ReactElement }) {
+  const { loading, user, profile } = useAuth()
+  if (loading) return <div className="p-6">Loading…</div>
+  if (!user || !profile) return <Navigate to="/" replace />
+  if (profile.role !== 'admin') return <Navigate to="/caregiver" replace />
+  return children
+}
+
+function CaregiverGuard({ children }: { children: React.ReactElement }) {
+  const { loading, user, profile } = useAuth()
+  if (loading) return <div className="p-6">Loading…</div>
+  if (!user || !profile) return <Navigate to="/" replace />
+  if (profile.disabled) return <div className="p-6 text-red-600">Account disabled.</div>
+  return children
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <AdminPage />
+              </AdminGuard>
+            }
+          />
+          <Route
+            path="/caregiver"
+            element={
+              <CaregiverGuard>
+                <CaregiverPage />
+              </CaregiverGuard>
+            }
+          />
+          {/* Place before the wildcard */}
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  )
+}
