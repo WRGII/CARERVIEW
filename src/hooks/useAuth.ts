@@ -79,13 +79,13 @@ export function useAuth() {
       }
 
       const userId: string = nextUser.id
-      const email: string | null = nextUser.email ?? null
+      const emailAddr: string | null = nextUser.email ?? null
 
-      const prof = await upsertProfile(userId, email)
+      const prof = await upsertProfile(userId, emailAddr)
       setProfile(prof)
 
       // Frontend guard: compute admin by email (DB trigger already enforces role)
-      const admin = email === ADMIN_EMAIL
+      const admin = emailAddr === ADMIN_EMAIL
       setIsAdmin(admin)
     } catch (e: any) {
       console.error(e)
@@ -119,8 +119,8 @@ export function useAuth() {
   }, [])
 
   const role: Role = isAdmin ? 'admin' : (profile?.role ?? 'caregiver')
-  const email: string | null = profile?.email ?? user?.email ?? null
+  const userEmail: string | null = profile?.email ?? user?.email ?? null
   const userId: string | null = user?.id ?? null
 
-  return { loading, error, user, userId, email, profile, role, isAdmin }
+  return { loading, error, user, userId, email: userEmail, profile, role, isAdmin }
 }
