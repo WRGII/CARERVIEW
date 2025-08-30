@@ -6,7 +6,7 @@ type Role = 'admin' | 'caregiver'
 
 export type Profile = {
   id: string              // mirrors auth.users.id
-  email: string | null    // stored for easy checks
+  email: string | null
   display_name: string | null
   role: Role
   disabled: boolean
@@ -22,17 +22,15 @@ export function useAuth() {
   const ADMIN_EMAIL = 'william.griffith@grifii.com'
 
   async function upsertProfile(userId: string, email: string | null) {
-    // Try to fetch profile by id (your profiles.id = auth.users.id)
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', userId) // profiles.id == auth.users.id in your schema
       .maybeSingle()
 
     if (error) throw error
 
     if (!data) {
-      // Insert default caregiver profile (DB trigger enforces admin for ADMIN_EMAIL)
       const insert = {
         id: userId,
         email,
@@ -49,7 +47,7 @@ export function useAuth() {
       return created as Profile
     }
 
-    // Keep email in sync if it changed
+    // keep email in sync
     if (email && data.email !== email) {
       const { data: updated, error: updErr } = await supabase
         .from('profiles')
@@ -66,7 +64,7 @@ export function useAuth() {
 
   async function load(session: any) {
     try {
-      setLoading(true)
+      // IMPORTANT: do NOT setLoading(true) here; we control loading around the subscription
       setError(null)
 
       const nextUser = session?.user ?? null
@@ -84,32 +82,28 @@ export function useAuth() {
       const prof = await upsertProfile(userId, emailAddr)
       setProfile(prof)
 
-      // Frontend guard: compute admin by email (DB trigger already enforces role)
-      const admin = emailAddr === ADMIN_EMAIL
-      setIsAdmin(admin)
+      // email-based guard avoids race with DB trigger updating role
+      setIsAdmin(emailAddr === ADMIN_EMAIL)
     } catch (e: any) {
       console.error(e)
       setError(e.message ?? 'Failed to load auth/profile')
       setProfile(null)
       setIsAdmin(false)
-    } finally {
-      setLoading(false)
     }
   }
 
   useEffect(() => {
     let active = true
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return
-      load(data.session)
-    })
+    // Keep loading true until INITIAL_SESSION (or first auth event) is processed
+    setLoading(true)
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!active) return
-      load(session)
+      await load(session)
+      // first event (including INITIAL_SESSION) will flip loading off
+      setLoading(false)
     })
 
     return () => {
