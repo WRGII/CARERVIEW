@@ -19,10 +19,13 @@ export const LandingPage: React.FC = () => {
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
 
-  const routeByEmail = (userEmail: string | null | undefined) => {
+  const routeByEmail = (userEmail: string) => {
     const em = (userEmail || '').toLowerCase()
-    if (em === ADMIN_EMAIL) navigate('/admin', { replace: true })
-    else navigate('/caregiver', { replace: true })
+    if (em === ADMIN_EMAIL.toLowerCase()) {
+      navigate('/admin', { replace: true })
+    } else {
+      navigate('/caregiver', { replace: true })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +36,6 @@ export const LandingPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        // 1) create account
         const { error: signUpErr } = await supabase.auth.signUp({
           email,
           password,
@@ -41,19 +43,23 @@ export const LandingPage: React.FC = () => {
         })
         if (signUpErr) throw signUpErr
 
-        // 2) immediately sign in (your MVP allows auto-login)
-        const { data: signInData, error: siErr } = await supabase.auth.signInWithPassword({
+        const { error: siErr } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (siErr) throw siErr
 
-        // 3) route by email (no DB role fetch, avoids race)
-        routeByEmail(signInData.user?.email)
+        // ✅ Use the typed email state for routing
+        routeByEmail(email)
       } else {
-        const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
+        const { error: siErr } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
         if (siErr) throw siErr
-        routeByEmail(data.user?.email)
+
+        // ✅ Use the typed email state for routing
+        routeByEmail(email)
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed')
