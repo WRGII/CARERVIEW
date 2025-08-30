@@ -1,25 +1,15 @@
 // src/pages/LandingPage.tsx
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 
-type ProfileRow = { role?: 'admin' | 'caregiver' | null }
-
-async function fetchProfileRoleWithRetry(userId: string, tries = 6, delayMs = 300): Promise<'admin' | 'caregiver' | null> {
-  for (let i = 0; i < tries; i++) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)           // profiles.id == auth.users.id
-      .single<ProfileRow>()
-    if (!error && data) return (data.role ?? null) as any
-    await new Promise(res => setTimeout(res, delayMs))
-  }
-  return null
-}
+const ADMIN_EMAIL = 'william.griffith@grifii.com'
 
 export const LandingPage: React.FC = () => {
+  const navigate = useNavigate()
+
   const [isSignUp, setIsSignUp] = useState(true)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -29,6 +19,12 @@ export const LandingPage: React.FC = () => {
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
 
+  const routeByEmail = (userEmail: string | null | undefined) => {
+    const em = (userEmail || '').toLowerCase()
+    if (em === ADMIN_EMAIL) navigate('/admin', { replace: true })
+    else navigate('/caregiver', { replace: true })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -37,6 +33,7 @@ export const LandingPage: React.FC = () => {
 
     try {
       if (isSignUp) {
+        // 1) create account
         const { error: signUpErr } = await supabase.auth.signUp({
           email,
           password,
@@ -44,23 +41,19 @@ export const LandingPage: React.FC = () => {
         })
         if (signUpErr) throw signUpErr
 
+        // 2) immediately sign in (your MVP allows auto-login)
         const { data: signInData, error: siErr } = await supabase.auth.signInWithPassword({
-          email, password,
+          email,
+          password,
         })
         if (siErr) throw siErr
-        const u = signInData.user
-        if (!u) throw new Error('No user returned after sign in')
 
-        const role = (await fetchProfileRoleWithRetry(u.id)) ?? 'caregiver'
-        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
+        // 3) route by email (no DB role fetch, avoids race)
+        routeByEmail(signInData.user?.email)
       } else {
         const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
         if (siErr) throw siErr
-        const u = data.user
-        if (!u) throw new Error('No user returned after sign in')
-
-        const role = (await fetchProfileRoleWithRetry(u.id)) ?? 'caregiver'
-        window.location.href = role === 'admin' ? '/admin' : '/caregiver'
+        routeByEmail(data.user?.email)
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed')
@@ -69,7 +62,6 @@ export const LandingPage: React.FC = () => {
     }
   }
 
-  // NEW: send reset email
   const handleForgotPassword = async () => {
     setError(null)
     setInfo(null)
@@ -81,7 +73,6 @@ export const LandingPage: React.FC = () => {
 
     try {
       setSendingReset(true)
-      // Use the current origin for the redirect; make sure Supabase “Site URL” matches this host
       const redirectTo = `${window.location.origin}/reset-password`
       const { error: rErr } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
       if (rErr) throw rErr
