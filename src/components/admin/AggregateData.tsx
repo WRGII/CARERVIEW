@@ -23,10 +23,10 @@ export const AggregateData: React.FC = () => {
 
       // Get total active caregivers
       const { count: totalCaregivers } = await supabase
-        .from('access_tokens')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'caregiver')
-        .eq('is_active', true)
+        .eq('disabled', false)
 
       // Get average scores by category
       const { data: avgData, error: avgError } = await supabase
