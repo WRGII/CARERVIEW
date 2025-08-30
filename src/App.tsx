@@ -15,10 +15,10 @@ import ResetPassword from './pages/ResetPassword' // <-- added
 const queryClient = new QueryClient()
 
 function AdminGuard({ children }: { children: JSX.Element }) {
-  const { loading, user, profile } = useAuth()
+  const { loading, user, isAdmin } = useAuth()
   if (loading) return <div className="p-6">Loading…</div>
-  if (!user || !profile) return <Navigate to="/" replace />
-  if (profile.role !== 'admin') return <Navigate to="/caregiver" replace />
+  if (!user) return <Navigate to="/" replace />
+  if (!isAdmin) return <Navigate to="/caregiver" replace />
   return children
 }
 
