@@ -1,3 +1,4 @@
+```typescript
 import React from 'react'
 import { useObservation } from '../../hooks/useObservations'
 import { Card, CardContent, CardHeader } from '../ui/Card'
@@ -177,8 +178,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     {category.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    category.type === 'ADL' 
-                      ? 'bg-blue-100 text-blue-800' 
+                    category.type === 'ADL'
+                      ? 'bg-blue-100 text-blue-800'
                       : 'bg-green-100 text-green-800'
                   }`}>
                     {category.type}
@@ -197,10 +198,10 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className={`inline-flex items-center justify-center w-12 h-8 rounded-lg text-sm font-semibold ${
-                          response.score >= 7 
-                            ? 'bg-green-100 text-green-800' 
-                            : response.score >= 4 
-                            ? 'bg-yellow-100 text-yellow-800' 
+                          response.score >= 7
+                            ? 'bg-green-100 text-green-800'
+                            : response.score >= 4
+                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
                           {response.score}
@@ -228,3 +229,4 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     </div>
   )
 }
+```
