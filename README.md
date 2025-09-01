@@ -1,6 +1,6 @@
-# CarerView - Daily functional assessment system made easy!
+# CarerView - Daily functional assessment system easy!
 
-For family and professional caregivers to record daily observations using ADA and OT-aligned categories.
+For family and professional caregivers to record daily observations using ADA and OT categories.
 
 ## Features
 
@@ -37,7 +37,6 @@ All data is stored in Supabase with proper RLS policies:
 ## Security Model
 
 - **Row Level Security**: All data isolated by token_id
-- **Token Hashing**: Tokens are hashed before storage
 - **Role-Based Access**: Separate permissions for admins and caregivers
 
 ## Getting Started
