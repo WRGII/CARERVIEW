@@ -1,9 +1,9 @@
 // src/pages/LandingPage.tsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/hooks/useProfile';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";   // ✅ fixed import
+import { useAuth } from "../hooks/useAuth";         // ✅ relative path
+import { useProfile } from "../hooks/useProfile";   // ✅ relative path
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -18,10 +18,10 @@ export default function LandingPage() {
     refetch: refetchProfile,
   } = useProfile(user?.id);
 
-  // Simple local form state (adjust/remove if you already have a form)
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState(''); // optional for sign-up
+  // Local form state (for sign-in/up)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   // Once user & profile are known, route based on role
   useEffect(() => {
@@ -29,17 +29,17 @@ export default function LandingPage() {
     if (!user) return;
 
     if (profile?.disabled) {
-      alert('Your account is disabled. Please contact an administrator.');
+      alert("Your account is disabled. Please contact an administrator.");
       return;
     }
 
-    const isAdmin = profile?.role === 'admin';
-    navigate(isAdmin ? '/admin' : '/caregiver', { replace: true });
+    const isAdmin = profile?.role === "admin";
+    navigate(isAdmin ? "/admin" : "/caregiver", { replace: true });
   }, [user, profile, authLoading, profileLoading, navigate]);
 
   // ---- Handlers ----
 
-  // Sign In → fetch profile → route by role
+  // Sign In
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -49,75 +49,69 @@ export default function LandingPage() {
       return;
     }
 
-    // Ensure we have the latest profile for the now-signed-in user
     await refetchProfile();
-
     const { data: sessionUser } = await supabase.auth.getUser();
+
     const { data: p, error: pErr } = await supabase
-      .from('profiles')
-      .select('role, disabled')
-      .eq('id', sessionUser.user?.id)
+      .from("profiles")
+      .select("role, disabled")
+      .eq("id", sessionUser.user?.id)
       .single();
 
-    if (pErr) {
-      console.warn('Profile fetch after sign-in failed:', pErr.message);
-    }
+    if (pErr) console.warn("Profile fetch after sign-in failed:", pErr.message);
 
     if (p?.disabled) {
-      alert('Your account is disabled. Please contact an administrator.');
+      alert("Your account is disabled. Please contact an administrator.");
       return;
     }
 
-    navigate(p?.role === 'admin' ? '/admin' : '/caregiver');
+    navigate(p?.role === "admin" ? "/admin" : "/caregiver");
   };
 
-  // Sign Up → upsert profiles row (if no DB trigger) → route by role (default caregiver)
+  // Sign Up
   const handleSignUp = async () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName || '' } },
+      options: { data: { display_name: displayName || "" } },
     });
     if (error) {
       alert(error.message);
       return;
     }
 
-    // If email confirmations are ON, user may not be logged in yet:
     const { data: sessionUser } = await supabase.auth.getUser();
 
-    // Safety: create profile row if a DB trigger doesn’t do it
     if (sessionUser.user?.id) {
-      const { error: upsertErr } = await supabase.from('profiles').upsert({
+      const { error: upsertErr } = await supabase.from("profiles").upsert({
         id: sessionUser.user.id,
         email,
-        display_name: displayName || '',
-        role: 'caregiver', // DB default is caregiver; setting explicitly is fine
+        display_name: displayName || "",
+        role: "caregiver",
         disabled: false,
       });
-      if (upsertErr) console.warn('profiles upsert warning:', upsertErr.message);
+      if (upsertErr) console.warn("profiles upsert warning:", upsertErr.message);
 
       const { data: p } = await supabase
-        .from('profiles')
-        .select('role, disabled')
-        .eq('id', sessionUser.user.id)
+        .from("profiles")
+        .select("role, disabled")
+        .eq("id", sessionUser.user.id)
         .single();
 
       if (p?.disabled) {
-        alert('Your account is disabled. Please contact an administrator.');
+        alert("Your account is disabled. Please contact an administrator.");
         return;
       }
-      navigate(p?.role === 'admin' ? '/admin' : '/caregiver');
+      navigate(p?.role === "admin" ? "/admin" : "/caregiver");
     } else {
-      // If confirmations are ON
-      alert('Please check your email to confirm your account before signing in.');
+      alert("Please check your email to confirm your account before signing in.");
     }
   };
 
   // ---- UI ----
   return (
     <div className="mx-auto max-w-5xl p-6">
-      {/* Hero / Marketing copy — keep or customize */}
+      {/* Hero / Marketing copy */}
       <section className="text-center mt-8">
         <h1 className="text-3xl md:text-4xl font-bold">
           CarerView — Daily Functional Assessment Made Easy
@@ -154,7 +148,6 @@ export default function LandingPage() {
             autoComplete="current-password"
           />
 
-          {/* Optional: only used during sign-up */}
           <input
             className="w-full border rounded p-2"
             type="text"
@@ -178,20 +171,20 @@ export default function LandingPage() {
           </div>
         </form>
 
-        {/* Optional: password reset link if you have /reset-password configured */}
+        {/* Password reset link */}
         <div className="mt-3">
           <button
             className="text-sm underline"
             onClick={async () => {
               if (!email) {
-                alert('Enter your email above first, then click reset.');
+                alert("Enter your email above first, then click reset.");
                 return;
               }
               const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password`,
               });
               if (error) alert(error.message);
-              else alert('If that email exists, a reset link has been sent.');
+              else alert("If that email exists, a reset link has been sent.");
             }}
           >
             Forgot your password?
@@ -199,7 +192,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Loading hint on first mount (optional) */}
       {(authLoading || profileLoading) && user && (
         <p className="mt-4 text-center text-sm text-slate-500">Checking your access…</p>
       )}
