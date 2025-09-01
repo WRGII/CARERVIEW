@@ -7,6 +7,8 @@ import { Button } from '../components/ui/Button'
 import { ObservationList } from '../components/caregiver/ObservationList'
 import ObservationForm from '../components/caregiver/ObservationForm'
 import { Plus, ArrowLeft } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
+import { exportToDOCX, exportToCSV } from '@/lib/exports'
 
 type ViewMode = 'list' | 'form' | 'view'
 
