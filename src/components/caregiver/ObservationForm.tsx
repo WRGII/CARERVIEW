@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
+import { useProfile } from '../../hooks/useProfile'
 import { Button } from '../ui/Button'
 
 interface ObservationFormProps {
@@ -28,6 +29,7 @@ type Category = {
 
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, loading: authLoading } = useAuth()
+  const { data: profile } = useProfile(user?.id)
   const queryClient = useQueryClient()
   
   const [patientName, setPatientName] = useState('')
@@ -36,75 +38,58 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
   const [dateError, setDateError] = useState('')
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Date validation function
+  // Date validation function (MM/DD/YYYY)
   const validateDate = (dateString: string): boolean => {
     if (!dateString) return false
-    
     const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/
     if (!dateRegex.test(dateString)) return false
-    
     const [month, day, year] = dateString.split('/').map(Number)
     const date = new Date(year, month - 1, day)
-    return date.getFullYear() === year && 
-           date.getMonth() === month - 1 && 
-           date.getDate() === day
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
   }
 
   const handleDateChange = (value: string) => {
     setDateOfObservation(value)
-    if (value && !validateDate(value)) {
-      setDateError('Please enter a valid date in MM/DD/YYYY format')
-    } else {
-      setDateError('')
-    }
+    if (value && !validateDate(value)) setDateError('Please enter a valid date in MM/DD/YYYY format')
+    else setDateError('')
   }
 
-  // Convert MM/DD/YYYY to YYYY-MM-DD for database
+  // Convert MM/DD/YYYY to YYYY-MM-DD for DB
   const formatDateForDB = (dateString: string): string => {
     if (!dateString || !validateDate(dateString)) return ''
     const [month, day, year] = dateString.split('/').map(Number)
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  const {
-  data: categoryQuestions,
-  isLoading,
-  isError,
-  error,
-  refetch,
-} = useQuery({
-  queryKey: ['category-questions', user?.id],   // tie cache to the signed-in user
-  enabled: !authLoading && !!user?.id,          // ✅ DO NOT run until auth is ready
-  staleTime: 5 * 60 * 1000,                     // cache 5 minutes
-  retry: 2,                                     // retry a couple times on transient errors
-  refetchOnWindowFocus: false,                  // avoid surprise refetch loops
-  queryFn: async (): Promise<CategoryQuestion[]> => {
-    // Extra guard (shouldn’t hit if enabled is correct)
-    if (!user?.id) return []
+  // Gate the query on auth readiness to avoid “Loading…” hangs
+  const { data: categoryQuestions, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['category-questions', user?.id],
+    enabled: !authLoading && !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<CategoryQuestion[]> => {
+      if (!user?.id) return []
+      const { data, error } = await supabase
+        .from('v_category_questions')
+        .select('*')
+        .order('type', { ascending: true })
+        .order('category_order', { ascending: true })
+        .order('question_order', { ascending: true })
+      if (error) throw new Error(error.message)
+      return data || []
+    }
+  })
 
-    const { data, error } = await supabase
-      .from('v_category_questions')
-      .select('*')
-      .order('type', { ascending: true })
-      .order('category_order', { ascending: true })
-      .order('question_order', { ascending: true })
-
-    if (error) throw new Error(error.message)
-    return data || []
-  },
-})
-
-
-  // Transform data into categories with questions
+  // Transform into categories with questions
   const categories: Category[] = React.useMemo(() => {
     if (!categoryQuestions) return []
-    
-    const categoryMap = new Map<string, Category>()
-    
+    const map = new Map<string, Category>()
     categoryQuestions.forEach(item => {
-      if (!categoryMap.has(item.category_id)) {
-        categoryMap.set(item.category_id, {
+      if (!map.has(item.category_id)) {
+        map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
           type: item.type,
@@ -112,86 +97,111 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
           questions: []
         })
       }
-      
-      categoryMap.get(item.category_id)!.questions.push({
+      map.get(item.category_id)!.questions.push({
         id: item.question_id,
         text: item.question_text,
         order: item.question_order
       })
     })
-    
-    const result = Array.from(categoryMap.values())
+    const result = Array.from(map.values())
     result.sort((a, b) => a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type))
     result.forEach(cat => cat.questions.sort((a, b) => a.order - b.order))
-    
     return result
   }, [categoryQuestions])
 
   const createObservation = useMutation({
-    mutationFn: async (observationData: any) => {
-      if (!user) throw new Error('User not authenticated')
+    mutationFn: async (observationData: {
+      patientName: string
+      observationDate: string              // YYYY-MM-DD
+      modeOfObservation: 'In Person' | 'Voice Call' | 'Video Call'
+      notes: string
+      answers: Record<string, number | undefined>
+    }) => {
+      if (!user?.id) throw new Error('You must be signed in to save an observation.')
 
-      // Create observation with user.id
-      const { data: observation, error: obsError } = await supabase
+      // Build caregiver identity
+      const caregiver_name =
+        (profile?.display_name || '').trim() || profile?.email || user.email || ''
+      const caregiver_email = profile?.email || user.email || ''
+
+      // IMPORTANT: Insert ONLY columns that exist on observations.
+      // Remove date_of_observation (likely not a column) to avoid 400.
+      const { data: obsRow, error: obsError } = await supabase
         .from('observations')
         .insert({
-          user_id: user.id,
+          user_id: user.id,                                 // ✅ RLS
           patient_name: observationData.patientName || null,
-          observation_date: observationData.observationDate,
-          date_of_observation: observationData.observationDate,
+          observation_date: observationData.observationDate, // ✅ source of truth date
           mode_of_observation: observationData.modeOfObservation,
           notes: observationData.notes || null,
-          caregiver_name: user.profile?.display_name || '',
-          caregiver_email: user.email || ''
+          caregiver_name,
+          caregiver_email
         })
-        .select()
+        .select('id')                                       // return PK
         .single()
 
-      if (obsError) throw obsError
+      if (obsError) {
+        // Surface full PostgREST context for debugging
+        console.error('Create observation error:', obsError)
+        throw new Error(`Create observation failed: ${obsError.message}`)
+      }
+      if (!obsRow?.id) throw new Error('Observation saved but id was not returned.')
 
-      // Create responses for selected scores
+      // Build responses (only selected scores)
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
-        .map(([questionId, score]) => ({
-          observation_id: observation.id,
-          question_id: questionId,
+        .map(([question_id, score]) => ({
+          observation_id: obsRow.id,
+          question_id,
           score: score as number
         }))
 
       if (responses.length > 0) {
-        const { error: resError } = await supabase
-          .from('responses')
-          .insert(responses)
-
-        if (resError) throw resError
+        const { error: resError } = await supabase.from('responses').insert(responses)
+        if (resError) {
+          console.error('Create responses error:', resError)
+          throw new Error(`Create responses failed: ${resError.message}`)
+        }
       }
 
-      return observation
+      return obsRow.id as string
     },
+    onMutate: () => setSaveError(null),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations'] })
       onComplete()
+    },
+    onError: (e: any) => {
+      console.error('CreateObservation failed:', e)
+      setSaveError(e?.message || 'Failed to save observation.')
     }
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setSaveError(null)
+
     if (!dateOfObservation) {
       setDateError('Date of observation is required')
       return
     }
-    
     if (!validateDate(dateOfObservation)) {
       setDateError('Please enter a valid date in MM/DD/YYYY format')
       return
     }
 
     const formattedDate = formatDateForDB(dateOfObservation)
-    
+
+    // Require at least one score
+    const hasAnyScore = Object.values(answers).some(v => typeof v === 'number')
+    if (!hasAnyScore) {
+      setSaveError('Please select at least one score before saving.')
+      return
+    }
+
     createObservation.mutate({
       patientName,
-      observationDate: formattedDate,
+      observationDate: formattedDate,       // YYYY-MM-DD
       modeOfObservation,
       notes,
       answers
@@ -203,38 +213,23 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     setAnswers(prev => ({ ...prev, [questionId]: score }))
   }
 
-  // BEFORE
-// if (isLoading) {
-//   return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions...</div>
-// }
+  if (authLoading || isLoading) {
+    return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
+  }
 
-// AFTER
-if (authLoading || isLoading) {
-  return (
-    <div className="text-slate-500 bg-white border rounded-xl p-4">
-      Loading questions…
-    </div>
-  )
-}
-
-if (isError) {
-  return (
-    <div className="bg-white border rounded-xl p-4">
-      <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
-      <button
-        type="button"
-        onClick={() => refetch()}
-        className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
-      >
-        Try again
-      </button>
-    </div>
-  )
-}
-
-
-  if (error) {
-    return <div className="text-red-700 bg-white border rounded-xl p-4">Error: {error.message}</div>
+  if (isError) {
+    return (
+      <div className="bg-white border rounded-xl p-4">
+        <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
+        >
+          Try again
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -243,9 +238,7 @@ if (isError) {
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
         <div className="grid gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Patient Name
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name</label>
             <input
               value={patientName}
               onChange={(e) => setPatientName(e.target.value)}
@@ -253,7 +246,7 @@ if (isError) {
               placeholder="Enter patient name"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Date of Observation <span className="text-red-500">*</span>
@@ -268,15 +261,11 @@ if (isError) {
               placeholder="MM/DD/YYYY"
               required
             />
-            {dateError && (
-              <p className="text-red-600 text-sm mt-1">{dateError}</p>
-            )}
+            {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Mode of Observation
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Mode of Observation</label>
             <select
               value={modeOfObservation}
               onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
@@ -287,11 +276,9 @@ if (isError) {
               <option value="Video Call">Video Call</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Notes (Optional)
-            </label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Notes (Optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -325,9 +312,7 @@ if (isError) {
                       >
                         <option value="">Select score...</option>
                         {[1,2,3,4,5,6,7,8,9,10].map((n) => (
-                          <option key={n} value={n}>
-                            {n}
-                          </option>
+                          <option key={n} value={n}>{n}</option>
                         ))}
                       </select>
                     </div>
@@ -339,22 +324,22 @@ if (isError) {
         ))}
       </div>
 
+      {/* Action bar */}
       <div className="flex items-center gap-3">
-        <Button
-          type="submit"
-          disabled={createObservation.isPending}
-          variant="primary"
-        >
+        <Button type="submit" disabled={createObservation.isPending} variant="primary">
           {createObservation.isPending ? 'Saving...' : 'Create Observation'}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onComplete}
-        >
+        <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
       </div>
+
+      {/* Inline save error */}
+      {saveError && (
+        <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
     </form>
   )
 }
