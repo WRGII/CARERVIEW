@@ -27,7 +27,7 @@ type Category = {
 }
 
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   
   const [patientName, setPatientName] = useState('')
