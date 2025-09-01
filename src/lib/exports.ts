@@ -1,7 +1,8 @@
+// src/lib/exports.ts
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx'
 import { saveAs } from 'file-saver'
 
-// Define types locally
+// Types aligned to your runtime shapes and tolerant to missing joins
 interface Legend {
   id: string
   score: number
@@ -13,10 +14,10 @@ interface Category {
   id: string
   name: string
   type: 'ADL' | 'IADL'
-  ada_definition: string
-  ot_definition: string
-  sort_order: number
-  created_at: string
+  ada_definition?: string
+  ot_definition?: string
+  sort_order?: number
+  created_at?: string
 }
 
 interface Question {
@@ -24,7 +25,7 @@ interface Question {
   category_id: string
   question_text: string
   sort_order: number
-  created_at: string
+  created_at?: string
 }
 
 interface CategoryWithQuestions extends Category {
@@ -34,16 +35,35 @@ interface CategoryWithQuestions extends Category {
 interface ObservationWithResponses {
   id: string
   user_id: string
-  patient_name: string
-  observation_date: string
-  date_of_observation: string
-  mode_of_observation: 'In Person' | 'Voice Call' | 'Video Call'
-  notes: string
-  caregiver_name: string
-  caregiver_email: string
+  patient_name: string | null
+  observation_date: string // YYYY-MM-DD
+  date_of_observation?: string | null
+  mode_of_observation?: 'In Person' | 'Voice Call' | 'Video Call'
+  notes: string | null
+  caregiver_name: string | null
+  caregiver_email: string | null
   created_at: string
   updated_at: string
-  responses: any[]
+  // Each response may or may not have the joined question/category (RLS, etc.)
+  responses: Array<{
+    id: string
+    observation_id: string
+    question_id: string
+    score: number
+    notes: string | null
+    created_at: string
+    updated_at: string
+    question?: {
+      id: string
+      question_text: string
+      sort_order: number
+      category?: {
+        id: string
+        name: string
+        type: 'ADL' | 'IADL'
+      } | null
+    } | null
+  }>
 }
 
 export const exportToDOCX = async (
@@ -67,7 +87,7 @@ export const exportToDOCX = async (
           ],
           spacing: { after: 400 }
         }),
-        
+
         // Patient Information
         new Paragraph({
           children: [
@@ -104,7 +124,7 @@ export const exportToDOCX = async (
             })
           ]
         }),
-        
+
         // Notes section (if present)
         ...(observation.notes ? [
           new Paragraph({
@@ -121,7 +141,7 @@ export const exportToDOCX = async (
           new Paragraph({
             children: [
               new TextRun({
-                text: observation.notes,
+                text: observation.notes || '',
                 size: 24
               })
             ],
@@ -144,10 +164,11 @@ export const exportToDOCX = async (
 
         // Results by category
         ...categories.flatMap(category => {
-          const categoryResponses = observation.responses.filter(
-            r => r.question.category_id === category.id
+          // ✅ FIX: use the joined category id safely
+          const categoryResponses = (observation.responses || []).filter(
+            r => r.question?.category?.id === category.id
           )
-          
+
           if (categoryResponses.length === 0) return []
 
           return [
@@ -162,7 +183,7 @@ export const exportToDOCX = async (
               ],
               spacing: { before: 300, after: 200 }
             }),
-            
+
             // Create table for this category's responses
             new Table({
               width: {
@@ -202,19 +223,20 @@ export const exportToDOCX = async (
                   ]
                 }),
                 // Data rows
-                ...categoryResponses.map(response => 
+                ...categoryResponses.map(response =>
                   new TableRow({
                     children: [
                       new TableCell({
                         children: [new Paragraph({
-                          children: [new TextRun({ text: response.question.question_text, size: 20 })]
+                          // ✅ FIX: guard missing joins
+                          children: [new TextRun({ text: response.question?.question_text || '(question unavailable)', size: 20 })]
                         })]
                       }),
                       new TableCell({
                         children: [new Paragraph({
-                          children: [new TextRun({ 
-                            text: `${response.score}/10`, 
-                            bold: true, 
+                          children: [new TextRun({
+                            text: `${response.score}/10`,
+                            bold: true,
                             size: 20,
                             color: response.score >= 7 ? '059669' : response.score >= 4 ? 'ea580c' : 'dc2626'
                           })]
@@ -222,8 +244,8 @@ export const exportToDOCX = async (
                       }),
                       new TableCell({
                         children: [new Paragraph({
-                          children: [new TextRun({ 
-                            text: legend.find(l => l.score === response.score)?.description || '',
+                          children: [new TextRun({
+                            text: (legend.find(l => l.score === response.score)?.description) || '',
                             size: 20
                           })]
                         })]
@@ -233,7 +255,7 @@ export const exportToDOCX = async (
                 )
               ]
             }),
-            
+
             new Paragraph({ text: '', spacing: { after: 200 } }) // Spacing after table
           ]
         }),
@@ -250,12 +272,9 @@ export const exportToDOCX = async (
           ],
           spacing: { before: 600, after: 200 }
         }),
-        
+
         new Table({
-          width: {
-            size: 100,
-            type: WidthType.PERCENTAGE,
-          },
+          width: { size: 100, type: WidthType.PERCENTAGE },
           borders: {
             top: { style: BorderStyle.SINGLE, size: 1 },
             bottom: { style: BorderStyle.SINGLE, size: 1 },
@@ -268,15 +287,11 @@ export const exportToDOCX = async (
             new TableRow({
               children: [
                 new TableCell({
-                  children: [new Paragraph({
-                    children: [new TextRun({ text: 'Score', bold: true, size: 22 })]
-                  })],
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Score', bold: true, size: 22 })] })],
                   width: { size: 20, type: WidthType.PERCENTAGE }
                 }),
                 new TableCell({
-                  children: [new Paragraph({
-                    children: [new TextRun({ text: 'Description', bold: true, size: 22 })]
-                  })],
+                  children: [new Paragraph({ children: [new TextRun({ text: 'Description', bold: true, size: 22 })] })],
                   width: { size: 80, type: WidthType.PERCENTAGE }
                 })
               ]
@@ -286,18 +301,16 @@ export const exportToDOCX = async (
                 children: [
                   new TableCell({
                     children: [new Paragraph({
-                      children: [new TextRun({ 
-                        text: item.score.toString(), 
-                        bold: true, 
+                      children: [new TextRun({
+                        text: item.score.toString(),
+                        bold: true,
                         size: 20,
                         color: item.score >= 7 ? '059669' : item.score >= 4 ? 'ea580c' : 'dc2626'
                       })]
                     })]
                   }),
                   new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({ text: item.description, size: 20 })]
-                    })]
+                    children: [new Paragraph({ children: [new TextRun({ text: item.description, size: 20 })] })]
                   })
                 ]
               })
@@ -310,7 +323,7 @@ export const exportToDOCX = async (
 
   const buffer = await Packer.toBuffer(doc)
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
-  const fileName = `observation-${observation.patient_name?.replace(/[^a-zA-Z0-9]/g, '_') || 'unnamed'}-${observation.observation_date}.docx`
+  const fileName = `observation-${(observation.patient_name || 'unnamed').replace(/[^a-zA-Z0-9]/g, '_')}-${observation.observation_date}.docx`
   saveAs(blob, fileName)
 }
 
@@ -319,15 +332,12 @@ export const exportToCSV = async (
   categories: CategoryWithQuestions[],
   legend: Legend[]
 ) => {
-  // Helper function to escape CSV values
-  const escapeCSV = (value: string): string => {
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      return `"${value.replace(/"/g, '""')}"`
-    }
-    return value
+  // Helper to escape CSV values
+  const escapeCSV = (value: unknown): string => {
+    const s = (value ?? '').toString()
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
   }
 
-  // CSV Header
   const headers = [
     'Patient Name',
     'Observation Date',
@@ -339,27 +349,25 @@ export const exportToCSV = async (
     'Notes'
   ]
 
-  // CSV Rows
   const rows: string[][] = []
 
-  // Add observation info and responses
-  observation.responses.forEach(response => {
-    const category = response.question.category
+  // Add observation info and responses (null-safe joins)
+  ;(observation.responses || []).forEach(response => {
+    const category = response.question?.category
     const legendDescription = legend.find(l => l.score === response.score)?.description || ''
-    
+
     rows.push([
       observation.patient_name || 'Unnamed Patient',
       observation.observation_date,
-      category.name,
-      category.type,
-      response.question.question_text,
-      response.score.toString(),
+      category?.name || '',
+      category?.type || '',
+      response.question?.question_text || '',
+      response.score?.toString() || '',
       legendDescription,
       response.notes || ''
     ])
   })
 
-  // If no responses, add at least the observation info
   if (rows.length === 0) {
     rows.push([
       observation.patient_name || 'Unnamed Patient',
@@ -373,17 +381,13 @@ export const exportToCSV = async (
     ])
   }
 
-  // Build CSV content
   const csvContent = [
-    // Add metadata rows
     ['CarerView Observation Export'],
     ['Generated:', new Date().toLocaleString()],
     [''],
     ['Observation Notes:', observation.notes || 'None'],
     [''],
-    // Add headers
     headers,
-    // Add data rows
     ...rows,
     [''],
     ['Scoring Legend:'],
@@ -393,8 +397,7 @@ export const exportToCSV = async (
     .map(row => row.map(escapeCSV).join(','))
     .join('\n')
 
-  // Create and download file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const fileName = `observation-${observation.patient_name?.replace(/[^a-zA-Z0-9]/g, '_') || 'unnamed'}-${observation.observation_date}.csv`
+  const fileName = `observation-${(observation.patient_name || 'unnamed').replace(/[^a-zA-Z0-9]/g, '_')}-${observation.observation_date}.csv`
   saveAs(blob, fileName)
 }
