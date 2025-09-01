@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 
-export const LandingPage: React.FC = () => {
+export default function LandingPage() {
   const navigate = useNavigate()
 
   const [isSignUp, setIsSignUp] = useState(true)
@@ -172,7 +172,7 @@ export const LandingPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card>
+        <Card>
             <CardContent>
               <div className="flex items-center gap-3 mb-2">
                 <FileText className="w-5 h-5 text-blue-600" />
@@ -288,5 +288,3 @@ export const LandingPage: React.FC = () => {
     </div>
   )
 }
-
-export default LandingPage
