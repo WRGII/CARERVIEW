@@ -1,4 +1,3 @@
-```typescript
 import React from 'react'
 import { useObservation } from '../../hooks/useObservations'
 import { Card, CardContent, CardHeader } from '../ui/Card'
@@ -229,4 +228,3 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     </div>
   )
 }
-```
