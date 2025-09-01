@@ -5,7 +5,7 @@ import { Button } from '../ui/Button'
 import { Loading } from '../ui/Loading'
 import { ErrorMessage } from '../ui/ErrorMessage'
 import { formatDate } from '../../lib/utils'
-import { ArrowLeft, User, Calendar, Phone, Mail, FileText } from 'lucide-react'
+import { ArrowLeft, User, Calendar, Phone, FileText } from 'lucide-react'
 
 interface ViewObservationProps {
   observationId: string
