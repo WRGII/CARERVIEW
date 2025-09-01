@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Activity, LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import type { AuthUser } from '../../lib/auth'
@@ -11,12 +12,22 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
+  const navigate = useNavigate()
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut()
-      window.location.href = '/'
-    } catch (error) {
-      console.error('Sign out error:', error)
+    } catch (err) {
+      console.error('Sign out error:', err)
+    } finally {
+      // Try router navigation
+      navigate('/', { replace: true })
+      // Fallback: force hard reload to LandingPage
+      setTimeout(() => {
+        if (window.location.pathname !== '/') {
+          window.location.assign('/')
+        }
+      }, 50)
     }
   }
 
