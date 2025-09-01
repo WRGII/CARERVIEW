@@ -142,7 +142,6 @@ export default function CaregiverPage() {
     alert(e?.message || 'Failed to export observation.')
   }
 }
-
   
   return (
     // pass both user + profile to Layout
