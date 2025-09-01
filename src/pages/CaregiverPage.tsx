@@ -81,6 +81,69 @@ export default function CaregiverPage() {
     }
   }
 
+  const handleExportObservation = async (observationId: string, format: 'docx' | 'csv') => {
+  try {
+    // 1) Fetch observation + nested responses + joins
+    const { data: obs, error: obsErr } = await supabase
+      .from('observations')
+      .select(`
+        id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
+        responses:responses (
+          id, observation_id, question_id, score, notes, created_at, updated_at,
+          question:questions (
+            id, question_text, sort_order,
+            category:categories ( id, name, type )
+          )
+        )
+      `)
+      .eq('id', observationId)
+      .single()
+
+    if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
+
+    // 2) Fetch legend
+    const { data: legend, error: legErr } = await supabase
+      .from('legend')
+      .select('*')
+      .order('score', { ascending: true })
+
+    if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
+
+    // 3) Build categories-with-questions
+    const responses = obs?.responses ?? []
+    const catMap = new Map<string, { id: string; name: string; type: 'ADL' | 'IADL'; questions: any[] }>()
+
+    for (const r of responses) {
+      const c = r.question.category
+      if (!c) continue
+      if (!catMap.has(c.id)) {
+        catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] })
+      }
+      catMap.get(c.id)!.questions.push({
+        id: r.question.id,
+        category_id: c.id,
+        question_text: r.question.question_text,
+        sort_order: r.question.sort_order,
+      })
+    }
+
+    const categories = Array.from(catMap.values())
+    categories.forEach(cat => cat.questions.sort((a, b) => a.sort_order - b.sort_order))
+    categories.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)))
+
+    // 4) Trigger the correct exporter
+    if (format === 'docx') {
+      await exportToDOCX(obs as any, categories as any, legend as any)
+    } else {
+      await exportToCSV(obs as any, categories as any, legend as any)
+    }
+  } catch (e: any) {
+    console.error('Export failed:', e)
+    alert(e?.message || 'Failed to export observation.')
+  }
+}
+
+  
   return (
     // pass both user + profile to Layout
     <Layout title="Caregiver Dashboard" user={{ ...user, profile }}>
