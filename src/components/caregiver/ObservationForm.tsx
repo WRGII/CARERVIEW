@@ -203,9 +203,35 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     setAnswers(prev => ({ ...prev, [questionId]: score }))
   }
 
-  if (isLoading) {
-    return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions...</div>
-  }
+  // BEFORE
+// if (isLoading) {
+//   return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions...</div>
+// }
+
+// AFTER
+if (authLoading || isLoading) {
+  return (
+    <div className="text-slate-500 bg-white border rounded-xl p-4">
+      Loading questions…
+    </div>
+  )
+}
+
+if (isError) {
+  return (
+    <div className="bg-white border rounded-xl p-4">
+      <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
+      <button
+        type="button"
+        onClick={() => refetch()}
+        className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+
 
   if (error) {
     return <div className="text-red-700 bg-white border rounded-xl p-4">Error: {error.message}</div>
