@@ -44,6 +44,7 @@ export default function LandingPage() {
         .select('role, disabled')
         .eq('id', user.id)
         .single()
+
       if (prof2?.disabled) {
         await supabase.auth.signOut()
         navigate('/', { replace: true })
@@ -76,22 +77,14 @@ export default function LandingPage() {
         })
         if (signUpErr) throw signUpErr
 
-        const { error: siErr } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        const { error: siErr } = await supabase.auth.signInWithPassword({ email, password })
         if (siErr) throw siErr
 
-        // route by role (creates profile if missing)
         await routeByRole()
       } else {
-        const { error: siErr } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        const { error: siErr } = await supabase.auth.signInWithPassword({ email, password })
         if (siErr) throw siErr
 
-        // route by role
         await routeByRole()
       }
     } catch (err: any) {
@@ -108,7 +101,6 @@ export default function LandingPage() {
     }
     setSendingReset(true)
     setError(null)
-    setInfo(null)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -172,7 +164,7 @@ export default function LandingPage() {
             </CardContent>
           </Card>
 
-        <Card>
+          <Card>
             <CardContent>
               <div className="flex items-center gap-3 mb-2">
                 <FileText className="w-5 h-5 text-blue-600" />
