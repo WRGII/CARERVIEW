@@ -30,8 +30,9 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     return <ErrorMessage message="Observation not found" />
   }
 
-  // Group responses by category
-  const categorizedResponses = React.useMemo(() => {
+  if (!observation.responses) {
+    var categorizedResponses = []
+  } else {
     const categoryMap = new Map<string, {
       id: string
       name: string
@@ -83,8 +84,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       category.responses.sort((a, b) => a.question.sort_order - b.question.sort_order)
     })
 
-    return categories
-  }, [observation.responses])
+    var categorizedResponses = categories
+  }
 
   return (
     <div className="space-y-6">
