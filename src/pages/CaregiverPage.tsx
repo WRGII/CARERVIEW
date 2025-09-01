@@ -8,8 +8,10 @@ import { Button } from '../components/ui/Button'
 import { ObservationList } from '../components/caregiver/ObservationList'
 import ObservationForm from '../components/caregiver/ObservationForm'
 import { Plus, ArrowLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
-import { exportToDOCX, exportToCSV } from '@/lib/exports'
+
+// ✅ use relative paths instead of "@/..."
+import { supabase } from '../lib/supabaseClient'
+import { exportToDOCX, exportToCSV } from '../lib/exports'
 
 type ViewMode = 'list' | 'form' | 'view'
 
@@ -28,7 +30,6 @@ export default function CaregiverPage() {
     setViewMode('view')
   }
 
-  // ✅ Single, real export handler
   const handleExportObservation = async (observationId: string, format: 'docx' | 'csv') => {
     try {
       // 1) Fetch observation + nested responses + joins
@@ -57,7 +58,7 @@ export default function CaregiverPage() {
 
       if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
 
-      // 3) Build categories-with-questions (shape expected by exporters)
+      // 3) Build categories-with-questions
       const responses = (obs?.responses ?? []) as Array<{
         question: {
           id: string
@@ -115,7 +116,11 @@ export default function CaregiverPage() {
         return (
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => setViewMode('list')} className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setViewMode('list')}
+                className="flex items-center space-x-2"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to List</span>
               </Button>
@@ -128,7 +133,11 @@ export default function CaregiverPage() {
         return (
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => setViewMode('list')} className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setViewMode('list')}
+                className="flex items-center space-x-2"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to List</span>
               </Button>
@@ -137,7 +146,9 @@ export default function CaregiverPage() {
             {currentObservationId && (
               <div className="bg-white border rounded-xl p-6">
                 <p className="text-slate-600">Viewing observation {currentObservationId}</p>
-                <p className="text-sm text-slate-500 mt-2">View functionality will be implemented in a future update.</p>
+                <p className="text-sm text-slate-500 mt-2">
+                  View functionality will be implemented in a future update.
+                </p>
               </div>
             )}
           </div>
@@ -147,7 +158,11 @@ export default function CaregiverPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
-              <Button variant="primary" onClick={() => setViewMode('form')} className="flex items-center space-x-2">
+              <Button
+                variant="primary"
+                onClick={() => setViewMode('form')}
+                className="flex items-center space-x-2"
+              >
                 <Plus className="w-4 h-4" />
                 <span>New Observation</span>
               </Button>
