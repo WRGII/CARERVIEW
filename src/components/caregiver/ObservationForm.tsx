@@ -67,20 +67,34 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  const { data: categoryQuestions, isLoading, error } = useQuery({
-    queryKey: ['category-questions'],
-    queryFn: async (): Promise<CategoryQuestion[]> => {
-      const { data, error } = await supabase
-        .from('v_category_questions')
-        .select('*')
-        .order('type', { ascending: true })
-        .order('category_order', { ascending: true })
-        .order('question_order', { ascending: true })
+  const {
+  data: categoryQuestions,
+  isLoading,
+  isError,
+  error,
+  refetch,
+} = useQuery({
+  queryKey: ['category-questions', user?.id],   // tie cache to the signed-in user
+  enabled: !authLoading && !!user?.id,          // ✅ DO NOT run until auth is ready
+  staleTime: 5 * 60 * 1000,                     // cache 5 minutes
+  retry: 2,                                     // retry a couple times on transient errors
+  refetchOnWindowFocus: false,                  // avoid surprise refetch loops
+  queryFn: async (): Promise<CategoryQuestion[]> => {
+    // Extra guard (shouldn’t hit if enabled is correct)
+    if (!user?.id) return []
 
-      if (error) throw new Error(error.message)
-      return data || []
-    }
-  })
+    const { data, error } = await supabase
+      .from('v_category_questions')
+      .select('*')
+      .order('type', { ascending: true })
+      .order('category_order', { ascending: true })
+      .order('question_order', { ascending: true })
+
+    if (error) throw new Error(error.message)
+    return data || []
+  },
+})
+
 
   // Transform data into categories with questions
   const categories: Category[] = React.useMemo(() => {
