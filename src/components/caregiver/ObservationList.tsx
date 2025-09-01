@@ -8,7 +8,7 @@ import { Eye, FileText, Download } from 'lucide-react'
 
 interface ObservationListProps {
   onViewObservation: (id: string) => void
-  onExportObservation: (id: string, format: 'pdf' | 'docx') => void
+  onExportObservation: (id: string, format: 'docx' | 'csv') => void
 }
 
 export const ObservationList: React.FC<ObservationListProps> = ({
