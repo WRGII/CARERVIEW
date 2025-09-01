@@ -1,252 +1,208 @@
 // src/pages/LandingPage.tsx
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { Activity, Shield, Database, FileText, ArrowRight } from 'lucide-react'
-import { Card, CardContent } from '../components/ui/Card'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
-const ADMIN_EMAIL = 'william.griffith@grifii.com'
+export default function LandingPage() {
+  const navigate = useNavigate();
 
-export const LandingPage: React.FC = () => {
-  const navigate = useNavigate()
+  // Supabase auth state (use your existing hook)
+  const { user, authLoading } = useAuth();
 
-  const [isSignUp, setIsSignUp] = useState(true)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
-  const [sendingReset, setSendingReset] = useState(false)
+  // Fetch the logged-in user's profile (role/disabled/display_name/email)
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useProfile(user?.id);
 
-  const routeByEmail = (userEmail: string) => {
-    const em = (userEmail || '').toLowerCase()
-    if (em === ADMIN_EMAIL.toLowerCase()) {
-      navigate('/admin', { replace: true })
-    } else {
-      navigate('/caregiver', { replace: true })
+  // Simple local form state (adjust/remove if you already have a form)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState(''); // optional for sign-up
+
+  // Once user & profile are known, route based on role
+  useEffect(() => {
+    if (authLoading || profileLoading) return;
+    if (!user) return;
+
+    if (profile?.disabled) {
+      alert('Your account is disabled. Please contact an administrator.');
+      return;
     }
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setInfo(null)
+    const isAdmin = profile?.role === 'admin';
+    navigate(isAdmin ? '/admin' : '/caregiver', { replace: true });
+  }, [user, profile, authLoading, profileLoading, navigate]);
 
-    try {
-      if (isSignUp) {
-        const { error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { display_name: name } },
-        })
-        if (signUpErr) throw signUpErr
+  // ---- Handlers ----
 
-        const { error: siErr } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (siErr) throw siErr
+  // Sign In → fetch profile → route by role
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        // ✅ Use the typed email state for routing
-        routeByEmail(email)
-      } else {
-        const { error: siErr } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (siErr) throw siErr
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-        // ✅ Use the typed email state for routing
-        routeByEmail(email)
+    // Ensure we have the latest profile for the now-signed-in user
+    await refetchProfile();
+
+    const { data: sessionUser } = await supabase.auth.getUser();
+    const { data: p, error: pErr } = await supabase
+      .from('profiles')
+      .select('role, disabled')
+      .eq('id', sessionUser.user?.id)
+      .single();
+
+    if (pErr) {
+      console.warn('Profile fetch after sign-in failed:', pErr.message);
+    }
+
+    if (p?.disabled) {
+      alert('Your account is disabled. Please contact an administrator.');
+      return;
+    }
+
+    navigate(p?.role === 'admin' ? '/admin' : '/caregiver');
+  };
+
+  // Sign Up → upsert profiles row (if no DB trigger) → route by role (default caregiver)
+  const handleSignUp = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: displayName || '' } },
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // If email confirmations are ON, user may not be logged in yet:
+    const { data: sessionUser } = await supabase.auth.getUser();
+
+    // Safety: create profile row if a DB trigger doesn’t do it
+    if (sessionUser.user?.id) {
+      const { error: upsertErr } = await supabase.from('profiles').upsert({
+        id: sessionUser.user.id,
+        email,
+        display_name: displayName || '',
+        role: 'caregiver', // DB default is caregiver; setting explicitly is fine
+        disabled: false,
+      });
+      if (upsertErr) console.warn('profiles upsert warning:', upsertErr.message);
+
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('role, disabled')
+        .eq('id', sessionUser.user.id)
+        .single();
+
+      if (p?.disabled) {
+        alert('Your account is disabled. Please contact an administrator.');
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed')
-    } finally {
-      setLoading(false)
+      navigate(p?.role === 'admin' ? '/admin' : '/caregiver');
+    } else {
+      // If confirmations are ON
+      alert('Please check your email to confirm your account before signing in.');
     }
-  }
+  };
 
-  const handleForgotPassword = async () => {
-    setError(null)
-    setInfo(null)
-
-    if (!email) {
-      setError('Enter your email above, then click “Forgot your password?”.')
-      return
-    }
-
-    try {
-      setSendingReset(true)
-      const redirectTo = `${window.location.origin}/reset-password`
-      const { error: rErr } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
-      if (rErr) throw rErr
-      setInfo('Password reset email sent. Please check your inbox.')
-    } catch (e: any) {
-      setError(e.message || 'Failed to send password reset email')
-    } finally {
-      setSendingReset(false)
-    }
-  }
-
+  // ---- UI ----
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Hero */}
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Activity className="w-16 h-16 text-blue-600" />
+    <div className="mx-auto max-w-5xl p-6">
+      {/* Hero / Marketing copy — keep or customize */}
+      <section className="text-center mt-8">
+        <h1 className="text-3xl md:text-4xl font-bold">
+          CarerView — Daily Functional Assessment Made Easy
+        </h1>
+        <p className="mt-3 text-slate-700 max-w-2xl mx-auto">
+          For family and professional caregivers to record daily observations across ADA and OT
+          Activities of Daily Living categories using a simple 1–10 scale. Administrators can view
+          system-wide aggregates. Patients do not log in.
+        </p>
+      </section>
+
+      {/* Auth card */}
+      <section className="mt-10 mx-auto max-w-md border rounded-2xl shadow-sm p-6">
+        <h2 className="text-xl font-semibold mb-4">Sign in or create an account</h2>
+
+        <form className="space-y-3" onSubmit={handleSignIn}>
+          <input
+            className="w-full border rounded p-2"
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
+
+          <input
+            className="w-full border rounded p-2"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+
+          {/* Optional: only used during sign-up */}
+          <input
+            className="w-full border rounded p-2"
+            type="text"
+            placeholder="Display name (optional for sign up)"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+
+          <div className="flex gap-3 pt-2">
+            <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">
+              Sign in
+            </button>
+
+            <button
+              type="button"
+              className="px-4 py-2 rounded border"
+              onClick={handleSignUp}
+            >
+              Sign up
+            </button>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">CarerView</h1>
-          <p className="text-xl text-slate-600 mb-6">For family and professional caregivers to record daily observations across ADA and OT Activities of Daily Living categories, </p>
-          <p className="text-lg text-slate-700 max-w-2xl mx-auto">
-            Daily Functional Assessment Made Easy!
-          </p>
+        </form>
+
+        {/* Optional: password reset link if you have /reset-password configured */}
+        <div className="mt-3">
+          <button
+            className="text-sm underline"
+            onClick={async () => {
+              if (!email) {
+                alert('Enter your email above first, then click reset.');
+                return;
+              }
+              const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+              });
+              if (error) alert(error.message);
+              else alert('If that email exists, a reset link has been sent.');
+            }}
+          >
+            Forgot your password?
+          </button>
         </div>
+      </section>
 
-        {/* Feature grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          <Card><CardContent>
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg"><Shield className="w-6 h-6 text-blue-600" /></div>
-              <h3 className="text-lg font-semibold text-slate-900">Secure Access</h3>
-            </div>
-            <p className="text-slate-600">Email and password authentication with role-based access controls.</p>
-          </CardContent></Card>
-
-          <Card><CardContent>
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-green-100 rounded-lg"><Database className="w-6 h-6 text-green-600" /></div>
-              <h3 className="text-lg font-semibold text-slate-900">Database-Driven</h3>
-            </div>
-            <p className="text-slate-600">All categories, questions, and standardized definitions live in secure database with real-time updates.</p>
-          </CardContent></Card>
-
-          <Card><CardContent>
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg"><FileText className="w-6 h-6 text-purple-600" /></div>
-              <h3 className="text-lg font-semibold text-slate-900">Professional Reports</h3>
-            </div>
-            <p className="text-slate-600">Export observations with full details and clean formatting.</p>
-          </CardContent></Card>
-
-          <Card><CardContent>
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="p-3 bg-orange-100 rounded-lg"><Activity className="w-6 h-6 text-orange-600" /></div>
-              <h3 className="text-lg font-semibold text-slate-900">ADA/OT Aligned</h3>
-            </div>
-            <p className="text-slate-600">Purpose-built for ADL & IADL assessments with standardized definitions.</p>
-          </CardContent></Card>
-        </div>
-
-        {/* Auth form */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-            <div className="flex justify-center mb-6">
-              <div className="flex bg-slate-100 rounded-lg p-1">
-                <button
-                  type="button"
-                  onClick={() => { setIsSignUp(true); setError(null); setInfo(null) }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                    isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >Sign Up</button>
-                <button
-                  type="button"
-                  onClick={() => { setIsSignUp(false); setError(null); setInfo(null) }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                    !isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >Sign In</button>
-              </div>
-            </div>
-
-            <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h2>
-            <p className="text-slate-600 mb-6 text-center">
-              {isSignUp ? 'Enter your details to create your account' : 'Sign in to access your dashboard'}
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {isSignUp && (
-                <label className="block text-sm font-semibold text-slate-700">
-                  Display Name
-                  <input
-                    value={name} onChange={(e) => setName(e.target.value)} required
-                    placeholder="Enter your full name"
-                    className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
-                  />
-                </label>
-              )}
-
-              <label className="block text-sm font-semibold text-slate-700">
-                Email Address
-                <input
-                  type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                  placeholder="Enter your email address"
-                  className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
-                />
-              </label>
-
-              <label className="block text-sm font-semibold text-slate-700">
-                Password
-                <input
-                  type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-                  placeholder="Enter your password"
-                  className="mt-2 w-full px-4 py-3.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-slate-50/50 focus:bg-white text-slate-900 placeholder-slate-500"
-                />
-              </label>
-
-              {!isSignUp && (
-                <div className="text-right -mt-2">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={sendingReset}
-                    className="text-sm text-blue-600 hover:underline disabled:opacity-50"
-                  >
-                    {sendingReset ? 'Sending…' : 'Forgot your password?'}
-                  </button>
-                </div>
-              )}
-
-              <button
-                type="submit" disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-lg disabled:opacity-50 transition font-semibold shadow-lg hover:shadow-xl group"
-              >
-                {loading ? (
-                  <span className="inline-flex items-center gap-3">
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {isSignUp ? 'Creating account…' : 'Signing in…'}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-2">
-                    {isSignUp ? 'Create Account' : 'Sign In'}
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                )}
-              </button>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-                  <p className="text-red-800 font-medium">Error</p>
-                  <p className="text-red-700 text-sm mt-1">{error}</p>
-                </div>
-              )}
-
-              {info && (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                  <p className="text-blue-800 text-sm">{info}</p>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      </div>
+      {/* Loading hint on first mount (optional) */}
+      {(authLoading || profileLoading) && user && (
+        <p className="mt-4 text-center text-sm text-slate-500">Checking your access…</p>
+      )}
     </div>
-  )
+  );
 }
-
-export default LandingPage
