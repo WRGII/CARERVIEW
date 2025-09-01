@@ -7,6 +7,7 @@ import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { Button } from '../components/ui/Button'
 import { ObservationList } from '../components/caregiver/ObservationList'
 import ObservationForm from '../components/caregiver/ObservationForm'
+import { ViewObservation } from '../components/caregiver/ViewObservation'
 import { Plus, ArrowLeft } from 'lucide-react'
 
 // ✅ use relative paths instead of "@/..."
@@ -131,27 +132,16 @@ export default function CaregiverPage() {
         )
       case 'view':
         return (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setViewMode('list')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to List</span>
-              </Button>
-              <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
+          currentObservationId ? (
+            <ViewObservation
+              observationId={currentObservationId}
+              onBack={() => setViewMode('list')}
+            />
+          ) : (
+            <div className="bg-white border rounded-xl p-6">
+              <p className="text-slate-600">No observation selected</p>
             </div>
-            {currentObservationId && (
-              <div className="bg-white border rounded-xl p-6">
-                <p className="text-slate-600">Viewing observation {currentObservationId}</p>
-                <p className="text-sm text-slate-500 mt-2">
-                  View functionality will be implemented in a future update.
-                </p>
-              </div>
-            )}
-          </div>
+          )
         )
       default:
         return (
