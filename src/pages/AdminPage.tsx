@@ -27,8 +27,20 @@ export default function AdminPage() {
     "Admin";
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/", { replace: true });
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      // Try router navigation
+      navigate("/", { replace: true });
+      // Fallback: force hard reload to LandingPage
+      setTimeout(() => {
+        if (window.location.pathname !== "/") {
+          window.location.assign("/");
+        }
+      }, 50);
+    }
   };
 
   return (
@@ -42,6 +54,7 @@ export default function AdminPage() {
           </span>
         </div>
         <button
+          type="button"
           onClick={handleSignOut}
           className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
         >
