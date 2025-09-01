@@ -177,7 +177,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                   <h3 className="text-lg font-semibold text-slate-900">
                     {category.name}
                   </h3>
-                  <span className={\`px-2 py-1 rounded text-xs font-medium ${
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
                     category.type === 'ADL'
                       ? 'bg-blue-100 text-blue-800'
                       : 'bg-green-100 text-green-800'
@@ -197,7 +197,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={\`inline-flex items-center justify-center w-12 h-8 rounded-lg text-sm font-semibold ${
+                        <span className={`inline-flex items-center justify-center w-12 h-8 rounded-lg text-sm font-semibold ${
                           response.score >= 7
                             ? 'bg-green-100 text-green-800'
                             : response.score >= 4
