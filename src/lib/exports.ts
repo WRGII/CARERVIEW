@@ -51,6 +51,7 @@ interface ObservationWithResponses {
     question_id: string
     score: number
     notes: string | null
+    category_notes?: string | null
     created_at: string
     updated_at: string
     question?: {
@@ -125,12 +126,12 @@ export const exportToDOCX = async (
           ]
         }),
 
-        // Notes section (if present)
+        // Administrative Notes section (if present)
         ...(observation.notes ? [
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Notes',
+                text: 'Administrative Notes',
                 bold: true,
                 size: 28,
                 underline: {}
@@ -171,6 +172,8 @@ export const exportToDOCX = async (
 
           if (categoryResponses.length === 0) return []
 
+          // Get category notes from the first response (they should all be the same for a category)
+          const categoryNotes = categoryResponses.length > 0 ? categoryResponses[0].category_notes : null
           return [
             new Paragraph({
               children: [
@@ -256,6 +259,30 @@ export const exportToDOCX = async (
               ]
             }),
 
+            // Add category notes section if present
+            ...(categoryNotes ? [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${category.name} Category Notes:`,
+                    bold: true,
+                    size: 22,
+                    color: '374151'
+                  })
+                ],
+                spacing: { before: 200, after: 100 }
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: categoryNotes,
+                    size: 20,
+                    color: '4b5563'
+                  })
+                ],
+                spacing: { after: 200 }
+              })
+            ] : []),
             new Paragraph({ text: '', spacing: { after: 200 } }) // Spacing after table
           ]
         }),
@@ -346,7 +373,8 @@ export const exportToCSV = async (
     'Question',
     'Score',
     'Score Description',
-    'Notes'
+    'Question Notes',
+    'Category Notes'
   ]
 
   const rows: string[][] = []
@@ -364,7 +392,8 @@ export const exportToCSV = async (
       response.question?.question_text || '',
       response.score?.toString() || '',
       legendDescription,
-      response.notes || ''
+      response.notes || '',
+      response.category_notes || ''
     ])
   })
 
@@ -377,6 +406,7 @@ export const exportToCSV = async (
       'No responses recorded',
       '',
       '',
+      '',
       observation.notes || ''
     ])
   }
@@ -385,7 +415,7 @@ export const exportToCSV = async (
     ['CarerView Observation Export'],
     ['Generated:', new Date().toLocaleString()],
     [''],
-    ['Observation Notes:', observation.notes || 'None'],
+    ['Administrative Notes:', observation.notes || 'None'],
     [''],
     headers,
     ...rows,

@@ -37,6 +37,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
+  const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
   const [dateError, setDateError] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -116,6 +117,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       modeOfObservation: 'In Person' | 'Voice Call' | 'Video Call'
       notes: string
       answers: Record<string, number | undefined>
+      categoryNotes: Record<string, string>
     }) => {
       if (!user?.id) throw new Error('You must be signed in to save an observation.')
 
@@ -151,8 +153,14 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
         .map(([question_id, score]) => ({
+          // Find which category this question belongs to
+          const categoryQuestion = categoryQuestions?.find(cq => cq.question_id === question_id)
+          const categoryId = categoryQuestion?.category_id
+          const categoryNote = categoryId ? observationData.categoryNotes[categoryId] || '' : ''
+          
           observation_id: obsRow.id,
-          question_id,
+            score: score as number,
+            category_notes: categoryNote
           score: score as number
         }))
 
@@ -204,7 +212,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       observationDate: formattedDate,       // YYYY-MM-DD
       modeOfObservation,
       notes,
-      answers
+      answers,
+      categoryNotes
     })
   }
 
@@ -213,6 +222,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     setAnswers(prev => ({ ...prev, [questionId]: score }))
   }
 
+  const setCategoryNote = (categoryId: string, value: string) => {
+    setCategoryNotes(prev => ({ ...prev, [categoryId]: value }))
+  }
   if (authLoading || isLoading) {
     return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
   }
@@ -278,7 +290,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Notes (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Administrative Notes (Optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -318,6 +330,20 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     </div>
                   </div>
                 ))}
+                
+                {/* Category Notes Section */}
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {category.name} Category Notes (Optional)
+                  </label>
+                  <textarea
+                    value={categoryNotes[category.id] || ''}
+                    onChange={(e) => setCategoryNote(category.id, e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={`Enter notes specific to ${category.name} observations...`}
+                    rows={2}
+                  />
+                </div>
               </div>
             </div>
           </div>
