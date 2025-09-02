@@ -148,9 +148,9 @@ export default function LandingPage() {
             <CardContent>
               <div className="flex items-center gap-3 mb-2">
                 <Shield className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold">Secure & Private</h3>
+                <h3 className="font-semibold">Easy Observation Format</h3>
               </div>
-              <p className="text-slate-600">Only caregivers and admins can access. Patients never log in.</p>
+              <p className="text-slate-600">Simply answer as many or as few appropriate questions for each Obervation.</p>
             </CardContent>
           </Card>
 
