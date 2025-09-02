@@ -276,7 +276,7 @@ export default function LandingPage() {
 
         {/* Footer */}
         <div className="mt-16 text-center text-slate-500 text-sm">
-          <p>© {new Date().getFullYear()} CarerView — All rights reserved.</p>
+          <p>© {new Date().getFullYear()} CarerView App | All rights reserved | a GrifDigi company</p>
         </div>
       </div>
     </div>
