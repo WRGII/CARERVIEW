@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
+import { ScorePicker } from '../ui/ScorePicker'            // <-- NEW
+import { useLegend } from '../../hooks/useLegend'          // <-- NEW
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -31,6 +33,16 @@ type Category = {
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
+
+  // Load legend so we can show tooltips on the score buttons
+  const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
+  const legendMap = React.useMemo(() => {
+    const map: Record<number, string> = {}
+    ;(legend || []).forEach(l => {
+      map[l.score] = l.description
+    })
+    return map
+  }, [legend])
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
@@ -216,23 +228,19 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     })
   }
 
-  const setScore = (questionId: string, value: string) => {
-    const score = value === '' ? undefined : Number(value)
-    setAnswers(prev => ({ ...prev, [questionId]: score }))
-  }
-
   const setCategoryNote = (categoryId: string, value: string) => {
     setCategoryNotes(prev => ({ ...prev, [categoryId]: value }))
   }
 
-  if (authLoading || isLoading) {
+  if (authLoading || isLoading || legendLoading) {
     return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
   }
 
-  if (isError) {
+  if (isError || legendError) {
     return (
       <div className="bg-white border rounded-xl p-4">
-        <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
+        {isError && <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>}
+        {legendError && <p className="text-red-700 mb-2">Error loading score reference</p>}
         <button
           type="button"
           onClick={() => refetch()}
@@ -324,16 +332,13 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                   <div key={question.id} className="grid md:grid-cols-12 items-center gap-3">
                     <div className="md:col-span-9 text-slate-800">{question.text}</div>
                     <div className="md:col-span-3">
-                      <select
-                        value={answers[question.id] ?? ''}
-                        onChange={(e) => setScore(question.id, e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select score...</option>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <option key={n} value={n}>{n}</option>
-                        ))}
-                      </select>
+                      {/* Replaced dropdown with ScorePicker */}
+                      <ScorePicker
+                        value={answers[question.id]}
+                        onChange={(val) => setAnswers(prev => ({ ...prev, [question.id]: val }))}
+                        legendMap={legendMap}
+                        ariaLabel={`Set score for: ${question.text}`}
+                      />
                     </div>
                   </div>
                 ))}
