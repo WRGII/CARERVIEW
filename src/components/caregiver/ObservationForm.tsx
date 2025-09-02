@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
-import { useProfile } from '../../hooks/useProfile'
 import { Button } from '../ui/Button'
 import { useLegend } from '../../hooks/useLegend'
 
@@ -29,8 +28,7 @@ type Category = {
 }
 
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
-  const { user, loading: authLoading } = useAuth()
-  const { data: profile } = useProfile(user?.id)
+  const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
   

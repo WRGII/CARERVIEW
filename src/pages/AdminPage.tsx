@@ -3,13 +3,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import { useProfile } from "../hooks/useProfile";
 import { AggregateData } from "../components/admin/AggregateData"; // named import (kept)
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const { user, loading, error } = useAuth();
-  const { data: profile } = useProfile(user?.id);
+  const { user, profile, loading, error } = useAuth();
 
   if (loading) return <div className="p-6">Loading admin dashboard...</div>;
   if (error || !user)
