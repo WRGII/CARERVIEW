@@ -130,7 +130,7 @@ export default function LandingPage() {
           </h2>
           <p className="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
             For family and professional caregivers to record daily observations across ADA and OT
-            Activities of Daily Living categories using a simple 1–10 scale.
+            Activities of Daily Living categories using a simple 1–5 scale.
           </p>
           <div className="mt-6 flex justify-center">
             <a
