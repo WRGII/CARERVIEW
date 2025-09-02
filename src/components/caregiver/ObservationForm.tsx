@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { useProfile } from '../../hooks/useProfile'
 import { Button } from '../ui/Button'
+import { useLegend } from '../../hooks/useLegend'
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -31,6 +32,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, loading: authLoading } = useAuth()
   const { data: profile } = useProfile(user?.id)
   const queryClient = useQueryClient()
+  const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
   
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
@@ -305,6 +307,56 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
               style={{ minHeight: '200px' }}
             />
           </div>
+        </div>
+      </div>
+
+      {/* Legend Section */}
+      <div className="bg-white border rounded-xl">
+        <div className="px-4 py-3 border-b bg-slate-50">
+          <h3 className="font-semibold text-slate-900">Score Reference</h3>
+        </div>
+        <div className="p-4">
+          {legendLoading ? (
+            <div className="text-slate-500 text-center py-4">Loading score reference...</div>
+          ) : legendError ? (
+            <div className="text-red-600 text-center py-4">Failed to load score reference</div>
+          ) : legend && legend.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Scores 0-5 */}
+              <div className="space-y-2">
+                {legend
+                  .filter(item => item.score <= 5)
+                  .map(item => (
+                    <div key={item.id} className="flex items-center justify-between py-1">
+                      <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-sm font-semibold ${
+                        item.score >= 4 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {item.score}
+                      </span>
+                      <span className="text-slate-700 text-sm flex-1 ml-3">{item.description}</span>
+                    </div>
+                  ))}
+              </div>
+              
+              {/* Right Column: Scores 6-10 */}
+              <div className="space-y-2">
+                {legend
+                  .filter(item => item.score >= 6)
+                  .map(item => (
+                    <div key={item.id} className="flex items-center justify-between py-1">
+                      <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-sm font-semibold ${
+                        item.score >= 7 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {item.score}
+                      </span>
+                      <span className="text-slate-700 text-sm flex-1 ml-3">{item.description}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-slate-500 text-center py-4">No score reference available</div>
+          )}
         </div>
       </div>
 
