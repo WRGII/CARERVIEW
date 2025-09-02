@@ -158,10 +158,10 @@ export default function LandingPage() {
             <CardContent>
               <div className="flex items-center gap-3 mb-2">
                 <Database className="w-5 h-5 text-blue-600" />
-                <h3 className="font-semibold">Structured Data</h3>
+                <h3 className="font-semibold">Structured Formats</h3>
               </div>
               <p className="text-slate-600">
-                Observations captured in consistent categories with 1–10 scoring for longitudinal tracking.
+                Consistent categories and defined questions with 1–10 scoring.
               </p>
             </CardContent>
           </Card>
