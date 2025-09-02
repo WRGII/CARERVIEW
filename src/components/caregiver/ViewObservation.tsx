@@ -147,19 +147,6 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                   <p className="font-medium text-slate-900">{observation.caregiver_name}</p>
                   {observation.caregiver_email && (
                     <p className="text-sm text-slate-500">{observation.caregiver_email}</p>
-                    
-                    {/* Display category notes if any exist */}
-                    {category.responses.length > 0 && category.responses[0].category_notes && (
-                      <div className="mt-4 pt-4 border-t border-slate-200">
-                        <div className="flex items-start space-x-3">
-                          <FileText className="w-4 h-4 text-slate-500 mt-1" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-700 mb-1">{category.name} Category Notes</p>
-                            <p className="text-slate-600 text-sm">{category.responses[0].category_notes}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   )}
                 </div>
               </div>

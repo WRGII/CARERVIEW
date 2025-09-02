@@ -152,17 +152,19 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       // Build responses (only selected scores)
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
-        .map(([question_id, score]) => ({
+        .map(([question_id, score]) => {
           // Find which category this question belongs to
           const categoryQuestion = categoryQuestions?.find(cq => cq.question_id === question_id)
           const categoryId = categoryQuestion?.category_id
           const categoryNote = categoryId ? observationData.categoryNotes[categoryId] || '' : ''
           
-          observation_id: obsRow.id,
+          return {
+            observation_id: obsRow.id,
+            question_id,
             score: score as number,
             category_notes: categoryNote
-          score: score as number
-        }))
+          }
+        })
 
       if (responses.length > 0) {
         const { error: resError } = await supabase.from('responses').insert(responses)
