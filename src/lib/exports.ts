@@ -238,10 +238,10 @@ export const exportToDOCX = async (
                       new TableCell({
                         children: [new Paragraph({
                           children: [new TextRun({
-                            text: `${response.score}/10`,
+                            text: `${response.score}/5`,
                             bold: true,
                             size: 20,
-                            color: response.score >= 7 ? '059669' : response.score >= 4 ? 'ea580c' : 'dc2626'
+                            color: response.score >= 4 ? '059669' : response.score >= 3 ? 'ea580c' : 'dc2626'
                           })]
                         })]
                       }),
@@ -291,13 +291,39 @@ export const exportToDOCX = async (
         new Paragraph({
           children: [
             new TextRun({
+              text: 'CARERVIEW 1-5 ADL SCALE',
+              bold: true,
+              size: 32,
+              color: '1f2937'
+            })
+          ],
+          spacing: { before: 600, after: 400 },
+          alignment: 'center'
+        }),
+
+        // Scale visualization in text form
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: '1 (Total Assistance) → 2 (Constant Shared Effort) → 3 (Independent with Support) → 4 (Independent with Difficulty) → 5 (Fully Independent)',
+              size: 20,
+              color: '374151'
+            })
+          ],
+          spacing: { after: 400 },
+          alignment: 'center'
+        }),
+
+        new Paragraph({
+          children: [
+            new TextRun({
               text: 'Scoring Legend',
               bold: true,
               size: 28,
               underline: {}
             })
           ],
-          spacing: { before: 600, after: 200 }
+          spacing: { before: 200, after: 200 }
         }),
 
         new Table({

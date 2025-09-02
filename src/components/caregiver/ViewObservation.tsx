@@ -6,6 +6,7 @@ import { Loading } from '../ui/Loading'
 import { ErrorMessage } from '../ui/ErrorMessage'
 import { formatDate } from '../../lib/utils'
 import { ArrowLeft, User, Calendar, Phone, FileText } from 'lucide-react'
+import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 
 interface ViewObservationProps {
   observationId: string
@@ -203,10 +204,15 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                             : response.score >= 4
                             ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-red-100 text-red-800'
+                          response.score >= 4
+                            ? 'bg-green-100 text-green-800'
+                            : response.score >= 3
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
                           {response.score}
                         </span>
-                        <span className="text-slate-500 text-sm">/10</span>
+                        <span className="text-slate-500 text-sm">/5</span>
                       </div>
                     </div>
                   ))}
@@ -241,6 +247,9 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Score Legend Display */}
+      <ScoreLegendDisplay />
     </div>
   )
 }
