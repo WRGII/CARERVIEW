@@ -402,20 +402,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     rows={2}
                   />
                 </div>
-                
-                {/* Category Notes Section */}
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {category.name} Category Notes (Optional)
-                  </label>
-                  <textarea
-                    value={categoryNotes[category.id] || ''}
-                    onChange={(e) => setCategoryNote(category.id, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={`Enter notes specific to ${category.name} observations...`}
-                    rows={2}
-                  />
-                </div>
               </div>
             </div>
           </div>
