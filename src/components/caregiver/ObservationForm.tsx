@@ -250,55 +250,59 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="bg-white border rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
-        <div className="grid gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name</label>
-            <input
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter patient name"
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name</label>
+              <input
+                value={patientName}
+                onChange={(e) => setPatientName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter patient name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Date of Observation <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={dateOfObservation}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg border ${
+                  dateError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
+                } focus:outline-none focus:ring-2`}
+                placeholder="MM/DD/YYYY"
+                required
+              />
+              {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Mode of Observation</label>
+              <select
+                value={modeOfObservation}
+                onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="In Person">In Person</option>
+                <option value="Voice Call">Voice Call</option>
+                <option value="Video Call">Video Call</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Date of Observation <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={dateOfObservation}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className={`w-full px-3 py-2 rounded-lg border ${
-                dateError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
-              } focus:outline-none focus:ring-2`}
-              placeholder="MM/DD/YYYY"
-              required
-            />
-            {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Mode of Observation</label>
-            <select
-              value={modeOfObservation}
-              onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="In Person">In Person</option>
-              <option value="Voice Call">Voice Call</option>
-              <option value="Video Call">Video Call</option>
-            </select>
-          </div>
-
-          <div>
+          {/* Right Column */}
+          <div className="flex flex-col">
             <label className="block text-sm font-medium text-slate-700 mb-2">Administrative Notes (Optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full flex-1 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="Enter any notes"
-              rows={3}
+              style={{ minHeight: '200px' }}
             />
           </div>
         </div>
