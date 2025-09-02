@@ -119,12 +119,15 @@ export default function LandingPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Hero */}
         <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+            CarerView
+          </h1>
           <div className="flex items-center justify-center mb-6">
             <Activity className="w-16 h-16 text-blue-600" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-            CarerView — Daily Functional Assessment Made Easy
-          </h1>
+          <h2 className="text-2xl md:text-4xl font-bold tracking-tight text-slate-800 mb-4">
+            Daily Functional Assessment Made Easy
+          </h2>
           <p className="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
             For family and professional caregivers to record daily observations across ADA and OT
             Activities of Daily Living categories using a simple 1–10 scale.
