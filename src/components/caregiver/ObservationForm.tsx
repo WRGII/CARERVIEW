@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
-import { useLegend } from '../../hooks/useLegend'
+import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -31,7 +31,6 @@ type Category = {
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
-  const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
@@ -308,41 +307,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       </div>
 
       {/* Legend Section: dynamic 1–5 */}
-      <div className="bg-white border rounded-xl">
-        <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-900">Score Reference</h3>
-        </div>
-        <div className="p-4">
-          {legendLoading ? (
-            <div className="text-slate-500 text-center py-4">Loading score reference...</div>
-          ) : legendError ? (
-            <div className="text-red-600 text-center py-4">Failed to load score reference</div>
-          ) : legend && legend.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2">
-              {legend
-                .filter(item => item.score >= 1 && item.score <= 5)
-                .sort((a, b) => a.score - b.score)
-                .map(item => (
-                  <div key={item.score} className="flex items-start gap-3">
-                    <span
-                      className={[
-                        'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-sm font-semibold',
-                        item.score <= 2 ? 'bg-red-100 text-red-800' :
-                        item.score === 3 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      ].join(' ')}
-                    >
-                      {item.score}
-                    </span>
-                    <span className="text-slate-700 text-sm">{item.description}</span>
-                  </div>
-                ))}
-            </div>
-          ) : (
-            <div className="text-slate-500 text-center py-4">No score reference available</div>
-          )}
-        </div>
-      </div>
+      <ScoreLegendDisplay />
 
       <div className="space-y-6">
         {categories.map((category) => (
@@ -365,7 +330,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                         className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select score...</option>
-                        {[1,2,3,4,5].map((n) => (
+                        {[1, 2, 3, 4, 5].map((n) => (
                           <option key={n} value={n}>{n}</option>
                         ))}
                       </select>
