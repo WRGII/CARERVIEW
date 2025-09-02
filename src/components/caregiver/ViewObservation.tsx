@@ -211,6 +211,21 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     </div>
                   ))}
                 </div>
+              
+              {/* Display category notes if any exist */}
+              {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <div className="flex items-start space-x-3">
+                    <FileText className="w-4 h-4 text-slate-500 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-600 mb-1">{category.name} Category Notes</p>
+                      <p className="text-slate-900">
+                        {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               </CardContent>
             </Card>
           ))}
