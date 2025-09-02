@@ -5,8 +5,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
-+ import ScorePicker from '../ui/ScorePicker'            // <-- NEW
-import { useLegend } from '../../hooks/useLegend'          // <-- NEW
+import ScorePicker from '../ui/ScorePicker'   // ✅ default import
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -33,16 +32,6 @@ type Category = {
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
-
-  // Load legend so we can show tooltips on the score buttons
-  const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
-  const legendMap = React.useMemo(() => {
-    const map: Record<number, string> = {}
-    ;(legend || []).forEach(l => {
-      map[l.score] = l.description
-    })
-    return map
-  }, [legend])
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
@@ -76,7 +65,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  // Gate the query on auth readiness to avoid “Loading…” hangs
+  // Gate the query on auth readiness
   const { data: categoryQuestions, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['category-questions', user?.id],
     enabled: !authLoading && !!user?.id,
@@ -125,7 +114,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const createObservation = useMutation({
     mutationFn: async (observationData: {
       patientName: string
-      observationDate: string              // YYYY-MM-DD
+      observationDate: string
       modeOfObservation: 'In Person' | 'Voice Call' | 'Video Call'
       notes: string
       answers: Record<string, number | undefined>
@@ -133,12 +122,10 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     }) => {
       if (!user?.id) throw new Error('You must be signed in to save an observation.')
 
-      // Build caregiver identity
       const caregiver_name =
         (profile?.display_name || '').trim() || profile?.email || user.email || ''
       const caregiver_email = profile?.email || user.email || ''
 
-      // Insert observation
       const { data: obsRow, error: obsError } = await supabase
         .from('observations')
         .insert({
@@ -159,21 +146,13 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       }
       if (!obsRow?.id) throw new Error('Observation saved but id was not returned.')
 
-      // Build responses (only selected scores)
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
-        .map(([question_id, score]) => {
-          const categoryQuestion = categoryQuestions?.find(cq => cq.question_id === question_id)
-          const categoryId = categoryQuestion?.category_id
-          const categoryNote = categoryId ? observationData.categoryNotes[categoryId] || '' : ''
-          // If your 'responses' table does NOT have 'category_notes', remove that field.
-          return {
-            observation_id: obsRow.id,
-            question_id,
-            score: score as number,
-            // category_notes: categoryNote, // uncomment ONLY if this column exists
-          }
-        })
+        .map(([question_id, score]) => ({
+          observation_id: obsRow.id,
+          question_id,
+          score: score as number
+        }))
 
       if (responses.length > 0) {
         const { error: resError } = await supabase.from('responses').insert(responses)
@@ -210,8 +189,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     }
 
     const formattedDate = formatDateForDB(dateOfObservation)
-
-    // Require at least one score
     const hasAnyScore = Object.values(answers).some(v => typeof v === 'number')
     if (!hasAnyScore) {
       setSaveError('Please select at least one score before saving.')
@@ -232,15 +209,14 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     setCategoryNotes(prev => ({ ...prev, [categoryId]: value }))
   }
 
-  if (authLoading || isLoading || legendLoading) {
+  if (authLoading || isLoading) {
     return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
   }
 
-  if (isError || legendError) {
+  if (isError) {
     return (
       <div className="bg-white border rounded-xl p-4">
-        {isError && <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>}
-        {legendError && <p className="text-red-700 mb-2">Error loading score reference</p>}
+        <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
         <button
           type="button"
           onClick={() => refetch()}
@@ -250,6 +226,15 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </button>
       </div>
     )
+  }
+
+  // Map scores to descriptions for ScorePicker
+  const legendMap: Record<number, string> = {
+    1: 'Total assistance',
+    2: 'Constant Shared effort',
+    3: 'Independent with support',
+    4: 'Independent with difficulty',
+    5: 'Fully independent'
   }
 
   return (
@@ -314,7 +299,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </div>
       </div>
 
-      {/* Legend Section: dynamic 1–5 */}
+      {/* Legend Section */}
       <ScoreLegendDisplay />
 
       <div className="space-y-6">
@@ -332,11 +317,10 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                   <div key={question.id} className="grid md:grid-cols-12 items-center gap-3">
                     <div className="md:col-span-9 text-slate-800">{question.text}</div>
                     <div className="md:col-span-3">
-                      {/* Replaced dropdown with ScorePicker */}
                       <ScorePicker
                         value={answers[question.id]}
                         onChange={(val) => setAnswers(prev => ({ ...prev, [question.id]: val }))}
-                        legendMap={legendMap}
+                        descriptions={legendMap}    // ✅ fixed prop
                         ariaLabel={`Set score for: ${question.text}`}
                       />
                     </div>
@@ -372,7 +356,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </Button>
       </div>
 
-      {/* Inline save error */}
       {saveError && (
         <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {saveError}
