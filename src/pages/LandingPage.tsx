@@ -172,7 +172,7 @@ export default function LandingPage() {
                 <FileText className="w-5 h-5 text-blue-600" />
                 <h3 className="font-semibold">Reports On Demand</h3>
               </div>
-              <p className="text-slate-600">Purpose-built for ADL & IADL assessments with standardized definitions.</p>
+              <p className="text-slate-600">Purpose-built for ADL & IADL caregiver assessments.</p>
             </CardContent>
           </Card>
         </div>
