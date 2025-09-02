@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
-import { ScorePicker } from '../ui/ScorePicker'            // <-- NEW
++ import ScorePicker from '../ui/ScorePicker'            // <-- NEW
 import { useLegend } from '../../hooks/useLegend'          // <-- NEW
 
 interface ObservationFormProps {
