@@ -150,7 +150,7 @@ export default function LandingPage() {
                 <Shield className="w-5 h-5 text-blue-600" />
                 <h3 className="font-semibold">Quick Process</h3>
               </div>
-              <p className="text-slate-600">Simply answer as many or as few appropriate questions for each Obervation.</p>
+              <p className="text-slate-600">Simply answer as many or as few appropriate questions.</p>
             </CardContent>
           </Card>
 
