@@ -1,3 +1,4 @@
+// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
@@ -31,7 +32,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const { data: legend, isLoading: legendLoading, error: legendError } = useLegend()
-  
+
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
   const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
@@ -105,7 +106,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       })
     })
     const result = Array.from(map.values())
-    result.sort((a, b) => a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type))
+    result.sort((a, b) => (a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type)))
     result.forEach(cat => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
@@ -126,24 +127,22 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         (profile?.display_name || '').trim() || profile?.email || user.email || ''
       const caregiver_email = profile?.email || user.email || ''
 
-      // IMPORTANT: Insert ONLY columns that exist on observations.
-      // Remove date_of_observation (likely not a column) to avoid 400.
+      // Insert observation
       const { data: obsRow, error: obsError } = await supabase
         .from('observations')
         .insert({
-          user_id: user.id,                                 // ✅ RLS
+          user_id: user.id,
           patient_name: observationData.patientName || null,
-          observation_date: observationData.observationDate, // ✅ source of truth date
+          observation_date: observationData.observationDate,
           mode_of_observation: observationData.modeOfObservation,
           notes: observationData.notes || null,
           caregiver_name,
           caregiver_email
         })
-        .select('id')                                       // return PK
+        .select('id')
         .single()
 
       if (obsError) {
-        // Surface full PostgREST context for debugging
         console.error('Create observation error:', obsError)
         throw new Error(`Create observation failed: ${obsError.message}`)
       }
@@ -153,16 +152,15 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       const responses = Object.entries(observationData.answers)
         .filter(([_, score]) => typeof score === 'number')
         .map(([question_id, score]) => {
-          // Find which category this question belongs to
           const categoryQuestion = categoryQuestions?.find(cq => cq.question_id === question_id)
           const categoryId = categoryQuestion?.category_id
           const categoryNote = categoryId ? observationData.categoryNotes[categoryId] || '' : ''
-          
+          // If your 'responses' table does NOT have 'category_notes', remove that field.
           return {
             observation_id: obsRow.id,
             question_id,
             score: score as number,
-            category_notes: categoryNote
+            // category_notes: categoryNote, // uncomment ONLY if this column exists
           }
         })
 
@@ -211,7 +209,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
     createObservation.mutate({
       patientName,
-      observationDate: formattedDate,       // YYYY-MM-DD
+      observationDate: formattedDate,
       modeOfObservation,
       notes,
       answers,
@@ -227,6 +225,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const setCategoryNote = (categoryId: string, value: string) => {
     setCategoryNotes(prev => ({ ...prev, [categoryId]: value }))
   }
+
   if (authLoading || isLoading) {
     return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
   }
@@ -308,7 +307,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </div>
       </div>
 
-      {/* Legend Section */}
+      {/* Legend Section: dynamic 1–5 */}
       <div className="bg-white border rounded-xl">
         <div className="px-4 py-3 border-b bg-slate-50">
           <h3 className="font-semibold text-slate-900">Score Reference</h3>
@@ -319,38 +318,25 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
           ) : legendError ? (
             <div className="text-red-600 text-center py-4">Failed to load score reference</div>
           ) : legend && legend.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column: Scores 0-5 */}
-              <div className="space-y-2">
-                {legend
-                  .filter(item => item.score <= 5)
-                  .map(item => (
-                    <div key={item.id} className="flex items-center justify-between py-1">
-                      <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-sm font-semibold ${
-                        item.score >= 4 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.score}
-                      </span>
-                      <span className="text-slate-700 text-sm flex-1 ml-3">{item.description}</span>
-                    </div>
-                  ))}
-              </div>
-              
-              {/* Right Column: Scores 6-10 */}
-              <div className="space-y-2">
-                {legend
-                  .filter(item => item.score >= 6)
-                  .map(item => (
-                    <div key={item.id} className="flex items-center justify-between py-1">
-                      <span className={`inline-flex items-center justify-center w-8 h-6 rounded text-sm font-semibold ${
-                        item.score >= 7 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {item.score}
-                      </span>
-                      <span className="text-slate-700 text-sm flex-1 ml-3">{item.description}</span>
-                    </div>
-                  ))}
-              </div>
+            <div className="grid grid-cols-1 gap-2">
+              {legend
+                .filter(item => item.score >= 1 && item.score <= 5)
+                .sort((a, b) => a.score - b.score)
+                .map(item => (
+                  <div key={item.score} className="flex items-start gap-3">
+                    <span
+                      className={[
+                        'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-sm font-semibold',
+                        item.score <= 2 ? 'bg-red-100 text-red-800' :
+                        item.score === 3 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      ].join(' ')}
+                    >
+                      {item.score}
+                    </span>
+                    <span className="text-slate-700 text-sm">{item.description}</span>
+                  </div>
+                ))}
             </div>
           ) : (
             <div className="text-slate-500 text-center py-4">No score reference available</div>
@@ -379,14 +365,14 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                         className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select score...</option>
-                        {[0,1,2,3,4,5,6,7,8,9,10].map((n) => (
+                        {[1,2,3,4,5].map((n) => (
                           <option key={n} value={n}>{n}</option>
                         ))}
                       </select>
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Category Notes Section */}
                 <div className="mt-6 pt-4 border-t border-slate-200">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
