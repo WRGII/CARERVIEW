@@ -161,7 +161,7 @@ export default function LandingPage() {
                 <h3 className="font-semibold">Structured Formats</h3>
               </div>
               <p className="text-slate-600">
-                Consistent categories and defined questions with 1–10 scoring.
+                Consistent categories with defined questions.
               </p>
             </CardContent>
           </Card>
