@@ -126,7 +126,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     })
     return map
   }, [categories])
-  
   const handleSave = async (exitAfterSave: boolean) => {
     setSaveError(null)
     setSaveSuccessMessage(null)
@@ -369,12 +368,18 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       {/* Action bar */}
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={isSaving} variant="primary">
-          {isSaving ? 'Saving...' : 'Create Observation'}
+          {isSaving ? 'Saving...' : 'Save & Exit'}
         </Button>
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
       </div>
+
+      {saveSuccessMessage && (
+        <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {saveSuccessMessage}
+        </div>
+      )}
 
       {saveError && (
         <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
