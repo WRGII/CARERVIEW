@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
+import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 import ScorePicker from '../ui/ScorePicker'   // ✅ default import
@@ -32,6 +33,7 @@ type Category = {
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
+  const upsertObservation = useUpsertObservationAndResponses()
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
@@ -41,6 +43,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
   const [dateError, setDateError] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
   // Date validation function (MM/DD/YYYY)
   const validateDate = (dateString: string): boolean => {
@@ -111,80 +116,29 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     return result
   }, [categoryQuestions])
 
-  const createObservation = useMutation({
-    mutationFn: async (observationData: {
-      patientName: string
-      observationDate: string
-      modeOfObservation: 'In Person' | 'Voice Call' | 'Video Call'
-      notes: string
-      answers: Record<string, number | undefined>
-      categoryNotes: Record<string, string>
-    }) => {
-      if (!user?.id) throw new Error('You must be signed in to save an observation.')
-
-      const caregiver_name =
-        (profile?.display_name || '').trim() || profile?.email || user.email || ''
-      const caregiver_email = profile?.email || user.email || ''
-
-      const { data: obsRow, error: obsError } = await supabase
-        .from('observations')
-        .insert({
-          user_id: user.id,
-          patient_name: observationData.patientName || null,
-          observation_date: observationData.observationDate,
-          mode_of_observation: observationData.modeOfObservation,
-          notes: observationData.notes || null,
-          caregiver_name,
-          caregiver_email
-        })
-        .select('id')
-        .single()
-
-      if (obsError) {
-        console.error('Create observation error:', obsError)
-        throw new Error(`Create observation failed: ${obsError.message}`)
-      }
-      if (!obsRow?.id) throw new Error('Observation saved but id was not returned.')
-
-      const responses = Object.entries(observationData.answers)
-        .filter(([_, score]) => typeof score === 'number')
-        .map(([question_id, score]) => ({
-          observation_id: obsRow.id,
-          question_id,
-          score: score as number
-        }))
-
-      if (responses.length > 0) {
-        const { error: resError } = await supabase.from('responses').insert(responses)
-        if (resError) {
-          console.error('Create responses error:', resError)
-          throw new Error(`Create responses failed: ${resError.message}`)
-        }
-      }
-
-      return obsRow.id as string
-    },
-    onMutate: () => setSaveError(null),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['observations'] })
-      onComplete()
-    },
-    onError: (e: any) => {
-      console.error('CreateObservation failed:', e)
-      setSaveError(e?.message || 'Failed to save observation.')
-    }
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  // Create question to category mapping for responses
+  const questionCategoryMap: Record<string, string> = React.useMemo(() => {
+    const map: Record<string, string> = {}
+    categories.forEach(category => {
+      category.questions.forEach(question => {
+        map[question.id] = category.id
+      })
+    })
+    return map
+  }, [categories])
+  const handleSave = async (exitAfterSave: boolean) => {
     setSaveError(null)
+    setSaveSuccessMessage(null)
+    setIsSaving(true)
 
     if (!dateOfObservation) {
       setDateError('Date of observation is required')
+      setIsSaving(false)
       return
     }
     if (!validateDate(dateOfObservation)) {
       setDateError('Please enter a valid date in MM/DD/YYYY format')
+      setIsSaving(false)
       return
     }
 
@@ -192,16 +146,57 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     const hasAnyScore = Object.values(answers).some(v => typeof v === 'number')
     if (!hasAnyScore) {
       setSaveError('Please select at least one score before saving.')
+      setIsSaving(false)
       return
     }
 
-    createObservation.mutate({
-      patientName,
-      observationDate: formattedDate,
-      modeOfObservation,
-      notes,
-      answers,
-      categoryNotes
+    const caregiver_name =
+      (profile?.display_name || '').trim() || profile?.email || user.email || ''
+    const caregiver_email = profile?.email || user.email || ''
+
+    try {
+      const result = await upsertObservation.mutateAsync({
+        observationId: currentObservationId || undefined,
+        observation: {
+          patient_name: patientName,
+          observation_date: formattedDate,
+          mode_of_observation: modeOfObservation,
+          notes,
+          caregiver_name,
+          caregiver_email
+        },
+        answers,
+        categoryNotes,
+        questionCategoryMap
+      })
+
+      // Update current observation ID for future saves
+      if (!currentObservationId) {
+        setCurrentObservationId(result.id)
+      }
+
+      if (exitAfterSave) {
+        onComplete()
+      } else {
+        setSaveSuccessMessage('Observation saved successfully!')
+        setTimeout(() => setSaveSuccessMessage(null), 3000)
+      }
+    } catch (e: any) {
+      console.error('Save observation failed:', e)
+      setSaveError(e?.message || 'Failed to save observation.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleSave(true)
+  }
+
+  const handleInterimSave = () => {
+    handleSave(false)
+  }
     })
   }
 
@@ -342,19 +337,51 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                 </div>
               </div>
             </div>
+
+            {/* Category Save Buttons */}
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleInterimSave}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
+                </Button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Action bar */}
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={createObservation.isPending} variant="primary">
-          {createObservation.isPending ? 'Saving...' : 'Create Observation'}
+        <Button type="submit" disabled={isSaving} variant="primary">
+          {isSaving ? 'Saving...' : 'Save & Exit'}
         </Button>
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
       </div>
+
+      {saveSuccessMessage && (
+        <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {saveSuccessMessage}
+        </div>
+      )}
 
       {saveError && (
         <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">

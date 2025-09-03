@@ -207,6 +207,101 @@ export const useCreateObservationWithResponses = () => {
   })
 }
 
+export const useUpsertObservationAndResponses = () => {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: async (args: {
+      observationId?: string
+      observation: Partial<Observation>
+      answers: Record<string, number | undefined>
+      categoryNotes: Record<string, string>
+      questionCategoryMap: Record<string, string>
+    }) => {
+      const { observationId, observation, answers, categoryNotes, questionCategoryMap } = args
+      if (!user?.id) throw new Error('User not authenticated')
+
+      // Normalize/validate keys for upsert
+      const observation_date =
+        typeof observation.observation_date === 'string'
+          ? observation.observation_date
+          : new Date().toISOString().slice(0, 10)
+
+      const obsPayload = {
+        patient_name: (observation.patient_name ?? '').trim() || 'Unnamed Patient',
+        observation_date,
+        mode_of_observation: (observation.mode_of_observation as Observation['mode_of_observation']) ?? 'In Person',
+        notes: observation.notes ?? '',
+        caregiver_name: observation.caregiver_name ?? '',
+        caregiver_email: observation.caregiver_email ?? '',
+        user_id: user.id,
+      }
+
+      let finalObservationId: string
+
+      if (observationId) {
+        // Update existing observation
+        const { data: obsRow, error: obsErr } = await supabase
+          .from('observations')
+          .update(obsPayload)
+          .eq('id', observationId)
+          .eq('user_id', user.id)
+          .select('id')
+          .single()
+
+        if (obsErr) throw new Error(`Failed to update observation: ${obsErr.message}`)
+        if (!obsRow?.id) throw new Error('Observation updated but id was not returned.')
+        finalObservationId = obsRow.id
+      } else {
+        // Create new observation
+        const { data: obsRow, error: obsErr } = await supabase
+          .from('observations')
+          .insert(obsPayload)
+          .select('id')
+          .single()
+
+        if (obsErr) throw new Error(`Failed to create observation: ${obsErr.message}`)
+        if (!obsRow?.id) throw new Error('Observation saved but id was not returned.')
+        finalObservationId = obsRow.id
+      }
+
+      // Prepare responses for upsert
+      const responseRows = Object.entries(answers)
+        .filter(([_, score]) => typeof score === 'number')
+        .map(([question_id, score]) => {
+          const category_id = questionCategoryMap[question_id]
+          const category_notes = category_id ? categoryNotes[category_id] || '' : ''
+          
+          return {
+            observation_id: finalObservationId,
+            question_id,
+            score: score as number,
+            notes: '',
+            category_notes
+          }
+        })
+
+      if (responseRows.length > 0) {
+        const { error: respErr } = await supabase
+          .from('responses')
+          .upsert(responseRows, {
+            onConflict: 'observation_id,question_id'
+          })
+
+        if (respErr) {
+          throw new Error(`Failed to save responses: ${respErr.message}`)
+        }
+      }
+
+      return { id: finalObservationId }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['observations'] })
+    },
+  })
+}
+
 export const useUpdateObservation = () => {
   const queryClient = useQueryClient()
   const { user } = useAuth()
