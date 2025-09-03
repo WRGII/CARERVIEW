@@ -126,7 +126,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     })
     return map
   }, [categories])
-
+  
   const handleSave = async (exitAfterSave: boolean) => {
     setSaveError(null)
     setSaveSuccessMessage(null)
@@ -196,8 +196,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   }
 
   const handleInterimSave = () => {
-    handleSave(false)
-  }
 
   const setCategoryNote = (categoryId: string, value: string) => {
     setCategoryNotes(prev => ({ ...prev, [categoryId]: value }))
@@ -334,6 +332,32 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     rows={2}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Category Save Buttons */}
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleInterimSave}
+                  disabled={isSaving}
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
+                </Button>
               </div>
             </div>
           </div>
