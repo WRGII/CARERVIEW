@@ -126,6 +126,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     })
     return map
   }, [categories])
+
   const handleSave = async (exitAfterSave: boolean) => {
     setSaveError(null)
     setSaveSuccessMessage(null)
@@ -196,8 +197,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
   const handleInterimSave = () => {
     handleSave(false)
-  }
-    })
   }
 
   const setCategoryNote = (categoryId: string, value: string) => {
@@ -337,51 +336,19 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                 </div>
               </div>
             </div>
-
-            {/* Category Save Buttons */}
-            <div className="mt-6 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-end space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSave(true)}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2"
-                >
-                  <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={handleInterimSave}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2"
-                >
-                  <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
-                </Button>
-              </div>
-            </div>
           </div>
         ))}
       </div>
 
       {/* Action bar */}
       <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isSaving} variant="primary">
-          {isSaving ? 'Saving...' : 'Save & Exit'}
+        <Button type="submit" disabled={upsertObservation.isPending} variant="primary">
+          {upsertObservation.isPending ? 'Saving...' : 'Create Observation'}
         </Button>
         <Button type="button" variant="outline" onClick={onComplete}>
           Cancel
         </Button>
       </div>
-
-      {saveSuccessMessage && (
-        <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-          {saveSuccessMessage}
-        </div>
-      )}
 
       {saveError && (
         <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
