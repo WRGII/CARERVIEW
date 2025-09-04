@@ -10,7 +10,6 @@ import ObservationForm from '../components/caregiver/ObservationForm'
 import { ViewObservation } from '../components/caregiver/ViewObservation'
 import { Plus, ArrowLeft } from 'lucide-react'
 
-// ✅ use relative paths instead of "@/..."
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
 
@@ -28,12 +27,11 @@ export default function CaregiverPage() {
 
   const handleViewObservation = (id: string) => {
     setCurrentObservationId(id)
-    setViewMode('view')
+    setViewMode('view') // ensures ViewObservation mounts -> Print button visible
   }
 
   const handleExportObservation = async (observationId: string, format: 'docx' | 'csv') => {
     try {
-      // 1) Fetch observation + nested responses + joins
       const { data: obs, error: obsErr } = await supabase
         .from('observations')
         .select(`
@@ -51,7 +49,6 @@ export default function CaregiverPage() {
 
       if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
 
-      // 2) Fetch legend
       const { data: legend, error: legErr } = await supabase
         .from('legend')
         .select('*')
@@ -59,7 +56,6 @@ export default function CaregiverPage() {
 
       if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
 
-      // 3) Build categories-with-questions
       const responses = (obs?.responses ?? []) as Array<{
         question: {
           id: string
@@ -99,7 +95,6 @@ export default function CaregiverPage() {
         a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)
       )
 
-      // 4) Trigger the correct exporter
       if (format === 'docx') {
         await exportToDOCX(obs as any, categories as any, legend as any)
       } else {
@@ -130,19 +125,22 @@ export default function CaregiverPage() {
             <ObservationForm onComplete={() => setViewMode('list')} />
           </div>
         )
+
       case 'view':
-        return (
-          currentObservationId ? (
-            <ViewObservation
-              observationId={currentObservationId}
-              onBack={() => setViewMode('list')}
-            />
-          ) : (
-            <div className="bg-white border rounded-xl p-6">
-              <p className="text-slate-600">No observation selected</p>
-            </div>
-          )
+        return currentObservationId ? (
+          <ViewObservation
+            observationId={currentObservationId}
+            onBack={() => {
+              setCurrentObservationId(null)
+              setViewMode('list')
+            }}
+          />
+        ) : (
+          <div className="bg-white border rounded-xl p-6">
+            <p className="text-slate-600">No observation selected</p>
+          </div>
         )
+
       default:
         return (
           <div className="space-y-6">
