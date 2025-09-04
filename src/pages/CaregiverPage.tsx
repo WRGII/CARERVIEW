@@ -1,5 +1,5 @@
 // src/pages/CaregiverPage.tsx
-import React, { useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -14,117 +14,152 @@ import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
 
 type ViewMode = 'list' | 'form' | 'view'
+type ExportFormat = 'docx' | 'csv'
 
 export default function CaregiverPage() {
   const { user, profile, loading, error } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
+  const [exportingFor, setExportingFor] = useState<string | null>(null) // disable repeat clicks
 
+  // Auth / profile guards
   if (loading) return <Loading message="Loading caregiver dashboard..." />
   if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
   if (profile.disabled) return <ErrorMessage message="Account disabled." />
 
-  const handleViewObservation = (id: string) => {
+  const handleViewObservation = useCallback((id: string) => {
     setCurrentObservationId(id)
     setViewMode('view') // ensures ViewObservation mounts -> Print button visible
-  }
+  }, [])
 
-  const handleExportObservation = async (observationId: string, format: 'docx' | 'csv') => {
-    try {
-      const { data: obs, error: obsErr } = await supabase
-        .from('observations')
-        .select(`
-          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
-          responses:responses (
-            id, observation_id, question_id, score, notes, created_at, updated_at,
-            question:questions (
-              id, question_text, sort_order,
-              category:categories ( id, name, type )
+  const handleExportObservation = useCallback(
+    async (observationId: string, format: ExportFormat) => {
+      if (exportingFor) return // simple lock; skip while exporting
+      setExportingFor(observationId)
+      try {
+        const { data: obs, error: obsErr } = await supabase
+          .from('observations')
+          .select(`
+            id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
+            responses:responses (
+              id, observation_id, question_id, score, notes, created_at, updated_at,
+              question:questions (
+                id, question_text, sort_order,
+                category:categories ( id, name, type )
+              )
             )
-          )
-        `)
-        .eq('id', observationId)
-        .single()
+          `)
+          .eq('id', observationId)
+          .single()
 
-      if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
+        if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
+        if (!obs) throw new Error('Observation not found.')
 
-      const { data: legend, error: legErr } = await supabase
-        .from('legend')
-        .select('*')
-        .order('score', { ascending: true })
+        const { data: legend, error: legErr } = await supabase
+          .from('legend')
+          .select('*')
+          .order('score', { ascending: true })
 
-      if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
+        if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
 
-      const responses = (obs?.responses ?? []) as Array<{
-        question: {
-          id: string
-          question_text: string
-          sort_order: number
-          category: { id: string; name: string; type: 'ADL' | 'IADL' }
+        // Build categories-with-questions from responses (if any)
+        const responses = (obs.responses ?? []) as Array<{
+          question: {
+            id: string
+            question_text: string
+            sort_order: number
+            category: { id: string; name: string; type: 'ADL' | 'IADL' } | null
+          } | null
+          score: number
+        }>
+
+        const catMap = new Map<
+          string,
+          {
+            id: string
+            name: string
+            type: 'ADL' | 'IADL'
+            questions: { id: string; category_id: string; question_text: string; sort_order: number }[]
+          }
+        >()
+
+        for (const r of responses) {
+          const q = r?.question
+          const c = q?.category
+          if (!q || !c) continue
+
+          if (!catMap.has(c.id)) {
+            catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] })
+          }
+          catMap.get(c.id)!.questions.push({
+            id: q.id,
+            category_id: c.id,
+            question_text: q.question_text,
+            sort_order: q.sort_order,
+          })
         }
-      }>
 
-      const catMap = new Map<
-        string,
-        {
-          id: string
-          name: string
-          type: 'ADL' | 'IADL'
-          questions: { id: string; category_id: string; question_text: string; sort_order: number }[]
-        }
-      >()
+        const categories = Array.from(catMap.values())
+        categories.forEach(cat => cat.questions.sort((a, b) => a.sort_order - b.sort_order))
+        categories.sort((a, b) =>
+          a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)
+        )
 
-      for (const r of responses) {
-        const c = r.question.category
-        if (!c) continue
-        if (!catMap.has(c.id)) {
-          catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] })
+        if (format === 'docx') {
+          await exportToDOCX(obs as any, categories as any, legend as any)
+        } else {
+          await exportToCSV(obs as any, categories as any, legend as any)
         }
-        catMap.get(c.id)!.questions.push({
-          id: r.question.id,
-          category_id: c.id,
-          question_text: r.question.question_text,
-          sort_order: r.question.sort_order,
-        })
+      } catch (e: any) {
+        console.error('Export failed:', e)
+        alert(e?.message || 'Failed to export observation.')
+      } finally {
+        setExportingFor(null)
       }
+    },
+    [exportingFor]
+  )
 
-      const categories = Array.from(catMap.values())
-      categories.forEach(cat => cat.questions.sort((a, b) => a.sort_order - b.sort_order))
-      categories.sort((a, b) =>
-        a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)
-      )
-
-      if (format === 'docx') {
-        await exportToDOCX(obs as any, categories as any, legend as any)
-      } else {
-        await exportToCSV(obs as any, categories as any, legend as any)
-      }
-    } catch (e: any) {
-      console.error('Export failed:', e)
-      alert(e?.message || 'Failed to export observation.')
-    }
-  }
-
-  const renderContent = () => {
+  const header = useMemo(() => {
     switch (viewMode) {
       case 'form':
         return (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setViewMode('list')}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to List</span>
-              </Button>
-              <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
-            </div>
-            <ObservationForm onComplete={() => setViewMode('list')} />
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => setViewMode('list')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to List</span>
+            </Button>
+            <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
           </div>
         )
+      case 'view':
+        return null // ViewObservation renders its own top bar (Back + Print)
+      default:
+        return (
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
+            <Button
+              variant="primary"
+              onClick={() => setViewMode('form')}
+              className="flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Observation</span>
+            </Button>
+          </div>
+        )
+    }
+  }, [viewMode])
+
+  const body = useMemo(() => {
+    switch (viewMode) {
+      case 'form':
+        return <ObservationForm onComplete={() => setViewMode('list')} />
 
       case 'view':
         return currentObservationId ? (
@@ -143,30 +178,20 @@ export default function CaregiverPage() {
 
       default:
         return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
-              <Button
-                variant="primary"
-                onClick={() => setViewMode('form')}
-                className="flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Observation</span>
-              </Button>
-            </div>
-            <ObservationList
-              onViewObservation={handleViewObservation}
-              onExportObservation={handleExportObservation}
-            />
-          </div>
+          <ObservationList
+            onViewObservation={handleViewObservation}
+            onExportObservation={handleExportObservation}
+          />
         )
     }
-  }
+  }, [viewMode, currentObservationId, handleViewObservation, handleExportObservation])
 
   return (
     <Layout title="Caregiver Dashboard" user={{ ...user, profile }}>
-      {renderContent()}
+      <div className="space-y-6">
+        {header}
+        {body}
+      </div>
     </Layout>
   )
 }
