@@ -16,6 +16,7 @@ export interface Observation {
   caregiver_email: string
   created_at: string
   updated_at: string
+  last_saved_at: string | null
 }
 
 export interface ObservationWithResponses extends Observation {
@@ -120,12 +121,13 @@ export const useCreateObservation = () => {
         caregiver_name: observation.caregiver_name ?? '',
         caregiver_email: observation.caregiver_email ?? '',
         user_id: user.id, // ✅ critical for RLS
+        last_saved_at: new Date().toISOString(), // ✅ record save timestamp
       }
 
       const { data, error } = await supabase
         .from('observations')
         .insert(payload)
-        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at')
+        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at, last_saved_at')
         .single()
 
       if (error) throw new Error(`Failed to create observation: ${error.message}`)
@@ -171,6 +173,7 @@ export const useCreateObservationWithResponses = () => {
         caregiver_name: observation.caregiver_name ?? '',
         caregiver_email: observation.caregiver_email ?? '',
         user_id: user.id, // ✅ needed for RLS
+        last_saved_at: new Date().toISOString(), // ✅ record save timestamp
       }
 
       // 1) Insert observation and return id
@@ -236,6 +239,7 @@ export const useUpsertObservationAndResponses = () => {
         caregiver_name: observation.caregiver_name ?? '',
         caregiver_email: observation.caregiver_email ?? '',
         user_id: user.id,
+        last_saved_at: new Date().toISOString(), // ✅ record save timestamp for both create and update
       }
 
       let finalObservationId: string
@@ -315,10 +319,11 @@ export const useUpdateObservation = () => {
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
+          last_saved_at: new Date().toISOString(), // ✅ record save timestamp
         })
         .eq('id', id)
         .eq('user_id', user.id)
-        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at')
+        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at, last_saved_at')
         .single()
 
       if (error) {
