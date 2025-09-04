@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Activity, LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
@@ -13,21 +13,38 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
   const navigate = useNavigate()
+  const [signOutError, setSignOutError] = useState<string | null>(null)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
+    console.log('Sign out button clicked - starting sign out process')
+    setSignOutError(null)
+    setIsSigningOut(true)
+    
     try {
+      console.log('Calling supabase.auth.signOut()')
       await supabase.auth.signOut()
+      console.log('supabase.auth.signOut() completed successfully')
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
       console.error('Sign out error:', err)
+      setSignOutError(`Sign out failed: ${errorMessage}`)
+      setIsSigningOut(false)
+      return // Don't proceed with navigation if sign out failed
     } finally {
-      // Try router navigation
-      navigate('/', { replace: true })
-      // Fallback: force hard reload to LandingPage
-      setTimeout(() => {
-        if (window.location.pathname !== '/') {
-          window.location.assign('/')
-        }
-      }, 50)
+      if (!signOutError) {
+        console.log('Attempting navigation to landing page')
+        // Try router navigation
+        navigate('/', { replace: true })
+        // Fallback: force hard reload to LandingPage
+        setTimeout(() => {
+          if (window.location.pathname !== '/') {
+            console.log('Router navigation may have failed, forcing page reload')
+            window.location.assign('/')
+          }
+        }, 100) // Increased timeout slightly
+      }
+      setIsSigningOut(false)
     }
   }
 
@@ -52,14 +69,20 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
             </div>
             <div className="flex items-center space-x-4">
               <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+              {signOutError && (
+                <div className="text-sm text-red-600 bg-red-50 px-2 py-1 rounded">
+                  {signOutError}
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
+                disabled={isSigningOut}
                 className="flex items-center space-x-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
+                <span>{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
               </Button>
             </div>
           </div>
