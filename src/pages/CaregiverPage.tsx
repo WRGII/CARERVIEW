@@ -1,5 +1,5 @@
 // src/pages/CaregiverPage.tsx
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -20,7 +20,7 @@ export default function CaregiverPage() {
   const { user, profile, loading, error } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
-  const [exportingFor, setExportingFor] = useState<string | null>(null) // disable repeat clicks
+  const [exportingFor, setExportingFor] = useState<string | null>(null)
 
   // Auth / profile guards
   if (loading) return <Loading message="Loading caregiver dashboard..." />
@@ -28,100 +28,97 @@ export default function CaregiverPage() {
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
   if (profile.disabled) return <ErrorMessage message="Account disabled." />
 
-  const handleViewObservation = useCallback((id: string) => {
+  function handleViewObservation(id: string) {
     setCurrentObservationId(id)
-    setViewMode('view') // ensures ViewObservation mounts -> Print button visible
-  }, [])
+    setViewMode('view')
+  }
 
-  const handleExportObservation = useCallback(
-    async (observationId: string, format: ExportFormat) => {
-      if (exportingFor) return // simple lock; skip while exporting
-      setExportingFor(observationId)
-      try {
-        const { data: obs, error: obsErr } = await supabase
-          .from('observations')
-          .select(`
-            id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
-            responses:responses (
-              id, observation_id, question_id, score, notes, created_at, updated_at,
-              question:questions (
-                id, question_text, sort_order,
-                category:categories ( id, name, type )
-              )
+  async function handleExportObservation(observationId: string, format: ExportFormat) {
+    if (exportingFor) return
+    setExportingFor(observationId)
+    try {
+      // Observation + nested responses + joins
+      const { data: obs, error: obsErr } = await supabase
+        .from('observations')
+        .select(`
+          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
+          responses:responses (
+            id, observation_id, question_id, score, notes, created_at, updated_at,
+            question:questions (
+              id, question_text, sort_order,
+              category:categories ( id, name, type )
             )
-          `)
-          .eq('id', observationId)
-          .single()
+          )
+        `)
+        .eq('id', observationId)
+        .single()
 
-        if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
-        if (!obs) throw new Error('Observation not found.')
+      if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
+      if (!obs) throw new Error('Observation not found.')
 
-        const { data: legend, error: legErr } = await supabase
-          .from('legend')
-          .select('*')
-          .order('score', { ascending: true })
+      // Legend (1–5)
+      const { data: legend, error: legErr } = await supabase
+        .from('legend')
+        .select('*')
+        .order('score', { ascending: true })
 
-        if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
+      if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
 
-        // Build categories-with-questions from responses (if any)
-        const responses = (obs.responses ?? []) as Array<{
-          question: {
-            id: string
-            question_text: string
-            sort_order: number
-            category: { id: string; name: string; type: 'ADL' | 'IADL' } | null
-          } | null
-          score: number
-        }>
+      // Build categories-with-questions (defensive against nulls)
+      const responses = (obs.responses ?? []) as Array<{
+        question: {
+          id: string
+          question_text: string
+          sort_order: number
+          category: { id: string; name: string; type: 'ADL' | 'IADL' } | null
+        } | null
+      }>
 
-        const catMap = new Map<
-          string,
-          {
-            id: string
-            name: string
-            type: 'ADL' | 'IADL'
-            questions: { id: string; category_id: string; question_text: string; sort_order: number }[]
-          }
-        >()
-
-        for (const r of responses) {
-          const q = r?.question
-          const c = q?.category
-          if (!q || !c) continue
-
-          if (!catMap.has(c.id)) {
-            catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] })
-          }
-          catMap.get(c.id)!.questions.push({
-            id: q.id,
-            category_id: c.id,
-            question_text: q.question_text,
-            sort_order: q.sort_order,
-          })
+      const catMap = new Map<
+        string,
+        {
+          id: string
+          name: string
+          type: 'ADL' | 'IADL'
+          questions: { id: string; category_id: string; question_text: string; sort_order: number }[]
         }
+      >()
 
-        const categories = Array.from(catMap.values())
-        categories.forEach(cat => cat.questions.sort((a, b) => a.sort_order - b.sort_order))
-        categories.sort((a, b) =>
-          a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)
-        )
-
-        if (format === 'docx') {
-          await exportToDOCX(obs as any, categories as any, legend as any)
-        } else {
-          await exportToCSV(obs as any, categories as any, legend as any)
+      for (const r of responses) {
+        const q = r?.question
+        const c = q?.category
+        if (!q || !c) continue
+        if (!catMap.has(c.id)) {
+          catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] })
         }
-      } catch (e: any) {
-        console.error('Export failed:', e)
-        alert(e?.message || 'Failed to export observation.')
-      } finally {
-        setExportingFor(null)
+        catMap.get(c.id)!.questions.push({
+          id: q.id,
+          category_id: c.id,
+          question_text: q.question_text,
+          sort_order: q.sort_order,
+        })
       }
-    },
-    [exportingFor]
-  )
 
-  const header = useMemo(() => {
+      const categories = Array.from(catMap.values())
+      categories.forEach(cat => cat.questions.sort((a, b) => a.sort_order - b.sort_order))
+      categories.sort((a, b) =>
+        a.type === b.type ? a.name.localeCompare(b.name) : a.type.localeCompare(b.type)
+      )
+
+      if (format === 'docx') {
+        await exportToDOCX(obs as any, categories as any, legend as any)
+      } else {
+        await exportToCSV(obs as any, categories as any, legend as any)
+      }
+    } catch (e: any) {
+      console.error('Export failed:', e)
+      alert(e?.message || 'Failed to export observation.')
+    } finally {
+      setExportingFor(null)
+    }
+  }
+
+  function renderHeader() {
     switch (viewMode) {
       case 'form':
         return (
@@ -138,7 +135,8 @@ export default function CaregiverPage() {
           </div>
         )
       case 'view':
-        return null // ViewObservation renders its own top bar (Back + Print)
+        // ViewObservation renders its own top bar (Back + Print)
+        return null
       default:
         return (
           <div className="flex items-center justify-between">
@@ -154,13 +152,12 @@ export default function CaregiverPage() {
           </div>
         )
     }
-  }, [viewMode])
+  }
 
-  const body = useMemo(() => {
+  function renderBody() {
     switch (viewMode) {
       case 'form':
         return <ObservationForm onComplete={() => setViewMode('list')} />
-
       case 'view':
         return currentObservationId ? (
           <ViewObservation
@@ -175,7 +172,6 @@ export default function CaregiverPage() {
             <p className="text-slate-600">No observation selected</p>
           </div>
         )
-
       default:
         return (
           <ObservationList
@@ -184,13 +180,13 @@ export default function CaregiverPage() {
           />
         )
     }
-  }, [viewMode, currentObservationId, handleViewObservation, handleExportObservation])
+  }
 
   return (
     <Layout title="Caregiver Dashboard" user={{ ...user, profile }}>
       <div className="space-y-6">
-        {header}
-        {body}
+        {renderHeader()}
+        {renderBody()}
       </div>
     </Layout>
   )
