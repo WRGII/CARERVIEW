@@ -2,4 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Print Styles */
+@media print {
+  /* Hide elements that shouldn't appear in print */
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Ensure proper page breaks and margins */
+  @page {
+    margin: 0.75in;
+    size: letter;
+  }
+  
+  /* Remove background colors and shadows for better printing */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Ensure cards and content are visible */
+  .bg-white,
+  .border,
+  .rounded-xl {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Optimize typography for print */
+  body {
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  /* Avoid breaking content across pages */
+  .space-y-6 > * {
+    page-break-inside: avoid;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Ensure proper spacing for cards */
+  .p-4, .p-6 {
+    padding: 0.5rem !important;
+  }
+  
+  /* Make score indicators more visible in print */
+  .bg-green-100,
+  .bg-yellow-100,
+  .bg-red-100 {
+    border: 1px solid #374151 !important;
+  }
+}
 html, body, #root { height: 100%; }

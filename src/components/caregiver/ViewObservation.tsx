@@ -5,7 +5,7 @@ import { Button } from '../ui/Button'
 import { Loading } from '../ui/Loading'
 import { ErrorMessage } from '../ui/ErrorMessage'
 import { formatDate } from '../../lib/utils'
-import { ArrowLeft, User, Calendar, Phone, FileText } from 'lucide-react'
+import { ArrowLeft, User, Calendar, Phone, FileText, Printer } from 'lucide-react'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 
 interface ViewObservationProps {
@@ -18,6 +18,10 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
   onBack
 }) => {
   const { data: observation, isLoading, error } = useObservation(observationId)
+
+  const handlePrint = () => {
+    window.print()
+  }
 
   if (isLoading) {
     return <Loading message="Loading observation..." />
@@ -91,16 +95,26 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
   return (
     <div className="space-y-6">
       {/* Top bar */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between print:hidden">
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to List</span>
+          </Button>
+          <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
+        </div>
         <Button
           variant="outline"
-          onClick={onBack}
+          onClick={handlePrint}
           className="flex items-center space-x-2"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to List</span>
+          <Printer className="w-4 h-4" />
+          <span>Print</span>
         </Button>
-        <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
       </div>
 
       {/* Header card with observation details */}
