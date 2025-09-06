@@ -584,7 +584,7 @@ export default function LandingPage() {
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
                 >
-                  {isSignUp ? 'Get Started — Free for Families' : 'Welcome back'}
+                  {isSignUp ? 'Get Started' : 'Welcome back'}
                   {!loading && <ArrowRight className="w-5 h-5" />}
                 </button>
               </form>
