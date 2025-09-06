@@ -122,8 +122,34 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
+        {/* Top Header Sign In Section */}
+        <div className="pt-4 pb-2">
+          <div className="flex justify-center items-center space-x-4">
+            <a
+              href="#get-started"
+              onClick={(e) => {
+                e.preventDefault()
+                setIsSignUp(false)
+                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="text-sm text-slate-gray/70 hover:text-cyan-primary transition-colors duration-200 font-medium"
+            >
+              Sign In
+            </a>
+            <button
+              onClick={() => {
+                setIsSignUp(false)
+                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="px-3 py-1.5 text-sm font-medium text-cyan-primary border border-cyan-primary/30 rounded-lg hover:bg-cyan-primary/10 transition-all duration-200"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+        
         {/* Hero Section */}
-        <div className="pt-16 pb-20 text-center">
+        <div className="pt-8 pb-20 text-center">
           <div className="flex items-center justify-center mb-8">
             <img 
               src="/CareView_logo_1_colored_highres.png" 
