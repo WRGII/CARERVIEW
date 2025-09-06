@@ -595,6 +595,13 @@ export default function LandingPage() {
 
         {/* Footer */}
         <div className="py-16 text-center border-t border-slate-gray/20">
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src="/CareView_logo_1_colored_highres.png" 
+              alt="CarerView Logo" 
+              className="w-12 h-12 object-contain"
+            />
+          </div>
           <p className="text-slate-gray/60 text-sm mb-4">
             Built with caregivers & clinicians. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
           </p>
