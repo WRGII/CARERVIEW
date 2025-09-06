@@ -341,7 +341,7 @@ export default function LandingPage() {
           </div>
           
           <p className="text-center text-slate-gray/60 mt-8 italic">
-            Categories are customizable so CarerView fits your family's reality.
+            Observations are custom so CarerView fits your family's reality.
           </p>
         </div>
 
