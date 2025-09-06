@@ -156,7 +156,7 @@ export default function LandingPage() {
           </h2>
           
           <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
-            Observing the changes in someone you love can be stressful. CarerView gives you a simple way to notice and share what's getting easier, what's getting harder, and how things shift day-to-day—so everyone on the care team talks using the same barometer.
+            Observing the changes in someone you love can be stressful. CarerView gives you a simple way to observe and share what's getting easier, what's getting harder, and how things shift day-to-day—so everyone on the care team talks using the same barometer.
           </p>
           
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
