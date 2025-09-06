@@ -121,9 +121,11 @@ export default function LandingPage() {
         {/* Hero Section */}
         <div className="pt-16 pb-20 text-center">
           <div className="flex items-center justify-center mb-8">
-            <div className="p-4 bg-gradient-to-br from-cyan-primary/20 to-peach-blush/30 rounded-full">
-              <Heart className="w-12 h-12 text-cyan-primary" />
-            </div>
+            <img 
+              src="/CareView_logo_1_colored_highres.png" 
+              alt="CarerView Logo" 
+              className="w-24 h-24 object-contain"
+            />
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-6">
