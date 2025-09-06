@@ -125,17 +125,6 @@ export default function LandingPage() {
         {/* Top Header Sign In Section */}
         <div className="pt-4 pb-2">
           <div className="flex justify-center items-center space-x-4">
-            <a
-              href="#get-started"
-              onClick={(e) => {
-                e.preventDefault()
-                setIsSignUp(false)
-                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="text-sm text-slate-gray/70 hover:text-cyan-primary transition-colors duration-200 font-medium"
-            >
-              Sign In
-            </a>
             <button
               onClick={() => {
                 setIsSignUp(false)
