@@ -612,7 +612,7 @@ export default function LandingPage() {
             />
           </div>
           <p className="text-slate-gray/60 text-sm mb-4">
-            Built with caregivers & clinicians. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
+            Built with caregivers & clinicians in mind. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
           </p>
           <p className="text-slate-gray/50 text-xs">
             © {new Date().getFullYear()} CarerView App | All rights reserved | a GrifDigi company
