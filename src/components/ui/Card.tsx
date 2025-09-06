@@ -8,7 +8,7 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className }) => {
   return (
-    <div className={cn('bg-white rounded-lg shadow-sm border border-slate-200', className)}>
+    <div className={cn('bg-warm-white rounded-lg shadow-sm border border-slate-gray/20', className)}>
       {children}
     </div>
   )
@@ -16,7 +16,7 @@ export const Card: React.FC<CardProps> = ({ children, className }) => {
 
 export const CardHeader: React.FC<CardProps> = ({ children, className }) => {
   return (
-    <div className={cn('px-6 py-4 border-b border-slate-200', className)}>
+    <div className={cn('px-6 py-4 border-b border-slate-gray/20', className)}>
       {children}
     </div>
   )
@@ -32,7 +32,7 @@ export const CardContent: React.FC<CardProps> = ({ children, className }) => {
 
 export const CardFooter: React.FC<CardProps> = ({ children, className }) => {
   return (
-    <div className={cn('px-6 py-4 border-t border-slate-200', className)}>
+    <div className={cn('px-6 py-4 border-t border-slate-gray/20', className)}>
       {children}
     </div>
   )

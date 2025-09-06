@@ -204,17 +204,17 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   }
 
   if (authLoading || isLoading) {
-    return <div className="text-slate-500 bg-white border rounded-xl p-4">Loading questions…</div>
+    return <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-4">Loading questions…</div>
   }
 
   if (isError) {
     return (
-      <div className="bg-white border rounded-xl p-4">
-        <p className="text-red-700 mb-2">Error loading questions: {error?.message}</p>
+      <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-4">
+        <p className="text-slate-gray mb-2">Error loading questions: {error?.message}</p>
         <button
           type="button"
           onClick={() => refetch()}
-          className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
+          className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
         >
           Try again
         </button>
@@ -233,44 +233,44 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name</label>
+              <label className="block text-sm font-medium text-slate-gray mb-2">Patient Name</label>
               <input
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
                 placeholder="Enter patient name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Date of Observation <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-slate-gray mb-2">
+                Date of Observation <span className="text-peach-blush">*</span>
               </label>
               <input
                 type="text"
                 value={dateOfObservation}
                 onChange={(e) => handleDateChange(e.target.value)}
                 className={`w-full px-3 py-2 rounded-lg border ${
-                  dateError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
-                } focus:outline-none focus:ring-2`}
+                  dateError ? 'border-peach-blush focus:border-peach-blush focus:ring-peach-blush' : 'border-slate-gray/30 focus:border-cyan-primary focus:ring-cyan-primary'
+                } focus:outline-none focus:ring-2 bg-warm-white text-slate-gray`}
                 placeholder="MM/DD/YYYY"
                 required
               />
-              {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+              {dateError && <p className="text-slate-gray text-sm mt-1">{dateError}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Mode of Observation</label>
+              <label className="block text-sm font-medium text-slate-gray mb-2">Mode of Observation</label>
               <select
                 value={modeOfObservation}
                 onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
               >
                 <option value="In Person">In Person</option>
                 <option value="Voice Call">Voice Call</option>
@@ -281,11 +281,11 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
           {/* Right Column */}
           <div className="flex flex-col">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Administrative Notes (Optional)</label>
+            <label className="block text-sm font-medium text-slate-gray mb-2">Administrative Notes (Optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full flex-1 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full flex-1 px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary resize-none bg-warm-white text-slate-gray"
               placeholder="Enter any notes"
               style={{ minHeight: '200px' }}
             />
@@ -298,18 +298,18 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
       <div className="space-y-6">
         {categories.map((category) => (
-          <div key={category.id} className="bg-white border rounded-xl">
-            <div className="px-4 py-3 border-b bg-slate-50">
-              <div className="font-semibold text-slate-900">
+          <div key={category.id} className="bg-warm-white border border-slate-gray/20 rounded-xl">
+            <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10">
+              <div className="font-semibold text-slate-gray">
                 {category.name}{' '}
-                <span className="text-slate-500 text-sm">({category.type})</span>
+                <span className="text-slate-gray/60 text-sm">({category.type})</span>
               </div>
             </div>
             <div className="p-4">
               <div className="space-y-4">
                 {category.questions.map((question) => (
                   <div key={question.id} className="grid md:grid-cols-12 items-center gap-3">
-                    <div className="md:col-span-9 text-slate-800">{question.text}</div>
+                    <div className="md:col-span-9 text-slate-gray">{question.text}</div>
                     <div className="md:col-span-3">
                       <ScorePicker
                         value={answers[question.id]}
@@ -322,14 +322,14 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                 ))}
 
                 {/* Category Notes Section */}
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                <div className="mt-6 pt-4 border-t border-slate-gray/20">
+                  <label className="block text-sm font-medium text-slate-gray mb-2">
                     {category.name} Category Notes (Optional)
                   </label>
                   <textarea
                     value={categoryNotes[category.id] || ''}
                     onChange={(e) => setCategoryNote(category.id, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
                     placeholder={`Enter notes specific to ${category.name} observations...`}
                     rows={2}
                   />
@@ -338,7 +338,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             </div>
 
             {/* Category Save Buttons */}
-            <div className="mt-6 pt-4 border-t border-slate-200">
+            <div className="mt-6 pt-4 border-t border-slate-gray/20">
               <div className="flex items-center justify-end space-x-3">
                 <Button
                   type="button"
@@ -377,7 +377,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       </div>
 
       {saveError && (
-        <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">
           {saveError}
         </div>
       )}

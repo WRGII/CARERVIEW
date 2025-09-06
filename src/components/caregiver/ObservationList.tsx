@@ -27,12 +27,12 @@ export const ObservationList: React.FC<ObservationListProps> = ({
 
   if (!observations || observations.length === 0) {
     return (
-      <Card>
+      <Card className="bg-warm-white">
         <CardContent>
           <div className="text-center py-8">
-            <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No Observations Yet</h3>
-            <p className="text-slate-600">Create your first observation to get started.</p>
+            <FileText className="w-12 h-12 text-slate-gray/40 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-gray mb-2">No Observations Yet</h3>
+            <p className="text-slate-gray/70">Create your first observation to get started.</p>
           </div>
         </CardContent>
       </Card>
@@ -42,18 +42,18 @@ export const ObservationList: React.FC<ObservationListProps> = ({
   return (
     <div className="space-y-4">
       {observations.map(observation => (
-        <Card key={observation.id}>
+        <Card key={observation.id} className="bg-warm-white">
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-slate-gray">
                   {observation.patient_name || 'Unnamed Patient'}
                 </h3>
-                <p className="text-slate-600">
+                <p className="text-slate-gray/80">
                   Observed on {formatDate(observation.observation_date)}
                 </p>
                 {observation.notes && (
-                  <p className="text-sm text-slate-500 mt-1">{observation.notes}</p>
+                  <p className="text-sm text-slate-gray/60 mt-1">{observation.notes}</p>
                 )}
               </div>
               <div className="flex items-center space-x-2">

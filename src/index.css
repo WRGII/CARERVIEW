@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom CSS Variables for Brand Colors */
+:root {
+  --warm-white: #FAFAF5;
+  --cyan-primary: #00BCD4;
+  --slate-gray: #5C6F77;
+  --peach-blush: #FAD4C0;
+  --mint-green: #C8E6C9;
+  --cyan-hover: #00ACC1;
+  --cyan-dark: #0097A7;
+}
+
+/* Base styles with new color palette */
+body {
+  background-color: var(--warm-white);
+  color: var(--slate-gray);
+}
+
 /* Print Styles */
 @media print {
   /* Hide elements that shouldn't appear in print */

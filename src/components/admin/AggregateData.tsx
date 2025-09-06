@@ -86,43 +86,43 @@ export const AggregateData: React.FC = () => {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-cyan-primary/20 rounded-lg">
+                <FileText className="w-6 h-6 text-cyan-primary" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Total Observations</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.totalObservations}</p>
+                <p className="text-sm text-slate-gray/70">Total Observations</p>
+                <p className="text-2xl font-bold text-slate-gray">{stats.totalObservations}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Users className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-mint-green/60 rounded-lg">
+                <Users className="w-6 h-6 text-slate-gray" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Active Caregivers</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.totalCaregivers}</p>
+                <p className="text-sm text-slate-gray/70">Active Caregivers</p>
+                <p className="text-2xl font-bold text-slate-gray">{stats.totalCaregivers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-peach-blush/60 rounded-lg">
+                <BarChart3 className="w-6 h-6 text-slate-gray" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">Avg Category Score</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm text-slate-gray/70">Avg Category Score</p>
+                <p className="text-2xl font-bold text-slate-gray">
                   {stats.averageScoreByCategory.length > 0 
                     ? (stats.averageScoreByCategory.reduce((sum, cat) => sum + cat.average, 0) / stats.averageScoreByCategory.length).toFixed(1)
                     : '0.0'
@@ -133,15 +133,15 @@ export const AggregateData: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-orange-600" />
+              <div className="p-3 bg-cyan-primary/20 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-cyan-primary" />
               </div>
               <div>
-                <p className="text-sm text-slate-600">This Week</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm text-slate-gray/70">This Week</p>
+                <p className="text-2xl font-bold text-slate-gray">
                   {stats.recentActivity.reduce((sum, day) => sum + day.count, 0)}
                 </p>
               </div>
@@ -152,9 +152,9 @@ export const AggregateData: React.FC = () => {
 
       {/* Average Scores by Category */}
       {stats.averageScoreByCategory.length > 0 && (
-        <Card>
+        <Card className="bg-warm-white">
           <CardHeader>
-            <h3 className="text-lg font-semibold text-slate-900">Average Scores by Category</h3>
+            <h3 className="text-lg font-semibold text-slate-gray">Average Scores by Category</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -163,21 +163,21 @@ export const AggregateData: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       item.type === 'ADL' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
+                        ? 'bg-cyan-primary/20 text-cyan-primary' 
+                        : 'bg-mint-green/60 text-slate-gray'
                     }`}>
                       {item.type}
                     </span>
-                    <span className="text-slate-900">{item.category}</span>
+                    <span className="text-slate-gray">{item.category}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-slate-200 rounded-full h-3">
+                    <div className="w-32 bg-slate-gray/20 rounded-full h-3">
                       <div 
-                        className="bg-blue-600 h-3 rounded-full"
+                        className="bg-cyan-primary h-3 rounded-full"
                         style={{ width: `${(item.average / 10) * 100}%` }}
                       />
                     </div>
-                    <span className="text-lg font-semibold text-slate-900 w-12 text-right">
+                    <span className="text-lg font-semibold text-slate-gray w-12 text-right">
                       {item.average.toFixed(1)}
                     </span>
                   </div>

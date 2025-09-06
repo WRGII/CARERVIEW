@@ -45,22 +45,22 @@ export default function AdminPage() {
     <div className="mx-auto max-w-5xl p-6">
       {/* Top bar: identity + logout */}
       <div className="mb-6 flex items-center justify-between">
-        <div className="text-sm text-slate-700">
+        <div className="text-sm text-slate-gray">
           <span className="font-semibold">{display}</span>
-          <span className="ml-2 inline-block rounded border px-2 py-0.5 text-xs">
+          <span className="ml-2 inline-block rounded border border-slate-gray/30 px-2 py-0.5 text-xs">
             Admin
           </span>
         </div>
         <button
           type="button"
           onClick={handleSignOut}
-          className="rounded border px-3 py-1 text-sm hover:bg-slate-50"
+          className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
         >
           Log out
         </button>
       </div>
 
-      <h1 className="text-2xl font-semibold mb-4">Admin Dashboard</h1>
+      <h1 className="text-2xl font-semibold mb-4 text-slate-gray">Admin Dashboard</h1>
 
       {/* System-wide aggregates / KPIs */}
       <div className="mt-6">

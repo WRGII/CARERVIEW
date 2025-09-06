@@ -118,27 +118,27 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       </div>
 
       {/* Header card with observation details */}
-      <Card>
+      <Card className="bg-warm-white">
         <CardHeader>
-          <h3 className="text-lg font-semibold text-slate-900">Observation Details</h3>
+          <h3 className="text-lg font-semibold text-slate-gray">Observation Details</h3>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex items-center space-x-3">
-              <User className="w-5 h-5 text-slate-500" />
+              <User className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-600">Patient Name</p>
-                <p className="font-medium text-slate-900">
+                <p className="text-sm text-slate-gray/70">Patient Name</p>
+                <p className="font-medium text-slate-gray">
                   {observation.patient_name || 'Unnamed Patient'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <Calendar className="w-5 h-5 text-slate-500" />
+              <Calendar className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-600">Observation Date</p>
-                <p className="font-medium text-slate-900">
+                <p className="text-sm text-slate-gray/70">Observation Date</p>
+                <p className="font-medium text-slate-gray">
                   {formatDate(observation.observation_date)}
                 </p>
               </div>
@@ -146,22 +146,22 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
 
             {observation.mode_of_observation && (
               <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-slate-500" />
+                <Phone className="w-5 h-5 text-slate-gray/60" />
                 <div>
-                  <p className="text-sm text-slate-600">Mode of Observation</p>
-                  <p className="font-medium text-slate-900">{observation.mode_of_observation}</p>
+                  <p className="text-sm text-slate-gray/70">Mode of Observation</p>
+                  <p className="font-medium text-slate-gray">{observation.mode_of_observation}</p>
                 </div>
               </div>
             )}
 
             {observation.caregiver_name && (
               <div className="flex items-center space-x-3">
-                <User className="w-5 h-5 text-slate-500" />
+                <User className="w-5 h-5 text-slate-gray/60" />
                 <div>
-                  <p className="text-sm text-slate-600">Caregiver</p>
-                  <p className="font-medium text-slate-900">{observation.caregiver_name}</p>
+                  <p className="text-sm text-slate-gray/70">Caregiver</p>
+                  <p className="font-medium text-slate-gray">{observation.caregiver_name}</p>
                   {observation.caregiver_email && (
-                    <p className="text-sm text-slate-500">{observation.caregiver_email}</p>
+                    <p className="text-sm text-slate-gray/60">{observation.caregiver_email}</p>
                   )}
                 </div>
               </div>
@@ -169,12 +169,12 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
           </div>
 
           {observation.notes && (
-            <div className="mt-6 pt-4 border-t border-slate-200">
+            <div className="mt-6 pt-4 border-t border-slate-gray/20">
               <div className="flex items-start space-x-3">
-                <FileText className="w-5 h-5 text-slate-500 mt-0.5" />
+                <FileText className="w-5 h-5 text-slate-gray/60 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm text-slate-600 mb-1">Notes</p>
-                  <p className="text-slate-900">{observation.notes}</p>
+                  <p className="text-sm text-slate-gray/70 mb-1">Notes</p>
+                  <p className="text-slate-gray">{observation.notes}</p>
                 </div>
               </div>
             </div>
@@ -186,16 +186,16 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       {categorizedResponses.length > 0 ? (
         <div className="space-y-6">
           {categorizedResponses.map(category => (
-            <Card key={category.id}>
+            <Card key={category.id} className="bg-warm-white">
               <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-slate-gray">
                     {category.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     category.type === 'ADL'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-green-100 text-green-800'
+                      ? 'bg-cyan-primary/20 text-cyan-primary'
+                      : 'bg-mint-green/60 text-slate-gray'
                   }`}>
                     {category.type}
                   </span>
@@ -204,24 +204,24 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
               <CardContent>
                 <div className="space-y-3">
                   {category.responses.map((response, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-slate-100 last:border-b-0">
+                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-slate-gray/10 last:border-b-0">
                       <div className="flex-1 mb-2 sm:mb-0">
-                        <p className="text-slate-900">{response.question.question_text}</p>
+                        <p className="text-slate-gray">{response.question.question_text}</p>
                         {response.notes && (
-                          <p className="text-sm text-slate-600 mt-1">{response.notes}</p>
+                          <p className="text-sm text-slate-gray/70 mt-1">{response.notes}</p>
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className={`inline-flex items-center justify-center w-12 h-8 rounded-lg text-sm font-semibold ${
                           response.score >= 4
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-mint-green/60 text-slate-gray'
                             : response.score >= 3
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-cyan-primary/20 text-cyan-primary'
+                            : 'bg-peach-blush/60 text-slate-gray'
                         }`}>
                           {response.score}
                         </span>
-                        <span className="text-slate-500 text-sm">/5</span>
+                        <span className="text-slate-gray/60 text-sm">/5</span>
                       </div>
                     </div>
                   ))}
@@ -229,12 +229,12 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
               
               {/* Display category notes if any exist */}
               {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes && (
-                <div className="mt-4 pt-4 border-t border-slate-200">
+                <div className="mt-4 pt-4 border-t border-slate-gray/20">
                   <div className="flex items-start space-x-3">
-                    <FileText className="w-4 h-4 text-slate-500 mt-0.5" />
+                    <FileText className="w-4 h-4 text-slate-gray/60 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm text-slate-600 mb-1">{category.name} Category Notes</p>
-                      <p className="text-slate-900">
+                      <p className="text-sm text-slate-gray/70 mb-1">{category.name} Category Notes</p>
+                      <p className="text-slate-gray">
                         {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes}
                       </p>
                     </div>
@@ -246,12 +246,12 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
           ))}
         </div>
       ) : (
-        <Card>
+        <Card className="bg-warm-white">
           <CardContent>
             <div className="text-center py-8">
-              <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">No Responses</h3>
-              <p className="text-slate-600">This observation has no recorded responses.</p>
+              <FileText className="w-12 h-12 text-slate-gray/40 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-gray mb-2">No Responses</h3>
+              <p className="text-slate-gray/70">This observation has no recorded responses.</p>
             </div>
           </CardContent>
         </Card>
