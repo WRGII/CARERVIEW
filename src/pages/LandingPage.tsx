@@ -432,7 +432,7 @@ export default function LandingPage() {
                     <CheckCircle className="w-5 h-5 text-slate-gray" />
                   </div>
                   <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">A printable/shareable view for appointments</h5>
+                    <h5 className="text-lg font-semibold text-slate-gray mb-1">A printable view for appointments</h5>
                     <p className="text-slate-gray/80">Bring concrete data to every healthcare conversation</p>
                   </div>
                 </div>
