@@ -67,6 +67,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
                   <div className="text-sm text-slate-gray/80">
                     <span className="font-medium">{user.profile?.display_name}</span>
                     <span className="text-slate-gray/60 ml-1">({user.email})</span>
+                    {user.profile?.display_name && (
+                      <>
+                        <span className="text-slate-gray/40">•</span>
+                        <div className="text-sm text-slate-gray/70">
+                          Welcome <span className="font-medium text-slate-gray">{user.profile.display_name}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
