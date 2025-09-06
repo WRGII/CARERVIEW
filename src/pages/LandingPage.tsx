@@ -189,7 +189,7 @@ export default function LandingPage() {
             <div className="bg-warm-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-slate-gray/10">
               <div className="text-2xl text-cyan-primary mb-2">"</div>
               <blockquote className="text-lg text-slate-gray/90 italic leading-relaxed mb-6">
-                My brother and my two cousins are the primary caregivers for our Auntie. Our emotions around her independence ability caused a lot of arguments. We love CarerView because it lets us have a common and easy system to discuss the entire situation.
+                My brother and my two cousins are the primary caregivers for our Auntie. Our emotions around her independence ability caused a lot of arguments. We love CarerView because it lets us have a common and easy system to discuss our observations of the entire situation.
               </blockquote>
               <div className="flex items-center justify-center">
                 <div className="w-12 h-12 bg-gradient-to-br from-cyan-primary/20 to-mint-green/30 rounded-full flex items-center justify-center mr-4">
