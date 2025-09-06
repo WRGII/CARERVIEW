@@ -497,6 +497,15 @@ export default function LandingPage() {
             </div>
             
             <div className="bg-warm-white p-8 rounded-2xl shadow-xl border border-slate-gray/20">
+              {/* Logo in top left corner */}
+              <div className="flex justify-start mb-6">
+                <img 
+                  src="/CareView_logo_1_colored_highres.png" 
+                  alt="CarerView Logo" 
+                  className="w-12 h-12 object-contain"
+                />
+              </div>
+              
               <div className="flex justify-center mb-6">
                 <div className="flex bg-slate-gray/10 rounded-lg p-1">
                   <button
