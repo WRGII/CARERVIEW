@@ -239,7 +239,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Bring everyone together</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Share read-only links or PDFs with family and clinicians so discussions start from the same definitions and data.
+                  Share private Observations with family and clinicians so discussions start from the same definitions and data.
                 </p>
               </CardContent>
             </Card>
