@@ -149,7 +149,7 @@ export default function LandingPage() {
               href="#get-started"
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
-              Get Started — Free for Families <ArrowRight className="w-5 h-5" />
+              Get Started Today <ArrowRight className="w-5 h-5" />
             </a>
             <a
               href="#sample-report"
