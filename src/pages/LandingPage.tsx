@@ -203,7 +203,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Simple daily check-ins</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Spend 1–3 minutes noting how things went across core Activities of Daily Living. On most days, 3–5 quick check-ins are plenty.
+                  Spend just a few  minutes noting how things went across core Activities of Daily Living. On most days, 3–5 quick check-ins are plenty.
                 </p>
               </CardContent>
             </Card>
