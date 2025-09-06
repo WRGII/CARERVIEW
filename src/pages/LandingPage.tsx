@@ -88,7 +88,11 @@ export default function LandingPage() {
         await routeByRole()
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed')
+      if (err.message === 'Invalid login credentials') {
+        setError('Incorrect email or password. Please check your credentials or try resetting your password.')
+      } else {
+        setError(err.message || 'Authentication failed')
+      }
     } finally {
       setLoading(false)
     }
