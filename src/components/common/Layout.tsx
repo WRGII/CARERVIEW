@@ -1,6 +1,7 @@
+// src/components/layout/Layout.tsx
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import type { AuthUser } from '../../lib/auth'
 import { Button } from '../ui/Button'
@@ -17,33 +18,37 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
-    console.log('Sign out button clicked - starting sign out process')
+    console.log('[Layout] Sign out clicked')
     setSignOutError(null)
     setIsSigningOut(true)
-    
+
     try {
-      console.log('Calling supabase.auth.signOut()')
-      await supabase.auth.signOut()
-      console.log('supabase.auth.signOut() completed successfully')
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
-      console.error('Sign out error:', err)
-      setSignOutError(`Sign out failed: ${errorMessage}`)
-      setIsSigningOut(false)
-      return // Don't proceed with navigation if sign out failed
-    } finally {
-      if (!signOutError) {
-        console.log('Attempting navigation to landing page')
-        // Try router navigation
-        navigate('/', { replace: true })
-        // Fallback: force hard reload to LandingPage
-        setTimeout(() => {
-          if (window.location.pathname !== '/') {
-            console.log('Router navigation may have failed, forcing page reload')
-            window.location.assign('/')
-          }
-        }, 100) // Increased timeout slightly
+      // Supabase v2: returns { error }
+      console.log('[Layout] Calling supabase.auth.signOut()')
+      const { error } = await supabase.auth.signOut()
+
+      if (error) {
+        console.error('[Layout] signOut error:', error)
+        setSignOutError(`Sign out failed: ${error.message}`)
+        setIsSigningOut(false)
+        return
       }
+
+      console.log('[Layout] signOut success → navigating to "/"')
+      // Primary SPA navigation
+      navigate('/', { replace: true })
+
+      // Absolute fallback in case router is mid-transition / stale
+      setTimeout(() => {
+        if (window.location.pathname !== '/') {
+          console.log('[Layout] Forcing hard reload to "/" fallback')
+          window.location.assign('/')
+        }
+      }, 120)
+    } catch (err: any) {
+      console.error('[Layout] signOut unexpected error:', err)
+      setSignOutError(`Sign out failed: ${err?.message ?? 'Unknown error'}`)
+    } finally {
       setIsSigningOut(false)
     }
   }
@@ -54,9 +59,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <img 
-                src="/CareView_logo_1_colored_highres.png" 
-                alt="CarerView Logo" 
+              <img
+                src="/CareView_logo_1_colored_highres.png"
+                alt="CarerView Logo"
                 className="w-8 h-8 object-contain mr-3"
               />
               <div>
@@ -79,6 +84,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
                 </div>
               </div>
             </div>
+
             <div className="flex items-center space-x-4">
               <h2 className="text-lg font-semibold text-slate-gray">{title}</h2>
               {signOutError && (
@@ -87,14 +93,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
                 </div>
               )}
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
                 disabled={isSigningOut}
+                aria-busy={isSigningOut}
                 className="flex items-center space-x-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span>{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
+                <span>{isSigningOut ? 'Signing Out…' : 'Sign Out'}</span>
               </Button>
             </div>
           </div>
