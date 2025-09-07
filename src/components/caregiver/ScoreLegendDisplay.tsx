@@ -50,7 +50,7 @@ export const ScoreLegendDisplay: React.FC = () => {
     .sort((a, b) => a.score - b.score)
 
   // Color mapping for scores 1-5
-  const getScoreColorNew = (score: number) => {
+  const getScoreColor = (score: number) => {
     switch (score) {
       case 1: return 'bg-peach-blush'
       case 2: return 'bg-peach-blush/70'
