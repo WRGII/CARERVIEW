@@ -25,7 +25,7 @@ type CategoryQuestion = {
 type Category = {
   id: string
   name: string
-  type: 'ADL' | 'IADL'
+  type: 'ADL' | 'IADL' | null
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -81,7 +81,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       if (!user?.id) return []
       const { data, error } = await supabase
         .from('v_category_questions')
-        .select('*')
+        .select('category_id, category_name, type, category_order, question_id, question_order, question_text')
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
@@ -95,7 +95,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     const map = new Map<string, Category>()
     categoryQuestions.forEach(item => {
       // Skip items with missing critical data
-      if (!item.category_id || !item.category_name || !item.type || 
+      if (!item.category_id || !item.category_name || 
           item.category_order === null || !item.question_id || 
           !item.question_text || item.question_order === null) {
         return
@@ -310,7 +310,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10">
               <div className="font-semibold text-slate-gray">
                 {category.name}{' '}
-                <span className="text-slate-gray/60 text-sm">({category.type})</span>
+                <span className="text-slate-gray/60 text-sm">({category.type || 'N/A'})</span>
               </div>
             </div>
             <div className="p-4">
