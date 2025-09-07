@@ -13,13 +13,13 @@ interface ObservationFormProps {
 }
 
 type CategoryQuestion = {
-  category_id: string
-  category_name: string
-  type: 'ADL' | 'IADL'
-  category_order: number
-  question_id: string
-  question_order: number
-  question_text: string
+  category_id: string | null
+  category_name: string | null
+  type: 'ADL' | 'IADL' | null
+  category_order: number | null
+  question_id: string | null
+  question_order: number | null
+  question_text: string | null
 }
 
 type Category = {
@@ -82,7 +82,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       const { data, error } = await supabase
         .from('v_category_questions')
         .select('*')
-        .order('type', { ascending: true })
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
@@ -95,6 +94,13 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
     categoryQuestions.forEach(item => {
+      // Skip items with missing critical data
+      if (!item.category_id || !item.category_name || !item.type || 
+          item.category_order === null || !item.question_id || 
+          !item.question_text || item.question_order === null) {
+        return
+      }
+      
       if (!map.has(item.category_id)) {
         map.set(item.category_id, {
           id: item.category_id,
@@ -120,7 +126,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const questionCategoryMap: Record<string, string> = React.useMemo(() => {
     const map: Record<string, string> = {}
     categories.forEach(category => {
+      if (!category.id) return
       category.questions.forEach(question => {
+        if (!question.id) return
         map[question.id] = category.id
       })
     })
