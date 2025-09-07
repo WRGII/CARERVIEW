@@ -193,11 +193,11 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     {category.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    category.category_type === 'ADL'
+                    (category.category_type ?? 'general') === 'ADL'
                       ? 'bg-cyan-primary/20 text-cyan-primary'
                       : 'bg-mint-green/60 text-slate-gray'
                   }`}>
-                    {category.category_type}
+                    {category.category_type ?? 'general'}
                   </span>
                 </div>
               </CardHeader>

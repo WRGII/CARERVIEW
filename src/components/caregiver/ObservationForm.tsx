@@ -15,7 +15,7 @@ interface ObservationFormProps {
 export type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  category_type: string   // use this instead of "type"
+  category_type: string
   category_order: number
   question_id: string
   question_text: string
@@ -101,13 +101,11 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         return
       }
       
-      const catType = item.category_type ?? 'general'
-      
       if (!map.has(item.category_id)) {
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          category_type: catType,
+          category_type: item.category_type ?? 'general',
           order: item.category_order,
           questions: []
         })
@@ -119,7 +117,11 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       })
     })
     const result = Array.from(map.values())
-    result.sort((a, b) => (a.category_type === b.category_type ? a.order - b.order : a.category_type.localeCompare(b.category_type)))
+    result.sort((a, b) => {
+      const aType = a.category_type ?? 'general'
+      const bType = b.category_type ?? 'general'
+      return aType === bType ? a.order - b.order : aType.localeCompare(bType)
+    })
     result.forEach(cat => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
@@ -322,7 +324,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10">
               <div className="font-semibold text-slate-gray">
                 {category.name}{' '}
-                <span className="text-slate-gray/60 text-sm">({category.category_type || 'N/A'})</span>
+                <span className="text-slate-gray/60 text-sm">({category.category_type ?? 'general'})</span>
               </div>
             </div>
             <div className="p-4">
