@@ -16,7 +16,6 @@ export interface Observation {
   caregiver_email: string
   created_at: string
   updated_at: string
-  last_saved_at: string | null
 }
 
 export interface ObservationWithResponses extends Observation {
@@ -121,13 +120,12 @@ export const useCreateObservation = () => {
         caregiver_name: observation.caregiver_name ?? '',
         caregiver_email: observation.caregiver_email ?? '',
         user_id: user.id, // ✅ critical for RLS
-        last_saved_at: new Date().toISOString(), // ✅ record save timestamp
       }
 
       const { data, error } = await supabase
         .from('observations')
         .insert(payload)
-        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at, last_saved_at')
+        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at')
         .single()
 
       if (error) throw new Error(`Failed to create observation: ${error.message}`)
@@ -173,7 +171,6 @@ export const useCreateObservationWithResponses = () => {
         caregiver_name: observation.caregiver_name ?? '',
         caregiver_email: observation.caregiver_email ?? '',
         user_id: user.id, // ✅ needed for RLS
-        last_saved_at: new Date().toISOString(), // ✅ record save timestamp
       }
 
       // 1) Insert observation and return id
@@ -225,80 +222,52 @@ export const useUpsertObservationAndResponses = () => {
       const { observationId, observation, answers, categoryNotes, questionCategoryMap } = args
       if (!user?.id) throw new Error('User not authenticated')
 
-      // Normalize/validate keys for upsert
-      const observation_date =
-        typeof observation.observation_date === 'string'
-          ? observation.observation_date
-          : new Date().toISOString().slice(0, 10)
+      // Upsert observation using the actual database schema
+      const { data: obs, error: obsErr } = await supabase
+        .from('observations')
+        .upsert(
+          {
+            id: observationId,                 // undefined → new row
+            notes: observation.notes ?? null,
+            date_of_observation: observation.observation_date, // YYYY-MM-DD
+            patient_name: observation.patient_name ?? null,
+            mode_of_observation: observation.mode_of_observation ?? null,
+            caregiver_name: observation.caregiver_name ?? null,
+            caregiver_email: observation.caregiver_email ?? null,
+            user_id: user.id,
+          },
+          { onConflict: 'id' }
+        )
+        .select('id')
+        .single()
 
-      const obsPayload = {
-        patient_name: (observation.patient_name ?? '').trim() || 'Unnamed Patient',
-        observation_date,
-        mode_of_observation: (observation.mode_of_observation as Observation['mode_of_observation']) ?? 'In Person',
-        notes: observation.notes ?? '',
-        caregiver_name: observation.caregiver_name ?? '',
-        caregiver_email: observation.caregiver_email ?? '',
-        user_id: user.id,
-        last_saved_at: new Date().toISOString(), // ✅ record save timestamp for both create and update
-      }
+      if (obsErr) throw new Error(`Failed to upsert observation: ${obsErr.message}`)
+      const observation_id = obs!.id
 
-      let finalObservationId: string
+      // Delete old responses then insert fresh ones
+      await supabase.from('responses').delete().eq('observation_id', observation_id)
 
-      if (observationId) {
-        // Update existing observation
-        const { data: obsRow, error: obsErr } = await supabase
-          .from('observations')
-          .update(obsPayload)
-          .eq('id', observationId)
-          .eq('user_id', user.id)
-          .select('id')
-          .single()
-
-        if (obsErr) throw new Error(`Failed to update observation: ${obsErr.message}`)
-        if (!obsRow?.id) throw new Error('Observation updated but id was not returned.')
-        finalObservationId = obsRow.id
-      } else {
-        // Create new observation
-        const { data: obsRow, error: obsErr } = await supabase
-          .from('observations')
-          .insert(obsPayload)
-          .select('id')
-          .single()
-
-        if (obsErr) throw new Error(`Failed to create observation: ${obsErr.message}`)
-        if (!obsRow?.id) throw new Error('Observation saved but id was not returned.')
-        finalObservationId = obsRow.id
-      }
-
-      // Prepare responses for upsert
-      const responseRows = Object.entries(answers)
+      const rows = Object.entries(answers)
         .filter(([_, score]) => typeof score === 'number')
         .map(([question_id, score]) => {
           const category_id = questionCategoryMap[question_id]
-          const category_notes = category_id ? categoryNotes[category_id] || '' : ''
+          const category_notes = category_id ? categoryNotes[category_id] ?? null : null
           
           return {
-            observation_id: finalObservationId,
+            observation_id: observation_id,
             question_id,
             score: score as number,
-            notes: '',
+            notes: null,
             category_notes
           }
         })
 
-      if (responseRows.length > 0) {
-        const { error: respErr } = await supabase
-          .from('responses')
-          .upsert(responseRows, {
-            onConflict: 'observation_id,question_id'
-          })
-
-        if (respErr) {
-          throw new Error(`Failed to save responses: ${respErr.message}`)
-        }
+      if (rows.length > 0) {
+        const { error: respErr } = await supabase.from('responses').insert(rows)
+        if (respErr) throw new Error(`Failed to save responses: ${respErr.message}`)
       }
 
-      return { id: finalObservationId }
+      return { id: observation_id }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['observations'] })
@@ -318,12 +287,10 @@ export const useUpdateObservation = () => {
         .from('observations')
         .update({
           ...updates,
-          updated_at: new Date().toISOString(),
-          last_saved_at: new Date().toISOString(), // ✅ record save timestamp
         })
         .eq('id', id)
         .eq('user_id', user.id)
-        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at, last_saved_at')
+        .select('id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, user_id, created_at, updated_at')
         .single()
 
       if (error) {
