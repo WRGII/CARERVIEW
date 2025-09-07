@@ -12,20 +12,20 @@ interface ObservationFormProps {
   onComplete: () => void
 }
 
-type CategoryQuestion = {
-  category_id: string | null
-  category_name: string | null
-  type: 'ADL' | 'IADL' | null
-  category_order: number | null
-  question_id: string | null
-  question_order: number | null
-  question_text: string | null
+export type CategoryQuestionRow = {
+  category_id: string
+  category_name: string
+  category_type: string   // use this instead of "type"
+  category_order: number
+  question_id: string
+  question_text: string
+  question_order: number
 }
 
 type Category = {
   id: string
   name: string
-  type: 'ADL' | 'IADL' | null
+  category_type: string
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -77,11 +77,11 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchOnWindowFocus: false,
-    queryFn: async (): Promise<CategoryQuestion[]> => {
+    queryFn: async (): Promise<CategoryQuestionRow[]> => {
       if (!user?.id) return []
       const { data, error } = await supabase
         .from('v_category_questions')
-        .select('category_id, category_name, type, category_order, question_id, question_order, question_text')
+        .select('category_id, category_name, category_type, category_order, question_id, question_text, question_order')
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
@@ -95,17 +95,19 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     const map = new Map<string, Category>()
     categoryQuestions.forEach(item => {
       // Skip items with missing critical data
-      if (!item.category_id || !item.category_name || 
-          item.category_order === null || !item.question_id || 
-          !item.question_text || item.question_order === null) {
+      if (!item.category_id || !item.category_name || !item.category_type ||
+          !item.category_order || !item.question_id || 
+          !item.question_text || !item.question_order) {
         return
       }
+      
+      const catType = item.category_type ?? 'general'
       
       if (!map.has(item.category_id)) {
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          type: item.type,
+          category_type: catType,
           order: item.category_order,
           questions: []
         })
@@ -117,7 +119,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       })
     })
     const result = Array.from(map.values())
-    result.sort((a, b) => (a.type === b.type ? a.order - b.order : a.type.localeCompare(b.type)))
+    result.sort((a, b) => (a.category_type === b.category_type ? a.order - b.order : a.category_type.localeCompare(b.category_type)))
     result.forEach(cat => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
@@ -230,6 +232,16 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     )
   }
 
+  // Show friendly message if no categories available
+  if (!categories || categories.length === 0) {
+    return (
+      <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6 text-center">
+        <p className="text-slate-gray mb-2">No questions available</p>
+        <p className="text-slate-gray/60 text-sm">Please contact support if this issue persists.</p>
+      </div>
+    )
+  }
+
   // Map scores to descriptions for ScorePicker
   const legendMap: Record<number, string> = {
     1: 'Total assistance',
@@ -310,7 +322,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10">
               <div className="font-semibold text-slate-gray">
                 {category.name}{' '}
-                <span className="text-slate-gray/60 text-sm">({category.type || 'N/A'})</span>
+                <span className="text-slate-gray/60 text-sm">({category.category_type || 'N/A'})</span>
               </div>
             </div>
             <div className="p-4">
