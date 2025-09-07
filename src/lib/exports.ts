@@ -13,7 +13,7 @@ interface Legend {
 interface Category {
   id: string
   name: string
-  type: 'ADL' | 'IADL'
+  category_type: string
   ada_definition?: string
   ot_definition?: string
   sort_order?: number
@@ -61,7 +61,7 @@ interface ObservationWithResponses {
       category?: {
         id: string
         name: string
-        type: 'ADL' | 'IADL'
+        category_type: string
       } | null
     } | null
   }>
@@ -178,7 +178,7 @@ export const exportToDOCX = async (
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${category.name} (${category.type})`,
+                  text: `${category.name} (${category.category_type ?? 'general'})`,
                   bold: true,
                   size: 26,
                   color: '1f2937'
@@ -414,7 +414,7 @@ export const exportToCSV = async (
       observation.patient_name || 'Unnamed Patient',
       observation.observation_date,
       category?.name || '',
-      category?.type || '',
+      category?.category_type || '',
       response.question?.question_text || '',
       response.score?.toString() || '',
       legendDescription,
