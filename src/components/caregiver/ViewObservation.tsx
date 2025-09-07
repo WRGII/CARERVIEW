@@ -41,7 +41,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     const categoryMap = new Map<string, {
       id: string
       name: string
-      type: 'ADL' | 'IADL'
+      category_type: 'ADL' | 'IADL'
       responses: Array<{
         score: number
         notes: string | null
@@ -60,7 +60,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         categoryMap.set(category.id, {
           id: category.id,
           name: category.name,
-          type: category.type,
+          category_type: category.category_type,
           responses: []
         })
       }
@@ -78,8 +78,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     // Sort categories: ADL before IADL, then by name
     const categories = Array.from(categoryMap.values())
     categories.sort((a, b) => {
-      if (a.type !== b.type) {
-        return a.type === 'ADL' ? -1 : 1
+      if (a.category_type !== b.category_type) {
+        return a.category_type === 'ADL' ? -1 : 1
       }
       return a.name.localeCompare(b.name)
     })
