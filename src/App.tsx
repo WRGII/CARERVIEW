@@ -72,6 +72,14 @@ export default function App() {
               </CaregiverGuard>
             }
           />
+          <Route
+  path="/caregiver/observations/new"
+  element={
+    <CaregiverGuard>
+      <NewObservationPage />
+    </CaregiverGuard>
+  }
+/>
           <Route path="/reset-password" element={<ResetPassword />} />
           {/* Last resort: if anything falls through, go home */}
           <Route path="*" element={<Navigate to="/" replace />} />
