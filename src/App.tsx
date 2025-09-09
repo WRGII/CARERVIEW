@@ -10,7 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
-import NewObservationPage from "./pages/caregiver/NewObservationPage";
+import NewObservationPage from "./components/caregiver/NewObservationPage";
 
 const queryClient = new QueryClient();
 
