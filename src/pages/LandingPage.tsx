@@ -139,17 +139,16 @@ export default function LandingPage() {
         
         {/* Hero Section */}
         <div className="pt-8 pb-20 text-center">
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex flex-col items-center justify-center mb-8">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-4">
+              CarerView
+            </h1>
             <img 
               src="/CareView_logo_1_colored_highres.png" 
               alt="CarerView Logo" 
               className="w-24 h-24 object-contain"
             />
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-6">
-            CarerView
-          </h1>
           
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-gray/90 mb-8 leading-tight">
             Clear observations out of the confusion of care.
