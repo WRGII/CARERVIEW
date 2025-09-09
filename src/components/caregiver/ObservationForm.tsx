@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface ObservationFormProps {
   onComplete: () => void
