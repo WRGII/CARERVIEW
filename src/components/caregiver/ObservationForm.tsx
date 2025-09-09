@@ -6,7 +6,8 @@ import { useAuth } from '../../hooks/useAuth'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
-import ScorePicker from '../ui/ScorePicker' // ✅ default import
+import ScorePicker from '../ui/ScorePicker'
+import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -360,12 +361,46 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       <div className="space-y-6">
         {categories.map((category) => (
           <div key={category.id} className="bg-warm-white border border-slate-gray/20 rounded-xl">
-            <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10">
-              <div className="font-semibold text-slate-gray">
-                {category.name}{' '}
-                <span className="text-slate-gray/60 text-sm">
-                  ({category.category_type ?? 'general'})
-                </span>
+            <div className="px-4 py-3 border-b border-slate-gray/20 bg-gradient-to-r from-cyan-primary/5 to-mint-green/10 relative">
+              <div className="flex items-center justify-between">
+                <div className="font-semibold text-slate-gray">
+                  {category.name}{' '}
+                  <span className="text-slate-gray/60 text-sm">
+                    ({category.category_type ?? 'general'})
+                  </span>
+                </div>
+                
+                {/* CareView 1-5 ADL Scale Reference Image */}
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                  {/* Thumbs Down Icon */}
+                  <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ThumbsDown className="w-3 h-3 text-white" />
+                  </div>
+                  
+                  {/* Scale Blocks */}
+                  <div className="flex space-x-1">
+                    <div className="w-8 h-6 bg-peach-blush rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">1</span>
+                    </div>
+                    <div className="w-8 h-6 bg-peach-blush/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">2</span>
+                    </div>
+                    <div className="w-8 h-6 bg-cyan-primary/30 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">3</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">4</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">5</span>
+                    </div>
+                  </div>
+                  
+                  {/* Thumbs Up Icon */}
+                  <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ThumbsUp className="w-3 h-3 text-white" />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="p-4">
