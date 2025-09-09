@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
@@ -7,7 +7,6 @@ import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 
 interface ObservationFormProps {
   onComplete: () => void
@@ -228,6 +227,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       console.log('[ObservationForm] success →', result)
 
       if (!currentObservationId) setCurrentObservationId(result.id)
+
+      // 🔄 Make sure the dashboard list refreshes
+      await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
 
       if (exitAfterSave) {
         console.log('[ObservationForm] save success → onComplete()')
