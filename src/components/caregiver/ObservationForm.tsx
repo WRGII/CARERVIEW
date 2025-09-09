@@ -1,4 +1,3 @@
-// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
@@ -30,6 +29,8 @@ type Category = {
   order: number
   questions: { id: string; text: string; order: number }[]
 }
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
@@ -104,7 +105,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
     categoryQuestions.forEach((item) => {
-      // Skip incomplete rows (defensive)
       if (
         !item.category_id ||
         !item.category_name ||
@@ -189,39 +189,54 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       return
     }
 
-    const formattedDate = formatDateForDB(dateOfObservation)
     const caregiver_name =
-      (profile?.display_name || '').trim() || profile?.email || user?.email || ''
-    const caregiver_email = profile?.email || user?.email || ''
+      (profile?.display_name || '').trim() ||
+      (profile?.email || '').trim() ||
+      (user?.email || '').trim()
+
+    const caregiver_email = (profile?.email || user?.email || '').trim()
+
+    if (!emailRegex.test(caregiver_email)) {
+      setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
+      setIsSaving(false)
+      console.log('[ObservationForm] early return: invalid caregiver_email', caregiver_email)
+      return
+    }
+
+    const formattedDate = formatDateForDB(dateOfObservation)
+
+    const payload = {
+      observationId: currentObservationId || undefined,
+      observation: {
+        patient_name: patientName,
+        observation_date: formattedDate,
+        mode_of_observation: modeOfObservation,
+        notes,
+        caregiver_name,
+        caregiver_email
+      },
+      answers,
+      categoryNotes,
+      questionCategoryMap
+    }
+    console.log('[ObservationForm] payload →', payload)
 
     try {
       console.log('[ObservationForm] upsertObservation.mutateAsync firing...')
-      const result = await upsertObservation.mutateAsync({
-        observationId: currentObservationId || undefined,
-        observation: {
-          patient_name: patientName,
-          observation_date: formattedDate,
-          mode_of_observation: modeOfObservation,
-          notes,
-          caregiver_name,
-          caregiver_email
-        },
-        answers,
-        categoryNotes,
-        questionCategoryMap
-      })
+      const result = await upsertObservation.mutateAsync(payload)
+      console.log('[ObservationForm] success →', result)
 
       if (!currentObservationId) setCurrentObservationId(result.id)
 
       if (exitAfterSave) {
         console.log('[ObservationForm] save success → onComplete()')
-        onComplete() // parent should navigate to /caregiver
+        onComplete()
       } else {
         setSaveSuccessMessage('Observation saved successfully!')
         setTimeout(() => setSaveSuccessMessage(null), 3000)
       }
     } catch (e: any) {
-      console.error('Save observation failed:', e)
+      console.error('[ObservationForm] FAILED →', e)
       setSaveError(e?.message || 'Failed to save observation.')
     } finally {
       setIsSaving(false)
@@ -265,7 +280,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     )
   }
 
-  // Friendly empty state
   if (!categories || categories.length === 0) {
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6 text-center">
@@ -275,7 +289,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     )
   }
 
-  // Score legend for the picker
   const legendMap: Record<number, string> = {
     1: 'Total assistance',
     2: 'Constant Shared effort',
@@ -289,7 +302,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-2">
@@ -309,6 +321,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
               </label>
               <input
                 type="text"
+                required
                 value={dateOfObservation}
                 onChange={(e) => handleDateChange(e.target.value)}
                 className={`w-full px-3 py-2 rounded-lg border ${
@@ -339,7 +352,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="flex flex-col">
             <label className="block text-sm font-medium text-slate-gray mb-2">
               Administrative Notes (Optional)
@@ -355,7 +367,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </div>
       </div>
 
-      {/* Legend Section */}
       <ScoreLegendDisplay />
 
       <div className="space-y-6">
@@ -369,15 +380,10 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     ({category.category_type ?? 'general'})
                   </span>
                 </div>
-                
-                {/* CareView 1-5 ADL Scale Reference Image */}
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
-                  {/* Thumbs Down Icon */}
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsDown className="w-3 h-3 text-white" />
                   </div>
-                  
-                  {/* Scale Blocks */}
                   <div className="flex space-x-1">
                     <div className="w-8 h-6 bg-peach-blush rounded-sm flex items-center justify-center">
                       <span className="text-xs font-bold text-white">1</span>
@@ -395,8 +401,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                       <span className="text-xs font-bold text-slate-gray">5</span>
                     </div>
                   </div>
-                  
-                  {/* Thumbs Up Icon */}
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsUp className="w-3 h-3 text-white" />
                   </div>
@@ -420,8 +424,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     </div>
                   </div>
                 ))}
-
-                {/* Category Notes */}
                 <div className="mt-6 pt-4 border-t border-slate-gray/20">
                   <label className="block text-sm font-medium text-slate-gray mb-2">
                     {category.name} Category Notes (Optional)
@@ -429,86 +431,4 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                   <textarea
                     value={categoryNotes[category.id] || ''}
                     onChange={(e) => setCategoryNote(category.id, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
-                    placeholder={`Enter notes specific to ${category.name} observations...`}
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Category Save Buttons */}
-            <div className="mt-6 pt-4 border-t border-slate-gray/20">
-              <div className="flex items-center justify-end space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSave(true)}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2"
-                >
-                  <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  onClick={handleInterimSave}
-                  disabled={isSaving}
-                  className="flex items-center space-x-2"
-                >
-                  <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Action bar */}
-      <div className="flex items-center gap-3">
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={upsertObservation.isPending || isSaving || !isValidDate || !hasAnyScore}
-          title={
-            !isValidDate
-              ? 'Enter a valid date (MM/DD/YYYY)'
-              : !hasAnyScore
-              ? 'Select at least one score'
-              : undefined
-          }
-        >
-          {upsertObservation.isPending || isSaving ? 'Saving...' : 'Create Observation'}
-        </Button>
-        <Button type="button" variant="outline" onClick={onComplete}>
-          Cancel
-        </Button>
-      </div>
-
-      {/* Inline guidance */}
-      {(!isValidDate || !hasAnyScore) && (
-        <div className="text-slate-gray/70 text-sm">
-          {!isValidDate && (
-            <div>
-              • Enter a valid date in <strong>MM/DD/YYYY</strong>.
-            </div>
-          )}
-          {!hasAnyScore && <div>• Select at least one score to save.</div>}
-        </div>
-      )}
-
-      {saveError && (
-        <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">
-          {saveError}
-        </div>
-      )}
-      {saveSuccessMessage && (
-        <div className="mt-3 rounded-md border border-mint-green bg-mint-green/20 p-3 text-sm text-slate-gray">
-          {saveSuccessMessage}
-        </div>
-      )}
-    </form>
-  )
-}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2
