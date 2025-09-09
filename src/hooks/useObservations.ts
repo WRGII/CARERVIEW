@@ -161,7 +161,6 @@ export function useUpsertObservationAndResponses() {
 }
 // Back-compat alias: some files import { useObservation }
 export { useObservationById as useObservation };
-}
 
 /** Optional: delete observation (and cascade responses if FK is ON DELETE CASCADE) */
 export function useDeleteObservation() {
