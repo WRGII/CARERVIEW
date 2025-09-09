@@ -1,22 +1,23 @@
 // src/pages/CaregiverPage.tsx
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { Button } from '../components/ui/Button'
 import { ObservationList } from '../components/caregiver/ObservationList'
-import ObservationForm from '../components/caregiver/ObservationForm'
 import { ViewObservation } from '../components/caregiver/ViewObservation'
-import { Plus, ArrowLeft } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
 
-type ViewMode = 'list' | 'form' | 'view'
+type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
 
 export default function CaregiverPage() {
+  const navigate = useNavigate()
   const { user, profile, loading, error } = useAuth()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
@@ -120,20 +121,6 @@ export default function CaregiverPage() {
 
   function renderHeader() {
     switch (viewMode) {
-      case 'form':
-        return (
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => setViewMode('list')}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to List</span>
-            </Button>
-            <h2 className="text-xl font-semibold text-slate-900">Recording Observation</h2>
-          </div>
-        )
       case 'view':
         // ViewObservation renders its own top bar (Back + Print)
         return null
@@ -143,7 +130,7 @@ export default function CaregiverPage() {
             <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
             <Button
               variant="primary"
-              onClick={() => setViewMode('form')}
+              onClick={() => navigate('/caregiver/observations/new')}
               className="flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
@@ -156,8 +143,6 @@ export default function CaregiverPage() {
 
   function renderBody() {
     switch (viewMode) {
-      case 'form':
-        return <ObservationForm onComplete={() => setViewMode('list')} />
       case 'view':
         return currentObservationId ? (
           <ViewObservation
