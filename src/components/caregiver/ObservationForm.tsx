@@ -96,7 +96,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
-      return data || []
+      return (data as CategoryQuestionRow[]) || []
     }
   })
 
@@ -116,7 +116,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       ) {
         return
       }
-
       if (!map.has(item.category_id)) {
         map.set(item.category_id, {
           id: item.category_id,
@@ -302,6 +301,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-2">
@@ -352,6 +352,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
             </div>
           </div>
 
+          {/* Right Column */}
           <div className="flex flex-col">
             <label className="block text-sm font-medium text-slate-gray mb-2">
               Administrative Notes (Optional)
@@ -367,6 +368,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         </div>
       </div>
 
+      {/* Legend Section */}
       <ScoreLegendDisplay />
 
       <div className="space-y-6">
@@ -380,6 +382,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     ({category.category_type ?? 'general'})
                   </span>
                 </div>
+
+                {/* CareView 1-5 ADL Scale Reference */}
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsDown className="w-3 h-3 text-white" />
@@ -407,6 +411,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                 </div>
               </div>
             </div>
+
             <div className="p-4">
               <div className="space-y-4">
                 {category.questions.map((question) => (
@@ -424,6 +429,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                     </div>
                   </div>
                 ))}
+
+                {/* Category Notes */}
                 <div className="mt-6 pt-4 border-t border-slate-gray/20">
                   <label className="block text-sm font-medium text-slate-gray mb-2">
                     {category.name} Category Notes (Optional)
@@ -431,4 +438,100 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                   <textarea
                     value={categoryNotes[category.id] || ''}
                     onChange={(e) => setCategoryNote(category.id, e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2
+                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
+                    placeholder={`Enter notes specific to ${category.name} observations...`}
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Category Save Buttons */}
+            <div className="mt-6 pt-4 border-t border-slate-gray/20">
+              <div className="flex items-center justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleInterimSave}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Action bar */}
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={upsertObservation.isPending || isSaving || !isValidDate || !hasAnyScore}
+          title={
+            !isValidDate
+              ? 'Enter a valid date (MM/DD/YYYY)'
+              : !hasAnyScore
+              ? 'Select at least one score'
+              : undefined
+          }
+        >
+          {upsertObservation.isPending || isSaving ? 'Saving...' : 'Create Observation'}
+        </Button>
+        <Button type="button" variant="outline" onClick={onComplete}>
+          Cancel
+        </Button>
+      </div>
+
+      {/* Inline guidance */}
+      {(!isValidDate || !hasAnyScore) && (
+        <div className="text-slate-gray/70 text-sm">
+          {!isValidDate && (
+            <div>
+              • Enter a valid date in <strong>MM/DD/YYYY</strong>.
+            </div>
+          )}
+          {!hasAnyScore && <div>• Select at least one score to save.</div>}
+        </div>
+      )}
+
+      {saveError && (
+        <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">
+          {saveError}
+        </div>
+      )}
+      {saveSuccessMessage && (
+        <div className="mt-3 rounded-md border border-mint-green bg-mint-green/20 p-3 text-sm text-slate-gray">
+          {saveSuccessMessage}
+        </div>
+      )}
+    </form>
+  )
+}
