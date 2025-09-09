@@ -291,7 +291,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
           {/* Left Column */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-2">Patient Name</label>
+              <label className="block text-sm font-medium text-slate-gray mb-2">
+                Patient Name <span className="text-xs text-slate-gray/60">(required)</span>
+              </label>
               <input
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
@@ -302,7 +304,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-2">
-                Date of Observation <span className="text-peach-blush">*</span>
+                Date of Observation <span className="text-xs text-slate-gray/60">(required)</span>
               </label>
               <input
                 type="text"
@@ -320,7 +322,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-2">
-                Mode of Observation
+                Mode of Observation <span className="text-xs text-slate-gray/60">(required)</span>
               </label>
               <select
                 value={modeOfObservation}
