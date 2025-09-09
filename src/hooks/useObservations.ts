@@ -72,7 +72,7 @@ export function useObservationById(id?: string | null) {
 }
 
 /** =========================
- * Mutation: upsert observation + responses
+ * Mutation: upsert observation + responses (React Query v5)
  * Export used by ObservationForm
  * ========================= */
 type SavePayload = {
@@ -93,81 +93,86 @@ type SavePayload = {
 export function useUpsertObservationAndResponses() {
   const { user } = useAuth()
 
-  return useMutation(async (payload: SavePayload) => {
-    if (!user?.id) throw new Error('Not authenticated')
+  return useMutation({
+    mutationFn: async (payload: SavePayload) => {
+      if (!user?.id) throw new Error('Not authenticated')
 
-    const {
-      observationId,
-      observation,
-      answers,
-      categoryNotes,
-      questionCategoryMap,
-    } = payload
+      const {
+        observationId,
+        observation,
+        answers,
+        categoryNotes,
+        questionCategoryMap,
+      } = payload
 
-    const base = {
-      user_id: user.id,
-      patient_name: observation.patient_name ?? null,
-      observation_date: observation.observation_date,
-      mode_of_observation: observation.mode_of_observation ?? null,
-      notes: observation.notes ?? null,
-      caregiver_name: observation.caregiver_name ?? null,
-      caregiver_email: observation.caregiver_email ?? null,
-    }
+      const base = {
+        user_id: user.id,
+        patient_name: observation.patient_name ?? null,
+        observation_date: observation.observation_date,
+        mode_of_observation: observation.mode_of_observation ?? null,
+        notes: observation.notes ?? null,
+        caregiver_name: observation.caregiver_name ?? null,
+        caregiver_email: observation.caregiver_email ?? null,
+      }
 
-    // Insert or update observation and return its id
-    let obsId = observationId ?? null
+      // Insert or update observation and return its id
+      let obsId = observationId ?? null
 
-    if (obsId) {
-      const { data, error } = await supabase
-        .from('observations')
-        .update(base)
-        .eq('id', obsId)
-        .select('id')
-        .single()
-      if (error) throw error
-      obsId = data.id
-    } else {
-      const { data, error } = await supabase
-        .from('observations')
-        .insert(base)
-        .select('id')
-        .single()
-      if (error) throw error
-      obsId = data.id
-    }
+      if (obsId) {
+        const { data, error } = await supabase
+          .from('observations')
+          .update(base)
+          .eq('id', obsId)
+          .select('id')
+          .single()
+        if (error) throw error
+        obsId = data.id
+      } else {
+        const { data, error } = await supabase
+          .from('observations')
+          .insert(base)
+          .select('id')
+          .single()
+        if (error) throw error
+        obsId = data.id
+      }
 
-    // Prepare response rows
-    const rows = Object.entries(answers)
-      .filter(([, score]) => typeof score === 'number')
-      .map(([question_id, score]) => {
-        const category_id = questionCategoryMap[question_id]
-        return {
-          observation_id: obsId!,
-          question_id,
-          score: score as number,
-          notes: category_id ? (categoryNotes[category_id] ?? null) : null,
-        }
-      })
+      // Prepare response rows
+      const rows = Object.entries(answers)
+        .filter(([, score]) => typeof score === 'number')
+        .map(([question_id, score]) => {
+          const category_id = questionCategoryMap[question_id]
+          return {
+            observation_id: obsId!,
+            question_id,
+            score: score as number,
+            notes: category_id ? (categoryNotes[category_id] ?? null) : null,
+          }
+        })
 
-    if (rows.length) {
-      const { error } = await supabase
-        .from('responses')
-        .upsert(rows, { onConflict: 'observation_id,question_id' })
-      if (error) throw error
-    }
+      if (rows.length) {
+        const { error } = await supabase
+          .from('responses')
+          .upsert(rows, { onConflict: 'observation_id,question_id' })
+        if (error) throw error
+      }
 
-    return { id: obsId! }
+      return { id: obsId! }
+    },
   })
 }
+
 // Back-compat alias: some files import { useObservation }
-export { useObservationById as useObservation };
+export { useObservationById as useObservation }
 
 /** Optional: delete observation (and cascade responses if FK is ON DELETE CASCADE) */
 export function useDeleteObservation() {
   const { user } = useAuth()
-  return useMutation(async (id: string) => {
-    if (!user?.id) throw new Error('Not authenticated')
-    const { error } = await supabase.from('observations').delete().eq('id', id)
-    if (error) throw error
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!user?.id) throw new Error('Not authenticated')
+      const { error } = await supabase.from('observations').delete().eq('id', id)
+      if (error) throw error
+    },
   })
 }
