@@ -33,10 +33,9 @@ type Category = {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const queryClient = useQueryClient()
-
 export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
+  const queryClient = useQueryClient()
   const upsertObservation = useUpsertObservationAndResponses()
 
   const [patientName, setPatientName] = useState('')
