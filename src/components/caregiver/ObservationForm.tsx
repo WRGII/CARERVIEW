@@ -1,7 +1,9 @@
+// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
+import { useLegend } from '../../hooks/useLegend'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
@@ -15,7 +17,7 @@ interface ObservationFormProps {
 export type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  type: string
+  type: string               // 'ADL' | 'IADL'
   category_order: number
   question_id: string
   question_text: string
@@ -25,7 +27,7 @@ export type CategoryQuestionRow = {
 type Category = {
   id: string
   name: string
-  type: string
+  type: string               // 'ADL' | 'IADL'
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -51,7 +53,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
-  // Date validation (MM/DD/YYYY)
+  // --- date helpers ---
   const validateDate = (dateString: string): boolean => {
     if (!dateString) return false
     const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/
@@ -67,23 +69,22 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     else setDateError('')
   }
 
-  // Convert MM/DD/YYYY → YYYY-MM-DD for DB
   const formatDateForDB = (dateString: string): string => {
     if (!dateString || !validateDate(dateString)) return ''
     const [month, day, year] = dateString.split('/').map(Number)
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  // Fetch category+question rows (gated on auth)
+  // --- data: category + questions (auth-gated) ---
   const {
     data: categoryQuestions,
-    isLoading,
-    isError,
-    error,
-    refetch
+    isLoading: cqLoading,
+    isError: cqIsError,
+    error: cqError,
+    refetch: cqRefetch
   } = useQuery({
     queryKey: ['category-questions', user?.id],
-    enabled: !authLoading && !!user?.id,
+    enabled: !authLoading && !!user?.id,     // ✅ login-first gate
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchOnWindowFocus: false,
@@ -101,7 +102,18 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     }
   })
 
-  // Transform rows → Category[]
+  // --- data: legend 1–5 (auth-gated via hook) ---
+  const { data: legendRows, isLoading: legendLoading, isError: legendIsError } = useLegend()
+
+  const legendMap: Record<number, string> = React.useMemo(() => {
+    const m: Record<number, string> = {}
+    ;(legendRows ?? []).forEach(r => {
+      if (typeof r.score === 'number' && r.description) m[r.score] = r.description
+    })
+    return m
+  }, [legendRows])
+
+  // --- transform rows -> Category[] ---
   const categories: Category[] = React.useMemo(() => {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
@@ -134,16 +146,14 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     })
 
     const result = Array.from(map.values())
-    result.sort((a, b) => {
-      const aType = a.type ?? 'ADL'
-      const bType = b.type ?? 'ADL'
-      return aType === bType ? a.order - b.order : aType.localeCompare(bType)
-    })
+    // ✅ deterministic ADL-first, then category order
+    const orderOfType = (t: string) => (t === 'ADL' ? 0 : 1)
+    result.sort((a, b) => (orderOfType(a.type ?? 'ADL') - orderOfType(b.type ?? 'ADL')) || (a.order - b.order))
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
 
-  // question_id → category_id map for saving responses
+  // --- question_id -> category_id map (for saving responses) ---
   const questionCategoryMap: Record<string, string> = React.useMemo(() => {
     const map: Record<string, string> = {}
     categories.forEach((category) => {
@@ -156,16 +166,15 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     return map
   }, [categories])
 
-  // Derived validation flags
+  // --- derived flags ---
   const isValidDate = dateOfObservation ? validateDate(dateOfObservation) : false
   const hasAnyScore = React.useMemo(
     () => Object.values(answers).some((v) => typeof v === 'number'),
     [answers]
   )
 
-  // Save helpers
+  // --- save ---
   const handleSave = async (exitAfterSave: boolean) => {
-    console.log('[ObservationForm] handleSave called', { exitAfterSave })
     setSaveError(null)
     setSaveSuccessMessage(null)
     setIsSaving(true)
@@ -173,19 +182,16 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     if (!dateOfObservation) {
       setDateError('Date of observation is required')
       setIsSaving(false)
-      console.log('[ObservationForm] early return: no date')
       return
     }
     if (!validateDate(dateOfObservation)) {
       setDateError('Please enter a valid date in MM/DD/YYYY format')
       setIsSaving(false)
-      console.log('[ObservationForm] early return: invalid date format')
       return
     }
     if (!hasAnyScore) {
       setSaveError('Please select at least one score before saving.')
       setIsSaving(false)
-      console.log('[ObservationForm] early return: no scores selected')
       return
     }
 
@@ -199,7 +205,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     if (!emailRegex.test(caregiver_email)) {
       setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
       setIsSaving(false)
-      console.log('[ObservationForm] early return: invalid caregiver_email', caregiver_email)
       return
     }
 
@@ -219,27 +224,20 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       categoryNotes,
       questionCategoryMap
     }
-    console.log('[ObservationForm] payload →', payload)
 
     try {
-      console.log('[ObservationForm] upsertObservation.mutateAsync firing...')
       const result = await upsertObservation.mutateAsync(payload)
-      console.log('[ObservationForm] success →', result)
-
       if (!currentObservationId) setCurrentObservationId(result.id)
 
-      // 🔄 Make sure the dashboard list refreshes
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
 
       if (exitAfterSave) {
-        console.log('[ObservationForm] save success → onComplete()')
         onComplete()
       } else {
         setSaveSuccessMessage('Observation saved successfully!')
         setTimeout(() => setSaveSuccessMessage(null), 3000)
       }
     } catch (e: any) {
-      console.error('[ObservationForm] FAILED →', e)
       setSaveError(e?.message || 'Failed to save observation.')
     } finally {
       setIsSaving(false)
@@ -248,7 +246,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[ObservationForm] handleSubmit (form submit)')
     handleSave(true)
   }
 
@@ -260,7 +257,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     setCategoryNotes((prev) => ({ ...prev, [categoryId]: value }))
   }
 
-  if (authLoading || isLoading) {
+  // --- loading & error states (include legend) ---
+  if (authLoading || cqLoading || legendLoading) {
     return (
       <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-4">
         Loading questions…
@@ -268,13 +266,15 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     )
   }
 
-  if (isError) {
+  if (cqIsError || legendIsError) {
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-4">
-        <p className="text-slate-gray mb-2">Error loading questions: {error?.message}</p>
+        <p className="text-slate-gray mb-2">
+          Error loading questions or legend. Please try again.
+        </p>
         <button
           type="button"
-          onClick={() => refetch()}
+          onClick={() => cqRefetch()}
           className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
         >
           Try again
@@ -290,14 +290,6 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         <p className="text-slate-gray/60 text-sm">Please contact support if this issue persists.</p>
       </div>
     )
-  }
-
-  const legendMap: Record<number, string> = {
-    1: 'Total assistance',
-    2: 'Constant Shared effort',
-    3: 'Independent with support',
-    4: 'Independent with difficulty',
-    5: 'Fully independent'
   }
 
   return (
@@ -387,7 +379,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                   </span>
                 </div>
 
-                {/* CareView 1-5 ADL Scale Reference */}
+                {/* CarerView 1–5 ADL Scale Reference */}
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsDown className="w-3 h-3 text-white" />
@@ -427,7 +419,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                         onChange={(val) =>
                           setAnswers((prev) => ({ ...prev, [question.id]: val }))
                         }
-                        descriptions={legendMap}
+                        descriptions={legendMap}  // ✅ dynamic DB-driven
                         ariaLabel={`Set score for: ${question.text}`}
                       />
                     </div>
@@ -517,11 +509,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       {/* Inline guidance */}
       {(!isValidDate || !hasAnyScore) && (
         <div className="text-slate-gray/70 text-sm">
-          {!isValidDate && (
-            <div>
-              • Enter a valid date in <strong>MM/DD/YYYY</strong>.
-            </div>
-          )}
+          {!isValidDate && <div>• Enter a valid date in <strong>MM/DD/YYYY</strong>.</div>}
           {!hasAnyScore && <div>• Select at least one score to save.</div>}
         </div>
       )}
