@@ -1,11 +1,11 @@
 # CarerView - Daily functional assessment system easy!
 
-For family and professional caregivers to record daily observations using ADA and OT categories.
+For family caregivers to record and discuss daily observations using ADA and OT categories.
 
 ## Features
 
 ### For Caregivers
-- **Interactive Scoring**: 1-10 sliders with per-question and bulk save options
+- **Interactive Scoring**: 1-5 sliders with per-question and bulk save options
 - **ADA/OT Definitions**: Accessible tooltips with professional definitions
 - **ADA/OT Categories and Questions**: Guiding the Caregiver through daily observations step-by-step.
 - **Export Capabilities**: DOCX and CSV exports for individual observations
@@ -28,7 +28,7 @@ For family and professional caregivers to record daily observations using ADA an
 
 All data is stored in Supabase with proper RLS policies:
 
-- `legend` - Score meanings (0-10 scale)
+- `legend` - Score meanings (1-5 scale)
 - `categories` - ADL/IADL categories with definitions
 - `questions` - Assessment questions linked to categories
 - `observations` - Caregiver observation sessions
@@ -55,8 +55,9 @@ npm run build  # Build for production
 
 ## Deployment
 
-The application is Bolt publishing for MVP deployment with:
+The application is publishing for MVP deployment with:
 - Automatic Supabase integration
 - Environment variable management
+- Netlify deployment
 
-Built with ❤️ for family and professional caregiving assessment.
+Built with ❤️ for family caregiving assessment.
