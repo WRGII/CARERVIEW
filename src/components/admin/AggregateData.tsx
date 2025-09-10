@@ -162,11 +162,11 @@ export const AggregateData: React.FC = () => {
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      (item.category_type ?? 'general') === 'ADL' 
+                      (item.type ?? 'ADL') === 'ADL' 
                         ? 'bg-cyan-primary/20 text-cyan-primary' 
                         : 'bg-mint-green/60 text-slate-gray'
                     }`}>
-                      {item.category_type ?? 'general'}
+                      {item.type ?? 'ADL'}
                     </span>
                     <span className="text-slate-gray">{item.category}</span>
                   </div>

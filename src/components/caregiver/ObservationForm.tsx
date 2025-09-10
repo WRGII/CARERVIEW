@@ -15,7 +15,7 @@ interface ObservationFormProps {
 export type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  category_type: string
+  type: string
   category_order: number
   question_id: string
   question_text: string
@@ -25,7 +25,7 @@ export type CategoryQuestionRow = {
 type Category = {
   id: string
   name: string
-  category_type: string
+  type: string
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -92,7 +92,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       const { data, error } = await supabase
         .from('v_category_questions')
         .select(
-          'category_id, category_name, category_type, category_order, question_id, question_text, question_order'
+          'category_id, category_name, type, category_order, question_id, question_text, question_order'
         )
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
@@ -109,7 +109,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
       if (
         !item.category_id ||
         !item.category_name ||
-        !item.category_type ||
+        !item.type ||
         item.category_order == null ||
         !item.question_id ||
         !item.question_text ||
@@ -121,7 +121,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          category_type: item.category_type ?? 'general',
+          type: item.type ?? 'ADL',
           order: item.category_order,
           questions: []
         })
@@ -135,8 +135,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
 
     const result = Array.from(map.values())
     result.sort((a, b) => {
-      const aType = a.category_type ?? 'general'
-      const bType = b.category_type ?? 'general'
+      const aType = a.type ?? 'ADL'
+      const bType = b.type ?? 'ADL'
       return aType === bType ? a.order - b.order : aType.localeCompare(bType)
     })
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
@@ -383,7 +383,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
                 <div className="font-semibold text-slate-gray">
                   {category.name}{' '}
                   <span className="text-slate-gray/60 text-sm">
-                    ({category.category_type ?? 'general'})
+                    ({category.type ?? 'ADL'})
                   </span>
                 </div>
 

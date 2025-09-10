@@ -13,7 +13,7 @@ interface Legend {
 interface Category {
   id: string
   name: string
-  category_type: string
+  type: string
   ada_definition?: string
   ot_definition?: string
   sort_order?: number
@@ -131,7 +131,7 @@ export const exportToDOCX = async (
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Administrative Notes',
+                text: `${category.name} (${category.type ?? 'ADL'})`,
                 bold: true,
                 size: 28,
                 underline: {}
@@ -414,7 +414,7 @@ export const exportToCSV = async (
       observation.patient_name || 'Unnamed Patient',
       observation.observation_date,
       category?.name || '',
-      category?.category_type || '',
+      category?.type || '',
       response.question?.question_text || '',
       response.score?.toString() || '',
       legendDescription,

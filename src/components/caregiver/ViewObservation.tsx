@@ -41,7 +41,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     const categoryMap = new Map<string, {
       id: string
       name: string
-      category_type: 'ADL' | 'IADL'
+      type: 'ADL' | 'IADL'
       responses: Array<{
         score: number
         notes: string | null
@@ -60,7 +60,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         categoryMap.set(category.id, {
           id: category.id,
           name: category.name,
-          category_type: category.category_type,
+          type: category.type,
           responses: []
         })
       }
@@ -193,11 +193,11 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     {category.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    (category.category_type ?? 'general') === 'ADL'
+                    (category.type ?? 'ADL') === 'ADL'
                       ? 'bg-cyan-primary/20 text-cyan-primary'
                       : 'bg-mint-green/60 text-slate-gray'
                   }`}>
-                    {category.category_type ?? 'general'}
+                    {category.type ?? 'ADL'}
                   </span>
                 </div>
               </CardHeader>
