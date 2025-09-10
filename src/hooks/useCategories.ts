@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 interface Category {
   id: string
   name: string
-  category_type: 'ADL' | 'IADL'
+  type: 'ADL' | 'IADL'
   ada_definition: string
   ot_definition: string
   sort_order: number
