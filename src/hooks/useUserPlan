@@ -4,41 +4,48 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './useAuth'
 
 export type PlanId = 'primary_weekly' | 'occasional_monthly' | 'free'
+export type PlanStatus = 'active' | 'canceled' | 'incomplete' | 'past_due' | 'trialing' | null
 
-export type UserPlan = {
-  user_id: string
+export interface UserPlan {
   plan_id: PlanId | null
-  status: 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete' | null
-  current_period_start: string | null
+  status: PlanStatus
   current_period_end: string | null
 }
 
 /**
- * Reads the user's current subscription info from app.v_user_plan.
- * Auth-gated: only runs once auth is loaded and we have a user id.
+ * Reads the most-recent subscription row for the current user from app.user_subscriptions.
+ * Enabled only when VITE_REQUIRE_SUBSCRIPTION=true and a user is present.
  */
 export function useUserPlan() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
+  const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
-  return useQuery({
+  return useQuery<UserPlan | null>({
     queryKey: ['user-plan', user?.id],
-    enabled: !loading && !!user?.id,
-    queryFn: async (): Promise<UserPlan | null> => {
-      if (!user?.id) return null
+    enabled: requireSub && !!user?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
       const { data, error } = await supabase
         .schema('app')
-        .from('v_user_plan')
-        .select(
-          'user_id, plan_id, status, current_period_start, current_period_end'
-        )
-        .eq('user_id', user.id)
+        .from('user_subscriptions')
+        .select('plan_id,status,current_period_end')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
 
-      if (error) {
-        throw new Error(error.message)
+      // PGRST116 = "Results contain 0 rows"; treat as null (no plan yet)
+      if (error && (error as any).code !== 'PGRST116') throw error
+      if (!data) return null
+
+      return {
+        plan_id: (data as any).plan_id ?? null,
+        status: (data as any).status ?? null,
+        current_period_end: (data as any).current_period_end ?? null,
       }
-      return (data as UserPlan) ?? null
     },
-    staleTime: 60_000,
   })
 }
+
+export const hasActivePlan = (p: UserPlan | null | undefined) =>
+  !!p?.plan_id && p?.status === 'active'
