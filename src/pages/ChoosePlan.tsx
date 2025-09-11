@@ -3,8 +3,8 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-+ import { useUserPlan } from '../hooks/useUserPlan'
-+ import type { PlanId } from '../hooks/useUserPlan'
+import { useUserPlan } from '../hooks/useUserPlan'
+import type { PlanId } from '../hooks/useUserPlan'
 import {
   currentMonthWindowUtc,
   currentWeekWindowUtc,
