@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "types": ["vite/client"],
-    "skipLibCheck": true,
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
     "strict": true,
     "baseUrl": "./",
     "paths": {}
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "src/vite-env.d.ts"]
 }
