@@ -1,5 +1,5 @@
 // src/App.tsx
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
@@ -12,7 +12,8 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
-import ChoosePlan from "./pages/ChoosePlan";
+// 👇 Lazy load ChoosePlan to improve perceived speed after signup
+const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 // Caregiver sub-page
 import NewObservationPage from "./components/caregiver/NewObservationPage";
@@ -44,7 +45,7 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
   const { data: plan, isLoading: planLoading } = useUserPlan();
 
-  // 🔥 Prefetch static data as soon as we know the user/profile are valid (faster UX)
+  // Prefetch static data as soon as we know the user/profile are valid (faster UX)
   const prefetchEnabled =
     !authLoading && !!user && !profileLoading && !!profile && !profile.disabled;
   usePrefetchStatic(prefetchEnabled);
@@ -66,38 +67,50 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/choose-plan" element={<ChoosePlan />} />
+        {/* Suspense boundary to handle any lazy routes */}
+        <Suspense fallback={<div className="p-6">Loading…</div>}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
 
-          <Route
-            path="/admin"
-            element={
-              <AdminGuard>
-                <AdminPage />
-              </AdminGuard>
-            }
-          />
-          <Route
-            path="/caregiver"
-            element={
-              <CaregiverGuard>
-                <CaregiverPage />
-              </CaregiverGuard>
-            }
-          />
-          <Route
-            path="/caregiver/observations/new"
-            element={
-              <CaregiverGuard>
-                <NewObservationPage />
-              </CaregiverGuard>
-            }
-          />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          {/* Last resort: if anything falls through, go home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Lazy page with its own lightweight fallback for clarity */}
+            <Route
+              path="/choose-plan"
+              element={
+                <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
+                  <ChoosePlan />
+                </Suspense>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <AdminGuard>
+                  <AdminPage />
+                </AdminGuard>
+              }
+            />
+            <Route
+              path="/caregiver"
+              element={
+                <CaregiverGuard>
+                  <CaregiverPage />
+                </CaregiverGuard>
+              }
+            />
+            <Route
+              path="/caregiver/observations/new"
+              element={
+                <CaregiverGuard>
+                  <NewObservationPage />
+                </CaregiverGuard>
+              }
+            />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            {/* Last resort: if anything falls through, go home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
   );
