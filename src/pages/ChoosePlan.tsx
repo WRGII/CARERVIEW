@@ -213,7 +213,7 @@ export default function ChoosePlan() {
               $3<span className="text-base font-medium text-slate-500">/month</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
-              <li>• 1 observation per month</li>
+              <li>• 1 observation per week</li>
               <li>• Casual / backup carers</li>
             </ul>
             <button
