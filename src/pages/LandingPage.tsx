@@ -5,12 +5,12 @@ import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import Footer from '../components/common/Footer'
-import { useQueryClient } from '@tanstack/react-query';
-import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic';
-
+import { useQueryClient } from '@tanstack/react-query'
+import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic'
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [isSignUp, setIsSignUp] = useState(true)
   const [name, setName] = useState('')
@@ -21,8 +21,17 @@ export default function LandingPage() {
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
 
-  // --- helpers ---------------------------------------------------------------
+  // ---- Prefetch helper: warms ChoosePlan data + route chunk ----
+  const warmChoosePlan = React.useCallback(async () => {
+    try {
+      await prefetchChoosePlanAssets(queryClient)
+    } catch (e) {
+      // Non-fatal: just log for diagnostics
+      console.debug('[LandingPage] prefetchChoosePlanAssets failed', e)
+    }
+  }, [queryClient])
 
+  // --- helpers ---------------------------------------------------------------
   const upsertProfileIfMissing = async (uid: string, displayName: string, emailAddr: string) => {
     const { data: prof, error: selErr } = await supabase
       .from('profiles')
@@ -94,7 +103,6 @@ export default function LandingPage() {
   }
 
   // --- submit handlers -------------------------------------------------------
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -121,7 +129,8 @@ export default function LandingPage() {
             name ?? user.user_metadata?.display_name ?? '',
             user.email ?? ''
           )
-          // NEW: send new accounts to choose plan first
+          // Warm the ChoosePlan page & data, then navigate
+          await warmChoosePlan()
           navigate('/choose-plan', { replace: true })
         } else {
           // Email confirm ON → tell user to check inbox and then sign in.
@@ -175,8 +184,7 @@ export default function LandingPage() {
     }
   }
 
-  // --- UI (unchanged from your original) ------------------------------------
-
+  // --- UI --------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -219,6 +227,8 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="#get-started"
+              onMouseEnter={warmChoosePlan}           // <-- prefetch on hover
+              onFocus={warmChoosePlan}                // <-- prefetch for keyboard users
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
               Simple to start now <ArrowRight className="w-5 h-5" />
@@ -459,6 +469,8 @@ export default function LandingPage() {
             <div className="mt-12">
               <a
                 href="#get-started"
+                onMouseEnter={warmChoosePlan} // <-- prefetch on hover
+                onFocus={warmChoosePlan}
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
                 Begin today
@@ -582,7 +594,7 @@ export default function LandingPage() {
                 <div className="flex bg-slate-gray/10 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => { setIsSignUp(true); setError(null); setInfo(null) }}
+                    onClick={() => { setIsSignUp(true); setError(null); setInfo(null); warmChoosePlan() }}
                     className={`px-6 py-3 rounded-md text-sm font-medium transition ${
                       isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
                     }`}
@@ -655,6 +667,7 @@ export default function LandingPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
+                  onMouseEnter={isSignUp ? warmChoosePlan : undefined} // hint the route while hovering submit
                 >
                   {isSignUp ? 'Get Started' : 'Welcome back'}
                   {!loading && <ArrowRight className="w-5 h-5" />}
