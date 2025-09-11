@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useUserPlan, hasActivePlan } from './hooks/useUserPlan'
+import { usePrefetchStatic } from './hooks/usePrefetchStatic'
 
 // Pages
 import LandingPage from "./pages/LandingPage";
