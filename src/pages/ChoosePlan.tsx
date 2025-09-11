@@ -158,7 +158,7 @@ export default function ChoosePlan() {
       {/* Header */}
       <div className="w-full border-b border-slate-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-slate-800">Choose the CarerView plan that best suits you</h1>
+          <h1 className="text-xl font-semibold text-slate-800">Choose the CarerView plan that best suits your needs</h1>
           <HeaderLogo />
         </div>
       </div>
