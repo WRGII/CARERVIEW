@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
-import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
+import { useUserPlan, hasActivePlan } from './hooks/useUserPlan'
 
 // Pages
 import LandingPage from "./pages/LandingPage";
