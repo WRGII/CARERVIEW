@@ -4,8 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
-import { useUserPlan, hasActivePlan } from './hooks/useUserPlan'
-import { usePrefetchStatic } from './hooks/usePrefetchStatic'
+import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
+import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -42,8 +42,12 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   const { loading: authLoading, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
-  // Use restored hook
   const { data: plan, isLoading: planLoading } = useUserPlan();
+
+  // 🔥 Prefetch static data as soon as we know the user/profile are valid (faster UX)
+  const prefetchEnabled =
+    !authLoading && !!user && !profileLoading && !!profile && !profile.disabled;
+  usePrefetchStatic(prefetchEnabled);
 
   if (authLoading || profileLoading || (requireSub && planLoading)) {
     return <div className="p-6">Preparing your caregiver workspace…</div>;
