@@ -5,6 +5,9 @@ import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import Footer from '../components/common/Footer'
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic';
+
 
 export default function LandingPage() {
   const navigate = useNavigate()
