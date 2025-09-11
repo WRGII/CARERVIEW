@@ -1,10 +1,10 @@
 // src/App.tsx
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
-import { supabase } from "./lib/supabaseClient";
+import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -18,6 +18,10 @@ import NewObservationPage from "./components/caregiver/NewObservationPage";
 
 const queryClient = new QueryClient();
 
+/**
+ * IMPORTANT: Never redirect while auth/profile are still loading.
+ * Only decide after we know auth + profile states.
+ */
 function AdminGuard({ children }: { children: JSX.Element }) {
   const { loading: authLoading, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
@@ -37,24 +41,8 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   const { loading: authLoading, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
-
-  const { data: plan, isLoading: planLoading } = useQuery({
-    queryKey: ["user-plan-inline", user?.id],
-    enabled: requireSub && !authLoading && !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .schema("app")
-        .from("user_subscriptions")
-        .select("plan_id,status,current_period_end")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error && error.code !== "PGRST116") throw error; // allow "no rows"
-      return data as { plan_id?: string; status?: string; current_period_end?: string } | null;
-    },
-    staleTime: 60_000,
-  });
+  // Use restored hook
+  const { data: plan, isLoading: planLoading } = useUserPlan();
 
   if (authLoading || profileLoading || (requireSub && planLoading)) {
     return <div className="p-6">Preparing your caregiver workspace…</div>;
@@ -62,9 +50,8 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   if (!user) return <Navigate to="/" replace />;
   if (profile?.disabled) return <div className="p-6 text-red-600">Account disabled.</div>;
 
-  if (requireSub) {
-    const active = plan?.status === "active" && !!plan?.plan_id;
-    if (!active) return <Navigate to="/choose-plan" replace />;
+  if (requireSub && !hasActivePlan(plan)) {
+    return <Navigate to="/choose-plan" replace />;
   }
 
   return children;
@@ -76,7 +63,6 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-
           <Route path="/choose-plan" element={<ChoosePlan />} />
 
           <Route
@@ -103,8 +89,8 @@ export default function App() {
               </CaregiverGuard>
             }
           />
-
           <Route path="/reset-password" element={<ResetPassword />} />
+          {/* Last resort: if anything falls through, go home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
