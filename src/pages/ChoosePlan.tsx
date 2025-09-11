@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan } from '../hooks/useUserPlan'
 import type { PlanId } from '../hooks/useUserPlan'
+import { useCreateCheckoutSession } from '../hooks/useStripe'
+import { STRIPE_PRODUCTS } from '../stripe-config'
 import {
   currentMonthWindowUtc,
   currentWeekWindowUtc,
@@ -60,6 +62,7 @@ export default function ChoosePlan() {
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
   const [coupon, setCoupon] = React.useState('')
+  const createCheckoutSession = useCreateCheckoutSession()
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
@@ -93,10 +96,13 @@ export default function ChoosePlan() {
     try {
       setErr(null)
       setBusy('primary_weekly')
-      const { start, end } = currentWeekWindowUtc()
-      // (coupon is not applied yet; we’ll wire Stripe later)
-      await upsertLocalSub('primary_weekly', start, end)
-      navigate('/caregiver', { replace: true })
+      
+      // Create Stripe checkout session
+      await createCheckoutSession.mutateAsync({
+        productKey: 'primary',
+        successUrl: `${window.location.origin}/caregiver?success=true&plan=primary`,
+        cancelUrl: `${window.location.origin}/choose-plan?canceled=true`
+      })
     } catch (e: any) {
       setErr(e?.message || 'Failed to choose Primary plan')
     } finally {
@@ -108,9 +114,13 @@ export default function ChoosePlan() {
     try {
       setErr(null)
       setBusy('occasional_monthly')
-      const { start, end } = currentMonthWindowUtc()
-      await upsertLocalSub('occasional_monthly', start, end)
-      navigate('/caregiver', { replace: true })
+      
+      // Create Stripe checkout session
+      await createCheckoutSession.mutateAsync({
+        productKey: 'occasional',
+        successUrl: `${window.location.origin}/caregiver?success=true&plan=occasional`,
+        cancelUrl: `${window.location.origin}/choose-plan?canceled=true`
+      })
     } catch (e: any) {
       setErr(e?.message || 'Failed to choose Occasional plan')
     } finally {
@@ -192,7 +202,7 @@ export default function ChoosePlan() {
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Primary Caregiver</div>
             <div className="text-2xl font-bold mt-1">
-              USD$1.00<span className="text-base font-medium text-slate-500">/week</span>
+              USD$${STRIPE_PRODUCTS.primary.price.toFixed(2)}<span className="text-base font-medium text-slate-500">/week</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
               <li>• Up to 7 observations per week</li>
@@ -210,7 +220,7 @@ export default function ChoosePlan() {
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Occasional Caregiver</div>
             <div className="text-2xl font-bold mt-1">
-              USD$0.50<span className="text-base font-medium text-slate-500">/week</span>
+              USD$${STRIPE_PRODUCTS.occasional.price.toFixed(2)}<span className="text-base font-medium text-slate-500">/week</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
               <li>• 1 observation per week</li>
@@ -243,6 +253,15 @@ export default function ChoosePlan() {
           </div>
         </div>
       </div>
+
+      {/* Error display */}
+      {err && (
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{err}</p>
+          </div>
+        </div>
+      )}
 
       {/* Global footer */}
       <Footer />
