@@ -192,7 +192,7 @@ export default function ChoosePlan() {
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Primary Caregiver</div>
             <div className="text-2xl font-bold mt-1">
-              USD$1<span className="text-base font-medium text-slate-500">/week</span>
+              USD$1.00<span className="text-base font-medium text-slate-500">/week</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
               <li>• Up to 7 observations per week</li>
