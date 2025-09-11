@@ -1,32 +1,54 @@
-// src/components/common/Footer.tsx
 import React from 'react'
-import { useSiteSettings } from '../../hooks/useSiteSettings'
+import { supabase } from '../../lib/supabaseClient'
 
-export default function Footer({ className = '' }: { className?: string }) {
-  const { data } = useSiteSettings()
-  const logo =
-    data?.logo_url || '/CareView_logo_1_colored_highres.png' // fallback to existing asset
+export function Footer() {
+  const [logoUrl, setLogoUrl] = React.useState<string>('/CareView_logo_1_colored_highres.png')
+
+  React.useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .schema('app')
+          .from('site_settings')
+          .select('logo_url')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (!mounted) return
+        if (data?.logo_url) setLogoUrl(data.logo_url)
+      } catch {
+        // keep fallback
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const year = new Date().getFullYear()
 
   return (
-    <footer className={`py-16 text-center border-t border-slate-gray/20 ${className}`}>
-      <div className="flex items-center justify-center mb-6">
-        <img
-          src={logo}
-          alt="CarerView Logo"
-          className="w-12 h-12 object-contain"
-          loading="lazy"
-        />
+    <footer className="w-full border-t border-slate-200 bg-white">
+      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <img
+            src={logoUrl}
+            alt="CarerView"
+            className="w-6 h-6 object-contain opacity-80"
+          />
+        </div>
+        <p className="text-slate-600 text-sm mb-2">
+          Built with caregivers &amp; clinicians in mind. Categories reflect widely used ADL &amp; IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
+        </p>
+        <p className="text-slate-500 text-xs">
+          © {year} CarerView App | All rights reserved | a GrifDigi company
+        </p>
       </div>
-
-      <p className="text-slate-gray/60 text-sm mb-4">
-        Built with caregivers & clinicians in mind. Categories reflect widely used ADL & IADL
-        frameworks and occupational-therapy best practices, translated into everyday language
-        families can use together.
-      </p>
-
-      <p className="text-slate-gray/50 text-xs">
-        © {new Date().getFullYear()} CarerView App&nbsp;| All rights reserved | a GrifDigi company
-      </p>
     </footer>
   )
 }
+
+// Provide default export too so either import style works.
+export default Footer
