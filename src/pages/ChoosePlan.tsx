@@ -14,19 +14,20 @@ import {
 export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: plan, isLoading } = useUserPlan()
+  const { data: plan, isLoading: planLoading } = useUserPlan()
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
+  const buttonsDisabled = planLoading || busy !== null || !user?.id
 
   // If already on an active plan, bounce to caregiver
   React.useEffect(() => {
     if (!requireSub) return
-    if (!isLoading && plan?.status === 'active' && plan.plan_id) {
+    if (!planLoading && plan?.status === 'active' && plan.plan_id) {
       navigate('/caregiver', { replace: true })
     }
-  }, [requireSub, isLoading, plan, navigate])
+  }, [requireSub, planLoading, plan, navigate])
 
   const upsertLocalSub = async (
     plan_id: PlanId,
@@ -80,7 +81,7 @@ export default function ChoosePlan() {
       setErr(null)
       setBusy('free')
       if (!user?.id) throw new Error('No user')
-      // need profile.created_at to anchor the 30-day window
+      // anchor the 30-day window to profile.created_at
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('created_at')
@@ -129,56 +130,56 @@ export default function ChoosePlan() {
 
       <div className="grid md:grid-cols-3 gap-4">
         {/* Primary */}
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">Primary Caregiver</div>
-          <div className="text-2xl font-bold mt-1">
-            $1<span className="text-base font-medium text-slate-500">/week</span>
+        <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
+          <div className="text-lg font-semibold text-slate-gray">Primary Caregiver</div>
+          <div className="text-2xl font-bold mt-1 text-slate-gray">
+            $1<span className="text-base font-medium text-slate-gray/70">/week</span>
           </div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+          <ul className="mt-3 text-sm text-slate-gray/80 space-y-1">
             <li>• Up to 7 observations per week</li>
             <li>• Best for daily/primary carers</li>
           </ul>
           <button
             onClick={choosePrimary}
-            disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
+            disabled={buttonsDisabled}
+            className="mt-4 w-full rounded-xl py-2 border bg-cyan-primary text-white hover:opacity-90 disabled:opacity-60"
           >
             {busy === 'primary_weekly' ? 'Choosing…' : 'Choose Primary'}
           </button>
         </div>
 
         {/* Occasional */}
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">Occasional Caregiver</div>
-          <div className="text-2xl font-bold mt-1">
-            $3<span className="text-base font-medium text-slate-500">/month</span>
+        <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
+          <div className="text-lg font-semibold text-slate-gray">Occasional Caregiver</div>
+          <div className="text-2xl font-bold mt-1 text-slate-gray">
+            $3<span className="text-base font-medium text-slate-gray/70">/month</span>
           </div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+          <ul className="mt-3 text-sm text-slate-gray/80 space-y-1">
             <li>• 1 observation per month</li>
             <li>• Casual / backup carers</li>
           </ul>
           <button
             onClick={chooseOccasional}
-            disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
+            disabled={buttonsDisabled}
+            className="mt-4 w-full rounded-xl py-2 border bg-cyan-primary text-white hover:opacity-90 disabled:opacity-60"
           >
             {busy === 'occasional_monthly' ? 'Choosing…' : 'Choose Occasional'}
           </button>
         </div>
 
         {/* Free */}
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">Free</div>
-          <div className="text-2xl font-bold mt-1">$0</div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+        <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
+          <div className="text-lg font-semibold text-slate-gray">Free</div>
+          <div className="text-2xl font-bold mt-1 text-slate-gray">$0</div>
+          <ul className="mt-3 text-sm text-slate-gray/80 space-y-1">
             <li>• 3 total observations</li>
             <li>• Only in the first 30 days</li>
             <li>• Upgrade anytime</li>
           </ul>
           <button
             onClick={chooseFree}
-            disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-60"
+            disabled={buttonsDisabled}
+            className="mt-4 w-full rounded-xl py-2 border bg-slate-800 text-white hover:opacity-90 disabled:opacity-60"
           >
             {busy === 'free' ? 'Choosing…' : 'Choose Free'}
           </button>
