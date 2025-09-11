@@ -1,6 +1,6 @@
 // src/pages/ChoosePlan.tsx
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan } from '../hooks/useUserPlan'
@@ -10,26 +10,59 @@ import {
   currentWeekWindowUtc,
   first30dWindowUtc,
 } from '../lib/subPeriod'
-import { useSiteSettings } from '../hooks/useSiteSettings'
-import Footer from '../components/common/Footer'
+import { Footer } from '../components/common/Footer' // keep if you created this component
+
+function HeaderLogo() {
+  const [logoUrl, setLogoUrl] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let active = true
+    ;(async () => {
+      // IMPORTANT: target the app schema explicitly
+      const { data, error } = await supabase
+        .schema('app')
+        .from('site_settings')
+        .select('logo_url')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!active) return
+
+      if (error) {
+        // Silent fail → use fallback asset if present
+        setLogoUrl('/CareView_logo_1_colored_highres.png')
+        return
+      }
+      setLogoUrl(data?.logo_url || '/CareView_logo_1_colored_highres.png')
+    })()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  return (
+    <a href="/" className="inline-flex items-center justify-center w-8 h-8 rounded">
+      {/* simple circle w/ image; use your preferred styling */}
+      <img
+        src={logoUrl || '/CareView_logo_1_colored_highres.png'}
+        alt="CarerView"
+        className="w-8 h-8 object-contain"
+      />
+    </a>
+  )
+}
 
 export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: plan, isLoading } = useUserPlan()
-  const { data: settings } = useSiteSettings()
-
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
-
-  // coupon UI (logic will be connected to Stripe later)
   const [coupon, setCoupon] = React.useState('')
-  const [couponMsg, setCouponMsg] = React.useState<string | null>(null)
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
-  const logoUrl = settings?.logo_url || '/CareView_logo_1_colored_highres.png'
 
-  // If already on an active plan, bounce to caregiver
   React.useEffect(() => {
     if (!requireSub) return
     if (!isLoading && plan?.status === 'active' && plan.plan_id) {
@@ -44,7 +77,7 @@ export default function ChoosePlan() {
   ) => {
     if (!user?.id) throw new Error('No user')
     const { error } = await supabase
-      .schema('app')
+      .schema('app') // schema explicit
       .from('user_subscriptions')
       .upsert({
         user_id: user.id,
@@ -61,6 +94,7 @@ export default function ChoosePlan() {
       setErr(null)
       setBusy('primary_weekly')
       const { start, end } = currentWeekWindowUtc()
+      // (coupon is not applied yet; we’ll wire Stripe later)
       await upsertLocalSub('primary_weekly', start, end)
       navigate('/caregiver', { replace: true })
     } catch (e: any) {
@@ -89,7 +123,6 @@ export default function ChoosePlan() {
       setErr(null)
       setBusy('free')
       if (!user?.id) throw new Error('No user')
-      // anchor the 30-day window on profile.created_at
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('created_at')
@@ -106,98 +139,56 @@ export default function ChoosePlan() {
     }
   }
 
-  // temporary coupon handler (placeholder until Stripe integration)
-  const onApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!coupon.trim()) {
-      setCouponMsg('Enter a coupon code.')
-      return
-    }
-    setCouponMsg('Coupon support coming soon. Your code has been noted.')
-    // Optional: stash locally so we can pick it up post-Stripe:
-    try {
-      localStorage.setItem('cv_pending_coupon', coupon.trim())
-    } catch {}
-  }
-
   if (!requireSub) {
     return (
-      <div className="min-h-screen bg-warm-white">
-        <div className="max-w-5xl mx-auto p-6">
-          <header className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-slate-800">Subscriptions disabled</h1>
-            <Link to="/" aria-label="Back to home">
-              <img
-                src={logoUrl}
-                alt="CarerView"
-                className="w-10 h-10 object-contain"
-                loading="lazy"
-              />
-            </Link>
-          </header>
-
-          <p className="text-slate-600">
-            This environment does not require a plan.&nbsp;
-            <button
-              className="underline"
-              onClick={() => navigate('/caregiver', { replace: true })}
-            >
-              Continue
-            </button>
-          </p>
-        </div>
-        <Footer className="mt-12" />
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
+        <p className="text-slate-600">
+          This environment does not require a plan.{' '}
+          <button className="underline" onClick={() => navigate('/caregiver', { replace: true })}>
+            Continue
+          </button>
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-warm-white flex flex-col">
-      <div className="max-w-6xl mx-auto w-full p-6 flex-1">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-slate-800">Choose your plan</h1>
-          <Link to="/" aria-label="Back to home">
-            <img
-              src={logoUrl}
-              alt="CarerView"
-              className="w-10 h-10 object-contain"
-              loading="lazy"
-            />
-          </Link>
-        </header>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* Header */}
+      <div className="w-full border-b border-slate-200 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-slate-800">Choose your plan</h1>
+          <HeaderLogo />
+        </div>
+      </div>
 
+      {/* Content */}
+      <div className="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
         <p className="text-slate-600 mb-4">
           You can switch plans later. Billing via Stripe will be added soon—no charges yet.
         </p>
 
-        {/* Coupon input (placeholder) */}
-        <form onSubmit={onApplyCoupon} className="mb-6 flex flex-col sm:flex-row gap-2">
+        {/* Coupon input (placeholder only) */}
+        <div className="flex items-center gap-2 mb-6">
           <input
             value={coupon}
             onChange={(e) => setCoupon(e.target.value)}
             placeholder="Have a coupon? Enter it here"
-            className="flex-1 rounded-xl border border-slate-300 px-3 py-2 bg-white"
-            aria-label="Coupon code"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 bg-white"
           />
           <button
-            type="submit"
-            className="rounded-xl px-4 py-2 border bg-slate-800 text-white hover:bg-slate-900"
+            type="button"
+            className="rounded-lg px-4 py-2 bg-slate-800 text-white disabled:opacity-50"
+            disabled={!coupon.trim()}
+            onClick={() => {/* no-op for now; Stripe later */}}
           >
             Apply
           </button>
-        </form>
-        {couponMsg && (
-          <div className="mb-4 text-sm text-slate-700">{couponMsg}</div>
-        )}
+        </div>
 
-        {err && (
-          <div className="mb-4 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-800">
-            {err}
-          </div>
-        )}
-
-        <div className="grid md:grid-cols-3 gap-4">
-          {/* Primary */}
+        {/* Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Primary Caregiver</div>
             <div className="text-2xl font-bold mt-1">
@@ -216,7 +207,6 @@ export default function ChoosePlan() {
             </button>
           </div>
 
-          {/* Occasional */}
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Occasional Caregiver</div>
             <div className="text-2xl font-bold mt-1">
@@ -235,7 +225,6 @@ export default function ChoosePlan() {
             </button>
           </div>
 
-          {/* Free */}
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Free</div>
             <div className="text-2xl font-bold mt-1">$0</div>
