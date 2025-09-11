@@ -1,16 +1,14 @@
 // src/pages/LandingPage.tsx
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import Footer from '../components/common/Footer'
-import { useQueryClient } from '@tanstack/react-query'
 import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic'
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const [isSignUp, setIsSignUp] = useState(true)
   const [name, setName] = useState('')
@@ -21,15 +19,28 @@ export default function LandingPage() {
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
 
-  // ---- Prefetch helper: warms ChoosePlan data + route chunk ----
-  const warmChoosePlan = React.useCallback(async () => {
+  // --- PREFETCH: warm the ChoosePlan route chunk & small anon read -----------
+  const prefetchStarted = useRef(false)
+  const kickoffPrefetchIfNeeded = () => {
+    if (prefetchStarted.current) return
+    prefetchStarted.current = true
+    // 1) prefetch the ChoosePlan React chunk + any declared assets
     try {
-      await prefetchChoosePlanAssets(queryClient)
-    } catch (e) {
-      // Non-fatal: just log for diagnostics
-      console.debug('[LandingPage] prefetchChoosePlanAssets failed', e)
-    }
-  }, [queryClient])
+      prefetchChoosePlanAssets?.()
+      // also ensure the dynamic import is requested
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      import('../pages/ChoosePlan')
+    } catch {}
+    // 2) tiny anon read to warm Supabase/TLS (non-blocking; ignore result)
+    //    Footer on /choose-plan reads the same table.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    supabase
+      .schema('app')
+      .from('site_settings')
+      .select('logo_url')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+  }
 
   // --- helpers ---------------------------------------------------------------
   const upsertProfileIfMissing = async (uid: string, displayName: string, emailAddr: string) => {
@@ -50,14 +61,11 @@ export default function LandingPage() {
       })
       if (upErr) throw upErr
     } else if (prof.disabled) {
-      // Hard stop if disabled
       await supabase.auth.signOut()
       throw new Error('Account disabled. Please contact support.')
     }
   }
 
-  // Keep your original role-based routing for sign-ins (admins still go to /admin).
-  // Plan gating happens later via your route guards, so we send caregivers to /caregiver.
   const routeByRole = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
@@ -108,6 +116,8 @@ export default function LandingPage() {
     setLoading(true)
     setError(null)
     setInfo(null)
+    // start prefetch immediately; do not await
+    kickoffPrefetchIfNeeded()
 
     try {
       if (isSignUp) {
@@ -123,21 +133,17 @@ export default function LandingPage() {
         const session = data.session // null if email confirmation is required
 
         if (session && user?.id) {
-          // Email confirm OFF → we are authenticated immediately.
           await upsertProfileIfMissing(
             user.id,
             name ?? user.user_metadata?.display_name ?? '',
             user.email ?? ''
           )
-          // Warm the ChoosePlan page & data, then navigate
-          await warmChoosePlan()
+          // go to plan selection (prefetch already in-flight)
           navigate('/choose-plan', { replace: true })
         } else {
-          // Email confirm ON → tell user to check inbox and then sign in.
           setInfo('Check your inbox to confirm your email, then sign in to choose a plan.')
         }
       } else {
-        // Sign-in → ensure profile exists, then continue
         const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
         if (siErr) throw siErr
 
@@ -149,8 +155,6 @@ export default function LandingPage() {
             user.email ?? ''
           )
         }
-
-        // Caregivers go to /caregiver (guards will handle plan gating to /choose-plan when needed)
         await routeByRole()
       }
     } catch (err: any) {
@@ -184,7 +188,7 @@ export default function LandingPage() {
     }
   }
 
-  // --- UI --------------------------------------------------------------------
+  // --- UI (original content preserved) --------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -196,6 +200,7 @@ export default function LandingPage() {
                 setIsSignUp(false)
                 document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
               }}
+              onMouseEnter={kickoffPrefetchIfNeeded}
               className="px-3 py-1.5 text-sm font-medium text-cyan-primary border border-cyan-primary/30 rounded-lg hover:bg-cyan-primary/10 transition-all duration-200"
             >
               Sign In
@@ -227,8 +232,7 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="#get-started"
-              onMouseEnter={warmChoosePlan}           // <-- prefetch on hover
-              onFocus={warmChoosePlan}                // <-- prefetch for keyboard users
+              onMouseEnter={kickoffPrefetchIfNeeded}
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
               Simple to start now <ArrowRight className="w-5 h-5" />
@@ -469,8 +473,7 @@ export default function LandingPage() {
             <div className="mt-12">
               <a
                 href="#get-started"
-                onMouseEnter={warmChoosePlan} // <-- prefetch on hover
-                onFocus={warmChoosePlan}
+                onMouseEnter={kickoffPrefetchIfNeeded}
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
                 Begin today
@@ -571,7 +574,12 @@ export default function LandingPage() {
         </div>
 
         {/* Auth form */}
-        <div id="get-started" className="py-20">
+        <div
+          id="get-started"
+          className="py-20"
+          onFocusCapture={kickoffPrefetchIfNeeded}
+          onMouseEnter={kickoffPrefetchIfNeeded}
+        >
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
               <h3 className="text-4xl font-bold text-slate-gray mb-6">Bring calm to the conversation</h3>
@@ -594,7 +602,7 @@ export default function LandingPage() {
                 <div className="flex bg-slate-gray/10 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => { setIsSignUp(true); setError(null); setInfo(null); warmChoosePlan() }}
+                    onClick={() => { setIsSignUp(true); setError(null); setInfo(null); kickoffPrefetchIfNeeded() }}
                     className={`px-6 py-3 rounded-md text-sm font-medium transition ${
                       isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
                     }`}
@@ -603,7 +611,7 @@ export default function LandingPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setIsSignUp(false); setError(null); setInfo(null) }}
+                    onClick={() => { setIsSignUp(false); setError(null); setInfo(null); kickoffPrefetchIfNeeded() }}
                     className={`px-6 py-3 rounded-md text-sm font-medium transition ${
                       !isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
                     }`}
@@ -621,6 +629,7 @@ export default function LandingPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
+                      onFocus={kickoffPrefetchIfNeeded}
                       className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                       placeholder="How should we address you?"
                     />
@@ -634,6 +643,7 @@ export default function LandingPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={kickoffPrefetchIfNeeded}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                     placeholder="your.email@example.com"
                   />
@@ -646,6 +656,7 @@ export default function LandingPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onFocus={kickoffPrefetchIfNeeded}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                     placeholder="Choose a secure password"
                   />
@@ -667,7 +678,6 @@ export default function LandingPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
-                  onMouseEnter={isSignUp ? warmChoosePlan : undefined} // hint the route while hovering submit
                 >
                   {isSignUp ? 'Get Started' : 'Welcome back'}
                   {!loading && <ArrowRight className="w-5 h-5" />}
