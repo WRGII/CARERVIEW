@@ -1,27 +1,44 @@
 // src/pages/ChoosePlan.tsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { useUserPlan } from '../hooks/useUserPlan'
-import type { PlanId } from '../hooks/useUserPlan'
 import {
   currentMonthWindowUtc,
   currentWeekWindowUtc,
   first30dWindowUtc,
 } from '../lib/subPeriod'
 
+type PlanId = 'primary_weekly' | 'occasional_monthly' | 'free'
+
 export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: plan, isLoading: planLoading } = useUserPlan()
+  const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
+
+  const { data: plan, isLoading: planLoading } = useQuery({
+    queryKey: ['choose-plan-user-plan', user?.id],
+    enabled: requireSub && !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .schema('app')
+        .from('user_subscriptions')
+        .select('plan_id,status,current_period_end')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (error && error.code !== 'PGRST116') throw error
+      return data as { plan_id?: PlanId; status?: string } | null
+    },
+    staleTime: 60_000,
+  })
+
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
-
-  const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
   const buttonsDisabled = planLoading || busy !== null || !user?.id
 
-  // If already on an active plan, bounce to caregiver
   React.useEffect(() => {
     if (!requireSub) return
     if (!planLoading && plan?.status === 'active' && plan.plan_id) {
@@ -29,11 +46,7 @@ export default function ChoosePlan() {
     }
   }, [requireSub, planLoading, plan, navigate])
 
-  const upsertLocalSub = async (
-    plan_id: PlanId,
-    startISO: string,
-    endISO: string
-  ) => {
+  const upsertLocalSub = async (plan_id: PlanId, startISO: string, endISO: string) => {
     if (!user?.id) throw new Error('No user')
     const { error } = await supabase
       .schema('app')
@@ -81,7 +94,6 @@ export default function ChoosePlan() {
       setErr(null)
       setBusy('free')
       if (!user?.id) throw new Error('No user')
-      // anchor the 30-day window to profile.created_at
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('created_at')
@@ -104,10 +116,7 @@ export default function ChoosePlan() {
         <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
         <p className="text-slate-600">
           This environment does not require a plan.{' '}
-          <button
-            className="underline"
-            onClick={() => navigate('/caregiver', { replace: true })}
-          >
+          <button className="underline" onClick={() => navigate('/caregiver', { replace: true })}>
             Continue
           </button>
         </p>
@@ -129,7 +138,6 @@ export default function ChoosePlan() {
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Primary */}
         <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
           <div className="text-lg font-semibold text-slate-gray">Primary Caregiver</div>
           <div className="text-2xl font-bold mt-1 text-slate-gray">
@@ -148,7 +156,6 @@ export default function ChoosePlan() {
           </button>
         </div>
 
-        {/* Occasional */}
         <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
           <div className="text-lg font-semibold text-slate-gray">Occasional Caregiver</div>
           <div className="text-2xl font-bold mt-1 text-slate-gray">
@@ -167,7 +174,6 @@ export default function ChoosePlan() {
           </button>
         </div>
 
-        {/* Free */}
         <div className="bg-warm-white border border-slate-gray/20 rounded-2xl p-5">
           <div className="text-lg font-semibold text-slate-gray">Free</div>
           <div className="text-2xl font-bold mt-1 text-slate-gray">$0</div>
