@@ -461,7 +461,7 @@ export default function LandingPage() {
                   <Heart className="w-8 h-8 text-slate-gray" />
                 </div>
                 <h4 className="text-lg font-semibold text-slate-gray mb-2">Kind</h4>
-                <p className="text-slate-gray/80">Supportive prompts in plain language.</p>
+                <p className="text-slate-gray/80">Supportive questions in plain language.</p>
               </div>
 
               <div>
