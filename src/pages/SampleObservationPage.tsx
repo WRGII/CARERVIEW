@@ -20,7 +20,7 @@ interface SampleObservation {
   caregiver_email: string
   created_at: string
   updated_at: string
-  responses?: Array<{
+  sample_responses?: Array<{
     id: string
     score: number
     notes: string | null
@@ -42,13 +42,13 @@ export default function SampleObservationPage() {
   const [error, setError] = useState<string | null>(null)
 
   const getOrCreateSampleObservation = async (): Promise<SampleObservation> => {
-    // Find existing sample observation (should be pre-seeded by migration)
+    // Find existing sample observation from dedicated sample tables
     const { data: existing, error: selectError } = await supabasePublic
-      .from('observations')
+      .from('sample_observations')
       .select(`
         id, patient_name, observation_date, mode_of_observation, notes, 
         caregiver_name, caregiver_email, created_at, updated_at,
-        responses:responses (
+        sample_responses:sample_responses (
           id, score, notes,
           question:questions (
             question_text, sort_order,
@@ -56,8 +56,7 @@ export default function SampleObservationPage() {
           )
         )
       `)
-      .eq('patient_name', 'Sample Patient')
-      .eq('caregiver_name', 'Sample Caregiver')
+      .eq('id', '00000000-0000-0000-0000-000000000001')
       .maybeSingle()
 
     if (selectError) {
@@ -68,8 +67,8 @@ export default function SampleObservationPage() {
       return existing as SampleObservation
     }
 
-    // Sample observation not found - it should be pre-seeded by migration
-    throw new Error('Sample observation not found. Please ensure the database migration has been run to create the sample data.')
+    // Sample observation not found
+    throw new Error('Sample observation not found. Please ensure the sample data migration has been run.')
   }
 
   useEffect(() => {
@@ -116,7 +115,7 @@ export default function SampleObservationPage() {
     }>
   }>()
 
-  observation.responses?.forEach(response => {
+  observation.sample_responses?.forEach(response => {
     const category = response.question?.category
     if (!category) return
 
