@@ -292,7 +292,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear, 1–5 scale</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Easy, gentle wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
+                  Easy wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
                 </p>
               </CardContent>
             </Card>
