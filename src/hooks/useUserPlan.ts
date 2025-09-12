@@ -52,7 +52,7 @@ export function useUserPlan() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['user-plan', user?.id],
+    queryKey: ['app.user_subscriptions', 'user-plan', user?.id],
     enabled: !!user?.id,
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null
@@ -68,8 +68,8 @@ export function useUserPlan() {
 
       if (error) throw error
 
-      const normalize = (v: any) =>
-        typeof v === 'string' ? v : v ? new Date(v).toISOString() : null
+      const normalize = (v: unknown): string | null =>
+        typeof v === 'string' ? v : v ? new Date(v as any).toISOString() : null
 
       return data
         ? {
