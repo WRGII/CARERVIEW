@@ -546,7 +546,7 @@ export default function LandingPage() {
 
               <div className="mt-10 text-center">
                 <button className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200">
-                  View a Sample Report
+                  View an Observation Sample
                 </button>
               </div>
             </CardContent>
