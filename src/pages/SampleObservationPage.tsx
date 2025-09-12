@@ -42,7 +42,7 @@ export default function SampleObservationPage() {
   const [error, setError] = useState<string | null>(null)
 
   const getOrCreateSampleObservation = async (): Promise<SampleObservation> => {
-    // First, try to find existing sample observation
+    // Find existing sample observation (should be pre-seeded by migration)
     const { data: existing, error: selectError } = await supabasePublic
       .from('observations')
       .select(`
@@ -68,80 +68,8 @@ export default function SampleObservationPage() {
       return existing as SampleObservation
     }
 
-    // Create sample observation if it doesn't exist
-    const sampleDate = new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
-
-    const { data: newObservation, error: insertError } = await supabasePublic
-      .from('observations')
-      .insert({
-        patient_name: 'Sample Patient',
-        observation_date: sampleDate,
-        mode_of_observation: 'In Person',
-        notes: 'This is a sample observation demonstrating how CarerView captures daily functional assessments. This observation shows typical scoring patterns and notes that help families and healthcare providers understand changes in independence levels.',
-        caregiver_name: 'Sample Caregiver',
-        caregiver_email: 'sample@carerview.com',
-        user_id: '00000000-0000-0000-0000-000000000000' // Special UUID for sample data
-      })
-      .select('id')
-      .single()
-
-    if (insertError) {
-      throw new Error(`Failed to create sample observation: ${insertError.message}`)
-    }
-
-    // Get some sample questions to create responses
-    const { data: questions, error: questionsError } = await supabasePublic
-      .from('questions')
-      .select(`
-        id, question_text, sort_order,
-        category:categories ( id, name, type )
-      `)
-      .limit(8)
-
-    if (questionsError) {
-      console.warn('Failed to fetch questions for sample responses:', questionsError)
-    }
-
-    // Create sample responses if we have questions
-    if (questions && questions.length > 0) {
-      const sampleResponses = questions.map((question, index) => ({
-        observation_id: newObservation.id,
-        question_id: question.id,
-        score: [3, 4, 2, 5, 3, 4, 2, 4][index % 8], // Varied realistic scores
-        notes: index % 3 === 0 ? `Sample note for ${question.question_text.toLowerCase()}` : null
-      }))
-
-      const { error: responsesError } = await supabasePublic
-        .from('responses')
-        .insert(sampleResponses)
-
-      if (responsesError) {
-        console.warn('Failed to create sample responses:', responsesError)
-      }
-    }
-
-    // Fetch the complete observation with responses
-    const { data: completeObservation, error: fetchError } = await supabasePublic
-      .from('observations')
-      .select(`
-        id, patient_name, observation_date, mode_of_observation, notes, 
-        caregiver_name, caregiver_email, created_at, updated_at,
-        responses:responses (
-          id, score, notes,
-          question:questions (
-            question_text, sort_order,
-            category:categories ( id, name, type )
-          )
-        )
-      `)
-      .eq('id', newObservation.id)
-      .single()
-
-    if (fetchError) {
-      throw new Error(`Failed to fetch created sample observation: ${fetchError.message}`)
-    }
-
-    return completeObservation as SampleObservation
+    // Sample observation not found - it should be pre-seeded by migration
+    throw new Error('Sample observation not found. Please ensure the database migration has been run to create the sample data.')
   }
 
   useEffect(() => {
