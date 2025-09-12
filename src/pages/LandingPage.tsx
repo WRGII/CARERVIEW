@@ -1,14 +1,21 @@
 // src/pages/LandingPage.tsx
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import Footer from '../components/common/Footer'
+import { useQueryClient } from '@tanstack/react-query'
 import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic'
 
 export default function LandingPage() {
   const navigate = useNavigate()
+
+  // react-query client (used to pre-warm Choose Plan)
+  const queryClient = useQueryClient()
+  const kickoffPrefetch = React.useCallback(() => {
+    prefetchChoosePlanAssets(queryClient)
+  }, [queryClient])
 
   const [isSignUp, setIsSignUp] = useState(true)
   const [name, setName] = useState('')
@@ -19,30 +26,8 @@ export default function LandingPage() {
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
 
-  // --- PREFETCH: warm the ChoosePlan route chunk & small anon read -----------
-  const prefetchStarted = useRef(false)
-  const kickoffPrefetchIfNeeded = () => {
-    if (prefetchStarted.current) return
-    prefetchStarted.current = true
-    // 1) prefetch the ChoosePlan React chunk + any declared assets
-    try {
-      prefetchChoosePlanAssets?.()
-      // also ensure the dynamic import is requested
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      import('../pages/ChoosePlan')
-    } catch {}
-    // 2) tiny anon read to warm Supabase/TLS (non-blocking; ignore result)
-    //    Footer on /choose-plan reads the same table.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    supabase
-      .schema('app')
-      .from('site_settings')
-      .select('logo_url')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-  }
-
   // --- helpers ---------------------------------------------------------------
+
   const upsertProfileIfMissing = async (uid: string, displayName: string, emailAddr: string) => {
     const { data: prof, error: selErr } = await supabase
       .from('profiles')
@@ -57,7 +42,7 @@ export default function LandingPage() {
         email: emailAddr ?? '',
         display_name: displayName ?? '',
         role: 'caregiver',
-        disabled: false
+        disabled: false,
       })
       if (upErr) throw upErr
     } else if (prof.disabled) {
@@ -67,7 +52,9 @@ export default function LandingPage() {
   }
 
   const routeByRole = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
       navigate('/', { replace: true })
       return
@@ -85,7 +72,7 @@ export default function LandingPage() {
         email: user.email,
         display_name: (user.user_metadata && user.user_metadata.display_name) || '',
         role: 'caregiver',
-        disabled: false
+        disabled: false,
       })
       const { data: prof2 } = await supabase
         .from('profiles')
@@ -111,21 +98,22 @@ export default function LandingPage() {
   }
 
   // --- submit handlers -------------------------------------------------------
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setInfo(null)
-    // start prefetch immediately; do not await
-    kickoffPrefetchIfNeeded()
+
+    // 👇 warm up Choose Plan data ASAP for faster subsequent load
+    kickoffPrefetch()
 
     try {
       if (isSignUp) {
-        // Signup (email-confirm aware)
         const { data, error: signUpErr } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { display_name: name } }
+          options: { data: { display_name: name } },
         })
         if (signUpErr) throw signUpErr
 
@@ -138,7 +126,7 @@ export default function LandingPage() {
             name ?? user.user_metadata?.display_name ?? '',
             user.email ?? ''
           )
-          // go to plan selection (prefetch already in-flight)
+          // Go to plan choice first for new accounts
           navigate('/choose-plan', { replace: true })
         } else {
           setInfo('Check your inbox to confirm your email, then sign in to choose a plan.')
@@ -159,7 +147,9 @@ export default function LandingPage() {
       }
     } catch (err: any) {
       if (err?.message === 'Invalid login credentials') {
-        setError('Incorrect email or password. Please check your credentials or try resetting your password.')
+        setError(
+          'Incorrect email or password. Please check your credentials or try resetting your password.'
+        )
       } else {
         setError(err?.message || 'Authentication failed')
       }
@@ -177,7 +167,7 @@ export default function LandingPage() {
     setError(null)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/reset-password`,
       })
       if (error) throw error
       setInfo('If that email exists, a reset link has been sent.')
@@ -188,7 +178,8 @@ export default function LandingPage() {
     }
   }
 
-  // --- UI (original content preserved) --------------------------------------
+  // --- UI --------------------------------------------------------------------
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -198,9 +189,9 @@ export default function LandingPage() {
             <button
               onClick={() => {
                 setIsSignUp(false)
+                kickoffPrefetch() // also warm cache on toggle
                 document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
               }}
-              onMouseEnter={kickoffPrefetchIfNeeded}
               className="px-3 py-1.5 text-sm font-medium text-cyan-primary border border-cyan-primary/30 rounded-lg hover:bg-cyan-primary/10 transition-all duration-200"
             >
               Sign In
@@ -232,7 +223,7 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
               href="#get-started"
-              onMouseEnter={kickoffPrefetchIfNeeded}
+              onMouseEnter={kickoffPrefetch}
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
               Simple to start now <ArrowRight className="w-5 h-5" />
@@ -379,7 +370,9 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold text-slate-gray mb-2">Honor your loved one</h4>
-                    <p className="text-slate-gray/80">Focus on what they <em>can</em> do today, while tracking where help is needed.</p>
+                    <p className="text-slate-gray/80">
+                      Focus on what they <em>can</em> do today, while tracking where help is needed.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -399,9 +392,18 @@ export default function LandingPage() {
           <div className="grid gap-8 md:grid-cols-2">
             <Card className="border-0 shadow-lg bg-warm-white">
               <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">Activities of Daily Living</h4>
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Activities of Daily Living
+                </h4>
                 <div className="space-y-3">
-                  {['Bathing & personal hygiene', 'Dressing & grooming', 'Eating & drinking', 'Toileting & continence', 'Mobility & transfers', 'Safety awareness'].map((item, index) => (
+                  {[
+                    'Bathing & personal hygiene',
+                    'Dressing & grooming',
+                    'Eating & drinking',
+                    'Toileting & continence',
+                    'Mobility & transfers',
+                    'Safety awareness',
+                  ].map((item, index) => (
                     <div key={index} className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-cyan-primary rounded-full"></div>
                       <span className="text-slate-gray">{item}</span>
@@ -413,9 +415,18 @@ export default function LandingPage() {
 
             <Card className="border-0 shadow-lg bg-warm-white">
               <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">Instrumental Activities</h4>
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Instrumental Activities
+                </h4>
                 <div className="space-y-3">
-                  {['Medication management', 'Meals & groceries', 'Housekeeping & laundry', 'Finances & paperwork', 'Communication & memory', 'Transportation & errands'].map((item, index) => (
+                  {[
+                    'Medication management',
+                    'Meals & groceries',
+                    'Housekeeping & laundry',
+                    'Finances & paperwork',
+                    'Communication & memory',
+                    'Transportation & errands',
+                  ].map((item, index) => (
                     <div key={index} className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-mint-green rounded-full"></div>
                       <span className="text-slate-gray">{item}</span>
@@ -473,7 +484,7 @@ export default function LandingPage() {
             <div className="mt-12">
               <a
                 href="#get-started"
-                onMouseEnter={kickoffPrefetchIfNeeded}
+                onMouseEnter={kickoffPrefetch}
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
                 Begin today
@@ -491,7 +502,9 @@ export default function LandingPage() {
 
           <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
             <CardContent className="p-12">
-              <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">A single page report shows:</h4>
+              <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
+                A single page report shows:
+              </h4>
 
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -499,7 +512,9 @@ export default function LandingPage() {
                     <CheckCircle className="w-5 h-5 text-warm-white" />
                   </div>
                   <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">Daily notes summarized into clear trends</h5>
+                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
+                      Daily notes summarized into clear trends
+                    </h5>
                     <p className="text-slate-gray/80">See patterns emerge from your daily observations</p>
                   </div>
                 </div>
@@ -509,7 +524,9 @@ export default function LandingPage() {
                     <CheckCircle className="w-5 h-5 text-slate-gray" />
                   </div>
                   <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">Gentle flags when support needs shift</h5>
+                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
+                      Gentle flags when support needs shift
+                    </h5>
                     <p className="text-slate-gray/80">Know when it's time to adjust care approaches</p>
                   </div>
                 </div>
@@ -519,7 +536,9 @@ export default function LandingPage() {
                     <CheckCircle className="w-5 h-5 text-slate-gray" />
                   </div>
                   <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">A printable view for appointments</h5>
+                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
+                      A printable view for appointments
+                    </h5>
                     <p className="text-slate-gray/80">Bring concrete data to every healthcare conversation</p>
                   </div>
                 </div>
@@ -574,12 +593,7 @@ export default function LandingPage() {
         </div>
 
         {/* Auth form */}
-        <div
-          id="get-started"
-          className="py-20"
-          onFocusCapture={kickoffPrefetchIfNeeded}
-          onMouseEnter={kickoffPrefetchIfNeeded}
-        >
+        <div id="get-started" className="py-20">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
               <h3 className="text-4xl font-bold text-slate-gray mb-6">Bring calm to the conversation</h3>
@@ -602,7 +616,12 @@ export default function LandingPage() {
                 <div className="flex bg-slate-gray/10 rounded-lg p-1">
                   <button
                     type="button"
-                    onClick={() => { setIsSignUp(true); setError(null); setInfo(null); kickoffPrefetchIfNeeded() }}
+                    onClick={() => {
+                      setIsSignUp(true)
+                      setError(null)
+                      setInfo(null)
+                      kickoffPrefetch()
+                    }}
                     className={`px-6 py-3 rounded-md text-sm font-medium transition ${
                       isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
                     }`}
@@ -611,7 +630,12 @@ export default function LandingPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setIsSignUp(false); setError(null); setInfo(null); kickoffPrefetchIfNeeded() }}
+                    onClick={() => {
+                      setIsSignUp(false)
+                      setError(null)
+                      setInfo(null)
+                      kickoffPrefetch()
+                    }}
                     className={`px-6 py-3 rounded-md text-sm font-medium transition ${
                       !isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
                     }`}
@@ -629,7 +653,6 @@ export default function LandingPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      onFocus={kickoffPrefetchIfNeeded}
                       className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                       placeholder="How should we address you?"
                     />
@@ -643,9 +666,9 @@ export default function LandingPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onFocus={kickoffPrefetchIfNeeded}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                     placeholder="your.email@example.com"
+                    onFocus={kickoffPrefetch}
                   />
                 </div>
 
@@ -656,7 +679,6 @@ export default function LandingPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onFocus={kickoffPrefetchIfNeeded}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                     placeholder="Choose a secure password"
                   />
@@ -677,6 +699,7 @@ export default function LandingPage() {
                 <button
                   type="submit"
                   disabled={loading}
+                  onMouseEnter={kickoffPrefetch}
                   className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
                 >
                   {isSignUp ? 'Get Started' : 'Welcome back'}
@@ -696,6 +719,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+
         <Footer />
       </div>
     </div>
