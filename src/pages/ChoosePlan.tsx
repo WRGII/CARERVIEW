@@ -5,20 +5,66 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan } from '../hooks/useUserPlan'
 import type { PlanId } from '../hooks/useUserPlan'
-import { currentWeekWindowUtc, first30dWindowUtc } from '../lib/subPeriod'
+import {
+  currentMonthWindowUtc,
+  currentWeekWindowUtc,
+  first30dWindowUtc,
+} from '../lib/subPeriod'
 import Footer from '../components/common/Footer'
+
+// NEW: central Stripe config (price IDs come from .env via Vite)
+import {
+  PLANS,
+  RETURN_URLS,
+  getStripePriceId,
+  type PlanKey,
+} from '../config/stripe'
+
+// Optional: small header logo pulled from site_settings (already in your app)
+function HeaderLogo() {
+  const [logoUrl, setLogoUrl] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      // Public read policy already added for site_settings
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('logo_url')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+      if (!cancelled && !error && data?.[0]?.logo_url) {
+        setLogoUrl(data[0].logo_url)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (!logoUrl) return null
+  return (
+    <a href="/" className="absolute right-6 top-6 inline-flex">
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <img
+        src={logoUrl}
+        className="h-7 w-7 rounded-lg border border-slate-200/70 shadow-sm"
+      />
+    </a>
+  )
+}
 
 export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: plan, isLoading } = useUserPlan()
+
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
   const [coupon, setCoupon] = React.useState('') // reserved for Stripe coupons later
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
-  // If already on an active plan, bounce to caregiver
+  // If already on an active plan (from your local user_subscriptions logic), bounce
   React.useEffect(() => {
     if (!requireSub) return
     if (!isLoading && plan?.status === 'active' && plan.plan_id) {
@@ -45,40 +91,47 @@ export default function ChoosePlan() {
     if (error) throw error
   }
 
-  const choosePrimary = async () => {
+  // ---- Stripe checkout for paid plans --------------------------------------
+  async function startStripeCheckout(which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>) {
     try {
       setErr(null)
-      setBusy('primary_weekly')
-      const { start, end } = currentWeekWindowUtc()
-      await upsertLocalSub('primary_weekly', start, end)
-      navigate('/caregiver', { replace: true })
+      setBusy(which as PlanId)
+
+      if (!user?.id) throw new Error('No user')
+      const priceId = getStripePriceId(which)
+      if (!priceId) {
+        throw new Error(`Missing Stripe price id for ${which}. Set it in .env`)
+      }
+
+      // Call Supabase Edge Function to create a Checkout Session
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: priceId,
+          plan_id: which,
+          coupon: coupon.trim() || undefined, // optional
+          success_url: RETURN_URLS.success,
+          cancel_url: RETURN_URLS.cancel,
+        },
+      })
+
+      if (error) throw error
+      const url = (data as any)?.url
+      if (!url) throw new Error('Stripe checkout URL missing')
+
+      // Redirect to Stripe-hosted checkout
+      window.location.href = url
     } catch (e: any) {
-      setErr(e?.message || 'Failed to choose Primary plan')
-    } finally {
+      setErr(e?.message || 'Failed to start checkout')
       setBusy(null)
     }
   }
 
-  const chooseOccasional = async () => {
-    try {
-      setErr(null)
-      setBusy('occasional_weekly')
-      const { start, end } = currentWeekWindowUtc()
-      await upsertLocalSub('occasional_weekly', start, end)
-      navigate('/caregiver', { replace: true })
-    } catch (e: any) {
-      setErr(e?.message || 'Failed to choose Occasional plan')
-    } finally {
-      setBusy(null)
-    }
-  }
-
+  // ---- Free plan remains local for now --------------------------------------
   const chooseFree = async () => {
     try {
       setErr(null)
       setBusy('free')
       if (!user?.id) throw new Error('No user')
-      // need profile.created_at to anchor the 30-day window
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('created_at')
@@ -97,125 +150,111 @@ export default function ChoosePlan() {
 
   if (!requireSub) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-mint-green/10 to-cyan-primary/10 flex items-center">
-        <div className="max-w-5xl w-full mx-auto p-6">
-          <div className="bg-warm-white border border-slate-gray/20 rounded-2xl shadow-sm p-6 md:p-8">
-            <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
-            <p className="text-slate-600">
-              This environment does not require a plan.{' '}
-              <button
-                className="underline"
-                onClick={() => navigate('/caregiver', { replace: true })}
-              >
-                Continue
-              </button>
-            </p>
-          </div>
-        </div>
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
+        <p className="text-slate-600">
+          This environment does not require a plan.{' '}
+          <button
+            className="underline"
+            onClick={() => navigate('/caregiver', { replace: true })}
+          >
+            Continue
+          </button>
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-mint-green/10 to-cyan-primary/10 flex">
-      <div className="max-w-5xl w-full mx-auto p-6">
-        {/* logo in top-right */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-slate-800">Choose your plan</h1>
+    <div className="relative max-w-5xl mx-auto p-6">
+      <HeaderLogo />
+      <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your plan</h1>
+      <p className="text-slate-600 mb-4">
+        You can switch plans later. Billing via Stripe will be added soon—no charges yet.
+      </p>
+
+      {/* Coupon box (UI only; sent to stripe-checkout if present) */}
+      <div className="flex items-center gap-3 mb-6">
+        <input
+          value={coupon}
+          onChange={(e) => setCoupon(e.target.value)}
+          placeholder="Have a coupon? Enter it here"
+          className="flex-1 rounded-xl border px-3 py-2"
+        />
+        <button
+          type="button"
+          className="rounded-xl px-4 py-2 border bg-slate-900 text-white"
+          onClick={() => {/* noop for now; coupon applied during checkout */}}
+        >
+          Apply
+        </button>
+      </div>
+
+      {err && (
+        <div className="mb-4 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-800">
+          {err}
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-3 gap-4">
+        {/* Primary */}
+        <div className="border rounded-2xl p-5 bg-white">
+          <div className="text-lg font-semibold">{PLANS.primary_weekly.name}</div>
+          <div className="text-2xl font-bold mt-1">
+            $1<span className="text-base font-medium text-slate-500">/week</span>
+          </div>
+          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+            <li>• Up to 7 observations per week</li>
+            <li>• Best for daily/primary carers</li>
+          </ul>
           <button
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50"
-            title="Back to home"
+            onClick={() => startStripeCheckout('primary_weekly')}
+            disabled={busy !== null}
+            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
           >
-            <img src="/CareView_logo_1_colored_highres.png" alt="CarerView" className="h-8 w-8" />
-            <span className="text-slate-700 hidden sm:inline">Home</span>
+            {busy === 'primary_weekly' ? 'Redirecting…' : 'Choose Primary'}
           </button>
         </div>
 
-        <p className="text-slate-600 mb-6">
-          You can switch plans later. Billing via Stripe will be added soon—no charges yet.
-        </p>
-
-        {err && (
-          <div className="mb-4 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-800">
-            {err}
+        {/* Occasional */}
+        <div className="border rounded-2xl p-5 bg-white">
+          <div className="text-lg font-semibold">{PLANS.occasional_weekly.name}</div>
+          <div className="text-2xl font-bold mt-1">
+            $0.50<span className="text-base font-medium text-slate-500">/week</span>
           </div>
-        )}
-
-        {/* coupon input (reserved for Stripe later) */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Coupon (optional)</label>
-          <input
-            value={coupon}
-            onChange={(e) => setCoupon(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
-            placeholder="Enter coupon code"
-          />
-          <div className="text-xs text-slate-500 mt-1">Coupons will be applied during checkout when Stripe is connected.</div>
+          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+            <li>• 1 observation per week</li>
+            <li>• Casual / backup carers</li>
+          </ul>
+          <button
+            onClick={() => startStripeCheckout('occasional_weekly')}
+            disabled={busy !== null}
+            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
+          >
+            {busy === 'occasional_weekly' ? 'Redirecting…' : 'Choose Occasional'}
+          </button>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4">
-          {/* Primary */}
-          <div className="border rounded-2xl p-5 bg-white">
-            <div className="text-lg font-semibold">Primary Caregiver</div>
-            <div className="text-2xl font-bold mt-1">
-              $1<span className="text-base font-medium text-slate-500">/week</span>
-            </div>
-            <ul className="mt-3 text-sm text-slate-600 space-y-1">
-              <li>• Up to 7 observations per week</li>
-              <li>• Best for daily/primary carers</li>
-            </ul>
-            <button
-              onClick={choosePrimary}
-              disabled={busy !== null}
-              className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
-            >
-              {busy === 'primary_weekly' ? 'Choosing…' : 'Choose Primary'}
-            </button>
-          </div>
-
-          {/* Occasional (WEEKLY) */}
-          <div className="border rounded-2xl p-5 bg-white">
-            <div className="text-lg font-semibold">Occasional Caregiver</div>
-            <div className="text-2xl font-bold mt-1">
-              $0.50<span className="text-base font-medium text-slate-500">/week</span>
-            </div>
-            <ul className="mt-3 text-sm text-slate-600 space-y-1">
-              <li>• 1 observation per week</li>
-              <li>• Casual / backup carers</li>
-            </ul>
-            <button
-              onClick={chooseOccasional}
-              disabled={busy !== null}
-              className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
-            >
-              {busy === 'occasional_weekly' ? 'Choosing…' : 'Choose Occasional'}
-            </button>
-          </div>
-
-          {/* Free */}
-          <div className="border rounded-2xl p-5 bg-white">
-            <div className="text-lg font-semibold">Free</div>
-            <div className="text-2xl font-bold mt-1">$0</div>
-            <ul className="mt-3 text-sm text-slate-600 space-y-1">
-              <li>• 3 total observations</li>
-              <li>• Only in the first 30 days</li>
-              <li>• Upgrade anytime</li>
-            </ul>
-            <button
-              onClick={chooseFree}
-              disabled={busy !== null}
-              className="mt-4 w-full rounded-xl py-2 border bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-60"
-            >
-              {busy === 'free' ? 'Choosing…' : 'Choose Free'}
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-10">
-          <Footer />
+        {/* Free */}
+        <div className="border rounded-2xl p-5 bg-white">
+          <div className="text-lg font-semibold">{PLANS.free.name}</div>
+          <div className="text-2xl font-bold mt-1">$0</div>
+          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+            <li>• 3 total observations</li>
+            <li>• Only in the first 30 days</li>
+            <li>• Upgrade anytime</li>
+          </ul>
+          <button
+            onClick={chooseFree}
+            disabled={busy !== null}
+            className="mt-4 w-full rounded-xl py-2 border bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-60"
+          >
+            {busy === 'free' ? 'Setting up…' : 'Choose Free'}
+          </button>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }
