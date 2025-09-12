@@ -169,7 +169,7 @@ export default function ChoosePlan() {
   return (
     <div className="relative max-w-5xl mx-auto p-6">
       <HeaderLogo />
-      <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your plan</h1>
+      <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your ideal CarerView plan</h1>
       <p className="text-slate-600 mb-4">
         You can switch plans later. Billing via Stripe.
       </p>
