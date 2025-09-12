@@ -232,7 +232,7 @@ export default function LandingPage() {
               href="#sample-report"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
             >
-              See an Observation Report
+              See an Observation Sample
             </a>
           </div>
 
