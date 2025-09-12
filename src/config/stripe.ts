@@ -1,46 +1,65 @@
-// src/config/stripe.ts
+// src/stripe-config.ts
+export type PlanKey = 'primary_weekly' | 'occasional_weekly';
 
-// Supported plan IDs in app + DB
-export type PlanKey = 'primary_weekly' | 'occasional_weekly' | 'free';
+type ProductConfig = {
+  priceId: string;
+  name: string;
+  interval: 'week';
+  currency: 'usd';
+};
 
-export const PLANS: Record<
-  PlanKey,
-  { id: PlanKey; name: string; priceDisplay: string; stripePriceId?: string | null }
-> = {
+// Read env once, trim, and support legacy names for safety.
+const ENV = import.meta.env as Record<string, string | undefined>;
+
+const PRIMARY_WEEKLY =
+  (ENV.VITE_STRIPE_PRICE_PRIMARY_WEEKLY ??
+    ENV.VITE_STRIPE_PRICE_PRIMARY)?.trim() || '';
+
+const OCCASIONAL_WEEKLY =
+  (ENV.VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY ??
+    ENV.VITE_STRIPE_PRICE_OCCASIONAL)?.trim() || '';
+
+export const STRIPE_CONFIG: Record<PlanKey, ProductConfig> = {
   primary_weekly: {
-    id: 'primary_weekly',
+    priceId: PRIMARY_WEEKLY,
     name: 'Primary Caregiver',
-    priceDisplay: '$1 / week',
-    // set via Vite env: VITE_PRICE_PRIMARY_WEEKLY
-    stripePriceId: import.meta.env.VITE_PRICE_PRIMARY_WEEKLY ?? null,
+    interval: 'week',
+    currency: 'usd',
   },
   occasional_weekly: {
-    id: 'occasional_weekly',
+    priceId: OCCASIONAL_WEEKLY,
     name: 'Occasional Caregiver',
-    priceDisplay: '$0.50 / week',
-    // set via Vite env: VITE_PRICE_OCCASIONAL_WEEKLY
-    stripePriceId: import.meta.env.VITE_PRICE_OCCASIONAL_WEEKLY ?? null,
-  },
-  free: {
-    id: 'free',
-    name: 'Free',
-    priceDisplay: '$0',
-    stripePriceId: null, // no Stripe price for Free
+    interval: 'week',
+    currency: 'usd',
   },
 };
 
-// Publishable key for client-side Stripe
-export const STRIPE_PUBLIC_KEY =
-  (import.meta.env.VITE_STRIPE_PUBLIC_KEY as string | undefined) ?? '';
+// Helpful runtime checks (only warn once)
+let warned = false;
+export function assertStripeEnv(plan: PlanKey) {
+  const price =
+    plan === 'primary_weekly' ? PRIMARY_WEEKLY : OCCASIONAL_WEEKLY;
 
-// Return URLs used by checkout
-const origin = typeof window !== 'undefined' ? window.location.origin : '';
-export const RETURN_URLS = {
-  success: `${origin}/caregiver?purchase=success`,
-  cancel: `${origin}/choose-plan?purchase=cancelled`,
-};
+  if (!warned) {
+    if (!PRIMARY_WEEKLY) {
+      console.warn(
+        '[Stripe] VITE_STRIPE_PRICE_PRIMARY_WEEKLY is empty (or legacy key missing). Current value:',
+        ENV.VITE_STRIPE_PRICE_PRIMARY_WEEKLY
+      );
+    }
+    if (!OCCASIONAL_WEEKLY) {
+      console.warn(
+        '[Stripe] VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY is empty (or legacy key missing). Current value:',
+        ENV.VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY
+      );
+    }
+    warned = true;
+  }
 
-// Helper to safely fetch a plan's price id
-export function getStripePriceId(planId: PlanKey): string | null {
-  return PLANS[planId]?.stripePriceId ?? null;
+  if (!price) {
+    throw new Error(
+      `Missing Stripe price id for ${plan}. Set VITE_STRIPE_PRICE_${plan.toUpperCase()} in your environment and rebuild.`
+    );
+  }
+  return price;
 }
