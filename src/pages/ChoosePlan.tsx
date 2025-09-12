@@ -5,55 +5,8 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan } from '../hooks/useUserPlan'
 import type { PlanId } from '../hooks/useUserPlan'
-import { useCreateCheckoutSession } from '../hooks/useStripe'
-import { STRIPE_PRODUCTS } from '../stripe-config'
-import {
-  currentMonthWindowUtc,
-  currentWeekWindowUtc,
-  first30dWindowUtc,
-} from '../lib/subPeriod'
-import { Footer } from '../components/common/Footer' // keep if you created this component
-
-function HeaderLogo() {
-  const [logoUrl, setLogoUrl] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    let active = true
-    ;(async () => {
-      // IMPORTANT: target the app schema explicitly
-      const { data, error } = await supabase
-        .schema('app')
-        .from('site_settings')
-        .select('logo_url')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (!active) return
-
-      if (error) {
-        // Silent fail → use fallback asset if present
-        setLogoUrl('/CareView_logo_1_colored_highres.png')
-        return
-      }
-      setLogoUrl(data?.logo_url || '/CareView_logo_1_colored_highres.png')
-    })()
-    return () => {
-      active = false
-    }
-  }, [])
-
-  return (
-    <a href="/" className="inline-flex items-center justify-center w-8 h-8 rounded">
-      {/* simple circle w/ image; use your preferred styling */}
-      <img
-        src={logoUrl || '/CareView_logo_1_colored_highres.png'}
-        alt="CarerView"
-        className="w-8 h-8 object-contain"
-      />
-    </a>
-  )
-}
+import { currentWeekWindowUtc, first30dWindowUtc } from '../lib/subPeriod'
+import Footer from '../components/common/Footer'
 
 export default function ChoosePlan() {
   const { user } = useAuth()
@@ -61,11 +14,11 @@ export default function ChoosePlan() {
   const { data: plan, isLoading } = useUserPlan()
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
-  const [coupon, setCoupon] = React.useState('')
-  const createCheckoutSession = useCreateCheckoutSession()
+  const [coupon, setCoupon] = React.useState('') // reserved for Stripe coupons later
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
+  // If already on an active plan, bounce to caregiver
   React.useEffect(() => {
     if (!requireSub) return
     if (!isLoading && plan?.status === 'active' && plan.plan_id) {
@@ -80,7 +33,7 @@ export default function ChoosePlan() {
   ) => {
     if (!user?.id) throw new Error('No user')
     const { error } = await supabase
-      .schema('app') // schema explicit
+      .schema('app')
       .from('user_subscriptions')
       .upsert({
         user_id: user.id,
@@ -96,13 +49,9 @@ export default function ChoosePlan() {
     try {
       setErr(null)
       setBusy('primary_weekly')
-      
-      // Create Stripe checkout session
-      await createCheckoutSession.mutateAsync({
-        productKey: 'primary',
-        successUrl: `${window.location.origin}/caregiver?success=true&plan=primary`,
-        cancelUrl: `${window.location.origin}/choose-plan?canceled=true`
-      })
+      const { start, end } = currentWeekWindowUtc()
+      await upsertLocalSub('primary_weekly', start, end)
+      navigate('/caregiver', { replace: true })
     } catch (e: any) {
       setErr(e?.message || 'Failed to choose Primary plan')
     } finally {
@@ -113,14 +62,10 @@ export default function ChoosePlan() {
   const chooseOccasional = async () => {
     try {
       setErr(null)
-      setBusy('occasional_monthly')
-      
-      // Create Stripe checkout session
-      await createCheckoutSession.mutateAsync({
-        productKey: 'occasional',
-        successUrl: `${window.location.origin}/caregiver?success=true&plan=occasional`,
-        cancelUrl: `${window.location.origin}/choose-plan?canceled=true`
-      })
+      setBusy('occasional_weekly')
+      const { start, end } = currentWeekWindowUtc()
+      await upsertLocalSub('occasional_weekly', start, end)
+      navigate('/caregiver', { replace: true })
     } catch (e: any) {
       setErr(e?.message || 'Failed to choose Occasional plan')
     } finally {
@@ -133,6 +78,7 @@ export default function ChoosePlan() {
       setErr(null)
       setBusy('free')
       if (!user?.id) throw new Error('No user')
+      // need profile.created_at to anchor the 30-day window
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('created_at')
@@ -151,58 +97,69 @@ export default function ChoosePlan() {
 
   if (!requireSub) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
-        <p className="text-slate-600">
-          This environment does not require a plan.{' '}
-          <button className="underline" onClick={() => navigate('/caregiver', { replace: true })}>
-            Continue
-          </button>
-        </p>
+      <div className="min-h-screen bg-gradient-to-b from-mint-green/10 to-cyan-primary/10 flex items-center">
+        <div className="max-w-5xl w-full mx-auto p-6">
+          <div className="bg-warm-white border border-slate-gray/20 rounded-2xl shadow-sm p-6 md:p-8">
+            <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
+            <p className="text-slate-600">
+              This environment does not require a plan.{' '}
+              <button
+                className="underline"
+                onClick={() => navigate('/caregiver', { replace: true })}
+              >
+                Continue
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* Header */}
-      <div className="w-full border-b border-slate-200 bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-slate-800">Choose the CarerView plan that best suits your needs</h1>
-          <HeaderLogo />
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-6xl mx-auto w-full px-4 py-6 flex-1">
-        <p className="text-slate-600 mb-4">
-          You can switch plans later. Billing via Stripe will be added soon—no charges yet.
-        </p>
-
-        {/* Coupon input (placeholder only) */}
-        <div className="flex items-center gap-2 mb-6">
-          <input
-            value={coupon}
-            onChange={(e) => setCoupon(e.target.value)}
-            placeholder="Have a coupon? Enter it here"
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 bg-white"
-          />
+    <div className="min-h-screen bg-gradient-to-b from-mint-green/10 to-cyan-primary/10 flex">
+      <div className="max-w-5xl w-full mx-auto p-6">
+        {/* logo in top-right */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-semibold text-slate-800">Choose your plan</h1>
           <button
-            type="button"
-            className="rounded-lg px-4 py-2 bg-slate-800 text-white disabled:opacity-50"
-            disabled={!coupon.trim()}
-            onClick={() => {/* no-op for now; Stripe later */}}
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50"
+            title="Back to home"
           >
-            Apply
+            <img src="/CareView_logo_1_colored_highres.png" alt="CarerView" className="h-8 w-8" />
+            <span className="text-slate-700 hidden sm:inline">Home</span>
           </button>
         </div>
 
-        {/* Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <p className="text-slate-600 mb-6">
+          You can switch plans later. Billing via Stripe will be added soon—no charges yet.
+        </p>
+
+        {err && (
+          <div className="mb-4 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-800">
+            {err}
+          </div>
+        )}
+
+        {/* coupon input (reserved for Stripe later) */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-slate-700 mb-1">Coupon (optional)</label>
+          <input
+            value={coupon}
+            onChange={(e) => setCoupon(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"
+            placeholder="Enter coupon code"
+          />
+          <div className="text-xs text-slate-500 mt-1">Coupons will be applied during checkout when Stripe is connected.</div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Primary */}
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Primary Caregiver</div>
             <div className="text-2xl font-bold mt-1">
-              USD$${STRIPE_PRODUCTS.primary.price.toFixed(2)}<span className="text-base font-medium text-slate-500">/week</span>
+              $1<span className="text-base font-medium text-slate-500">/week</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
               <li>• Up to 7 observations per week</li>
@@ -217,10 +174,11 @@ export default function ChoosePlan() {
             </button>
           </div>
 
+          {/* Occasional (WEEKLY) */}
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Occasional Caregiver</div>
             <div className="text-2xl font-bold mt-1">
-              USD$${STRIPE_PRODUCTS.occasional.price.toFixed(2)}<span className="text-base font-medium text-slate-500">/week</span>
+              $0.50<span className="text-base font-medium text-slate-500">/week</span>
             </div>
             <ul className="mt-3 text-sm text-slate-600 space-y-1">
               <li>• 1 observation per week</li>
@@ -231,10 +189,11 @@ export default function ChoosePlan() {
               disabled={busy !== null}
               className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
             >
-              {busy === 'occasional_monthly' ? 'Choosing…' : 'Choose Occasional'}
+              {busy === 'occasional_weekly' ? 'Choosing…' : 'Choose Occasional'}
             </button>
           </div>
 
+          {/* Free */}
           <div className="border rounded-2xl p-5 bg-white">
             <div className="text-lg font-semibold">Free</div>
             <div className="text-2xl font-bold mt-1">$0</div>
@@ -252,19 +211,11 @@ export default function ChoosePlan() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Error display */}
-      {err && (
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">{err}</p>
-          </div>
+        <div className="mt-10">
+          <Footer />
         </div>
-      )}
-
-      {/* Global footer */}
-      <Footer />
+      </div>
     </div>
   )
 }
