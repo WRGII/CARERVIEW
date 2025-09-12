@@ -1,6 +1,6 @@
 // src/pages/LandingPage.tsx
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
@@ -228,12 +228,13 @@ export default function LandingPage() {
             >
               Start Observations Today <ArrowRight className="w-5 h-5" />
             </a>
-            <a
-              href="#sample-report"
+            <Link
+              to="/sample"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="View an Observation Sample"
             >
               View an Observation Sample
-            </a>
+            </Link>
           </div>
 
           <p className="mt-4 text-sm text-slate-gray/60">Simple and Easy Observation Format</p>
