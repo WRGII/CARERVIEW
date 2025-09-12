@@ -3,37 +3,37 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './useAuth'
 
-/**
- * Canonical plan IDs in DB
- */
+/** Canonical plan IDs in DB */
 export type PlanId = 'primary_weekly' | 'occasional_weekly' | 'free'
 
-export type PlanStatus = 'active' | 'canceled' | 'past_due' | 'incomplete' | 'incomplete_expired'
+/** Mirror of what our webhooks may write */
+export type PlanStatus =
+  | 'active'
+  | 'trialing'
+  | 'canceled'
+  | 'past_due'
+  | 'incomplete'
+  | 'incomplete_expired'
 
 export interface UserPlan {
   user_id: string
   plan_id: PlanId | null
   status: PlanStatus | null
-  current_period_start: string | null // ISO string
-  current_period_end: string | null   // ISO string
+  current_period_start: string | null // ISO
+  current_period_end: string | null   // ISO
   updated_at?: string | null
 }
 
-/**
- * Helper: is a plan currently active (status + within period)
- */
+/** Is the plan currently usable? (status + within period) */
 export function hasActivePlan(plan?: UserPlan | null): boolean {
   if (!plan) return false
-  if (plan.status !== 'active') return false
+  if (!(plan.status === 'active' || plan.status === 'trialing')) return false
   if (!plan.current_period_end) return false
-  const now = new Date().toISOString()
-  return now <= plan.current_period_end
+  const endMs = new Date(plan.current_period_end).getTime()
+  return Number.isFinite(endMs) && Date.now() <= endMs
 }
 
-/**
- * Optional helper: get allowed observation limit per plan.
- * (Actual enforcement may happen in SQL/RPC; keep this for UI hints.)
- */
+/** Optional helper for UI hints only */
 export function getPlanLimits(planId: PlanId | null | undefined) {
   switch (planId) {
     case 'primary_weekly':
@@ -47,10 +47,7 @@ export function getPlanLimits(planId: PlanId | null | undefined) {
   }
 }
 
-/**
- * Read the user's current local subscription row.
- * Table: app.user_subscriptions
- */
+/** Read the user's current local subscription row (app.user_subscriptions) */
 export function useUserPlan() {
   const { user } = useAuth()
 
@@ -71,7 +68,6 @@ export function useUserPlan() {
 
       if (error) throw error
 
-      // Normalize to ISO strings if they’re timestamps
       const normalize = (v: any) =>
         typeof v === 'string' ? v : v ? new Date(v).toISOString() : null
 
