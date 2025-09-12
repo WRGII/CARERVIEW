@@ -1,7 +1,7 @@
 // src/pages/SampleObservationPage.tsx
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import { supabasePublic } from '../lib/supabaseClient'
 import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Loading } from '../components/ui/Loading'
@@ -43,7 +43,7 @@ export default function SampleObservationPage() {
 
   const getOrCreateSampleObservation = async (): Promise<SampleObservation> => {
     // First, try to find existing sample observation
-    const { data: existing, error: selectError } = await supabase
+    const { data: existing, error: selectError } = await supabasePublic
       .from('observations')
       .select(`
         id, patient_name, observation_date, mode_of_observation, notes, 
@@ -71,7 +71,7 @@ export default function SampleObservationPage() {
     // Create sample observation if it doesn't exist
     const sampleDate = new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
 
-    const { data: newObservation, error: insertError } = await supabase
+    const { data: newObservation, error: insertError } = await supabasePublic
       .from('observations')
       .insert({
         patient_name: 'Sample Patient',
@@ -90,7 +90,7 @@ export default function SampleObservationPage() {
     }
 
     // Get some sample questions to create responses
-    const { data: questions, error: questionsError } = await supabase
+    const { data: questions, error: questionsError } = await supabasePublic
       .from('questions')
       .select(`
         id, question_text, sort_order,
@@ -111,7 +111,7 @@ export default function SampleObservationPage() {
         notes: index % 3 === 0 ? `Sample note for ${question.question_text.toLowerCase()}` : null
       }))
 
-      const { error: responsesError } = await supabase
+      const { error: responsesError } = await supabasePublic
         .from('responses')
         .insert(sampleResponses)
 
@@ -121,7 +121,7 @@ export default function SampleObservationPage() {
     }
 
     // Fetch the complete observation with responses
-    const { data: completeObservation, error: fetchError } = await supabase
+    const { data: completeObservation, error: fetchError } = await supabasePublic
       .from('observations')
       .select(`
         id, patient_name, observation_date, mode_of_observation, notes, 
