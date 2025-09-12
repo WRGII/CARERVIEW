@@ -1,53 +1,71 @@
 // src/hooks/useStripe.ts
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
-import { STRIPE_PRODUCTS, type ProductKey } from '../stripe-config'
+import { assertStripeEnv, type PlanKey } from '../stripe-config'
 
-interface CreateCheckoutSessionParams {
-  productKey: ProductKey
+type CreateCheckoutInput = {
+  plan: PlanKey
+  coupon?: string | null
   successUrl?: string
   cancelUrl?: string
 }
 
+type CheckoutResponse = {
+  url?: string
+  id?: string
+  [k: string]: any
+}
+
 export const useCreateCheckoutSession = () => {
-  return useMutation({
-    mutationFn: async ({ productKey, successUrl, cancelUrl }: CreateCheckoutSessionParams) => {
-      const product = STRIPE_PRODUCTS[productKey]
-      
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !session?.access_token) {
-        throw new Error('Authentication required')
-      }
+  return useMutation<CheckoutResponse, Error, CreateCheckoutInput>({
+    mutationFn: async ({ plan, coupon = null, successUrl, cancelUrl }) => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
+      if (!session?.access_token) throw new Error('Authentication required')
+
+      // Read the Stripe price ID from env (with helpful errors/warnings)
+      const priceId = assertStripeEnv(plan)
 
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`
-      
-      const response = await fetch(apiUrl, {
+
+      const payload: Record<string, any> = {
+        price_id: priceId,
+        mode: 'subscription', // all our plans are subscriptions
+        success_url:
+          successUrl ||
+          import.meta.env.VITE_STRIPE_RETURN_SUCCESS ||
+          `${window.location.origin}/choose-plan?status=success`,
+        cancel_url:
+          cancelUrl ||
+          import.meta.env.VITE_STRIPE_RETURN_CANCEL ||
+          `${window.location.origin}/choose-plan?canceled=1`,
+      }
+      if (coupon) payload.coupon = coupon
+
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          price_id: product.priceId,
-          mode: product.mode,
-          success_url: successUrl || `${window.location.origin}/caregiver?success=true`,
-          cancel_url: cancelUrl || `${window.location.origin}/choose-plan?canceled=true`
-        })
+        body: JSON.stringify(payload),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create checkout session')
+      if (!res.ok) {
+        let msg = `Stripe checkout failed (${res.status})`
+        try {
+          const err = await res.json()
+          if (err?.error) msg = err.error
+        } catch {}
+        throw new Error(msg)
       }
 
-      const data = await response.json()
-      
-      if (data.url) {
-        window.location.href = data.url
-      }
-      
+      const data: CheckoutResponse = await res.json()
+      if (data?.url) window.location.href = data.url
       return data
-    }
+    },
   })
 }
