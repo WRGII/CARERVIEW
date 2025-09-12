@@ -236,7 +236,7 @@ export default function LandingPage() {
             </a>
           </div>
 
-          <p className="mt-4 text-sm text-slate-gray/60">Start in 60 seconds</p>
+          <p className="mt-4 text-sm text-slate-gray/60">Simple and Easy Observation Format</p>
         </div>
 
         {/* Sub-hero Reassurance */}
