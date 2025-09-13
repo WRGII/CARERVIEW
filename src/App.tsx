@@ -14,9 +14,9 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
-import WhyCarerView from "./pages/WhyCarerView"; // ⬅️ NEW PAGE
+import WhyCarerView from "./pages/WhyCarerView"; // new
 
-// 👇 Lazy load ChoosePlan to improve perceived speed after signup
+// Lazy
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 // Caregiver sub-page
@@ -24,22 +24,16 @@ import NewObservationPage from "./components/caregiver/NewObservationPage";
 
 const queryClient = new QueryClient();
 
-/**
- * IMPORTANT: Never redirect while auth/profile are still loading.
- * Only decide after we know auth + profile states.
- */
 function AdminGuard({ children }: { children: JSX.Element }) {
   const { loading: authLoading, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
 
   if (authLoading) return <div className="p-6">Loading…</div>;
   if (!user) return <Navigate to="/" replace />;
-
   if (profileLoading) return <div className="p-6">Loading…</div>;
 
   const isAdmin = profile?.role === "admin" && !profile?.disabled;
   if (!isAdmin) return <Navigate to="/caregiver" replace />;
-
   return children;
 }
 
@@ -49,7 +43,6 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
   const { data: plan, isLoading: planLoading } = useUserPlan();
 
-  // Prefetch static data as soon as we know the user/profile are valid (faster UX)
   const prefetchEnabled =
     !authLoading && !!user && !profileLoading && !!profile && !profile.disabled;
   usePrefetchStatic(prefetchEnabled);
@@ -59,11 +52,7 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   }
   if (!user) return <Navigate to="/" replace />;
   if (profile?.disabled) return <div className="p-6 text-red-600">Account disabled.</div>;
-
-  if (requireSub && !hasActivePlan(plan)) {
-    return <Navigate to="/choose-plan" replace />;
-  }
-
+  if (requireSub && !hasActivePlan(plan)) return <Navigate to="/choose-plan" replace />;
   return children;
 }
 
@@ -72,14 +61,12 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <HashScroll />
-        {/* Suspense boundary to handle any lazy routes */}
         <Suspense fallback={<div className="p-6">Loading…</div>}>
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/why-carerview" element={<WhyCarerView />} /> {/* ⬅️ NEW ROUTE */}
+              <Route path="/why-carerview" element={<WhyCarerView />} />
 
-              {/* Lazy page with its own lightweight fallback for clarity */}
               <Route
                 path="/choose-plan"
                 element={
@@ -115,7 +102,7 @@ export default function App() {
               />
               <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
-            {/* Last resort: if anything falls through, go home */}
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
