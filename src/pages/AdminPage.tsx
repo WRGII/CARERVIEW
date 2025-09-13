@@ -1,6 +1,6 @@
 // src/pages/AdminPage.tsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { AggregateData } from "../components/admin/AggregateData"; // named import (kept)
@@ -64,7 +64,19 @@ export default function AdminPage() {
 
       {/* System-wide aggregates / KPIs */}
       <div className="mt-6">
-        <AggregateData />
+        {/* NEW: give AggregateData a link target so the "Active Caregivers" card can be clickable */}
+        <AggregateData caregiversLink="/admin/caregivers" />
+      </div>
+
+      {/* Accessibility/backup link (remove once AggregateData uses the prop above) */}
+      <div className="mt-4">
+        <Link
+          to="/admin/caregivers"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-gray/30 px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
+          aria-label="Manage active caregivers"
+        >
+          Manage caregivers
+        </Link>
       </div>
 
       {/* Add any other existing admin widgets/components below */}
