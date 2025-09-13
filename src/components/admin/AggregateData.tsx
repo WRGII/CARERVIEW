@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import { Card, CardContent, CardHeader } from '../ui/Card'
@@ -12,31 +13,38 @@ interface AggregateStats {
   recentActivity: { date: string; count: number }[]
 }
 
-export const AggregateData: React.FC = () => {
+type AggregateDataProps = {
+  /** If provided, the “Active Caregivers” metric becomes a link to this route. */
+  caregiversLink?: string
+}
+
+export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) => {
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['aggregate-stats'],
     queryFn: async (): Promise<AggregateStats> => {
-      // Get total observations
-      const { count: totalObservations } = await supabase
+      // Total observations
+      const { count: totalObservations, error: obsErr } = await supabase
         .from('observations')
         .select('*', { count: 'exact', head: true })
 
-      // Get total active caregivers
-      const { count: totalCaregivers } = await supabase
+      if (obsErr) console.warn('Failed to count observations:', obsErr)
+
+      // Total active caregivers
+      const { count: totalCaregivers, error: cgErr } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'caregiver')
         .eq('disabled', false)
 
-      // Get average scores by category
+      if (cgErr) console.warn('Failed to count caregivers:', cgErr)
+
+      // Average scores by category (RPC)
       const { data: avgData, error: avgError } = await supabase
         .rpc('get_average_scores_by_category')
 
-      if (avgError) {
-        console.warn('Failed to get average scores:', avgError)
-      }
+      if (avgError) console.warn('Failed to get average scores:', avgError)
 
-      // Get recent activity (last 7 days)
+      // Recent activity (last 7 days)
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -45,47 +53,56 @@ export const AggregateData: React.FC = () => {
         .select('observation_date')
         .gte('observation_date', sevenDaysAgo.toISOString().split('T')[0])
 
-      if (recentError) {
-        console.warn('Failed to get recent activity:', recentError)
-      }
+      if (recentError) console.warn('Failed to get recent activity:', recentError)
 
-      // Group by date
+      // Group counts by date (YYYY-MM-DD)
       const activityMap = new Map<string, number>()
-      recentData?.forEach(obs => {
+      recentData?.forEach((obs: { observation_date: string }) => {
         const date = obs.observation_date
         activityMap.set(date, (activityMap.get(date) || 0) + 1)
       })
 
       const recentActivity = Array.from(activityMap.entries()).map(([date, count]) => ({
         date,
-        count
+        count,
       }))
 
       return {
         totalObservations: totalObservations || 0,
         totalCaregivers: totalCaregivers || 0,
         averageScoreByCategory: avgData || [],
-        recentActivity
+        recentActivity,
       }
-    }
+    },
+    staleTime: 60_000, // 1 min
   })
 
-  if (isLoading) {
-    return <Loading message="Loading aggregate data..." />
-  }
+  if (isLoading) return <Loading message="Loading aggregate data..." />
+  if (error) return <div className="text-red-600">Failed to load aggregate data</div>
+  if (!stats) return <div>No data available</div>
 
-  if (error) {
-    return <div className="text-red-600">Failed to load aggregate data</div>
-  }
-
-  if (!stats) {
-    return <div>No data available</div>
-  }
+  // Prebuild the Active Caregivers card once; optionally wrap in a Link.
+  const caregiversCard = (
+    <Card className="bg-warm-white transition hover:shadow-md">
+      <CardContent>
+        <div className="flex items-center space-x-3">
+          <div className="p-3 bg-mint-green/60 rounded-lg">
+            <Users className="w-6 h-6 text-slate-gray" />
+          </div>
+          <div>
+            <p className="text-sm text-slate-gray/70">Active Caregivers</p>
+            <p className="text-2xl font-bold text-slate-gray">{stats.totalCaregivers}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Observations */}
         <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
@@ -100,20 +117,20 @@ export const AggregateData: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-warm-white">
-          <CardContent>
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-mint-green/60 rounded-lg">
-                <Users className="w-6 h-6 text-slate-gray" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-gray/70">Active Caregivers</p>
-                <p className="text-2xl font-bold text-slate-gray">{stats.totalCaregivers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Active Caregivers (optionally clickable) */}
+        {caregiversLink ? (
+          <Link
+            to={caregiversLink}
+            className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-primary/60"
+            aria-label="View and manage active caregivers"
+          >
+            {caregiversCard}
+          </Link>
+        ) : (
+          caregiversCard
+        )}
 
+        {/* Avg Category Score */}
         <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
@@ -123,16 +140,19 @@ export const AggregateData: React.FC = () => {
               <div>
                 <p className="text-sm text-slate-gray/70">Avg Category Score</p>
                 <p className="text-2xl font-bold text-slate-gray">
-                  {stats.averageScoreByCategory.length > 0 
-                    ? (stats.averageScoreByCategory.reduce((sum, cat) => sum + cat.average, 0) / stats.averageScoreByCategory.length).toFixed(1)
-                    : '0.0'
-                  }
+                  {stats.averageScoreByCategory.length > 0
+                    ? (
+                        stats.averageScoreByCategory.reduce((sum, cat) => sum + cat.average, 0) /
+                        stats.averageScoreByCategory.length
+                      ).toFixed(1)
+                    : '0.0'}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* This Week */}
         <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
@@ -161,18 +181,20 @@ export const AggregateData: React.FC = () => {
               {stats.averageScoreByCategory.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      (item.type ?? 'ADL') === 'ADL' 
-                        ? 'bg-cyan-primary/20 text-cyan-primary' 
-                        : 'bg-mint-green/60 text-slate-gray'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        (item.type ?? 'ADL') === 'ADL'
+                          ? 'bg-cyan-primary/20 text-cyan-primary'
+                          : 'bg-mint-green/60 text-slate-gray'
+                      }`}
+                    >
                       {item.type ?? 'ADL'}
                     </span>
                     <span className="text-slate-gray">{item.category}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-32 bg-slate-gray/20 rounded-full h-3">
-                      <div 
+                      <div
                         className="bg-cyan-primary h-3 rounded-full"
                         style={{ width: `${(item.average / 10) * 100}%` }}
                       />
