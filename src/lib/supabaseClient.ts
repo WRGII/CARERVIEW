@@ -1,19 +1,31 @@
 // src/lib/supabaseClient.ts
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-// Read env vars from Vite. Fail fast if missing to avoid silent runtime errors.
-const url = import.meta.env.VITE_SUPABASE_URL
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
+/**
+ * Central Supabase client.
+ * - Sets the DEFAULT DB SCHEMA to "app" so `.from("...")` queries hit `app.<table>` by default.
+ * - Keeps sessions persisted and tokens auto-refreshed.
+ */
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!url) throw new Error('VITE_SUPABASE_URL is not set')
-if (!anon) throw new Error('VITE_SUPABASE_ANON_KEY is not set')
+if (!supabaseUrl) throw new Error("VITE_SUPABASE_URL is not set");
+if (!supabaseAnonKey) throw new Error("VITE_SUPABASE_ANON_KEY is not set");
 
-export const supabase = createClient(url, anon, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  // 👇 Important: default all REST/RPC calls to the `app` schema
+  db: { schema: "app" },
+
   auth: {
-    persistSession: true,      // keep user signed in across refreshes
-    autoRefreshToken: true,    // refresh tokens automatically
-    detectSessionInUrl: true,  // handle OAuth redirects if you add them later
+    persistSession: true,     // keep user signed in across refreshes
+    autoRefreshToken: true,   // refresh tokens automatically
+    detectSessionInUrl: true, // handle OAuth redirects if added later
   },
-})
 
-export default supabase
+  // Optional: light telemetry header for easier debugging in logs
+  global: {
+    headers: { "X-Client-Info": "carerview-web/0.0.1" },
+  },
+});
+
+export default supabase;
