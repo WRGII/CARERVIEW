@@ -14,10 +14,9 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
-import WhyCarerView from "./pages/WhyCarerView"; // new
-import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
+import ActiveCaregiversPage from "./pages/ActiveCaregiversPage"; // 👈 NEW
 
-// Lazy
+// Lazy page to improve perceived speed after signup
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 // Caregiver sub-page
@@ -25,6 +24,7 @@ import NewObservationPage from "./components/caregiver/NewObservationPage";
 
 const queryClient = new QueryClient();
 
+/** Guards */
 function AdminGuard({ children }: { children: JSX.Element }) {
   const { loading: authLoading, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
@@ -35,6 +35,7 @@ function AdminGuard({ children }: { children: JSX.Element }) {
 
   const isAdmin = profile?.role === "admin" && !profile?.disabled;
   if (!isAdmin) return <Navigate to="/caregiver" replace />;
+
   return children;
 }
 
@@ -54,6 +55,7 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   if (!user) return <Navigate to="/" replace />;
   if (profile?.disabled) return <div className="p-6 text-red-600">Account disabled.</div>;
   if (requireSub && !hasActivePlan(plan)) return <Navigate to="/choose-plan" replace />;
+
   return children;
 }
 
@@ -66,7 +68,6 @@ export default function App() {
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/why-carerview" element={<WhyCarerView />} />
 
               <Route
                 path="/choose-plan"
@@ -85,6 +86,17 @@ export default function App() {
                   </AdminGuard>
                 }
               />
+
+              {/* 👇 NEW route – this is why your links were falling through to "/" */}
+              <Route
+                path="/admin/caregivers"
+                element={
+                  <AdminGuard>
+                    <ActiveCaregiversPage />
+                  </AdminGuard>
+                }
+              />
+
               <Route
                 path="/caregiver"
                 element={
@@ -104,6 +116,7 @@ export default function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
 
+            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
