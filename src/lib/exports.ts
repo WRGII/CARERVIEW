@@ -61,7 +61,7 @@ interface ObservationWithResponses {
       category?: {
         id: string
         name: string
-        type: string
+        category_type: string
       } | null
     } | null
   }>
@@ -178,7 +178,7 @@ export const exportToDOCX = async (
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `${category.name} (${category.type ?? 'general'})`,
+                  text: `${category.name} (${category.category_type ?? 'general'})`,
                   bold: true,
                   size: 26,
                   color: '1f2937'

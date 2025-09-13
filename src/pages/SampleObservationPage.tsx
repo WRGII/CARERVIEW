@@ -1,7 +1,7 @@
 // src/pages/SampleObservationPage.tsx
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { supabasePublic } from '../lib/supabaseClient'
+import { supabase } from '../lib/supabaseClient'
 import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Loading } from '../components/ui/Loading'
@@ -20,7 +20,7 @@ interface SampleObservation {
   caregiver_email: string
   created_at: string
   updated_at: string
-  sample_responses?: Array<{
+  responses?: Array<{
     id: string
     score: number
     notes: string | null
@@ -42,13 +42,13 @@ export default function SampleObservationPage() {
   const [error, setError] = useState<string | null>(null)
 
   const getOrCreateSampleObservation = async (): Promise<SampleObservation> => {
-    // Find existing sample observation from dedicated sample tables
-    const { data: existing, error: selectError } = await supabasePublic
-      .from('sample_observations')
+    // First, try to find existing sample observation
+    const { data: existing, error: selectError } = await supabase
+      .from('observations')
       .select(`
         id, patient_name, observation_date, mode_of_observation, notes, 
         caregiver_name, caregiver_email, created_at, updated_at,
-        sample_responses:sample_responses (
+        responses:responses (
           id, score, notes,
           question:questions (
             question_text, sort_order,
@@ -56,7 +56,8 @@ export default function SampleObservationPage() {
           )
         )
       `)
-      .eq('id', '00000000-0000-0000-0000-000000000001')
+      .eq('patient_name', 'Sample Patient')
+      .eq('caregiver_name', 'Sample Caregiver')
       .maybeSingle()
 
     if (selectError) {
@@ -67,8 +68,80 @@ export default function SampleObservationPage() {
       return existing as SampleObservation
     }
 
-    // Sample observation not found
-    throw new Error('Sample observation not found. Please ensure the sample data migration has been run.')
+    // Create sample observation if it doesn't exist
+    const sampleDate = new Date().toISOString().split('T')[0] // Today's date in YYYY-MM-DD format
+
+    const { data: newObservation, error: insertError } = await supabase
+      .from('observations')
+      .insert({
+        patient_name: 'Sample Patient',
+        observation_date: sampleDate,
+        mode_of_observation: 'In Person',
+        notes: 'This is a sample observation demonstrating how CarerView captures daily functional assessments. This observation shows typical scoring patterns and notes that help families and healthcare providers understand changes in independence levels.',
+        caregiver_name: 'Sample Caregiver',
+        caregiver_email: 'sample@carerview.com',
+        user_id: '00000000-0000-0000-0000-000000000000' // Special UUID for sample data
+      })
+      .select('id')
+      .single()
+
+    if (insertError) {
+      throw new Error(`Failed to create sample observation: ${insertError.message}`)
+    }
+
+    // Get some sample questions to create responses
+    const { data: questions, error: questionsError } = await supabase
+      .from('questions')
+      .select(`
+        id, question_text, sort_order,
+        category:categories ( id, name, type )
+      `)
+      .limit(8)
+
+    if (questionsError) {
+      console.warn('Failed to fetch questions for sample responses:', questionsError)
+    }
+
+    // Create sample responses if we have questions
+    if (questions && questions.length > 0) {
+      const sampleResponses = questions.map((question, index) => ({
+        observation_id: newObservation.id,
+        question_id: question.id,
+        score: [3, 4, 2, 5, 3, 4, 2, 4][index % 8], // Varied realistic scores
+        notes: index % 3 === 0 ? `Sample note for ${question.question_text.toLowerCase()}` : null
+      }))
+
+      const { error: responsesError } = await supabase
+        .from('responses')
+        .insert(sampleResponses)
+
+      if (responsesError) {
+        console.warn('Failed to create sample responses:', responsesError)
+      }
+    }
+
+    // Fetch the complete observation with responses
+    const { data: completeObservation, error: fetchError } = await supabase
+      .from('observations')
+      .select(`
+        id, patient_name, observation_date, mode_of_observation, notes, 
+        caregiver_name, caregiver_email, created_at, updated_at,
+        responses:responses (
+          id, score, notes,
+          question:questions (
+            question_text, sort_order,
+            category:categories ( id, name, type )
+          )
+        )
+      `)
+      .eq('id', newObservation.id)
+      .single()
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch created sample observation: ${fetchError.message}`)
+    }
+
+    return completeObservation as SampleObservation
   }
 
   useEffect(() => {
@@ -115,7 +188,7 @@ export default function SampleObservationPage() {
     }>
   }>()
 
-  observation.sample_responses?.forEach(response => {
+  observation.responses?.forEach(response => {
     const category = response.question?.category
     if (!category) return
 

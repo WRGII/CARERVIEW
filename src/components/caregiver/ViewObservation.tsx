@@ -78,8 +78,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     // Sort categories: ADL before IADL, then by name
     const categories = Array.from(categoryMap.values())
     categories.sort((a, b) => {
-      if (a.type !== b.type) {
-        return a.type === 'ADL' ? -1 : 1
+      if (a.category_type !== b.category_type) {
+        return a.category_type === 'ADL' ? -1 : 1
       }
       return a.name.localeCompare(b.name)
     })
