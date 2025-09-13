@@ -230,6 +230,7 @@ export default function WhyCarerView() {
         <div className="max-w-3xl">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-gray">Why CarerView</h1>
           <p className="mt-3 text-slate-gray/75">
+            We feel your struggle...We re caregivers too!
             CarerView gives families and care teams a simple, shared way to notice changes, align
             decisions, and keep everyone on the same page—without adding work.
           </p>
