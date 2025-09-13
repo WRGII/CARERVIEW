@@ -3,34 +3,39 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 
+const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
+
+/** Fetch the most recent logo_url from app.site_settings.
+ *  Works even if public is the default schema, because we force schema('app').
+ *  If the table isn't found or RLS denies, we return a safe fallback path.
+ */
 function useBrandingLogo() {
   return useQuery({
     queryKey: ["branding", "logo"],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("site_settings") // 👈 default schema is 'app'
-          .select("logo_url, updated_at")
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .schema("app") // ✅ force the app schema
+        .from("site_settings")
+        .select("logo_url, updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (error) throw error;
-
-        const raw = data?.logo_url ?? "";
-        if (!raw) return "/CareView_logo_1_colored_highres.png";
-
-        // Normalize relative paths
-        if (!/^https?:\/\//i.test(raw)) {
-          const base = import.meta.env.BASE_URL ?? "/";
-          return `${base}${raw.replace(/^\/+/, "")}`;
-        }
-        return raw;
-      } catch (err: any) {
-        // If PostgREST says "table not found in schema cache", just use the default asset
-        console.warn("[branding] logo fallback due to error:", err?.message ?? err);
-        return "/CareView_logo_1_colored_highres.png";
+      if (error) {
+        // Typical when default schema was changed to public and / or table missing in that schema
+        console.warn("[Header] site_settings lookup failed → using fallback logo", error);
+        return FALLBACK_LOGO;
       }
+
+      const raw = data?.logo_url ?? "";
+      if (!raw) return FALLBACK_LOGO;
+
+      // If not absolute, treat as app-relative (Netlify-friendly)
+      if (!/^https?:\/\//i.test(raw)) {
+        const base = import.meta.env.BASE_URL ?? "/";
+        return `${base}${raw.replace(/^\/+/, "")}`;
+      }
+      return raw;
     },
     staleTime: 1000 * 60 * 60,    // 1h
     gcTime:   1000 * 60 * 60 * 6, // 6h
@@ -45,13 +50,13 @@ export default function Header() {
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: Logo + App name */}
+          {/* Left: Logo + App name -> always links to LandingPage "/" */}
           <Link to="/" aria-label="CarerView home" className="flex items-center">
             {isLoading ? (
               <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
             ) : (
               <img
-                src={logoSrc || "/CareView_logo_1_colored_highres.png"}
+                src={logoSrc || FALLBACK_LOGO}
                 alt="CarerView Logo"
                 className="w-8 h-8 object-contain mr-3 rounded-md"
                 loading="eager"
@@ -61,7 +66,7 @@ export default function Header() {
             <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
 
-          {/* Right: CTAs */}
+          {/* Right: nav buttons */}
           <div className="flex items-center gap-3">
             <Link
               to="/why-carerview"
@@ -70,7 +75,6 @@ export default function Header() {
             >
               Why you need CarerView
             </Link>
-
             <Link
               to="/#get-started"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
