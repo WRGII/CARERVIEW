@@ -183,33 +183,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Header Sign In Section */}
-        <div className="pt-4 pb-2">
-          <div className="flex justify-center items-center space-x-4">
-            <button
-              onClick={() => {
-                setIsSignUp(false)
-                kickoffPrefetch() // also warm cache on toggle
-                document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="px-3 py-1.5 text-sm font-medium text-cyan-primary border border-cyan-primary/30 rounded-lg hover:bg-cyan-primary/10 transition-all duration-200"
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-
         {/* Hero Section */}
-        <div className="pt-8 pb-20 text-center">
-          <div className="flex flex-col items-center justify-center mb-8">
+        <div className="pt-12 pb-20 text-center">
+          <div className="flex flex-col items-center justify-center mb-12">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-4">
               CarerView
             </h1>
-            <img
-              src="/CareView_logo_1_colored_highres.png"
-              alt="CarerView Logo"
-              className="w-24 h-24 object-contain"
-            />
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-gray/90 mb-8 leading-tight">
