@@ -1,37 +1,21 @@
 // src/lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL!
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY!
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-export const supabase = createClient(url, anon, {
+if (!supabaseUrl) throw new Error('VITE_SUPABASE_URL is not set')
+if (!supabaseAnonKey) throw new Error('VITE_SUPABASE_ANON_KEY is not set')
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
-  db: { schema: 'public' }, // ✅ default to public
-})
-
-export default supabase
-// src/lib/supabaseClient.ts
-import { createClient } from '@supabase/supabase-js'
-
-const url  = import.meta.env.VITE_SUPABASE_URL
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!url)  throw new Error('VITE_SUPABASE_URL is not set')
-if (!anon) throw new Error('VITE_SUPABASE_ANON_KEY is not set')
-
-export const supabase = createClient(url, anon, {
-  // ✅ Default all calls to the *public* schema
-  // (omit this block entirely if you prefer; public is the SDK default)
+  // We default to the public schema. Use supabase.schema('app') explicitly
+  // wherever you need to hit the app.* tables (e.g. subscription_plans).
   db: { schema: 'public' },
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
 })
 
 export default supabase
