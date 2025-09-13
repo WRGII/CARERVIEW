@@ -1,51 +1,68 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useBrandingLogo } from "../../hooks/useBrandingLogo";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "../../lib/supabaseClient";
+
+/** Inline helper: fetch the most recent logo_url from app.site_settings */
+function useBrandingLogo() {
+  return useQuery({
+    queryKey: ["branding", "logo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .schema("app")
+        .from("site_settings")
+        .select("logo_url")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const raw = data?.logo_url ?? "";
+      if (!raw) return "/CareView_logo_1_colored_highres.png";
+
+      // If not absolute, treat as app-relative (works with Netlify base path)
+      if (!/^https?:\/\//i.test(raw)) {
+        const base = import.meta.env.BASE_URL ?? "/";
+        return `${base}${raw.replace(/^\/+/, "")}`;
+      }
+      return raw;
+    },
+    staleTime: 1000 * 60 * 60,   // 1h
+    gcTime:   1000 * 60 * 60 * 6, // 6h
+    retry: 1,
+  });
+}
 
 export default function Header() {
-  const { data: logoUrl } = useBrandingLogo();
-  const navigate = useNavigate();
+  const { data: logoSrc, isLoading } = useBrandingLogo();
 
   return (
-    <header
-      role="navigation"
-      aria-label="Global"
-      className="w-full border-b border-slate-gray/20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60"
-    >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left: Logo + Name */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            aria-label="Go to Landing Page"
-            className="group inline-flex items-center"
-          >
-            <img
-              src={logoUrl ?? "/CareView_logo_1_colored_highres.png"}
-              alt="CarerView logo"
-              className="h-9 w-9 rounded-xl border border-slate-gray/20 object-contain transition-transform group-hover:scale-95"
-              loading="eager"
-              fetchPriority="high"
-            />
-          </button>
-
-          <Link
-            to="/"
-            className="text-xl font-semibold tracking-tight text-slate-gray hover:opacity-80"
-            aria-label="CarerView Home"
-          >
-            CarerView
+    <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Left: Logo + App name -> always links to LandingPage "/" */}
+          <Link to="/" aria-label="CarerView home" className="flex items-center">
+            {isLoading ? (
+              <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
+            ) : (
+              <img
+                src={logoSrc || "/CareView_logo_1_colored_highres.png"}
+                alt="CarerView Logo"
+                className="w-8 h-8 object-contain mr-3 rounded-md"
+                loading="eager"
+                decoding="async"
+              />
+            )}
+            <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
-        </div>
 
-        {/* Right: Log In */}
-        <div className="flex items-center">
+          {/* Right: Log In button -> scrolls to login section on LandingPage */}
           <Link
-            to="/#get-started"
-            aria-label="Log In"
+            to="/#login"
             className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+            aria-label="Go to Log In"
           >
-            Sign In
+            Log In
           </Link>
         </div>
       </div>
