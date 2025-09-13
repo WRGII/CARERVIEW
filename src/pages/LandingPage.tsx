@@ -494,7 +494,7 @@ export default function LandingPage() {
                     <h5 className="text-lg font-semibold text-slate-gray mb-1">
                       Daily notes summarized into clear trends
                     </h5>
-                    <p className="text-slate-gray/80">See patterns emerge from your daily observations</p>
+                    <p className="text-slate-gray/80">See patterns emerge from your observations</p>
                   </div>
                 </div>
 
