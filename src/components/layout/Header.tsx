@@ -3,28 +3,34 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 
-/** Inline helper: fetch the most recent logo_url from app.site_settings */
 function useBrandingLogo() {
   return useQuery({
     queryKey: ["branding", "logo"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .schema("app")
-        .from("site_settings")
-        .select("logo_url")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("site_settings") // 👈 default schema is 'app'
+          .select("logo_url, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const raw = data?.logo_url ?? "";
-      if (!raw) return "/CareView_logo_1_colored_highres.png";
-      if (!/^https?:\/\//i.test(raw)) {
-        const base = import.meta.env.BASE_URL ?? "/";
-        return `${base}${raw.replace(/^\/+/, "")}`;
+        const raw = data?.logo_url ?? "";
+        if (!raw) return "/CareView_logo_1_colored_highres.png";
+
+        // Normalize relative paths
+        if (!/^https?:\/\//i.test(raw)) {
+          const base = import.meta.env.BASE_URL ?? "/";
+          return `${base}${raw.replace(/^\/+/, "")}`;
+        }
+        return raw;
+      } catch (err: any) {
+        // If PostgREST says "table not found in schema cache", just use the default asset
+        console.warn("[branding] logo fallback due to error:", err?.message ?? err);
+        return "/CareView_logo_1_colored_highres.png";
       }
-      return raw;
     },
     staleTime: 1000 * 60 * 60,    // 1h
     gcTime:   1000 * 60 * 60 * 6, // 6h
