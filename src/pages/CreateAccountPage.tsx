@@ -21,12 +21,14 @@ export default function CreateAccountPage() {
   const navigate = useNavigate();
 
   // ---------------------------------------------------------------------------
-  // Load plans (from public.subscription_plans)
+  // Load plans (your data is currently in app.subscription_plans)
+  // NOTE: When you move or bridge this to public, switch back to supabase.from(...)
   // ---------------------------------------------------------------------------
   const plansQ = useQuery({
     queryKey: ["subscription_plans"],
     queryFn: async (): Promise<Plan[]> => {
       const { data, error } = await supabase
+        .schema("app") // 👈 force the app schema to match where your table lives today
         .from("subscription_plans")
         .select("id,name,interval,price_cents")
         .order("price_cents", { ascending: true });
@@ -116,9 +118,7 @@ export default function CreateAccountPage() {
           name ?? user.user_metadata?.display_name ?? "",
           user.email ?? ""
         );
-        // If you want to immediately send them to Stripe for checkout here,
-        // replace the next line with your existing "start checkout" call
-        // then route to /caregiver after success.
+        // Hook your Stripe checkout here if you want immediate checkout.
         navigate("/caregiver", { replace: true });
       } else {
         setInfo("Check your inbox to confirm your email, then sign in to finish setup.");
