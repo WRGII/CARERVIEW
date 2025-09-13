@@ -205,7 +205,7 @@ export default function LandingPage() {
               onMouseEnter={kickoffPrefetch}
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
-              Simple to start now <ArrowRight className="w-5 h-5" />
+              Begin Observation Now <ArrowRight className="w-5 h-5" />
             </a>
             <a
               href="#sample-report"
