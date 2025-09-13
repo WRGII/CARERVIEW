@@ -1,7 +1,8 @@
+// src/pages/ActiveCaregiversPage.tsx
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
-import { Plus, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { Plus, CheckCircle2, XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 
 /** Generate a long random password so admin can "pre-create" a user.
@@ -110,16 +111,29 @@ export default function ActiveCaregiversPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => caregiversQ.refetch()}
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
-            disabled={caregiversQ.isRefetching}
-            aria-busy={caregiversQ.isRefetching}
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            {/* NEW: Back to Admin Dashboard button */}
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
+              aria-label="Back to Admin Dashboard"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Admin Dashboard
+            </Link>
+
+            {/* Refresh button (unchanged functionality) */}
+            <button
+              type="button"
+              onClick={() => caregiversQ.refetch()}
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
+              disabled={caregiversQ.isRefetching}
+              aria-busy={caregiversQ.isRefetching}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Add form */}
@@ -155,7 +169,7 @@ export default function ActiveCaregiversPage() {
             </h3>
           </div>
 
-          {caregiversQ.isLoading ? (
+        {caregiversQ.isLoading ? (
             <div className="p-6 text-slate-gray/70">Loading caregivers…</div>
           ) : caregiversQ.error ? (
             <div className="p-6 text-red-700">
