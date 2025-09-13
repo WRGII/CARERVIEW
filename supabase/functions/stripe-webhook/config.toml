@@ -1,1 +1,2 @@
+# supabase/functions/stripe-webhook/config.toml
 verify_jwt = false

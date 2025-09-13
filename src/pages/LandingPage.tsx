@@ -1,6 +1,6 @@
 // src/pages/LandingPage.tsx
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
@@ -226,18 +226,17 @@ export default function LandingPage() {
               onMouseEnter={kickoffPrefetch}
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
-              Start Observations Today <ArrowRight className="w-5 h-5" />
+              Simple to start now <ArrowRight className="w-5 h-5" />
             </a>
-            <Link
-              to="/sample"
+            <a
+              href="#sample-report"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="View an Observation Sample"
             >
-              View an Observation Sample
-            </Link>
+              See a Sample Report
+            </a>
           </div>
 
-          <p className="mt-4 text-sm text-slate-gray/60">Simple and Easy Observation Format</p>
+          <p className="mt-4 text-sm text-slate-gray/60">Start in 60 seconds</p>
         </div>
 
         {/* Sub-hero Reassurance */}
@@ -293,7 +292,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear, 1–5 scale</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Easy wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
+                  Easy, gentle wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
                 </p>
               </CardContent>
             </Card>
@@ -305,7 +304,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Trends you can trust</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Observe changes over days and weeks, not just how today felt. Gentle trends highlight when to adjust routines or supports.
+                  See changes over days and weeks, not just how today felt. Gentle trends highlight when to adjust routines or supports.
                 </p>
               </CardContent>
             </Card>
@@ -462,7 +461,7 @@ export default function LandingPage() {
                   <Heart className="w-8 h-8 text-slate-gray" />
                 </div>
                 <h4 className="text-lg font-semibold text-slate-gray mb-2">Kind</h4>
-                <p className="text-slate-gray/80">Supportive questions in plain language.</p>
+                <p className="text-slate-gray/80">Supportive prompts in plain language.</p>
               </div>
 
               <div>
@@ -504,7 +503,7 @@ export default function LandingPage() {
           <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
             <CardContent className="p-12">
               <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
-                A single Observation report shows:
+                A single page report shows:
               </h4>
 
               <div className="space-y-6">
@@ -547,7 +546,7 @@ export default function LandingPage() {
 
               <div className="mt-10 text-center">
                 <button className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200">
-                  View an Observation Sample
+                  View a Sample Report
                 </button>
               </div>
             </CardContent>

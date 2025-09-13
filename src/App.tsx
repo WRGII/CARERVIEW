@@ -12,7 +12,6 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
-import SampleObservationPage from "./pages/SampleObservationPage";
 // 👇 Lazy load ChoosePlan to improve perceived speed after signup
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -72,7 +71,6 @@ export default function App() {
         <Suspense fallback={<div className="p-6">Loading…</div>}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/sample" element={<SampleObservationPage />} />
 
             {/* Lazy page with its own lightweight fallback for clarity */}
             <Route

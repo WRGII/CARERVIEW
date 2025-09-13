@@ -46,22 +46,6 @@ All data is stored in Supabase with proper RLS policies:
 3. **Setup Categories**: COMPLETED
 4. **Setup Questions**: COMPLETED
 
-## Sample Observation Demo
-
-CarerView includes a sample observation feature that demonstrates the assessment process:
-
-- **Route**: Visit `/sample` to view a realistic sample observation
-- **Auto-creation**: The sample observation is automatically created on first visit if it doesn't exist
-- **Public access**: The sample observation is publicly viewable (no authentication required)
-- **RLS policy**: A Row Level Security policy ensures only the sample observation is accessible to anonymous users
-- **Database setup**: Run the migration `supabase/migrations/20250112_sample_observation_public_read.sql` to enable public access to the sample data
-
-The sample demonstrates:
-- Typical scoring patterns across ADL and IADL categories
-- Professional notes and observations
-- The 1-5 CarerView scoring system
-- Export-ready format for healthcare discussions
-
 ## Development
 
 ```bash
