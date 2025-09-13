@@ -482,7 +482,7 @@ export default function LandingPage() {
           <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
             <CardContent className="p-12">
               <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
-                A single page report shows:
+                A single Observation report shows:
               </h4>
 
               <div className="space-y-6">
