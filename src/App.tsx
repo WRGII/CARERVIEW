@@ -17,7 +17,6 @@ import ResetPassword from "./pages/ResetPassword";
 import WhyCarerView from "./pages/WhyCarerView"; // new
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 
-
 // Lazy
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
