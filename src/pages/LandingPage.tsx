@@ -5,20 +5,10 @@ import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import Footer from '../components/common/Footer'
-import { useQueryClient } from '@tanstack/react-query'
-import { prefetchChoosePlanAssets } from '../hooks/usePrefetchStatic'
 
 export default function LandingPage() {
   const navigate = useNavigate()
 
-  // react-query client (used to pre-warm Choose Plan)
-  const queryClient = useQueryClient()
-  const kickoffPrefetch = React.useCallback(() => {
-    prefetchChoosePlanAssets(queryClient)
-  }, [queryClient])
-
-  const [isSignUp, setIsSignUp] = useState(true)
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -105,46 +95,19 @@ export default function LandingPage() {
     setError(null)
     setInfo(null)
 
-    // 👇 warm up Choose Plan data ASAP for faster subsequent load
-    kickoffPrefetch()
-
     try {
-      if (isSignUp) {
-        const { data, error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { display_name: name } },
-        })
-        if (signUpErr) throw signUpErr
+      const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
+      if (siErr) throw siErr
 
-        const user = data.user
-        const session = data.session // null if email confirmation is required
-
-        if (session && user?.id) {
-          await upsertProfileIfMissing(
-            user.id,
-            name ?? user.user_metadata?.display_name ?? '',
-            user.email ?? ''
-          )
-          // Go to plan choice first for new accounts
-          navigate('/choose-plan', { replace: true })
-        } else {
-          setInfo('Check your inbox to confirm your email, then sign in to choose a plan.')
-        }
-      } else {
-        const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
-        if (siErr) throw siErr
-
-        const user = data.user
-        if (user?.id) {
-          await upsertProfileIfMissing(
-            user.id,
-            user.user_metadata?.display_name ?? '',
-            user.email ?? ''
-          )
-        }
-        await routeByRole()
+      const user = data.user
+      if (user?.id) {
+        await upsertProfileIfMissing(
+          user.id,
+          user.user_metadata?.display_name ?? '',
+          user.email ?? ''
+        )
       }
+      await routeByRole()
     } catch (err: any) {
       if (err?.message === 'Invalid login credentials') {
         setError(
@@ -200,15 +163,14 @@ export default function LandingPage() {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a
-              href="#get-started"
-              onMouseEnter={kickoffPrefetch}
+            {/* REVISED: go to Create Account wizard */}
+            <Link
+              to="/create-account"
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
               Begin Observation Now <ArrowRight className="w-5 h-5" />
-            </a>
+            </Link>
 
-            {/* CHANGED: route to WhyCarerView page */}
             <Link
               to="/why-carerview"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
@@ -218,7 +180,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="mt-4 text-sm text-slate-gray/60">USe CarerView as often, or as little, as needed</p>
+          <p className="mt-4 text-sm text-slate-gray/60">CarerView helps you care for them!</p>
         </div>
 
         {/* Sub-hero Reassurance */}
@@ -274,7 +236,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear, 1–5 scale</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Easy wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
+                  Easy, gentle wording—no medical jargon—grounded in occupational therapy best practices that families can understand.
                 </p>
               </CardContent>
             </Card>
@@ -286,7 +248,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Trends you can trust</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  See changes over days - weeks - and months, not just how today felt. Observed trends highlight when to adjust routines or supports.
+                  See changes over days and weeks, not just how today felt. Observed trends highlight when to adjust routines or supports.
                 </p>
               </CardContent>
             </Card>
@@ -353,7 +315,7 @@ export default function LandingPage() {
                   <div>
                     <h4 className="text-xl font-semibold text-slate-gray mb-2">Honor your loved one</h4>
                     <p className="text-slate-gray/80">
-                      Focus on what they <em>can</em> do today, while observing where help is needed.
+                      Focus on what they <em>can</em> do today, while tracking where help is needed.
                     </p>
                   </div>
                 </div>
@@ -365,7 +327,7 @@ export default function LandingPage() {
         {/* What You'll Track */}
         <div className="py-20">
           <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">Observations you'll record</h3>
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">What you'll track</h3>
             <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
               Simple living categories that reflect real daily life
             </p>
@@ -464,13 +426,13 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-12">
-              <a
-                href="#get-started"
-                onMouseEnter={kickoffPrefetch}
+              {/* REVISED: go to Create Account wizard */}
+              <Link
+                to="/create-account"
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
                 Begin Observations today
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -527,7 +489,6 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-10 text-center">
-                {/* CHANGED: button → Link to page */}
                 <Link
                   to="/why-carerview"
                   className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
@@ -579,13 +540,13 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Auth form */}
+        {/* Auth form (Sign In only) */}
         <div id="get-started" className="py-20">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
-              <h3 className="text-4xl font-bold text-slate-gray mb-6">Bring calm to the conversation</h3>
+              <h3 className="text-4xl font-bold text-slate-gray mb-6">Sign in to your account</h3>
               <p className="text-xl text-slate-gray/80">
-                Start noticing together, decide together, and care together—with CarerView as your shared compass.
+                Return to your caregiver dashboard.
               </p>
             </div>
 
@@ -599,53 +560,7 @@ export default function LandingPage() {
                 />
               </div>
 
-              <div className="flex justify-center mb-6">
-                <div className="flex bg-slate-gray/10 rounded-lg p-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSignUp(true)
-                      setError(null)
-                      setInfo(null)
-                      kickoffPrefetch()
-                    }}
-                    className={`px-6 py-3 rounded-md text-sm font-medium transition ${
-                      isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
-                    }`}
-                  >
-                    Create account
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSignUp(false)
-                      setError(null)
-                      setInfo(null)
-                      kickoffPrefetch()
-                    }}
-                    className={`px-6 py-3 rounded-md text-sm font-medium transition ${
-                      !isSignUp ? 'bg-warm-white text-slate-gray shadow-sm' : 'text-slate-gray/70 hover:text-slate-gray'
-                    }`}
-                  >
-                    Sign in
-                  </button>
-                </div>
-              </div>
-
               <form onSubmit={handleSubmit} className="space-y-6">
-                {isSignUp && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-gray mb-2">Your name</label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                      placeholder="How should we address you?"
-                    />
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-sm font-medium text-slate-gray mb-2">Email address</label>
                   <input
@@ -655,7 +570,6 @@ export default function LandingPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
                     placeholder="your.email@example.com"
-                    onFocus={kickoffPrefetch}
                   />
                 </div>
 
@@ -667,7 +581,7 @@ export default function LandingPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                    placeholder="Choose a secure password"
+                    placeholder="Your password"
                   />
                 </div>
 
@@ -686,15 +600,14 @@ export default function LandingPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  onMouseEnter={kickoffPrefetch}
                   className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
                 >
-                  {isSignUp ? 'Get Started' : 'Welcome back'}
+                  {loading ? 'Signing in…' : 'Sign In'}
                   {!loading && <ArrowRight className="w-5 h-5" />}
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="mt-6 flex items-center justify-between">
                 <button
                   onClick={handlePasswordReset}
                   disabled={sendingReset}
@@ -702,6 +615,10 @@ export default function LandingPage() {
                 >
                   Forgot your password?
                 </button>
+
+                <Link to="/create-account" className="text-sm text-cyan-primary hover:underline">
+                  Create account
+                </Link>
               </div>
             </div>
           </div>
