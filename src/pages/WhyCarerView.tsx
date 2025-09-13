@@ -2,17 +2,8 @@
 import React from "react";
 
 export default function WhyCarerView() {
+  // Removed: "Siblings & cousins caring for Auntie"
   const personas = [
-    {
-      title: "Siblings & cousins caring for Auntie",
-      quote:
-        "“Our emotions about Auntie’s independence caused arguments. CarerView gave us one easy, shared way to discuss what we’re actually seeing.”",
-      bullets: [
-        "Use one shared record so notes stop living in texts.",
-        "Log observations with the same simple prompts.",
-        "Spot week-to-week changes to guide decisions.",
-      ],
-    },
     {
       title: "Long-distance family coordination",
       quote:
@@ -62,24 +53,27 @@ export default function WhyCarerView() {
         <div className="max-w-3xl">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-gray">Why CarerView</h1>
           <p className="mt-3 text-slate-gray/75">
-            CarerView gives families and care teams a simple, shared way to notice changes, align decisions,
-            and keep everyone on the same page—without adding work.
+            CarerView gives families and care teams a simple, shared way to notice changes, align
+            decisions, and keep everyone on the same page—without adding work.
           </p>
         </div>
       </section>
 
+      {/* Persona cards */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 items-stretch">
           {personas.map((p) => (
             <article
               key={p.title}
-              className="rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
+              className="h-full rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
               aria-label={p.title}
             >
-              <div className="p-6">
+              <div className="p-6 h-full flex flex-col">
                 <h2 className="text-lg font-semibold text-slate-gray">{p.title}</h2>
                 <p className="mt-3 text-slate-gray/80 italic">{p.quote}</p>
-                <ul className="mt-4 space-y-2 text-slate-gray/80">
+
+                {/* flex-1 keeps bullets filling available space for even heights */}
+                <ul className="mt-4 space-y-2 text-slate-gray/80 flex-1">
                   {p.bullets.map((b, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="mt-1 inline-block h-2 w-2 rounded-full bg-peach-blush/70" />
@@ -93,21 +87,20 @@ export default function WhyCarerView() {
         </div>
       </section>
 
-      {/* Bottom CTA: reuse your existing LandingPage Create account / Sign in section */}
+      {/* Bottom CTA: placeholder stays for now; we'll replace with the full auth form in Step 2 */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20">
-        {/* ⬇️ COPY the exact JSX for your auth card from LandingPage.tsx and paste here. 
-            Keep the same handlers so functionality is identical. */}
         <div className="mx-auto w-full max-w-2xl">
           <div className="rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
             <div className="px-6 py-5 border-b border-slate-gray/10">
               <h3 className="text-xl font-semibold text-slate-gray">Bring calm to the conversation</h3>
               <p className="mt-1 text-slate-gray/70 text-sm">
-                Start noticing together, decide together, and care together—with CarerView as your shared compass.
+                Start noticing together, decide together, and care together—with CarerView as your shared
+                compass.
               </p>
             </div>
             <div className="p-6">
-              {/* Replace this placeholder with the *same* Create account / Sign in form JSX from LandingPage */}
               <p className="text-slate-gray/70 text-sm">
+                {/* This is temporary; we'll wire the real form in the next step */}
                 Place your existing <strong>Create account / Sign in</strong> form component here.
               </p>
             </div>
