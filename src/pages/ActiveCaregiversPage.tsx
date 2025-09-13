@@ -2,6 +2,8 @@ import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { Plus, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
+
 
 /** Generate a long random password so admin can "pre-create" a user.
  *  Because email confirmations are enabled in your project, this will NOT
