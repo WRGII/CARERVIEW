@@ -228,9 +228,9 @@ export default function WhyCarerView() {
       {/* Header/Outlet are provided by MainLayout */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-gray">Our family are caregivers too...</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-gray">We feel your struggle...</h1>
           <p className="mt-3 text-slate-gray/75">
-            We feel your struggle...So we developed CarerView to give families and care teams a shared way to notice changes, align
+            Our family are caregivers, too. So we developed CarerView to give families and care teams a shared way to notice changes, align
             decisions, and keep everyone on the same page—in a simple format.
           </p>
         </div>
