@@ -6,6 +6,8 @@ import { useAuth } from "./hooks/useAuth";
 import { useProfile } from "./hooks/useProfile";
 import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
 import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
+import MainLayout from "./components/layout/MainLayout";
+import HashScroll from "./components/util/HashScroll";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -67,46 +69,49 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <HashScroll />
         {/* Suspense boundary to handle any lazy routes */}
         <Suspense fallback={<div className="p-6">Loading…</div>}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
 
-            {/* Lazy page with its own lightweight fallback for clarity */}
-            <Route
-              path="/choose-plan"
-              element={
-                <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
-                  <ChoosePlan />
-                </Suspense>
-              }
-            />
+              {/* Lazy page with its own lightweight fallback for clarity */}
+              <Route
+                path="/choose-plan"
+                element={
+                  <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
+                    <ChoosePlan />
+                  </Suspense>
+                }
+              />
 
-            <Route
-              path="/admin"
-              element={
-                <AdminGuard>
-                  <AdminPage />
-                </AdminGuard>
-              }
-            />
-            <Route
-              path="/caregiver"
-              element={
-                <CaregiverGuard>
-                  <CaregiverPage />
-                </CaregiverGuard>
-              }
-            />
-            <Route
-              path="/caregiver/observations/new"
-              element={
-                <CaregiverGuard>
-                  <NewObservationPage />
-                </CaregiverGuard>
-              }
-            />
-            <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/admin"
+                element={
+                  <AdminGuard>
+                    <AdminPage />
+                  </AdminGuard>
+                }
+              />
+              <Route
+                path="/caregiver"
+                element={
+                  <CaregiverGuard>
+                    <CaregiverPage />
+                  </CaregiverGuard>
+                }
+              />
+              <Route
+                path="/caregiver/observations/new"
+                element={
+                  <CaregiverGuard>
+                    <NewObservationPage />
+                  </CaregiverGuard>
+                }
+              />
+              <Route path="/reset-password" element={<ResetPassword />} />
+            </Route>
             {/* Last resort: if anything falls through, go home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
