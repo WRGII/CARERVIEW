@@ -466,7 +466,7 @@ export default function LandingPage() {
                 onMouseEnter={kickoffPrefetch}
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
-                Begin today
+                Begin Observations today
               </a>
             </div>
           </div>
