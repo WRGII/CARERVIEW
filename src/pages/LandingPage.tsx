@@ -353,7 +353,7 @@ export default function LandingPage() {
                   <div>
                     <h4 className="text-xl font-semibold text-slate-gray mb-2">Honor your loved one</h4>
                     <p className="text-slate-gray/80">
-                      Focus on what they <em>can</em> do today, while tracking where help is needed.
+                      Focus on what they <em>can</em> do today, while observing where help is needed.
                     </p>
                   </div>
                 </div>
