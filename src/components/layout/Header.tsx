@@ -1,3 +1,4 @@
+// src/components/layout/Header.tsx
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
@@ -19,15 +20,13 @@ function useBrandingLogo() {
 
       const raw = data?.logo_url ?? "";
       if (!raw) return "/CareView_logo_1_colored_highres.png";
-
-      // If not absolute, treat as app-relative (works with Netlify base path)
       if (!/^https?:\/\//i.test(raw)) {
         const base = import.meta.env.BASE_URL ?? "/";
         return `${base}${raw.replace(/^\/+/, "")}`;
       }
       return raw;
     },
-    staleTime: 1000 * 60 * 60,   // 1h
+    staleTime: 1000 * 60 * 60,    // 1h
     gcTime:   1000 * 60 * 60 * 6, // 6h
     retry: 1,
   });
@@ -40,7 +39,7 @@ export default function Header() {
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: Logo + App name -> always links to LandingPage "/" */}
+          {/* Left: Logo + App name */}
           <Link to="/" aria-label="CarerView home" className="flex items-center">
             {isLoading ? (
               <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
@@ -56,14 +55,24 @@ export default function Header() {
             <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
 
-          {/* Right: Log In button -> scrolls to login section on LandingPage */}
-          <Link
-            to="/#login"
-            className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-            aria-label="Go to Log In"
-          >
-            Log In
-          </Link>
+          {/* Right: CTAs */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/why-carerview"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Why you need CarerView"
+            >
+              Why you need CarerView
+            </Link>
+
+            <Link
+              to="/#get-started"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Go to Sign In"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </div>
     </header>
