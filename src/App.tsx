@@ -14,6 +14,8 @@ import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
 import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
+import WhyCarerView from "./pages/WhyCarerView"; // ⬅️ NEW PAGE
+
 // 👇 Lazy load ChoosePlan to improve perceived speed after signup
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -75,6 +77,7 @@ export default function App() {
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/why-carerview" element={<WhyCarerView />} /> {/* ⬅️ NEW ROUTE */}
 
               {/* Lazy page with its own lightweight fallback for clarity */}
               <Route
