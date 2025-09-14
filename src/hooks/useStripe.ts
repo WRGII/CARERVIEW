@@ -5,67 +5,49 @@ import { getStripePriceId, RETURN_URLS, type PlanKey } from '../config/stripe'
 
 type CreateCheckoutArgs = {
   plan: PlanKey
-  coupon?: string | null // user-typed code, e.g. "CarerViewFriend2025"
+  coupon?: string | null        // optional user-entered promo code
   successUrl?: string
   cancelUrl?: string
 }
 
 type CheckoutResponse = {
   url?: string
-  id?: string
-  [k: string]: any
+  skip?: true
 }
 
 export const useCreateCheckoutSession = () => {
-  return useMutation<CheckoutResponse, Error, CreateCheckoutInput>({
+  return useMutation<CheckoutResponse, Error, CreateCheckoutArgs>({
     mutationFn: async ({ plan, coupon = null, successUrl, cancelUrl }) => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
+      // Ensure the user is authenticated (so the function can attach user_id)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (sessionError) throw sessionError
       if (!session?.access_token) throw new Error('Authentication required')
 
-      // Read the Stripe price ID from env (with helpful errors/warnings)
-      const priceId = assertStripeEnv(plan)
+      // Resolve Stripe Price ID for the chosen plan
+      const priceId = getStripePriceId(plan)
 
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`
-
-      const payload: Record<string, any> = {
-        price_id: priceId,
-        mode: 'subscription', // all our plans are subscriptions
-        success_url:
-          successUrl ||
-          import.meta.env.VITE_STRIPE_RETURN_SUCCESS ||
-          `${window.location.origin}/choose-plan?status=success`,
-        cancel_url:
-          cancelUrl ||
-          import.meta.env.VITE_STRIPE_RETURN_CANCEL ||
-          `${window.location.origin}/choose-plan?canceled=1`,
+      // Free plan → nothing to purchase, let caller skip checkout
+      if (!priceId) {
+        return { skip: true as const }
       }
-      if (coupon) payload.coupon = coupon
 
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+      // Call the Supabase Edge Function that creates a Checkout Session
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: priceId,
+          plan_key: plan,
+          promotionCode: coupon || null,                 // server resolves to a Promotion Code
+          success_url: successUrl ?? RETURN_URLS.success,
+          cancel_url:  cancelUrl  ?? RETURN_URLS.cancel,
         },
-        body: JSON.stringify(payload),
       })
 
-      if (!res.ok) {
-        let msg = `Stripe checkout failed (${res.status})`
-        try {
-          const err = await res.json()
-          if (err?.error) msg = err.error
-        } catch {}
-        throw new Error(msg)
-      }
+      if (error) throw error
+      if (!data?.url) throw new Error('Unable to start Stripe Checkout')
 
-      const data: CheckoutResponse = await res.json()
-      if (data?.url) window.location.href = data.url
-      return data
+      // Redirect to Stripe Checkout
+      window.location.assign(data.url as string)
+      return data as CheckoutResponse
     },
   })
 }
