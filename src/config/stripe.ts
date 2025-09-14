@@ -1,7 +1,7 @@
 // src/config/stripe.ts
 
 // Keys your UI and hooks will use for plan selection
-export type PlanKey = 'primary_weekly' | 'occasional_weekly' | 'free';
+export type PlanKey = 'primary_weekly' | 'occasional_weekly' | 'free'
 
 // Display metadata only — no secrets here
 export const PLANS: Record<
@@ -23,31 +23,37 @@ export const PLANS: Record<
     blurb: '3 total in first 30 days',
     mode: 'none',
   },
-};
+}
 
-// Return URLs (can be overridden by env). Do not hard-fail if unset;
+// Use window origin in the browser; fall back to PUBLIC_SITE_URL at build
+const ORIGIN =
+  (typeof window !== 'undefined' && window.location?.origin) ||
+  (import.meta.env.PUBLIC_SITE_URL as string) ||
+  ''
+
+// Return URLs (env can override). Keep defaults aligned with the new flow.
 export const RETURN_URLS = {
   success:
     import.meta.env.VITE_STRIPE_RETURN_SUCCESS ||
-    `${window.location.origin}/caregiver?success=true`,
+    `${ORIGIN}/caregiver`,
   cancel:
     import.meta.env.VITE_STRIPE_RETURN_CANCEL ||
-    `${window.location.origin}/choose-plan?canceled=true`,
-};
+    `${ORIGIN}/create-account?canceled=1`,
+}
 
 /**
- * Pull the correct Stripe Price ID for a plan from env (Vite injects VITE_* at build).
- * Returns null for "free" or if the env var is not set.
+ * Lookup the Stripe Price ID for a plan from env (Vite injects VITE_* at build).
+ * Returns null for "free" (no checkout) or if the env var is not set.
  */
 export function getStripePriceId(plan: PlanKey): string | null {
   switch (plan) {
     case 'primary_weekly':
-      return import.meta.env.VITE_STRIPE_PRICE_PRIMARY_WEEKLY || null;
+      return import.meta.env.VITE_STRIPE_PRICE_PRIMARY_WEEKLY || null
     case 'occasional_weekly':
-      return import.meta.env.VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY || null;
+      return import.meta.env.VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY || null
     case 'free':
-      return null;
+      return null
     default:
-      return null;
+      return null
   }
 }
