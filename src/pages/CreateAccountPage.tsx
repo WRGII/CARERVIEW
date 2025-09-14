@@ -11,6 +11,7 @@ type SubscriptionPlan = {
   name: string;
   interval: "week" | "month" | "year" | string;
   price_cents: number;
+  price_id: string | null; // Stripe Price ID (null for free plans)
 };
 
 function formatPriceUSD(cents: number, interval: string) {
@@ -22,6 +23,30 @@ function formatPriceUSD(cents: number, interval: string) {
   return `${dollars} / ${interval}`;
 }
 
+const PENDING_KEY = "cv_pending_checkout"; // { planId, promoCode }
+
+async function startCheckout(params: {
+  userId: string;
+  email: string;
+  priceId: string;
+  coupon?: string | null;
+}) {
+  const res = await fetch("/.netlify/functions/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: params.userId,
+      email: params.email,
+      price_id: params.priceId,
+      coupon_code: params.coupon ?? null,
+    }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const { url } = (await res.json()) as { url?: string };
+  if (!url) throw new Error("No checkout URL returned");
+  window.location.assign(url);
+}
+
 export default function CreateAccountPage() {
   const navigate = useNavigate();
 
@@ -31,7 +56,7 @@ export default function CreateAccountPage() {
     queryFn: async (): Promise<SubscriptionPlan[]> => {
       const { data, error } = await supabase
         .from("subscription_plans")
-        .select("id, name, interval, price_cents")
+        .select("id, name, interval, price_cents, price_id")
         .order("price_cents", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -62,6 +87,56 @@ export default function CreateAccountPage() {
       setSelectedPlanId(plansQ.data[0].id);
     }
   }, [plansQ.data, selectedPlanId]);
+
+  // If the user returns signed-in and we have a pending checkout, resume it.
+  React.useEffect(() => {
+    (async () => {
+      const pendingRaw = localStorage.getItem(PENDING_KEY);
+      if (!pendingRaw) return;
+
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user) return;
+
+      try {
+        const pending = JSON.parse(pendingRaw) as {
+          planId: string;
+          promoCode?: string | null;
+        };
+
+        // Make sure plans are loaded to find the price_id
+        if (!plansQ.data) return;
+
+        const plan = plansQ.data.find((p) => p.id === pending.planId);
+        if (!plan) return;
+
+        // Free plan: no checkout needed → just go to caregiver
+        if ((plan.price_cents ?? 0) <= 0) {
+          localStorage.removeItem(PENDING_KEY);
+          navigate("/caregiver", { replace: true });
+          return;
+        }
+
+        if (!plan.price_id) {
+          // Safety: paid plan must have a Stripe price_id
+          console.warn("Paid plan missing price_id. Cannot start checkout.");
+          return;
+        }
+
+        await startCheckout({
+          userId: user.id,
+          email: user.email || email,
+          priceId: plan.price_id,
+          coupon: pending.promoCode || undefined,
+        });
+
+        localStorage.removeItem(PENDING_KEY);
+      } catch (e) {
+        console.warn("Failed to resume pending checkout:", e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plansQ.data]); // run when plans load
 
   // ---- Handlers -------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,32 +183,29 @@ export default function CreateAccountPage() {
           return;
         }
 
-        // Paid: invoke Edge Function to create checkout
-        const { data: ck, error: fnErr } = await supabase.functions.invoke(
-          "create-checkout-session",
-          {
-            body: {
-              plan_id: selectedPlan.id,
-              promotionCode: promoCode || null,
-              success_url: `${window.location.origin}/caregiver`,
-              cancel_url: `${window.location.origin}/create-account?cancelled=1`,
-            },
-          }
-        );
-        if (fnErr) throw fnErr;
-
-        if (ck?.skip) {
-          navigate("/caregiver", { replace: true });
-          return;
+        if (!selectedPlan.price_id) {
+          throw new Error(
+            "Selected paid plan is missing a Stripe price. Please contact support."
+          );
         }
-        if (!ck?.url) throw new Error("Failed to start checkout");
-        window.location.assign(ck.url);
-        return;
+
+        await startCheckout({
+          userId: user.id,
+          email: user.email || email,
+          priceId: selectedPlan.price_id,
+          coupon: promoCode || undefined,
+        });
+        return; // redirected to Stripe
       }
 
-      // 4) No session → email confirmation is required in your project
+      // 4) No session → email confirmation is required in your project.
+      // Save pending checkout to resume after they return signed-in.
+      localStorage.setItem(
+        PENDING_KEY,
+        JSON.stringify({ planId: selectedPlan.id, promoCode })
+      );
       setInfo(
-        "Check your inbox to confirm your email. After you sign in, we’ll finish setting up your caregiver account."
+        "Check your inbox to confirm your email. After you sign in, we’ll finish setting up your subscription and caregiver account."
       );
     } catch (err: any) {
       if (err?.message === "User already registered") {
