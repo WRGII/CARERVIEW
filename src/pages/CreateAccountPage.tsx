@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { RETURN_URLS } from "../config/stripe";
 
 /** DB row for subscription_plans (public schema) */
 type SubscriptionPlan = {
@@ -25,24 +26,21 @@ function formatPriceUSD(cents: number, interval: string) {
 
 const PENDING_KEY = "cv_pending_checkout"; // { planId, promoCode }
 
-async function startCheckout(params: {
-  userId: string;
-  email: string;
+/** Start Stripe Checkout via Supabase Edge Function */
+async function startCheckoutViaSupabase(opts: {
   priceId: string;
-  coupon?: string | null;
+  promotionCode?: string | null;
 }) {
-  const res = await fetch("/.netlify/functions/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: params.userId,
-      email: params.email,
-      price_id: params.priceId,
-      coupon_code: params.coupon ?? null,
-    }),
+  const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+    body: {
+      price_id: opts.priceId,
+      promotionCode: opts.promotionCode ?? null,
+      success_url: RETURN_URLS.success,
+      cancel_url: RETURN_URLS.cancel,
+    },
   });
-  if (!res.ok) throw new Error(await res.text());
-  const { url } = (await res.json()) as { url?: string };
+  if (error) throw new Error(error.message || "Failed to start checkout");
+  const url = (data as any)?.url;
   if (!url) throw new Error("No checkout URL returned");
   window.location.assign(url);
 }
@@ -118,16 +116,13 @@ export default function CreateAccountPage() {
         }
 
         if (!plan.price_id) {
-          // Safety: paid plan must have a Stripe price_id
           console.warn("Paid plan missing price_id. Cannot start checkout.");
           return;
         }
 
-        await startCheckout({
-          userId: user.id,
-          email: user.email || email,
+        await startCheckoutViaSupabase({
           priceId: plan.price_id,
-          coupon: pending.promoCode || undefined,
+          promotionCode: pending.promoCode || null,
         });
 
         localStorage.removeItem(PENDING_KEY);
@@ -177,7 +172,7 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
-        // 3) Route: free plan -> caregiver; paid plan -> start checkout with promo
+        // 3) Free plan -> caregiver; paid plan -> Supabase function for Stripe Checkout
         if (selectedPlan.price_cents <= 0) {
           navigate("/caregiver", { replace: true });
           return;
@@ -189,11 +184,9 @@ export default function CreateAccountPage() {
           );
         }
 
-        await startCheckout({
-          userId: user.id,
-          email: user.email || email,
+        await startCheckoutViaSupabase({
           priceId: selectedPlan.price_id,
-          coupon: promoCode || undefined,
+          promotionCode: promoCode || null,
         });
         return; // redirected to Stripe
       }
