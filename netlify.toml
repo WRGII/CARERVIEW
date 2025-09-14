@@ -1,17 +1,12 @@
+# netlify.toml
+
 [build]
   command = "npm run build"
   publish = "dist"
 
-# Configure Netlify Functions
-[functions]
-  # Where your functions live
-  directory = "netlify/functions"
-  # Make sure TypeScript/ESM gets bundled correctly
-  node_bundler = "esbuild"
-  # Ensure the Stripe SDK is included in the bundle
-  external_node_modules = ["stripe"]
+# No [functions] section on purpose.
+# We don't want Netlify to look for serverless functions in this repo anymore.
 
-# SPA fallback so client-side routes work on refresh
 [[redirects]]
   from = "/*"
   to = "/index.html"
