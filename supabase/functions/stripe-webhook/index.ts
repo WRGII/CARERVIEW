@@ -4,20 +4,19 @@ import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
 /**
- * ENV EXPECTATIONS (set in Supabase project settings)
+ * ENV (set in Supabase project settings → Configuration → Functions):
  * - STRIPE_SECRET_KEY
  * - STRIPE_WEBHOOK_SECRET
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
  */
-
-const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!
-const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const stripeSecret     = Deno.env.get('STRIPE_SECRET_KEY')!
+const webhookSecret    = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
+const supabaseUrl      = Deno.env.get('SUPABASE_URL')!
+const serviceRoleKey   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 if (!stripeSecret || !webhookSecret || !supabaseUrl || !serviceRoleKey) {
-  console.error('Missing required environment variables for Stripe webhook function.')
+  console.error('Missing one or more required environment variables.')
 }
 
 const stripe = new Stripe(stripeSecret, {
@@ -51,7 +50,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // IMPORTANT: use the raw body for signature verification
+    // ⚠️ Signature verification requires the RAW body string
     const body = await req.text()
 
     let event: Stripe.Event
@@ -65,13 +64,8 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Process and then return 200 to Stripe
     await handleEvent(event)
-
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-      headers: JSON_HEADERS,
-    })
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: JSON_HEADERS })
   } catch (err: any) {
     console.error('Webhook error:', err?.message || err)
     return new Response(JSON.stringify({ error: err?.message || 'Webhook error' }), {
@@ -81,14 +75,10 @@ Deno.serve(async (req) => {
   }
 })
 
-/**
- * Top-level handler for Stripe events we care about.
- */
 async function handleEvent(event: Stripe.Event) {
   const type = event.type
   const obj = event.data?.object as any
 
-  // Extract Stripe customer id (present on sessions, subscriptions, invoices, etc.)
   const customerId = extractCustomerId(obj)
 
   switch (type) {
@@ -98,24 +88,23 @@ async function handleEvent(event: Stripe.Event) {
       break
     }
 
-    // Subscription lifecycle — keep our DB in sync
+    // Subscription lifecycle
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
     case 'customer.subscription.deleted':
-    case 'invoice.paid':
+    case 'invoice.payment_succeeded':   // ✅ correct success event
     case 'invoice.payment_failed': {
       if (customerId) {
         await syncCustomerFromStripe(customerId)
       } else {
-        console.warn(`No customerId found for event: ${type}`)
+        console.warn(`No customerId for event: ${type}`)
       }
       break
     }
 
-    default: {
-      // Not relevant for our flow — ignore quietly
+    default:
+      // ignore others
       break
-    }
   }
 }
 
@@ -127,38 +116,25 @@ function extractCustomerId(obj: any): string | null {
   return null
 }
 
-/**
- * When checkout completes:
- * - ensure we have a stripe_customers mapping (user_id ↔ customer_id)
- * - if mode=subscription, sync subscription and local user_subscriptions
- * - if mode=payment, insert into stripe_orders
- */
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const customerId = extractCustomerId(session)
   if (!customerId) {
-    console.warn('checkout.session.completed without customerId; skipping')
+    console.warn('checkout.session.completed without customerId')
     return
   }
 
-  // Ensure stripe_customers mapping
-  // We expect you passed user_id in session.metadata.user_id when creating the session
+  // We expect you to set session.metadata.user_id when creating checkout
   const userId = (session.metadata?.user_id as string) || null
   if (userId) {
-    // Upsert mapping in public.stripe_customers
     await upsertStripeCustomer(userId, customerId)
   } else {
-    // Try to see if mapping already exists; if not, we still continue
     const { data, error } = await supabase
       .from('stripe_customers')
       .select('user_id')
       .eq('customer_id', customerId)
       .maybeSingle()
-    if (error) {
-      console.error('stripe_customers lookup failed:', error)
-    }
-    if (!data) {
-      console.warn('No stripe_customers mapping and no user_id in metadata; continuing anyway.')
-    }
+    if (error) console.error('stripe_customers lookup failed:', error)
+    if (!data) console.warn('No stripe_customers mapping and no user_id metadata.')
   }
 
   if (session.mode === 'subscription') {
@@ -168,9 +144,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 }
 
-/**
- * Insert one-time payment into public.stripe_orders (if you later sell one-off items).
- */
 async function insertOneTimeOrder(session: Stripe.Checkout.Session, customerId: string) {
   try {
     const payload = {
@@ -183,33 +156,20 @@ async function insertOneTimeOrder(session: Stripe.Checkout.Session, customerId: 
       payment_status: session.payment_status,
       status: 'completed',
     }
-
     const { error } = await supabase.from('stripe_orders').insert(payload)
-    if (error) {
-      console.error('stripe_orders insert failed:', error)
-    }
+    if (error) console.error('stripe_orders insert failed:', error)
   } catch (err) {
     console.error('insertOneTimeOrder error:', err)
   }
 }
 
-/**
- * Keep public.stripe_customers in sync (user_id ↔ customer_id)
- */
 async function upsertStripeCustomer(userId: string, customerId: string) {
   const { error } = await supabase
     .from('stripe_customers')
     .upsert({ user_id: userId, customer_id: customerId }, { onConflict: 'user_id' })
-  if (error) {
-    console.error('stripe_customers upsert failed:', error)
-  }
+  if (error) console.error('stripe_customers upsert failed:', error)
 }
 
-/**
- * Fetch latest subscription from Stripe and sync to:
- * - public.stripe_subscriptions (your Stripe mirror)
- * - app.user_subscriptions (your local plan gate)
- */
 async function syncCustomerFromStripe(customerId: string) {
   try {
     const subs = await stripe.subscriptions.list({
@@ -220,7 +180,6 @@ async function syncCustomerFromStripe(customerId: string) {
     })
 
     if (!subs.data.length) {
-      // No subscription; mark as canceled locally if we can resolve the user
       await writeStripeSubscriptionRow(customerId, null)
       await deactivateLocalUserSubscription(customerId)
       return
@@ -232,7 +191,6 @@ async function syncCustomerFromStripe(customerId: string) {
         ? sub.default_payment_method
         : null
 
-    // Mirror to public.stripe_subscriptions
     await writeStripeSubscriptionRow(customerId, {
       subscription_id: sub.id,
       price_id: sub.items.data[0]?.price?.id ?? null,
@@ -244,9 +202,14 @@ async function syncCustomerFromStripe(customerId: string) {
       status: sub.status,
     })
 
-    // Update local gate: app.user_subscriptions
     const priceId = sub.items.data[0]?.price?.id ?? null
-    await upsertLocalUserSubscriptionFromStripe(customerId, priceId, sub.status, sub.current_period_start, sub.current_period_end)
+    await upsertLocalUserSubscriptionFromStripe(
+      customerId,
+      priceId,
+      sub.status,
+      sub.current_period_start,
+      sub.current_period_end,
+    )
   } catch (err) {
     console.error('syncCustomerFromStripe failed:', err)
   }
@@ -267,7 +230,6 @@ async function writeStripeSubscriptionRow(
         status: Stripe.Subscription.Status
       },
 ) {
-  // If sub is null, we set a canceled/empty row so UI can reflect no active sub
   const payload = sub
     ? {
         customer_id: customerId,
@@ -294,19 +256,10 @@ async function writeStripeSubscriptionRow(
 
   const { error } = await supabase
     .from('stripe_subscriptions') // public schema
-    .upsert(payload, { onConflict: 'customer_id' })
-
-  if (error) {
-    console.error('stripe_subscriptions upsert failed:', error)
-  }
+    .upsert(payload, { onConflict: 'customer_id' }) // requires unique(customer_id)
+  if (error) console.error('stripe_subscriptions upsert failed:', error)
 }
 
-/**
- * Update app.user_subscriptions using Stripe data.
- * - resolve user_id via public.stripe_customers
- * - map Stripe price_id → app.subscription_plans.id using app.subscription_plans.stripe_price_id
- * - write status + period in ISO
- */
 async function upsertLocalUserSubscriptionFromStripe(
   customerId: string,
   stripePriceId: string | null,
@@ -314,13 +267,12 @@ async function upsertLocalUserSubscriptionFromStripe(
   periodStart: number | null,
   periodEnd: number | null,
 ) {
-  // Resolve user_id from public.stripe_customers
+  // Resolve user_id via public.stripe_customers
   const { data: customerRow, error: custErr } = await supabase
     .from('stripe_customers')
     .select('user_id')
     .eq('customer_id', customerId)
     .maybeSingle()
-
   if (custErr) {
     console.error('lookup stripe_customers failed:', custErr)
     return
@@ -331,28 +283,24 @@ async function upsertLocalUserSubscriptionFromStripe(
     return
   }
 
-  // Map Stripe price → local plan_id
+  // Map Stripe price -> local plan_id from PUBLIC.subscription_plans
   let planId: string | null = null
   if (stripePriceId) {
     const { data: planRow, error: planErr } = await supabase
-      .schema('app')
-      .from('subscription_plans')
+      .from('subscription_plans') // ✅ public
       .select('id')
       .eq('stripe_price_id', stripePriceId)
       .maybeSingle()
-    if (planErr) {
-      console.error('subscription_plans lookup failed:', planErr)
-    }
+    if (planErr) console.error('subscription_plans lookup failed:', planErr)
     planId = planRow?.id ?? null
   }
 
-  // Normalize status for local table (keep raw or reduce to active/canceled/trialing)
   const localStatus =
     stripeStatus === 'active' || stripeStatus === 'trialing'
       ? stripeStatus
       : stripeStatus === 'past_due'
       ? 'past_due'
-      : 'canceled' // treat everything else as non-usable
+      : 'canceled'
 
   const iso = (sec: number | null) => (sec ? new Date(sec * 1000).toISOString() : null)
 
@@ -365,25 +313,17 @@ async function upsertLocalUserSubscriptionFromStripe(
   }
 
   const { error } = await supabase
-    .schema('app')
-    .from('user_subscriptions')
+    .from('user_subscriptions') // ✅ public
     .upsert(payload, { onConflict: 'user_id' })
-
-  if (error) {
-    console.error('app.user_subscriptions upsert failed:', error)
-  }
+  if (error) console.error('user_subscriptions upsert failed:', error)
 }
 
-/**
- * If customer has no subs, mark local user_subscriptions canceled (if mapping exists).
- */
 async function deactivateLocalUserSubscription(customerId: string) {
   const { data: customerRow, error: custErr } = await supabase
     .from('stripe_customers')
     .select('user_id')
     .eq('customer_id', customerId)
     .maybeSingle()
-
   if (custErr) {
     console.error('lookup stripe_customers failed:', custErr)
     return
@@ -392,8 +332,7 @@ async function deactivateLocalUserSubscription(customerId: string) {
   if (!userId) return
 
   const { error } = await supabase
-    .schema('app')
-    .from('user_subscriptions')
+    .from('user_subscriptions') // ✅ public
     .upsert(
       {
         user_id: userId,
@@ -404,8 +343,5 @@ async function deactivateLocalUserSubscription(customerId: string) {
       },
       { onConflict: 'user_id' },
     )
-
-  if (error) {
-    console.error('deactivate user_subscriptions failed:', error)
-  }
+  if (error) console.error('deactivate user_subscriptions failed:', error)
 }
