@@ -3,9 +3,9 @@ import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { getStripePriceId, RETURN_URLS, type PlanKey } from '../config/stripe'
 
-type CreateCheckoutInput = {
+type CreateCheckoutArgs = {
   plan: PlanKey
-  coupon?: string | null
+  coupon?: string | null // user-typed code, e.g. "CarerViewFriend2025"
   successUrl?: string
   cancelUrl?: string
 }
