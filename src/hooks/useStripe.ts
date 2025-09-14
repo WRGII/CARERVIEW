@@ -1,7 +1,7 @@
 // src/hooks/useStripe.ts
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
-import { assertStripeEnv, type PlanKey } from '../stripe-config'
+import { getStripePriceId, RETURN_URLS, type PlanKey } from '../config/stripe'
 
 type CreateCheckoutInput = {
   plan: PlanKey
