@@ -611,17 +611,6 @@ export default function WhyCarerView() {
           </div>
         </section>
 
-            <div className="mt-8">
-              <a
-                href="#privacy"
-                className="text-cyan-primary hover:text-cyan-hover font-medium underline"
-              >
-                Read our Privacy Promise
-              </a>
-            </div>
-          </div>
-        </div>
-
         <Footer />
       </div>
     </div>
