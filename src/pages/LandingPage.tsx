@@ -1,6 +1,5 @@
-// src/pages/LandingPage.tsx
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { Heart, Shield, Users, FileText, ArrowRight, CheckCircle, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
@@ -8,6 +7,7 @@ import Footer from '../components/common/Footer'
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -15,6 +15,16 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [sendingReset, setSendingReset] = useState(false)
+
+  // Smooth-scroll to #get-started if the page was opened with that hash
+  useEffect(() => {
+    if (location.hash === '#get-started') {
+      // small delay to ensure layout is ready
+      setTimeout(() => {
+        document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    }
+  }, [location.hash])
 
   // --- helpers ---------------------------------------------------------------
 
@@ -172,7 +182,7 @@ export default function LandingPage() {
             </Link>
 
             <Link
-              to="/why-carerview"
+              to="/why"  // ✅ dedicated page
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
               aria-label="Why you need CarerView"
             >
@@ -474,23 +484,11 @@ export default function LandingPage() {
                     <p className="text-slate-gray/80">Know when it's time to adjust care approaches</p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-peach-blush rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-slate-gray" />
-                  </div>
-                  <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
-                      A printable view for appointments
-                    </h5>
-                    <p className="text-slate-gray/80">Bring concrete data to every healthcare conversation</p>
-                  </div>
-                </div>
               </div>
 
               <div className="mt-10 text-center">
                 <Link
-                  to="/why-carerview"
+                  to="/why"  // ✅ dedicated page
                   className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
                   aria-label="Why you need CarerView"
                 >
