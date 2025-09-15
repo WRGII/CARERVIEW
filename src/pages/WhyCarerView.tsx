@@ -273,6 +273,95 @@ export default function WhyCarerView() {
         </div>
 
         {/* HOW CARERVIEW HELPS */}
+        {/* WHAT YOU'LL TRACK - MOVED TO POSITION 1 */}
+        <div className="py-20">
+          <div className="text-center mb-16">
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">
+              What you'll track
+            </h3>
+            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
+              Simple living categories that reflect real daily life
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            <Card className="border-0 shadow-lg bg-warm-white">
+              <CardContent className="p-8">
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Activities of Daily Living
+                </h4>
+                <BulletList
+                  bullets={[
+                    "Bathing & personal hygiene",
+                    "Dressing & grooming",
+                    "Eating & drinking",
+                    "Toileting & continence",
+                    "Mobility & transfers",
+                    "Safety awareness",
+                  ]}
+                  dot="cyan"
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-warm-white">
+              <CardContent className="p-8">
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Instrumental Activities
+                </h4>
+                <BulletList
+                  bullets={[
+                    "Medication management",
+                    "Meals & groceries",
+                    "Housekeeping & laundry",
+                    "Finances & paperwork",
+                    "Communication & memory",
+                    "Transportation & errands",
+                  ]}
+                  dot="mint"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <p className="text-center text-slate-gray/60 mt-8 italic">
+            Observations are custom so CarerView fits your family's reality.
+          </p>
+        </div>
+
+        {/* PERSONAS - MOVED TO POSITION 2 */}
+        <section className="pb-12">
+          <div className="text-center mb-10">
+            <h3 className="text-3xl font-bold text-slate-gray">
+              Built for real caregiving situations
+            </h3>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 items-stretch">
+            {personas.map((p) => (
+              <article
+                key={p.title}
+                className="h-full rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
+                aria-label={p.title}
+              >
+                <div className="p-6 h-full flex flex-col">
+                  <h4 className="text-lg font-semibold text-slate-gray">{p.title}</h4>
+                  <p className="mt-3 text-slate-gray/80 italic">{p.quote}</p>
+                  <ul className="mt-4 space-y-2 text-slate-gray/80 flex-1">
+                    {p.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1 inline-block h-2 w-2 rounded-full bg-peach-blush/70" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* HOW CARERVIEW HELPS - MOVED TO POSITION 3 */}
         <div className="py-20">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">
@@ -343,7 +432,7 @@ export default function WhyCarerView() {
           </div>
         </div>
 
-        {/* WHY FAMILIES CHOOSE */}
+        {/* WHY FAMILIES CHOOSE - MOVED TO POSITION 4 */}
         <div className="py-20 bg-gradient-to-r from-mint-green/30 to-peach-blush/20 rounded-3xl">
           <div className="max-w-6xl mx-auto px-8">
             <div className="text-center mb-16">
@@ -380,181 +469,6 @@ export default function WhyCarerView() {
             </div>
           </div>
         </div>
-
-        {/* WHAT YOU'LL TRACK */}
-        <div className="py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              What you'll track
-            </h3>
-            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
-              Simple living categories that reflect real daily life
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            <Card className="border-0 shadow-lg bg-warm-white">
-              <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Activities of Daily Living
-                </h4>
-                <BulletList
-                  bullets={[
-                    "Bathing & personal hygiene",
-                    "Dressing & grooming",
-                    "Eating & drinking",
-                    "Toileting & continence",
-                    "Mobility & transfers",
-                    "Safety awareness",
-                  ]}
-                  dot="cyan"
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-warm-white">
-              <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Instrumental Activities
-                </h4>
-                <BulletList
-                  bullets={[
-                    "Medication management",
-                    "Meals & groceries",
-                    "Housekeeping & laundry",
-                    "Finances & paperwork",
-                    "Communication & memory",
-                    "Transportation & errands",
-                  ]}
-                  dot="mint"
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          <p className="text-center text-slate-gray/60 mt-8 italic">
-            Observations are custom so CarerView fits your family's reality.
-          </p>
-        </div>
-
-        {/* DESIGNED FOR OVERWHELMED DAYS */}
-        <div className="py-20 bg-gradient-to-r from-peach-blush/20 to-mint-green/30 rounded-3xl">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h3 className="text-4xl font-bold text-slate-gray mb-12">
-              Designed for overwhelmed days
-            </h3>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              <MiniBlock
-                icon={<Clock className="w-8 h-8 text-cyan-primary" />}
-                title="Fast"
-                blurb="Log only what's relevant; skip the rest."
-              />
-              <MiniBlock
-                icon={<Heart className="w-8 h-8 text-slate-gray" />}
-                title="Kind"
-                blurb="Supportive prompts in plain language."
-                tone="peach"
-              />
-              <MiniBlock
-                icon={<Lock className="w-8 h-8 text-slate-gray" />}
-                title="Private"
-                blurb="You control who sees what, always."
-                tone="mint"
-              />
-              <MiniBlock
-                icon={<Shield className="w-8 h-8 text-slate-gray" />}
-                title="Portable"
-                blurb="Works on phone, tablet, or computer."
-                tone="peach"
-              />
-            </div>
-
-            <div className="mt-12">
-              <Link
-                to="/create-account"
-                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
-              >
-                Begin Observations today
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* SAMPLE REPORT */}
-        <div id="sample-report" className="py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              See the difference a week makes
-            </h3>
-            <p className="text-2xl text-slate-gray/80 mb-8">
-              From "I'm worried" to "Here's what changed."
-            </p>
-          </div>
-
-          <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
-            <CardContent className="p-12">
-              <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
-                A single Observation report shows:
-              </h4>
-
-              <div className="space-y-6">
-                <FeatureLine
-                  tone="cyanSolid"
-                  title="Daily notes summarized into clear trends"
-                  blurb="See patterns emerge from your observations."
-                />
-                <FeatureLine
-                  tone="mint"
-                  title="Gentle flags when support needs shift"
-                  blurb="Know when it's time to adjust care approaches."
-                />
-              </div>
-
-              <div className="mt-10 text-center">
-                {/* Avoid linking to /why from /why */}
-                <Link
-                  to="/create-account"
-                  className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
-                >
-                  Get started
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* PERSONAS */}
-        <section className="pb-12">
-          <div className="text-center mb-10">
-            <h3 className="text-3xl font-bold text-slate-gray">
-              Built for real caregiving situations
-            </h3>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 items-stretch">
-            {personas.map((p) => (
-              <article
-                key={p.title}
-                className="h-full rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
-                aria-label={p.title}
-              >
-                <div className="p-6 h-full flex flex-col">
-                  <h4 className="text-lg font-semibold text-slate-gray">{p.title}</h4>
-                  <p className="mt-3 text-slate-gray/80 italic">{p.quote}</p>
-                  <ul className="mt-4 space-y-2 text-slate-gray/80 flex-1">
-                    {p.bullets.map((b, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1 inline-block h-2 w-2 rounded-full bg-peach-blush/70" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
 
         {/* LIGHT AUTH (optional, as you had it) */}
         <section className="pb-20">
