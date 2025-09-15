@@ -1,4 +1,3 @@
-// src/components/layout/Header.tsx
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
@@ -22,7 +21,6 @@ function useBrandingLogo() {
         .maybeSingle();
 
       if (error) {
-        // Typical when default schema was changed to public and / or table missing in that schema
         console.warn("[Header] site_settings lookup failed → using fallback logo", error);
         return FALLBACK_LOGO;
       }
@@ -37,8 +35,8 @@ function useBrandingLogo() {
       }
       return raw;
     },
-    staleTime: 1000 * 60 * 60,    // 1h
-    gcTime:   1000 * 60 * 60 * 6, // 6h
+    staleTime: 1000 * 60 * 60, // 1h
+    gcTime: 1000 * 60 * 60 * 6, // 6h
     retry: 1,
   });
 }
@@ -69,14 +67,16 @@ export default function Header() {
           {/* Right: nav buttons */}
           <div className="flex items-center gap-3">
             <Link
-              to="/why-carerview"
+              to="/why"  // ✅ dedicated page
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
               aria-label="Why you need CarerView"
             >
               Why you need CarerView
             </Link>
+
+            {/* Use pathname+hash so React Router updates the hash without a full reload */}
             <Link
-              to="/#get-started"
+              to={{ pathname: "/", hash: "#get-started" }}
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
               aria-label="Go to Sign In"
             >
