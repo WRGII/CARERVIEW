@@ -19,7 +19,6 @@ import {
   type PlanKey,
 } from '../config/stripe'
 
-// Optional: small header logo pulled from app.site_settings
 function HeaderLogo() {
   const [logoUrl, setLogoUrl] = React.useState<string | null>(null)
   React.useEffect(() => {
@@ -35,9 +34,7 @@ function HeaderLogo() {
         setLogoUrl(data[0].logo_url)
       }
     })()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   if (!logoUrl) return null
@@ -63,7 +60,6 @@ export default function ChoosePlan() {
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
-  // If already on an active plan, bounce to caregiver
   React.useEffect(() => {
     if (!requireSub) return
     if (!isLoading && plan?.status === 'active' && plan.plan_id) {
@@ -90,37 +86,37 @@ export default function ChoosePlan() {
     if (error) throw error
   }
 
-  // ---- Stripe checkout for paid plans (via Supabase Edge Function) ----------
   async function startStripeCheckout(which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>) {
     try {
       setErr(null)
       setBusy(which as PlanId)
-      if (!user?.id) throw new Error('No user')
 
+      if (!user?.id) throw new Error('No user')
       const priceId = getStripePriceId(which)
       if (!priceId) throw new Error(`Missing Stripe price id for ${which}. Set it in .env`)
 
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      // ✅ Correct Edge Function name:
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
+          plan_id: which,
           promotionCode: coupon.trim() || null,
           success_url: RETURN_URLS.success,
           cancel_url: RETURN_URLS.cancel,
         },
       })
 
-      if (error) throw new Error(error.message || 'Failed to start checkout')
+      if (error) throw error
       const url = (data as any)?.url
       if (!url) throw new Error('Stripe checkout URL missing')
 
-      window.location.assign(url)
+      window.location.href = url
     } catch (e: any) {
       setErr(e?.message || 'Failed to start checkout')
       setBusy(null)
     }
   }
 
-  // ---- Free plan remains local ----------------------------------------------
   const chooseFree = async () => {
     try {
       setErr(null)
@@ -148,10 +144,7 @@ export default function ChoosePlan() {
         <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
         <p className="text-slate-600">
           This environment does not require a plan.{' '}
-          <button
-            className="underline"
-            onClick={() => navigate('/caregiver', { replace: true })}
-          >
+          <button className="underline" onClick={() => navigate('/caregiver', { replace: true })}>
             Continue
           </button>
         </p>
@@ -164,10 +157,9 @@ export default function ChoosePlan() {
       <HeaderLogo />
       <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your plan</h1>
       <p className="text-slate-600 mb-4">
-        You can switch plans later. Billing is handled securely by Stripe.
+        You can switch plans later. Billing via Stripe will be added soon—no charges yet.
       </p>
 
-      {/* Coupon box (sent to checkout if present) */}
       <div className="flex items-center gap-3 mb-6">
         <input
           value={coupon}
@@ -178,7 +170,7 @@ export default function ChoosePlan() {
         <button
           type="button"
           className="rounded-xl px-4 py-2 border bg-slate-900 text-white"
-          onClick={() => {/* visually sticky only; value is passed in startStripeCheckout */}}
+          onClick={() => {}}
         >
           Apply
         </button>
@@ -191,7 +183,6 @@ export default function ChoosePlan() {
       )}
 
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Primary */}
         <div className="border rounded-2xl p-5 bg-white">
           <div className="text-lg font-semibold">{PLANS.primary_weekly.name}</div>
           <div className="text-2xl font-bold mt-1">
@@ -210,7 +201,6 @@ export default function ChoosePlan() {
           </button>
         </div>
 
-        {/* Occasional */}
         <div className="border rounded-2xl p-5 bg-white">
           <div className="text-lg font-semibold">{PLANS.occasional_weekly.name}</div>
           <div className="text-2xl font-bold mt-1">
@@ -229,7 +219,6 @@ export default function ChoosePlan() {
           </button>
         </div>
 
-        {/* Free */}
         <div className="border rounded-2xl p-5 bg-white">
           <div className="text-lg font-semibold">{PLANS.free.name}</div>
           <div className="text-2xl font-bold mt-1">$0</div>
