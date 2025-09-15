@@ -74,7 +74,6 @@ export default function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/why" element={<WhyPage />} />
 
-
               <Route path="/create-account" element={<CreateAccountPage />} />
 
               <Route
