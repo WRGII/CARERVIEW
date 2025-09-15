@@ -1,14 +1,24 @@
 // src/pages/WhyCarerView.tsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Heart,
+  Shield,
+  Users,
+  FileText,
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  Lock,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { prefetchChoosePlanAssets } from "../hooks/usePrefetchStatic";
+import { Card, CardContent } from "../components/ui/Card";
 import Footer from "../components/common/Footer";
 
 export default function WhyCarerView() {
-  // --- personas (Auntie persona removed) ------------------------------------
+  // --- Personas --------------------------------------------------------------
   const personas = [
     {
       title: "Long-distance family coordination",
@@ -52,9 +62,8 @@ export default function WhyCarerView() {
     },
   ];
 
-  // --- auth form state/logic (exactly mirrored from LandingPage) ------------
+  // --- Auth logic (same behavior you used elsewhere) ------------------------
   const navigate = useNavigate();
-
   const queryClient = useQueryClient();
   const kickoffPrefetch = React.useCallback(() => {
     prefetchChoosePlanAssets(queryClient);
@@ -115,7 +124,8 @@ export default function WhyCarerView() {
       await supabase.from("profiles").upsert({
         id: user.id,
         email: user.email,
-        display_name: (user.user_metadata && user.user_metadata.display_name) || "",
+        display_name:
+          (user.user_metadata && user.user_metadata.display_name) || "",
         role: "caregiver",
         disabled: false,
       });
@@ -130,7 +140,9 @@ export default function WhyCarerView() {
         navigate("/", { replace: true });
         return;
       }
-      navigate(prof2?.role === "admin" ? "/admin" : "/caregiver", { replace: true });
+      navigate(prof2?.role === "admin" ? "/admin" : "/caregiver", {
+        replace: true,
+      });
       return;
     }
 
@@ -168,9 +180,11 @@ export default function WhyCarerView() {
             name ?? user.user_metadata?.display_name ?? "",
             user.email ?? ""
           );
-          navigate("/choose-plan", { replace: true });
+          navigate("/create-account", { replace: true });
         } else {
-          setInfo("Check your inbox to confirm your email, then sign in to choose a plan.");
+          setInfo(
+            "Check your inbox to confirm your email, then sign in to choose a plan."
+          );
         }
       } else {
         const { data, error: siErr } = await supabase.auth.signInWithPassword({
@@ -224,178 +238,629 @@ export default function WhyCarerView() {
 
   // --- UI --------------------------------------------------------------------
   return (
-    <div className="bg-warm-white">
-      {/* Header/Outlet are provided by MainLayout */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-3xl">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-gray">We feel your struggle...</h1>
-          <p className="mt-3 text-slate-gray/75">
-            Our family are caregivers, too. So we developed CarerView to give all families and care teams a shared way to notice changes, align
-            decisions, and keep everyone on the same page—in a simple format.
+    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* HERO */}
+        <div className="pt-12 pb-20 text-center">
+          <div className="flex flex-col items-center justify-center mb-8">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray">
+              Why you need CarerView
+            </h1>
+          </div>
+
+          <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+            Observing the changes in someone you love can be stressful. CarerView gives you a
+            simple way to observe and share what's getting easier, what's getting harder, and
+            how things shift day-to-day—so everyone on the care team talks using the same barometer.
           </p>
-        </div>
-      </section>
 
-      {/* Persona cards */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="grid gap-6 sm:grid-cols-2 items-stretch">
-          {personas.map((p) => (
-            <article
-              key={p.title}
-              className="h-full rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
-              aria-label={p.title}
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/create-account"
+              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
-              <div className="p-6 h-full flex flex-col">
-                <h2 className="text-lg font-semibold text-slate-gray">{p.title}</h2>
-                <p className="mt-3 text-slate-gray/80 italic">{p.quote}</p>
-                <ul className="mt-4 space-y-2 text-slate-gray/80 flex-1">
-                  {p.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="mt-1 inline-block h-2 w-2 rounded-full bg-peach-blush/70" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+              Begin Observation Now <ArrowRight className="w-5 h-5" />
+            </Link>
 
-      {/* Auth section (identical experience to LandingPage) */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">Bring calm to the conversation</h3>
-            <p className="text-xl text-slate-gray/80">
-              Start noticing together, decide together, and care together—with CarerView as your shared
-              compass.
+            <Link
+              to={{ pathname: "/", hash: "#get-started" }}
+              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Sign In"
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+
+        {/* HOW CARERVIEW HELPS */}
+        <div className="py-20">
+          <div className="text-center mb-16">
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">
+              A shared language for care
+            </h3>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Clock className="w-8 h-8 text-cyan-primary" />
+                </div>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">
+                  Simple daily check-ins
+                </h4>
+                <p className="text-slate-gray/80 leading-relaxed">
+                  Spend just a few minutes noting how things went across core Activities of
+                  Daily Living. Create quick check-ins or complete Observations anytime.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-mint-green/60 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-8 h-8 text-slate-gray" />
+                </div>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">
+                  Clear, 1–5 scale
+                </h4>
+                <p className="text-slate-gray/80 leading-relaxed">
+                  Easy, gentle wording—no medical jargon—grounded in occupational therapy
+                  best practices that families can understand.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-peach-blush/60 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-8 h-8 text-slate-gray" />
+                </div>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">
+                  Trends you can trust
+                </h4>
+                <p className="text-slate-gray/80 leading-relaxed">
+                  See changes over days and weeks, not just how today felt. Observed trends
+                  highlight when to adjust routines or supports.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-8 h-8 text-cyan-primary" />
+                </div>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">
+                  Bring everyone together
+                </h4>
+                <p className="text-slate-gray/80 leading-relaxed">
+                  Share private Observations with family and clinicians so discussions start
+                  from the same definitions and data.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* WHY FAMILIES CHOOSE */}
+        <div className="py-20 bg-gradient-to-r from-mint-green/30 to-peach-blush/20 rounded-3xl">
+          <div className="max-w-6xl mx-auto px-8">
+            <div className="text-center mb-16">
+              <h3 className="text-4xl font-bold text-slate-gray mb-6">
+                Less second-guessing. More peace of mind.
+              </h3>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="space-y-6">
+                <FeatureLine
+                  tone="cyan"
+                  title="Make doctor visits count"
+                  blurb="Arrive with specific observations instead of fuzzy memories."
+                />
+                <FeatureLine
+                  tone="mint"
+                  title="Reduce family friction"
+                  blurb="Align siblings and supporters around the same facts and wording."
+                />
+              </div>
+              <div className="space-y-6">
+                <FeatureLine
+                  tone="peach"
+                  title="Spot small shifts early"
+                  blurb="Gentle trends highlight when to adjust routines, medications, or supports."
+                />
+                <FeatureLine
+                  tone="cyanSolid"
+                  title="Honor your loved one"
+                  blurb="Focus on what they can do today, while tracking where help is needed."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* WHAT YOU'LL TRACK */}
+        <div className="py-20">
+          <div className="text-center mb-16">
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">
+              What you'll track
+            </h3>
+            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
+              Simple living categories that reflect real daily life
             </p>
           </div>
 
-          <div className="bg-warm-white p-8 rounded-2xl shadow-xl border border-slate-gray/20">
-            {/* Logo in top left corner */}
-            <div className="flex justify-start mb-6">
-              <img
-                src="/CareView_logo_1_colored_highres.png"
-                alt="CarerView Logo"
-                className="w-12 h-12 object-contain"
+          <div className="grid gap-8 md:grid-cols-2">
+            <Card className="border-0 shadow-lg bg-warm-white">
+              <CardContent className="p-8">
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Activities of Daily Living
+                </h4>
+                <BulletList
+                  bullets={[
+                    "Bathing & personal hygiene",
+                    "Dressing & grooming",
+                    "Eating & drinking",
+                    "Toileting & continence",
+                    "Mobility & transfers",
+                    "Safety awareness",
+                  ]}
+                  dot="cyan"
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-warm-white">
+              <CardContent className="p-8">
+                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
+                  Instrumental Activities
+                </h4>
+                <BulletList
+                  bullets={[
+                    "Medication management",
+                    "Meals & groceries",
+                    "Housekeeping & laundry",
+                    "Finances & paperwork",
+                    "Communication & memory",
+                    "Transportation & errands",
+                  ]}
+                  dot="mint"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <p className="text-center text-slate-gray/60 mt-8 italic">
+            Observations are custom so CarerView fits your family's reality.
+          </p>
+        </div>
+
+        {/* DESIGNED FOR OVERWHELMED DAYS */}
+        <div className="py-20 bg-gradient-to-r from-peach-blush/20 to-mint-green/30 rounded-3xl">
+          <div className="max-w-4xl mx-auto px-8 text-center">
+            <h3 className="text-4xl font-bold text-slate-gray mb-12">
+              Designed for overwhelmed days
+            </h3>
+
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              <MiniBlock
+                icon={<Clock className="w-8 h-8 text-cyan-primary" />}
+                title="Fast"
+                blurb="Log only what's relevant; skip the rest."
+              />
+              <MiniBlock
+                icon={<Heart className="w-8 h-8 text-slate-gray" />}
+                title="Kind"
+                blurb="Supportive prompts in plain language."
+                tone="peach"
+              />
+              <MiniBlock
+                icon={<Lock className="w-8 h-8 text-slate-gray" />}
+                title="Private"
+                blurb="You control who sees what, always."
+                tone="mint"
+              />
+              <MiniBlock
+                icon={<Shield className="w-8 h-8 text-slate-gray" />}
+                title="Portable"
+                blurb="Works on phone, tablet, or computer."
+                tone="peach"
               />
             </div>
 
-            <div className="flex justify-center mb-6">
-              <div className="flex bg-slate-gray/10 rounded-lg p-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(true);
-                    setError(null);
-                    setInfo(null);
-                    kickoffPrefetch();
-                  }}
-                  className={`px-6 py-3 rounded-md text-sm font-medium transition ${
-                    isSignUp
-                      ? "bg-warm-white text-slate-gray shadow-sm"
-                      : "text-slate-gray/70 hover:text-slate-gray"
-                  }`}
-                >
-                  Create account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSignUp(false);
-                    setError(null);
-                    setInfo(null);
-                    kickoffPrefetch();
-                  }}
-                  className={`px-6 py-3 rounded-md text-sm font-medium transition ${
-                    !isSignUp
-                      ? "bg-warm-white text-slate-gray shadow-sm"
-                      : "text-slate-gray/70 hover:text-slate-gray"
-                  }`}
-                >
-                  Sign in
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {isSignUp && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-gray mb-2">Your name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                    placeholder="How should we address you?"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-gray mb-2">Email address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                  placeholder="your.email@example.com"
-                  onFocus={kickoffPrefetch}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-gray mb-2">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                  placeholder="Choose a secure password"
-                />
-              </div>
-
-              {error && (
-                <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-4">
-                  <p className="text-slate-gray text-sm">{error}</p>
-                </div>
-              )}
-
-              {info && (
-                <div className="rounded-lg bg-mint-green/30 border border-mint-green p-4">
-                  <p className="text-slate-gray text-sm">{info}</p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                onMouseEnter={kickoffPrefetch}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
+            <div className="mt-12">
+              <Link
+                to="/create-account"
+                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
               >
-                {isSignUp ? "Get Started" : "Welcome back"}
-                {!loading && <ArrowRight className="w-5 h-5" />}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <button
-                onClick={handlePasswordReset}
-                disabled={sendingReset}
-                className="text-sm text-cyan-primary hover:underline disabled:opacity-60"
-              >
-                Forgot your password?
-              </button>
+                Begin Observations today
+              </Link>
             </div>
           </div>
         </div>
-      </section>
 
-      <Footer />
+        {/* SAMPLE REPORT */}
+        <div id="sample-report" className="py-20">
+          <div className="text-center mb-16">
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">
+              See the difference a week makes
+            </h3>
+            <p className="text-2xl text-slate-gray/80 mb-8">
+              From "I'm worried" to "Here's what changed."
+            </p>
+          </div>
+
+          <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
+            <CardContent className="p-12">
+              <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
+                A single Observation report shows:
+              </h4>
+
+              <div className="space-y-6">
+                <FeatureLine
+                  tone="cyanSolid"
+                  title="Daily notes summarized into clear trends"
+                  blurb="See patterns emerge from your observations."
+                />
+                <FeatureLine
+                  tone="mint"
+                  title="Gentle flags when support needs shift"
+                  blurb="Know when it's time to adjust care approaches."
+                />
+              </div>
+
+              <div className="mt-10 text-center">
+                {/* Avoid linking to /why from /why */}
+                <Link
+                  to="/create-account"
+                  className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
+                >
+                  Get started
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* PERSONAS */}
+        <section className="pb-12">
+          <div className="text-center mb-10">
+            <h3 className="text-3xl font-bold text-slate-gray">
+              Built for real caregiving situations
+            </h3>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 items-stretch">
+            {personas.map((p) => (
+              <article
+                key={p.title}
+                className="h-full rounded-2xl border border-slate-gray/20 bg-white shadow-sm hover:shadow-md transition-shadow"
+                aria-label={p.title}
+              >
+                <div className="p-6 h-full flex flex-col">
+                  <h4 className="text-lg font-semibold text-slate-gray">{p.title}</h4>
+                  <p className="mt-3 text-slate-gray/80 italic">{p.quote}</p>
+                  <ul className="mt-4 space-y-2 text-slate-gray/80 flex-1">
+                    {p.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-1 inline-block h-2 w-2 rounded-full bg-peach-blush/70" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* LIGHT AUTH (optional, as you had it) */}
+        <section className="pb-20">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-12">
+              <h3 className="text-4xl font-bold text-slate-gray mb-6">
+                Bring calm to the conversation
+              </h3>
+              <p className="text-xl text-slate-gray/80">
+                Start noticing together, decide together, and care together—with CarerView as your shared
+                compass.
+              </p>
+            </div>
+
+            <div className="bg-warm-white p-8 rounded-2xl shadow-xl border border-slate-gray/20">
+              {/* Logo in top left corner */}
+              <div className="flex justify-start mb-6">
+                <img
+                  src="/CareView_logo_1_colored_highres.png"
+                  alt="CarerView Logo"
+                  className="w-12 h-12 object-contain"
+                />
+              </div>
+
+              <div className="flex justify-center mb-6">
+                <div className="flex bg-slate-gray/10 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setError(null);
+                      setInfo(null);
+                      kickoffPrefetch();
+                    }}
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition ${
+                      isSignUp
+                        ? "bg-warm-white text-slate-gray shadow-sm"
+                        : "text-slate-gray/70 hover:text-slate-gray"
+                    }`}
+                  >
+                    Create account
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(false);
+                      setError(null);
+                      setInfo(null);
+                      kickoffPrefetch();
+                    }}
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition ${
+                      !isSignUp
+                        ? "bg-warm-white text-slate-gray shadow-sm"
+                        : "text-slate-gray/70 hover:text-slate-gray"
+                    }`}
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {isSignUp && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-gray mb-2">
+                      Your name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
+                      placeholder="How should we address you?"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-gray mb-2">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
+                    placeholder="your.email@example.com"
+                    onFocus={kickoffPrefetch}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-gray mb-2">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
+                    placeholder="Choose a secure password"
+                  />
+                </div>
+
+                {error && (
+                  <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-4">
+                    <p className="text-slate-gray text-sm">{error}</p>
+                  </div>
+                )}
+
+                {info && (
+                  <div className="rounded-lg bg-mint-green/30 border border-mint-green p-4">
+                    <p className="text-slate-gray text-sm">{info}</p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  onMouseEnter={kickoffPrefetch}
+                  className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
+                >
+                  {isSignUp ? "Get Started" : "Welcome back"}
+                  {!loading && <ArrowRight className="w-5 h-5" />}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handlePasswordReset}
+                  disabled={sendingReset}
+                  className="text-sm text-cyan-primary hover:underline disabled:opacity-60"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* TRUST & PRIVACY */}
+        <div className="py-20 bg-gradient-to-r from-mint-green/20 to-cyan-primary/10 rounded-3xl">
+          <div className="max-w-4xl mx-auto px-8 text-center">
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">
+              Your family's story stays yours
+            </h3>
+
+            <div className="grid gap-8 md:grid-cols-3 mt-12">
+              <TrustBlock
+                icon={<Shield className="w-8 h-8 text-cyan-primary" />}
+                title="You own your data"
+                blurb="Complete control over your family's information"
+              />
+              <TrustBlock
+                icon={<Lock className="w-8 h-8 text-slate-gray" />}
+                title="Private by default"
+                blurb="Share only with people you invite"
+                tone="mint"
+              />
+              <TrustBlock
+                icon={<CheckCircle className="w-8 h-8 text-slate-gray" />}
+                title="Secure storage"
+                blurb="Encrypted and protected always"
+                tone="peach"
+              />
+            </div>
+
+            <div className="mt-8">
+              <a
+                href="#privacy"
+                className="text-cyan-primary hover:text-cyan-hover font-medium underline"
+              >
+                Read our Privacy Promise
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </div>
+  );
+}
+
+/* ----- tiny presentational helpers to keep JSX tidy ----- */
+
+function FeatureLine({
+  tone,
+  title,
+  blurb,
+}: {
+  tone: "cyan" | "mint" | "peach" | "cyanSolid";
+  title: string;
+  blurb: string;
+}) {
+  const bg =
+    tone === "cyan"
+      ? "bg-cyan-primary"
+      : tone === "mint"
+      ? "bg-mint-green"
+      : tone === "peach"
+      ? "bg-peach-blush"
+      : "bg-cyan-primary";
+  const icon =
+    tone === "cyanSolid" ? (
+      <CheckCircle className="w-5 h-5 text-warm-white" />
+    ) : (
+      <CheckCircle className="w-5 h-5 text-slate-gray" />
+    );
+  const circleTone =
+    tone === "cyanSolid"
+      ? "bg-cyan-primary"
+      : tone === "mint"
+      ? "bg-mint-green"
+      : tone === "peach"
+      ? "bg-peach-blush"
+      : "bg-cyan-primary";
+
+  return (
+    <div className="flex items-start space-x-4">
+      <div
+        className={`w-8 h-8 ${circleTone} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}
+      >
+        {icon}
+      </div>
+      <div>
+        <h4 className="text-xl font-semibold text-slate-gray mb-2">{title}</h4>
+        <p className="text-slate-gray/80">{blurb}</p>
+      </div>
+    </div>
+  );
+}
+
+function BulletList({
+  bullets,
+  dot,
+}: {
+  bullets: string[];
+  dot: "cyan" | "mint";
+}) {
+  const dotClass = dot === "mint" ? "bg-mint-green" : "bg-cyan-primary";
+  return (
+    <div className="space-y-3">
+      {bullets.map((item, idx) => (
+        <div key={idx} className="flex items-center space-x-3">
+          <div className={`w-2 h-2 ${dotClass} rounded-full`} />
+          <span className="text-slate-gray">{item}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MiniBlock({
+  icon,
+  title,
+  blurb,
+  tone,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  blurb: string;
+  tone?: "peach" | "mint" | "cyan";
+}) {
+  const bg =
+    tone === "mint"
+      ? "bg-mint-green/60"
+      : tone === "peach"
+      ? "bg-peach-blush/60"
+      : "bg-cyan-primary/20";
+  const iconWrap = `w-16 h-16 ${bg} rounded-full flex items-center justify-center mx-auto mb-4`;
+  return (
+    <div>
+      <div className={iconWrap}>{icon}</div>
+      <h4 className="text-lg font-semibold text-slate-gray mb-2">{title}</h4>
+      <p className="text-slate-gray/80">{blurb}</p>
+    </div>
+  );
+}
+
+function TrustBlock({
+  icon,
+  title,
+  blurb,
+  tone,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  blurb: string;
+  tone?: "peach" | "mint" | "cyan";
+}) {
+  const bg =
+    tone === "mint"
+      ? "bg-mint-green/60"
+      : tone === "peach"
+      ? "bg-peach-blush/60"
+      : "bg-cyan-primary/20";
+  return (
+    <div>
+      <div className={`w-16 h-16 ${bg} rounded-full flex items-center justify-center mx-auto mb-4`}>
+        {icon}
+      </div>
+      <h4 className="text-lg font-semibold text-slate-gray mb-2">{title}</h4>
+      <p className="text-slate-gray/80">{blurb}</p>
     </div>
   );
 }
