@@ -146,7 +146,8 @@ async function syncCustomerFromStripe(customerId: string) {
     let planId: string | null = null
     if (stripePriceId) {
       const { data: planRow, error: planErr } = await db
-        .from('subscription_plans') // public schema
+        .schema('app')
+        .from('subscription_plans')
         .select('id')
         .eq('price_id', stripePriceId)
         .maybeSingle()
