@@ -611,33 +611,6 @@ export default function WhyCarerView() {
           </div>
         </section>
 
-        {/* TRUST & PRIVACY */}
-        <div className="py-20 bg-gradient-to-r from-mint-green/20 to-cyan-primary/10 rounded-3xl">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              Your family's story stays yours
-            </h3>
-
-            <div className="grid gap-8 md:grid-cols-3 mt-12">
-              <TrustBlock
-                icon={<Shield className="w-8 h-8 text-cyan-primary" />}
-                title="You own your data"
-                blurb="Complete control over your family's information"
-              />
-              <TrustBlock
-                icon={<Lock className="w-8 h-8 text-slate-gray" />}
-                title="Private by default"
-                blurb="Share only with people you invite"
-                tone="mint"
-              />
-              <TrustBlock
-                icon={<CheckCircle className="w-8 h-8 text-slate-gray" />}
-                title="Secure storage"
-                blurb="Encrypted and protected always"
-                tone="peach"
-              />
-            </div>
-
             <div className="mt-8">
               <a
                 href="#privacy"
