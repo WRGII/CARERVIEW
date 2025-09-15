@@ -2,9 +2,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
-import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { RETURN_URLS } from "../config/stripe";
+import { CreditCard, UserPlus, ArrowRight, Info } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 /** DB row for subscription_plans (public schema) */
 type SubscriptionPlan = {
@@ -26,25 +25,6 @@ function formatPriceUSD(cents: number, interval: string) {
 
 const PENDING_KEY = "cv_pending_checkout"; // { planId, promoCode }
 
-/** Start Stripe Checkout via Supabase Edge Function */
-async function startCheckoutViaSupabase(opts: {
-  priceId: string;
-  promotionCode?: string | null;
-}) {
-  const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-    body: {
-      price_id: opts.priceId,
-      promotionCode: opts.promotionCode ?? null,
-      success_url: RETURN_URLS.success,
-      cancel_url: RETURN_URLS.cancel,
-    },
-  });
-  if (error) throw new Error(error.message || "Failed to start checkout");
-  const url = (data as any)?.url;
-  if (!url) throw new Error("No checkout URL returned");
-  window.location.assign(url);
-}
-
 export default function CreateAccountPage() {
   const navigate = useNavigate();
 
@@ -65,6 +45,7 @@ export default function CreateAccountPage() {
   // ---- Local UI state -------------------------------------------------------
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
   const [promoCode, setPromoCode] = React.useState<string>("");
+  const [promoToast, setPromoToast] = React.useState<string | null>(null);
 
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -86,14 +67,38 @@ export default function CreateAccountPage() {
     }
   }, [plansQ.data, selectedPlanId]);
 
+  // Helper: call Stripe checkout Edge Function and optionally show promo toast
+  async function invokeCheckout(priceId: string, promo: string | undefined) {
+    const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+      body: {
+        price_id: priceId,
+        promotionCode: promo || null,
+        success_url: `${window.location.origin}/caregiver`,
+        cancel_url: `${window.location.origin}/create-account?canceled=1`,
+      },
+    });
+    if (error) throw error;
+    const url = (data as any)?.url as string | undefined;
+    const applied = Boolean((data as any)?.promo_applied);
+
+    if (promo && !applied) {
+      setPromoToast("We didn’t recognize that code. Checkout will continue without it.");
+      // brief pause so the user actually sees the toast before redirect
+      await new Promise((r) => setTimeout(r, 800));
+    }
+
+    if (!url) throw new Error("Stripe checkout URL missing");
+    window.location.assign(url);
+  }
+
   // If the user returns signed-in and we have a pending checkout, resume it.
   React.useEffect(() => {
     (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
       if (!pendingRaw) return;
 
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
+      const { data: u } = await supabase.auth.getUser();
+      const user = u.user;
       if (!user) return;
 
       try {
@@ -120,11 +125,7 @@ export default function CreateAccountPage() {
           return;
         }
 
-        await startCheckoutViaSupabase({
-          priceId: plan.price_id,
-          promotionCode: pending.promoCode || null,
-        });
-
+        await invokeCheckout(plan.price_id, pending.promoCode || undefined);
         localStorage.removeItem(PENDING_KEY);
       } catch (e) {
         console.warn("Failed to resume pending checkout:", e);
@@ -172,7 +173,7 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
-        // 3) Free plan -> caregiver; paid plan -> Supabase function for Stripe Checkout
+        // 3) Route: free plan -> caregiver; paid plan -> start checkout with promo
         if (selectedPlan.price_cents <= 0) {
           navigate("/caregiver", { replace: true });
           return;
@@ -184,10 +185,7 @@ export default function CreateAccountPage() {
           );
         }
 
-        await startCheckoutViaSupabase({
-          priceId: selectedPlan.price_id,
-          promotionCode: promoCode || null,
-        });
+        await invokeCheckout(selectedPlan.price_id, (promoCode || '').trim() || undefined);
         return; // redirected to Stripe
       }
 
@@ -214,8 +212,24 @@ export default function CreateAccountPage() {
   // ---- UI -------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      {/* Safety toast */}
+      {promoToast && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="flex items-center gap-2 rounded-xl bg-slate-900/90 text-white px-4 py-3 shadow-xl">
+            <Info className="w-4 h-4" />
+            <span className="text-sm">{promoToast}</span>
+            <button
+              className="ml-2 text-xs underline"
+              onClick={() => setPromoToast(null)}
+            >
+              dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <header className="mb-8">
+        <header className="mb-3">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">
             Create your CarerView account
           </h1>
@@ -223,6 +237,14 @@ export default function CreateAccountPage() {
             Choose a plan, then create your caregiver account. You can cancel any time.
           </p>
         </header>
+
+        {/* Sign-in link */}
+        <div className="mb-8 text-sm text-slate-gray/80">
+          Already have an account?{" "}
+          <Link to="/#get-started" className="text-cyan-primary hover:underline">
+            Sign in
+          </Link>
+        </div>
 
         {/* Choose a plan */}
         <section className="mb-8 rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
