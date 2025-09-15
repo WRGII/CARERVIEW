@@ -359,6 +359,24 @@ export default function WhyCarerView() {
               </article>
             ))}
           </div>
+
+          {/* Relocated action buttons */}
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/create-account"
+              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+            >
+              Begin Observation Now <ArrowRight className="w-5 h-5" />
+            </Link>
+
+            <Link
+              to={{ pathname: "/", hash: "#get-started" }}
+              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Sign In"
+            >
+              Sign In
+            </Link>
+          </div>
         </section>
 
         {/* HOW CARERVIEW HELPS - MOVED TO POSITION 3 */}
