@@ -1,4 +1,4 @@
-// supabase/functions/create-checkout-session/index.ts
+// supabase/functions/stripe-checkout/index.ts
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
@@ -38,31 +38,28 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth context (use the end-user JWT coming from the frontend)
+    // End-user auth context (bearer comes from the frontend)
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     })
-    const {
-      data: { user },
-      error: userErr,
-    } = await authClient.auth.getUser()
+    const { data: { user }, error: userErr } = await authClient.auth.getUser()
     if (userErr) throw userErr
     if (!user) return resp({ error: 'Not authenticated' }, 401)
 
-    // Service client for privileged DB writes
+    // Privileged DB client
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     const body = await req.json().catch(() => ({}))
     const price_id: string | null = body?.price_id ?? null
     const promotionCode: string | null = (body?.promotionCode || body?.coupon) ?? null
-    const success_url: string =
-      body?.success_url || (PUBLIC_SITE_URL ? `${PUBLIC_SITE_URL}/caregiver` : `${new URL(req.url).origin}/caregiver`)
-    const cancel_url: string =
-      body?.cancel_url || (PUBLIC_SITE_URL ? `${PUBLIC_SITE_URL}/create-account?canceled=1` : `${new URL(req.url).origin}/create-account?canceled=1`)
+
+    const origin = PUBLIC_SITE_URL || new URL(req.url).origin
+    const success_url: string = body?.success_url || `${origin}/caregiver`
+    const cancel_url: string = body?.cancel_url || `${origin}/create-account?canceled=1`
 
     if (!price_id) return resp({ error: 'Missing price_id' }, 400)
 
-    // 1) Resolve or create Stripe customer for this user
+    // 1) Ensure Stripe customer mapping for this user
     const { data: existing, error: mapErr } = await db
       .from('stripe_customers')
       .select('customer_id')
@@ -83,7 +80,7 @@ Deno.serve(async (req) => {
       if (upErr) throw upErr
     }
 
-    // 2) Optional promo code → translate to promotion_code ID
+    // 2) Optional promo code -> Stripe promotion_code
     let discounts: Array<{ promotion_code: string }> | undefined
     if (promotionCode) {
       const promos = await stripe.promotionCodes.list({
@@ -92,10 +89,7 @@ Deno.serve(async (req) => {
         limit: 1,
       })
       const promo = promos.data[0]
-      if (promo?.id) {
-        discounts = [{ promotion_code: promo.id }]
-      }
-      // If not found, we simply ignore — frontend can still show "applied" feedback separately if desired
+      if (promo?.id) discounts = [{ promotion_code: promo.id }]
     }
 
     // 3) Create Checkout Session
@@ -103,20 +97,18 @@ Deno.serve(async (req) => {
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: price_id, quantity: 1 }],
-      success_url,
-      cancel_url,
       allow_promotion_codes: true,
       discounts,
+      success_url,
+      cancel_url,
       client_reference_id: user.id,
-      subscription_data: {
-        metadata: { user_id: user.id },
-      },
+      subscription_data: { metadata: { user_id: user.id } },
       metadata: { user_id: user.id },
     })
 
     return resp({ url: session.url, id: session.id })
   } catch (err: any) {
-    console.error('[create-checkout-session] error:', err?.message || err)
+    console.error('[stripe-checkout] error:', err?.message || err)
     return resp({ error: err?.message || 'Failed to create checkout session' }, 500)
   }
 })
