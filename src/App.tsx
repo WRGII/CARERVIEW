@@ -10,7 +10,6 @@ import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
 import WhyPage from "./pages/WhyPage";
 
-
 // Pages
 import LandingPage from "./pages/LandingPage";
 import AdminPage from "./pages/AdminPage";
@@ -73,6 +72,8 @@ export default function App() {
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/why" element={<WhyPage />} />
+
 
               <Route path="/create-account" element={<CreateAccountPage />} />
 
