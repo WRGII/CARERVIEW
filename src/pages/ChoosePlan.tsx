@@ -157,7 +157,7 @@ export default function ChoosePlan() {
       <HeaderLogo />
       <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your plan</h1>
       <p className="text-slate-600 mb-4">
-        You can switch plans later. Billing via Stripe will be added soon—no charges yet.
+        You can switch plans any time.
       </p>
 
       <div className="flex items-center gap-3 mb-6">
