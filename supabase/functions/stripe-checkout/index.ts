@@ -22,19 +22,23 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
-const JSON_HEADERS = {
+const JSON_HEADERS: Record<string, string> = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  // IMPORTANT: allow the headers Supabase JS sends on invoke()
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Max-Age': '86400',
+  Vary: 'Origin',
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
+    // Preflight response
     return new Response(null, { status: 204, headers: JSON_HEADERS })
   }
   if (req.method !== 'POST') {
-    return resp({ error: 'Method not allowed' }, 405)
+    return new Response('Method not allowed', { status: 405, headers: JSON_HEADERS })
   }
 
   try {
@@ -42,7 +46,10 @@ Deno.serve(async (req) => {
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     })
-    const { data: { user }, error: userErr } = await authClient.auth.getUser()
+    const {
+      data: { user },
+      error: userErr,
+    } = await authClient.auth.getUser()
     if (userErr) throw userErr
     if (!user) return resp({ error: 'Not authenticated' }, 401)
 
@@ -51,6 +58,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const price_id: string | null = body?.price_id ?? null
+    // accept either "promotionCode" or "coupon" from frontend
     const promotionCode: string | null = (body?.promotionCode || body?.coupon) ?? null
 
     const origin = PUBLIC_SITE_URL || new URL(req.url).origin
@@ -82,7 +90,6 @@ Deno.serve(async (req) => {
 
     // 2) Optional promo code -> Stripe promotion_code
     let discounts: Array<{ promotion_code: string }> | undefined
-    let promoApplied = false
     if (promotionCode) {
       const promos = await stripe.promotionCodes.list({
         code: promotionCode,
@@ -90,10 +97,7 @@ Deno.serve(async (req) => {
         limit: 1,
       })
       const promo = promos.data[0]
-      if (promo?.id) {
-        discounts = [{ promotion_code: promo.id }]
-        promoApplied = true
-      }
+      if (promo?.id) discounts = [{ promotion_code: promo.id }]
     }
 
     // 3) Create Checkout Session
@@ -110,7 +114,7 @@ Deno.serve(async (req) => {
       metadata: { user_id: user.id },
     })
 
-    return resp({ url: session.url, id: session.id, promo_applied: promoApplied })
+    return resp({ url: session.url, id: session.id })
   } catch (err: any) {
     console.error('[stripe-checkout] error:', err?.message || err)
     return resp({ error: err?.message || 'Failed to create checkout session' }, 500)
