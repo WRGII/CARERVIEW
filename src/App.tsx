@@ -8,7 +8,7 @@ import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
 import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
-import WhyPage from "./pages/WhyPage";
+import WhyCarerView from "./pages/WhyCarerView";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -72,7 +72,7 @@ export default function App() {
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/why" element={<WhyPage />} />
+              <Route path="/why" element={<WhyCarerView />} />
 
               <Route path="/create-account" element={<CreateAccountPage />} />
 
