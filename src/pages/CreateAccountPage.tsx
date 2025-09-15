@@ -275,7 +275,7 @@ export default function CreateAccountPage() {
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.trim())}
-                    placeholder="Enter code (e.g., CarerViewFriend2025)"
+                    placeholder="Enter code"
                     className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
                   />
                 </div>
