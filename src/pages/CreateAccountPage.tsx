@@ -2,16 +2,16 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
-import { CreditCard, UserPlus, ArrowRight, Info } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 
-/** DB row for subscription_plans (public schema) */
+/** DB row for app.subscription_plans */
 type SubscriptionPlan = {
   id: string;
   name: string;
   interval: "week" | "month" | "year" | string;
   price_cents: number;
-  price_id: string | null; // Stripe Price ID (null for free plans)
+  stripe_price_id: string | null; // Stripe Price ID (null for free plans)
 };
 
 function formatPriceUSD(cents: number, interval: string) {
@@ -28,13 +28,14 @@ const PENDING_KEY = "cv_pending_checkout"; // { planId, promoCode }
 export default function CreateAccountPage() {
   const navigate = useNavigate();
 
-  // ---- Load plans -----------------------------------------------------------
+  // ---- Load plans from the *app* schema ------------------------------------
   const plansQ = useQuery({
     queryKey: ["plans"],
     queryFn: async (): Promise<SubscriptionPlan[]> => {
       const { data, error } = await supabase
+        .schema("app")
         .from("subscription_plans")
-        .select("id, name, interval, price_cents, price_id")
+        .select("id, name, interval, price_cents, stripe_price_id")
         .order("price_cents", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -45,7 +46,6 @@ export default function CreateAccountPage() {
   // ---- Local UI state -------------------------------------------------------
   const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
   const [promoCode, setPromoCode] = React.useState<string>("");
-  const [promoToast, setPromoToast] = React.useState<string | null>(null);
 
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -67,38 +67,14 @@ export default function CreateAccountPage() {
     }
   }, [plansQ.data, selectedPlanId]);
 
-  // Helper: call Stripe checkout Edge Function and optionally show promo toast
-  async function invokeCheckout(priceId: string, promo: string | undefined) {
-    const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-      body: {
-        price_id: priceId,
-        promotionCode: promo || null,
-        success_url: `${window.location.origin}/caregiver`,
-        cancel_url: `${window.location.origin}/create-account?canceled=1`,
-      },
-    });
-    if (error) throw error;
-    const url = (data as any)?.url as string | undefined;
-    const applied = Boolean((data as any)?.promo_applied);
-
-    if (promo && !applied) {
-      setPromoToast("We didn’t recognize that code. Checkout will continue without it.");
-      // brief pause so the user actually sees the toast before redirect
-      await new Promise((r) => setTimeout(r, 800));
-    }
-
-    if (!url) throw new Error("Stripe checkout URL missing");
-    window.location.assign(url);
-  }
-
   // If the user returns signed-in and we have a pending checkout, resume it.
   React.useEffect(() => {
     (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
       if (!pendingRaw) return;
 
-      const { data: u } = await supabase.auth.getUser();
-      const user = u.user;
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
       if (!user) return;
 
       try {
@@ -107,26 +83,35 @@ export default function CreateAccountPage() {
           promoCode?: string | null;
         };
 
-        // Make sure plans are loaded to find the price_id
         if (!plansQ.data) return;
-
         const plan = plansQ.data.find((p) => p.id === pending.planId);
         if (!plan) return;
 
-        // Free plan: no checkout needed → just go to caregiver
+        // Free plan → no checkout
         if ((plan.price_cents ?? 0) <= 0) {
           localStorage.removeItem(PENDING_KEY);
           navigate("/caregiver", { replace: true });
           return;
         }
-
-        if (!plan.price_id) {
-          console.warn("Paid plan missing price_id. Cannot start checkout.");
+        if (!plan.stripe_price_id) {
+          console.warn("Paid plan missing stripe_price_id. Cannot start checkout.");
           return;
         }
 
-        await invokeCheckout(plan.price_id, pending.promoCode || undefined);
+        // Start Supabase Edge Function checkout
+        const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+          body: {
+            price_id: plan.stripe_price_id,
+            promotionCode: pending.promoCode || null,
+            success_url: `${window.location.origin}/caregiver`,
+            cancel_url: `${window.location.origin}/create-account?canceled=1`,
+          },
+        });
+        if (error) throw error;
+        const url = (data as any)?.url;
+        if (!url) throw new Error("No checkout URL returned");
         localStorage.removeItem(PENDING_KEY);
+        window.location.assign(url);
       } catch (e) {
         console.warn("Failed to resume pending checkout:", e);
       }
@@ -173,24 +158,32 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
-        // 3) Route: free plan -> caregiver; paid plan -> start checkout with promo
+        // Free plan → caregiver; paid → Start Stripe Checkout
         if (selectedPlan.price_cents <= 0) {
           navigate("/caregiver", { replace: true });
           return;
         }
-
-        if (!selectedPlan.price_id) {
-          throw new Error(
-            "Selected paid plan is missing a Stripe price. Please contact support."
-          );
+        if (!selectedPlan.stripe_price_id) {
+          throw new Error("Selected paid plan is missing a Stripe price. Please contact support.");
         }
 
-        await invokeCheckout(selectedPlan.price_id, (promoCode || '').trim() || undefined);
-        return; // redirected to Stripe
+        const { data: ck, error: fnErr } = await supabase.functions.invoke("stripe-checkout", {
+          body: {
+            price_id: selectedPlan.stripe_price_id,
+            promotionCode: promoCode || null,
+            success_url: `${window.location.origin}/caregiver`,
+            cancel_url: `${window.location.origin}/create-account?canceled=1`,
+          },
+        });
+        if (fnErr) throw fnErr;
+
+        const url = (ck as any)?.url;
+        if (!url) throw new Error("Failed to start checkout");
+        window.location.assign(url);
+        return;
       }
 
-      // 4) No session → email confirmation is required in your project.
-      // Save pending checkout to resume after they return signed-in.
+      // 3) No session → email confirmation required. Save pending checkout.
       localStorage.setItem(
         PENDING_KEY,
         JSON.stringify({ planId: selectedPlan.id, promoCode })
@@ -212,39 +205,21 @@ export default function CreateAccountPage() {
   // ---- UI -------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
-      {/* Safety toast */}
-      {promoToast && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <div className="flex items-center gap-2 rounded-xl bg-slate-900/90 text-white px-4 py-3 shadow-xl">
-            <Info className="w-4 h-4" />
-            <span className="text-sm">{promoToast}</span>
-            <button
-              className="ml-2 text-xs underline"
-              onClick={() => setPromoToast(null)}
-            >
-              dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <header className="mb-3">
+        <header className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">
             Create your CarerView account
           </h1>
           <p className="mt-3 text-slate-gray/75">
             Choose a plan, then create your caregiver account. You can cancel any time.
           </p>
+          <p className="mt-2 text-slate-gray/70">
+            Already have an account?{" "}
+            <Link to="/#get-started" className="text-cyan-primary underline">
+              Sign in
+            </Link>
+          </p>
         </header>
-
-        {/* Sign-in link */}
-        <div className="mb-8 text-sm text-slate-gray/80">
-          Already have an account?{" "}
-          <Link to="/#get-started" className="text-cyan-primary hover:underline">
-            Sign in
-          </Link>
-        </div>
 
         {/* Choose a plan */}
         <section className="mb-8 rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
