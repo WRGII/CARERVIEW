@@ -8,6 +8,8 @@ import { useUserPlan, hasActivePlan } from "./hooks/useUserPlan";
 import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
+import WhyPage from "./pages/WhyPage";
+
 
 // Pages
 import LandingPage from "./pages/LandingPage";
