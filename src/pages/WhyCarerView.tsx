@@ -493,7 +493,7 @@ export default function WhyCarerView() {
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-12">
               <h3 className="text-4xl font-bold text-slate-gray mb-6">
-                Observations bring data to the conversation
+                Bring data to the conversation
               </h3>
               <p className="text-xl text-slate-gray/80">
                 Start noticing together, decide together, and care together...CarerView is your shared compass.
