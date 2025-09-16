@@ -455,7 +455,7 @@ export default function WhyCarerView() {
           <div className="max-w-6xl mx-auto px-8">
             <div className="text-center mb-16">
               <h3 className="text-4xl font-bold text-slate-gray mb-6">
-                Less second-guessing...More solid discussions.
+                Less fuzzy memory...More solid discussions.
               </h3>
             </div>
 
