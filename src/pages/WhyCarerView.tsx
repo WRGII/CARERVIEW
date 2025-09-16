@@ -427,7 +427,7 @@ export default function WhyCarerView() {
                   Trends you can trust
                 </h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  See changes over days and weeks, not just how today felt. Observed trends
+                  See changes over days - weeks - months, not just how today felt. Observed trends
                   highlight when to adjust routines or supports.
                 </p>
               </CardContent>
