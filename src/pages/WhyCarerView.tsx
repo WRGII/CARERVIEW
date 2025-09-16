@@ -496,8 +496,7 @@ export default function WhyCarerView() {
                 Observations bring data to the conversation
               </h3>
               <p className="text-xl text-slate-gray/80">
-                Start noticing together, decide together, and care together...with CarerView as your shared
-                compass.
+                Start noticing together, decide together, and care together...CarerView is your shared compass.
               </p>
             </div>
 
