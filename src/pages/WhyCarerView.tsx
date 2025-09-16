@@ -394,7 +394,7 @@ export default function WhyCarerView() {
                   <Clock className="w-8 h-8 text-cyan-primary" />
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Simple daily check-ins
+                  Simple Observations
                 </h4>
                 <p className="text-slate-gray/80 leading-relaxed">
                   Spend just a few minutes noting how things went across core Activities of
