@@ -409,7 +409,7 @@ export default function WhyCarerView() {
                   <CheckCircle className="w-8 h-8 text-slate-gray" />
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Clear, 1–5 scale
+                  Easy 1–5 scale
                 </h4>
                 <p className="text-slate-gray/80 leading-relaxed">
                   Easy, gentle wording—no medical jargon—grounded in occupational therapy
