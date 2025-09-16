@@ -24,6 +24,9 @@ const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 // Caregiver sub-page
 import NewObservationPage from "./components/caregiver/NewObservationPage";
 
+// ✅ Use a reliable relative import instead of alias to avoid Vite alias issues
+import AdminDeleteUser from "./pages/AdminDeleteUser";
+
 const queryClient = new QueryClient();
 
 /** Guards */
@@ -99,6 +102,15 @@ export default function App() {
                 element={
                   <AdminGuard>
                     <ActiveCaregiversPage />
+                  </AdminGuard>
+                }
+              />
+
+              <Route
+                path="/admin/delete-user"
+                element={
+                  <AdminGuard>
+                    <AdminDeleteUser />
                   </AdminGuard>
                 }
               />
