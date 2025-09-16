@@ -277,7 +277,7 @@ export default function WhyCarerView() {
         <div className="py-20">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              What you'll track
+              What you'll Observe
             </h3>
             <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
               Simple living categories that reflect real daily life
