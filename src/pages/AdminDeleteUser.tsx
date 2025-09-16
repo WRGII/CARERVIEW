@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { callAdminDeleteUser } from "../lib/admin";
+import { callAdminDeleteUser } from "@/lib/admin";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL!,
@@ -18,9 +18,7 @@ export default function AdminDeleteUser() {
       const u = data.user;
       setMe({
         email: u?.email ?? null,
-        role:
-          (u?.app_metadata as any)?.role ??
-          (u?.user_metadata as any)?.role,
+        role: (u?.app_metadata as any)?.role ?? (u?.user_metadata as any)?.role,
       });
     });
   }, []);
