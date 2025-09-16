@@ -412,7 +412,7 @@ export default function WhyCarerView() {
                   Easy 1–5 scale
                 </h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  Easy, gentle wording—no medical jargon—grounded in occupational therapy
+                  Clear wording—no medical jargon—grounded in occupational therapy
                   best practices that families can understand.
                 </p>
               </CardContent>
