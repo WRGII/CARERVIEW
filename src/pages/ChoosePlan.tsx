@@ -74,15 +74,15 @@ export default function ChoosePlan() {
   ) => {
     if (!user?.id) throw new Error('No user')
     // replace .schema('app').from('user_subscriptions') with:
-const { error } = await supabase
-  .from('user_subscriptions')
-  .upsert({
-    user_id: user.id,
-    plan_id,
-    status: 'active',
-    current_period_start: startISO,
-    current_period_end: endISO,
-  });
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .upsert({
+          user_id: user.id,
+          plan_id,
+          status: 'active',
+          current_period_start: startISO,
+          current_period_end: endISO,
+        })
 
   async function startStripeCheckout(which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>) {
     try {

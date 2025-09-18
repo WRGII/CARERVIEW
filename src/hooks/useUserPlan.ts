@@ -58,7 +58,6 @@ export function useUserPlan() {
       if (!user?.id) return null
 
       const { data, error } = await supabase
-        .schema('app')
         .from('user_subscriptions')
         .select(
           'user_id, plan_id, status, current_period_start, current_period_end, updated_at'

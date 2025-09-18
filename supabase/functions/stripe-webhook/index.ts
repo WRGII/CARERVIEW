@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
             current_period_end: pEnd ? pEnd.toISOString() : null,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'user_id' }
+          { onConflict: 'user_id,subscription_id' }
         )
         if (upErr) throw upErr
 
