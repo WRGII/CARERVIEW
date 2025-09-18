@@ -6,8 +6,6 @@ import { useAuth } from '../hooks/useAuth'
 import { useUserPlan } from '../hooks/useUserPlan'
 import type { PlanId } from '../hooks/useUserPlan'
 import {
-  currentMonthWindowUtc,
-  currentWeekWindowUtc,
   first30dWindowUtc,
 } from '../lib/subPeriod'
 import Footer from '../components/common/Footer'
@@ -25,7 +23,7 @@ function HeaderLogo() {
     let cancelled = false
     ;(async () => {
       const { data, error } = await supabase
-        .schema('app')
+        .schema('app') // site_settings lives in app schema
         .from('site_settings')
         .select('logo_url')
         .order('updated_at', { ascending: false })
@@ -67,26 +65,28 @@ export default function ChoosePlan() {
     }
   }, [requireSub, isLoading, plan, navigate])
 
+  /** Write the local "free" subscription to the canonical public table */
   const upsertLocalSub = async (
     plan_id: PlanId,
     startISO: string,
     endISO: string
   ) => {
     if (!user?.id) throw new Error('No user')
-    // replace .schema('app').from('user_subscriptions') with:
-      const { error } = await supabase
-        .from('user_subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan_id,
-          status: 'active',
-          current_period_start: startISO,
-          current_period_end: endISO,
-        })
-      if (error) throw error
+    const { error } = await supabase
+      .from('user_subscriptions') // <- public.user_subscriptions
+      .upsert({
+        user_id: user.id,
+        plan_id,
+        status: 'active',
+        current_period_start: startISO,
+        current_period_end: endISO,
+      })
+    if (error) throw error
   }
 
-  async function startStripeCheckout(which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>) {
+  async function startStripeCheckout(
+    which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>
+  ) {
     try {
       setErr(null)
       setBusy(which as PlanId)
@@ -95,7 +95,7 @@ export default function ChoosePlan() {
       const priceId = getStripePriceId(which)
       if (!priceId) throw new Error(`Missing Stripe price id for ${which}. Set it in .env`)
 
-      // ✅ Correct Edge Function name:
+      // Call the Edge Function with headers handled by supabase-js
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
@@ -106,7 +106,8 @@ export default function ChoosePlan() {
         },
       })
 
-      if (error) throw error
+      if (error) throw new Error(error.message || 'Failed to start checkout')
+
       const url = (data as any)?.url
       if (!url) throw new Error('Stripe checkout URL missing')
 
@@ -143,7 +144,7 @@ export default function ChoosePlan() {
       <div className="p-6">
         <h1 className="text-xl font-semibold mb-2">Subscriptions disabled</h1>
         <p className="text-slate-600">
-          This environment does not require a plan.{' '}
+          This environment does not require a plan{' '}
           <button className="underline" onClick={() => navigate('/caregiver', { replace: true })}>
             Continue
           </button>
@@ -156,9 +157,7 @@ export default function ChoosePlan() {
     <div className="relative max-w-5xl mx-auto p-6">
       <HeaderLogo />
       <h1 className="text-2xl font-semibold text-slate-800 mb-2">Choose your plan</h1>
-      <p className="text-slate-600 mb-4">
-        You can switch plans any time.
-      </p>
+      <p className="text-slate-600 mb-4">You can switch plans any time.</p>
 
       <div className="flex items-center gap-3 mb-6">
         <input
@@ -177,7 +176,7 @@ export default function ChoosePlan() {
       </div>
 
       {err && (
-        <div className="mb-4 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-800">
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           {err}
         </div>
       )}
