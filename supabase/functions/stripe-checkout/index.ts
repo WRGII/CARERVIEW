@@ -4,12 +4,12 @@ import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
 /**
- * ENV (Supabase → Project Settings → Functions → Secrets)
+ * REQUIRED Function Secrets (Project Settings → Functions → Secrets)
  * - STRIPE_SECRET_KEY
  * - SUPABASE_URL
  * - SUPABASE_ANON_KEY
  * - SUPABASE_SERVICE_ROLE_KEY
- * - PUBLIC_SITE_URL (e.g., https://carerview.netlify.app)
+ * - PUBLIC_SITE_URL   e.g. "https://careview.netlify.app" or "https://careview.netlify.app,http://localhost:5173"
  */
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
@@ -20,52 +20,69 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
+const PUBLIC_SITE_URL = (Deno.env.get('PUBLIC_SITE_URL') || '').trim()
+const ALLOWED_ORIGINS = PUBLIC_SITE_URL
+  ? PUBLIC_SITE_URL.split(',').map(s => s.trim()).filter(Boolean)
+  : [] // empty => we'll use "*"
 
-const JSON_HEADERS: Record<string, string> = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  // IMPORTANT: allow the headers Supabase JS sends on invoke()
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Max-Age': '86400',
-  Vary: 'Origin',
+function corsHeaders(origin: string | null) {
+  const allowAll = ALLOWED_ORIGINS.length === 0
+  const allowed =
+    allowAll || (origin && ALLOWED_ORIGINS.includes(origin))
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowed ? (allowAll ? '*' : (origin as string)) : 'null',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin',
+  } as Record<string, string>
+}
+
+function resp(body: unknown, status = 200, origin: string | null = null) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(origin) })
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('origin')
+
   if (req.method === 'OPTIONS') {
-    // Preflight response
-    return new Response(null, { status: 204, headers: JSON_HEADERS })
+    return new Response(null, { status: 204, headers: corsHeaders(origin) })
   }
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: JSON_HEADERS })
+    return resp({ error: 'Method not allowed' }, 405, origin)
   }
 
   try {
-    // End-user auth context (bearer comes from the frontend)
+    // Caller context from the user's JWT (sent automatically by supabase-js invoke)
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     })
-    const {
-      data: { user },
-      error: userErr,
-    } = await authClient.auth.getUser()
+    const { data: { user }, error: userErr } = await authClient.auth.getUser()
     if (userErr) throw userErr
-    if (!user) return resp({ error: 'Not authenticated' }, 401)
+    if (!user) return resp({ error: 'Not authenticated' }, 401, origin)
 
-    // Privileged DB client
+    // Privileged DB client (for mapping/upserting stripe_customers)
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     const body = await req.json().catch(() => ({}))
     const price_id: string | null = body?.price_id ?? null
-    // accept either "promotionCode" or "coupon" from frontend
     const promotionCode: string | null = (body?.promotionCode || body?.coupon) ?? null
 
-    const origin = PUBLIC_SITE_URL || new URL(req.url).origin
-    const success_url: string = body?.success_url || `${origin}/caregiver`
-    const cancel_url: string = body?.cancel_url || `${origin}/create-account?canceled=1`
+    // Derive default redirects; also validate provided URLs are allowed
+    const defaultOrigin = ALLOWED_ORIGINS[0] || new URL(req.url).origin
+    const success_url: string = body?.success_url || `${defaultOrigin}/caregiver`
+    const cancel_url: string = body?.cancel_url || `${defaultOrigin}/create-account?canceled=1`
 
-    if (!price_id) return resp({ error: 'Missing price_id' }, 400)
+    if (!price_id) return resp({ error: 'Missing price_id' }, 400, origin)
+
+    // Enforce redirect origins if ALLOWED_ORIGINS provided
+    if (ALLOWED_ORIGINS.length > 0) {
+      const s = new URL(success_url)
+      const c = new URL(cancel_url)
+      const ok = s.origin === c.origin && ALLOWED_ORIGINS.includes(s.origin)
+      if (!ok) return resp({ error: 'Redirect URLs must use an allowed origin' }, 400, origin)
+    }
 
     // 1) Ensure Stripe customer mapping for this user
     const { data: existing, error: mapErr } = await db
@@ -114,13 +131,9 @@ Deno.serve(async (req) => {
       metadata: { user_id: user.id },
     })
 
-    return resp({ url: session.url, id: session.id })
+    return resp({ url: session.url, id: session.id }, 200, origin)
   } catch (err: any) {
     console.error('[stripe-checkout] error:', err?.message || err)
-    return resp({ error: err?.message || 'Failed to create checkout session' }, 500)
+    return resp({ error: err?.message || 'Failed to create checkout session' }, 500, origin)
   }
 })
-
-function resp(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
-}
