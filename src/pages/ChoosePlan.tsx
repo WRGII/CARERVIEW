@@ -1,15 +1,12 @@
 // src/pages/ChoosePlan.tsx
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { useUserPlan } from '../hooks/useUserPlan'
+import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 import type { PlanId } from '../hooks/useUserPlan'
-import {
-  first30dWindowUtc,
-} from '../lib/subPeriod'
+import { first30dWindowUtc } from '../lib/subPeriod'
 import Footer from '../components/common/Footer'
-
 import {
   PLANS,
   RETURN_URLS,
@@ -23,7 +20,7 @@ function HeaderLogo() {
     let cancelled = false
     ;(async () => {
       const { data, error } = await supabase
-        .schema('app') // site_settings lives in app schema
+        .schema('app')
         .from('site_settings')
         .select('logo_url')
         .order('updated_at', { ascending: false })
@@ -50,7 +47,9 @@ function HeaderLogo() {
 export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: plan, isLoading } = useUserPlan()
+  const { data: plan, isLoading, refetch } = useUserPlan()
+  const [searchParams] = useSearchParams()
+  const statusParam = searchParams.get('status') // e.g. "success" after Stripe
 
   const [busy, setBusy] = React.useState<PlanId | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
@@ -58,14 +57,45 @@ export default function ChoosePlan() {
 
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === 'true'
 
+  // If subscriptions are required and user already has an active plan, go in.
   React.useEffect(() => {
     if (!requireSub) return
-    if (!isLoading && plan?.status === 'active' && plan.plan_id) {
+    if (!isLoading && hasActivePlan(plan)) {
       navigate('/caregiver', { replace: true })
     }
   }, [requireSub, isLoading, plan, navigate])
 
-  /** Write the local "free" subscription to the canonical public table */
+  // After returning from Stripe (?status=success), poll until the webhook
+  // has activated the subscription, then navigate to /caregiver.
+  React.useEffect(() => {
+    if (statusParam !== 'success') return
+    let tries = 0
+    let cancelled = false
+
+    const tick = async () => {
+      if (cancelled) return
+      const { data: latest } = await refetch()
+      if (hasActivePlan(latest)) {
+        navigate('/caregiver', { replace: true })
+        return
+      }
+      tries += 1
+      if (tries < 30) {
+        setTimeout(tick, 2000) // try again in 2s (≈1 minute total)
+      } else {
+        // Give a helpful message after waiting
+        setErr('Payment succeeded. We’re still finalizing your subscription—this can take a moment. If this persists, refresh the page.')
+      }
+    }
+
+    // show a friendly “activating” banner right away
+    setErr(null)
+    tick()
+
+    return () => { cancelled = true }
+  }, [statusParam, refetch, navigate])
+
+  /** Write the "free" subscription to the canonical public table */
   const upsertLocalSub = async (
     plan_id: PlanId,
     startISO: string,
@@ -73,7 +103,7 @@ export default function ChoosePlan() {
   ) => {
     if (!user?.id) throw new Error('No user')
     const { error } = await supabase
-      .from('user_subscriptions') // <- public.user_subscriptions
+      .from('user_subscriptions') // public.user_subscriptions
       .upsert({
         user_id: user.id,
         plan_id,
@@ -95,13 +125,12 @@ export default function ChoosePlan() {
       const priceId = getStripePriceId(which)
       if (!priceId) throw new Error(`Missing Stripe price id for ${which}. Set it in .env`)
 
-      // Call the Edge Function with headers handled by supabase-js
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
           plan_id: which,
           promotionCode: coupon.trim() || null,
-          success_url: RETURN_URLS.success,
+          success_url: RETURN_URLS.success, // e.g. https://.../choose-plan?status=success
           cancel_url: RETURN_URLS.cancel,
         },
       })
@@ -174,6 +203,12 @@ export default function ChoosePlan() {
           Apply
         </button>
       </div>
+
+      {statusParam === 'success' && !hasActivePlan(plan) && !err && (
+        <div className="mb-4 rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800">
+          Payment approved. Activating your subscription…
+        </div>
+      )}
 
       {err && (
         <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
