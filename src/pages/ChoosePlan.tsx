@@ -83,6 +83,8 @@ export default function ChoosePlan() {
           current_period_start: startISO,
           current_period_end: endISO,
         })
+      if (error) throw error
+  }
 
   async function startStripeCheckout(which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>) {
     try {
@@ -238,3 +240,4 @@ export default function ChoosePlan() {
       <Footer />
     </div>
   )
+}
