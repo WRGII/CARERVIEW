@@ -9,6 +9,7 @@ import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
 import WhyCarerView from "./pages/WhyCarerView";
+import ObservationForm from "./components/caregiver/ObservationForm";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -128,6 +129,22 @@ export default function App() {
                 element={
                   <CaregiverGuard>
                     <NewObservationPage />
+                  </CaregiverGuard>
+                }
+              />
+              <Route
+                path="/caregiver/observations/new/adl"
+                element={
+                  <CaregiverGuard>
+                    <ObservationForm formType="ADL" onComplete={() => { window.location.href = '/caregiver' }} />
+                  </CaregiverGuard>
+                }
+              />
+              <Route
+                path="/caregiver/observations/new/iadl"
+                element={
+                  <CaregiverGuard>
+                    <ObservationForm formType="IADL" onComplete={() => { window.location.href = '/caregiver' }} />
                   </CaregiverGuard>
                 }
               />

@@ -27,7 +27,8 @@ export function useObservations() {
           caregiver_name,
           caregiver_email,
           created_at,
-          updated_at
+          updated_at,
+          form_type
         `
         )
         .eq('user_id', user.id)
@@ -53,6 +54,7 @@ export function useObservationById(id?: string | null) {
         .select(
           `
           id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
+          form_type,
           responses:responses (
             id, observation_id, question_id, score, notes, created_at, updated_at,
             question:questions (
@@ -84,6 +86,7 @@ type SavePayload = {
     notes?: string | null
     caregiver_name?: string | null
     caregiver_email?: string | null
+    form_type: 'ADL' | 'IADL'
   }
   answers: Record<string, number | undefined>              // question_id -> score
   categoryNotes: Record<string, string>                    // category_id -> note
@@ -113,6 +116,7 @@ export function useUpsertObservationAndResponses() {
         notes: observation.notes ?? null,
         caregiver_name: observation.caregiver_name ?? null,
         caregiver_email: observation.caregiver_email ?? null,
+        form_type: observation.form_type,
       }
 
       // Insert or update observation and return its id

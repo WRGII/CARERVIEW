@@ -11,6 +11,7 @@ import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
+  formType: 'ADL' | 'IADL'
   onComplete: () => void
 }
 
@@ -34,7 +35,7 @@ type Category = {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export default function ObservationForm({ onComplete }: ObservationFormProps) {
+export default function ObservationForm({ formType, onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const upsertObservation = useUpsertObservationAndResponses()
@@ -83,7 +84,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
     error: cqError,
     refetch: cqRefetch
   } = useQuery({
-    queryKey: ['category-questions', user?.id],
+    queryKey: ['category-questions', user?.id, formType],
     enabled: !authLoading && !!user?.id,     // ✅ login-first gate
     staleTime: 5 * 60 * 1000,
     retry: 2,
@@ -95,6 +96,7 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         .select(
           'category_id, category_name, type, category_order, question_id, question_text, question_order'
         )
+        .eq('type', formType)
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
@@ -218,7 +220,8 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
         mode_of_observation: modeOfObservation,
         notes,
         caregiver_name,
-        caregiver_email
+        caregiver_email,
+        form_type: formType,
       },
       answers,
       categoryNotes,
@@ -295,7 +298,9 @@ export default function ObservationForm({ onComplete }: ObservationFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Create New Observation</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          Create New Observation <span className="text-slate-500">({formType})</span>
+        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">

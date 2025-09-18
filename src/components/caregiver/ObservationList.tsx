@@ -46,9 +46,16 @@ export const ObservationList: React.FC<ObservationListProps> = ({
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-gray">
-                  {observation.patient_name || 'Unnamed Patient'}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-slate-gray">
+                    {observation.patient_name || 'Unnamed Patient'}
+                  </h3>
+                  {observation.form_type && (
+                    <span className="text-xs px-2 py-0.5 rounded-full border bg-white">
+                      {observation.form_type}
+                    </span>
+                  )}
+                </div>
                 <p className="text-slate-gray/80">
                   Observed on {formatDate(observation.observation_date)}
                 </p>
