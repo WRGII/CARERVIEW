@@ -9,7 +9,6 @@ import { usePrefetchStatic } from "./hooks/usePrefetchStatic";
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
 import WhyCarerView from "./pages/WhyCarerView";
-import ObservationForm from "./components/caregiver/ObservationForm";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -22,11 +21,12 @@ import CreateAccountPage from "./pages/CreateAccountPage";
 // Lazy page
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
-// Caregiver sub-page
-import NewObservationPage from "./components/caregiver/NewObservationPage";
+// Caregiver: chooser and forms
+import NewObservationPage from "./pages/caregiver/NewObservationPage"; // <-- chooser page (ADL vs IADL)
+import ObservationForm from "./components/caregiver/ObservationForm";   // <-- the actual form component
 
-// ✅ Use a reliable relative import instead of alias to avoid Vite alias issues
-import AdminDeleteUser from "./pages/AdminDeleteUser";
+// Admin
+import AdminDeleteUser from "@/pages/AdminDeleteUser";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +89,7 @@ export default function App() {
                 }
               />
 
+              {/* Admin */}
               <Route
                 path="/admin"
                 element={
@@ -97,7 +98,6 @@ export default function App() {
                   </AdminGuard>
                 }
               />
-
               <Route
                 path="/admin/caregivers"
                 element={
@@ -106,7 +106,6 @@ export default function App() {
                   </AdminGuard>
                 }
               />
-
               <Route
                 path="/admin/delete-user"
                 element={
@@ -116,6 +115,7 @@ export default function App() {
                 }
               />
 
+              {/* Caregiver dashboard */}
               <Route
                 path="/caregiver"
                 element={
@@ -124,6 +124,8 @@ export default function App() {
                   </CaregiverGuard>
                 }
               />
+
+              {/* New Observation: chooser (default) */}
               <Route
                 path="/caregiver/observations/new"
                 element={
@@ -132,22 +134,37 @@ export default function App() {
                   </CaregiverGuard>
                 }
               />
+
+              {/* New Observation: ADL form */}
               <Route
                 path="/caregiver/observations/new/adl"
                 element={
                   <CaregiverGuard>
-                    <ObservationForm formType="ADL" onComplete={() => { window.location.href = '/caregiver' }} />
+                    <ObservationForm
+                      formType="ADL"
+                      onComplete={() => {
+                        window.location.href = "/caregiver";
+                      }}
+                    />
                   </CaregiverGuard>
                 }
               />
+
+              {/* New Observation: IADL form */}
               <Route
                 path="/caregiver/observations/new/iadl"
                 element={
                   <CaregiverGuard>
-                    <ObservationForm formType="IADL" onComplete={() => { window.location.href = '/caregiver' }} />
+                    <ObservationForm
+                      formType="IADL"
+                      onComplete={() => {
+                        window.location.href = "/caregiver";
+                      }}
+                    />
                   </CaregiverGuard>
                 }
               />
+
               <Route path="/reset-password" element={<ResetPassword />} />
             </Route>
 
