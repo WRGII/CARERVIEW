@@ -1,6 +1,6 @@
-# CarerView - Daily functional assessment system easy!
+# CarerView - Functional Assessment Made Easy!
 
-For family caregivers to record and discuss daily observations using ADA and OT categories.
+For family caregivers to record and discuss observations using ADA and OT functional assessment categories.
 
 ## Features
 
