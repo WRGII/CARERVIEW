@@ -1,12 +1,11 @@
-// supabase/functions/stripe-webhook/index.ts
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
 /**
- * Secrets required (Project Settings → Functions → Secrets):
+ * ENV (Project Settings → Functions → Secrets)
  * - STRIPE_SECRET_KEY
- * - STRIPE_WEBHOOK_SECRETS      // comma-separated list of whsec_... values (new first)
+ * - STRIPE_WEBHOOK_SECRETS  (comma-separated; fallback: STRIPE_WEBHOOK_SECRET)
  * - SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
  */
@@ -15,14 +14,17 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   appInfo: { name: 'CarerView', version: '1.0.0' },
 })
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// allow multiple secrets so rotations don’t break prod
-const WH_SECRETS = (Deno.env.get('STRIPE_WEBHOOK_SECRETS') || '')
+const SECRET_LIST = (
+  Deno.env.get('STRIPE_WEBHOOK_SECRETS') ||
+  Deno.env.get('STRIPE_WEBHOOK_SECRET') ||
+  ''
+)
   .split(',')
   .map(s => s.trim())
   .filter(Boolean)
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
@@ -30,10 +32,8 @@ const JSON_HEADERS = {
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type, Stripe-Signature',
 }
-
-function resp(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
-}
+const resp = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 
 async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, customerId: string) {
   const { data, error } = await db
@@ -55,41 +55,37 @@ async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: str
   return data?.id as string | undefined
 }
 
-// Try each secret until one verifies
-function constructWithAnySecret(body: string, sig: string): Stripe.Event {
-  let lastErr: unknown
-  for (const secret of WH_SECRETS) {
-    try {
-      return stripe.webhooks.constructEvent(body, sig, secret)
-    } catch (e) {
-      lastErr = e
-    }
-  }
-  throw lastErr
-}
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
   if (req.method !== 'POST') return resp({ error: 'Method not allowed' }, 405)
 
-  if (!WH_SECRETS.length) {
-    console.error('[stripe-webhook] no webhook secrets configured')
-    return resp({ error: 'Server not configured' }, 500)
+  // IMPORTANT: read raw body first, before touching it.
+  const rawBody = await req.text()
+  const sigHeader = req.headers.get('stripe-signature') ?? ''
+
+  // 🔎 Debug: confirm Stripe is really reaching us with header + body
+  console.log('[stripe-webhook] debug', {
+    hasSigHeader: !!sigHeader,
+    bodyLen: rawBody.length,
+    secretCount: SECRET_LIST.length,
+  })
+
+  let event: Stripe.Event | null = null
+  let lastErr: unknown = null
+
+  for (let i = 0; i < SECRET_LIST.length; i++) {
+    const secret = SECRET_LIST[i]
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, sigHeader, secret)
+      console.log('[stripe-webhook] signature matched', { matchedIndex: i })
+      break
+    } catch (e) {
+      lastErr = e
+    }
   }
 
-  const rawBody = await req.text()
-  const signature = req.headers.get('stripe-signature') ?? ''
-
-  let event: Stripe.Event
-  try {
-    event = constructWithAnySecret(rawBody, signature)
-  } catch (err: any) {
-    // Don’t log secrets; just give us enough context to debug
-    console.error('[stripe-webhook] invalid signature', {
-      bodyLen: rawBody.length,
-      hasSigHeader: Boolean(signature),
-      err: err?.message || String(err),
-    })
+  if (!event) {
+    console.error('[stripe-webhook] invalid signature for all secrets', { lastErr: String(lastErr) })
     return resp({ error: 'Invalid signature' }, 400)
   }
 
@@ -102,25 +98,13 @@ Deno.serve(async (req) => {
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription
 
-        // Prefer metadata.user_id; else map via stripe_customers
         const userId =
           (sub.metadata?.user_id as string | undefined) ||
           (await lookupUserIdFromCustomer(db, sub.customer as string))
 
-        // Maintain customer mapping if we have both
-        if (sub.customer && userId) {
-          const { error: mapErr } = await db
-            .from('stripe_customers')
-            .upsert(
-              { user_id: userId, customer_id: String(sub.customer) },
-              { onConflict: 'user_id' }
-            )
-          if (mapErr) console.warn('[stripe-webhook] map upsert warn:', mapErr.message)
-        }
-
         if (!userId) {
-          console.warn('[stripe-webhook] no user_id for subscription', sub.id)
-          return resp({ received: true })
+          console.warn('[stripe-webhook] no user_id for subscription', sub.id, sub.customer)
+          return resp({ ok: true })
         }
 
         const item = sub.items?.data?.[0]
@@ -143,7 +127,7 @@ Deno.serve(async (req) => {
             subscription_id: sub.id,
             price_id: priceId ?? undefined,
             plan_id: mappedPlanId ?? undefined,
-            status: sub.status, // 'active' / 'trialing' / 'canceled' / 'past_due' / etc.
+            status: sub.status,
             current_period_start: pStart ? pStart.toISOString() : null,
             current_period_end: pEnd ? pEnd.toISOString() : null,
             updated_at: new Date().toISOString(),
@@ -152,37 +136,18 @@ Deno.serve(async (req) => {
         )
         if (upErr) throw upErr
 
-        console.log('[stripe-webhook] upserted', {
-          type: event.type,
-          userId,
-          subId: sub.id,
-          status: sub.status,
-        })
         return resp({ received: true })
       }
 
       case 'checkout.session.completed': {
-        // Optional: ensure stripe_customers mapping exists
-        const cs = event.data.object as Stripe.Checkout.Session
-        const userId = (cs.metadata?.user_id as string | undefined) || undefined
-        if (cs.customer && userId) {
-          const { error } = await db
-            .from('stripe_customers')
-            .upsert(
-              { user_id: userId, customer_id: String(cs.customer) },
-              { onConflict: 'user_id' }
-            )
-          if (error) console.warn('[stripe-webhook] mapping after checkout warn:', error.message)
-        }
         return resp({ received: true })
       }
 
-      // Reduce noise
       default:
         return resp({ received: true })
     }
   } catch (err: any) {
-    console.error('[stripe-webhook] handler error:', err?.message || String(err))
+    console.error('[stripe-webhook] error:', err?.message || err)
     return resp({ error: 'Webhook handling failed' }, 500)
   }
 })
