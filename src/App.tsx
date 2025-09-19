@@ -22,9 +22,8 @@ import CreateAccountPage from "./pages/CreateAccountPage";
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 // Caregiver: chooser and forms
-import NewObservationType from "./pages/caregiver/NewObservationType";
-// chooser page (ADL vs IADL)
-import ObservationForm from "./components/caregiver/ObservationForm";   // <-- the actual form component
+import NewObservationType from "./pages/caregiver/NewObservationType"; // chooser page (ADL vs IADL)
+import ObservationForm from "./components/caregiver/ObservationForm"; // the actual form component
 
 // Admin
 import AdminDeleteUser from "@/pages/AdminDeleteUser";
@@ -131,7 +130,7 @@ export default function App() {
                 path="/caregiver/observations/new"
                 element={
                   <CaregiverGuard>
-                    <NewObservationPage />
+                    <NewObservationType />
                   </CaregiverGuard>
                 }
               />
