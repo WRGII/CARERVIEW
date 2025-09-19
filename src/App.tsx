@@ -22,7 +22,8 @@ import CreateAccountPage from "./pages/CreateAccountPage";
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 // Caregiver: chooser and forms
-import NewObservationPage from "./pages/caregiver/NewObservationPage"; // <-- chooser page (ADL vs IADL)
+import NewObservationType from "./pages/caregiver/NewObservationType";
+chooser page (ADL vs IADL)
 import ObservationForm from "./components/caregiver/ObservationForm";   // <-- the actual form component
 
 // Admin
