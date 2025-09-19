@@ -59,7 +59,7 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   // IMPORTANT: match on stripe_price_id (not price_id)
   const { data, error } = await db
-    .from('subscription_plans') // public.subscription_plans (table)
+    .from('subscription_plans') // public.subscription_plans
     .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
         if (customerId && userId) {
           const { error } = await db.from('stripe_customers').upsert(
             { user_id: userId, customer_id: customerId, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' },
+            { onConflict: 'user_id' }, // one row per user
           )
           if (error) console.warn('[stripe-webhook] upsert stripe_customers failed', error)
         }
@@ -141,27 +141,34 @@ Deno.serve(async (req) => {
         const pStart  = sub.current_period_start ? new Date(sub.current_period_start * 1000) : null
         const pEnd    = sub.current_period_end   ? new Date(sub.current_period_end   * 1000) : null
 
+        // NEW: fallback to plan_id from subscription metadata (set at checkout)
+        const metaPlanId = (sub.metadata?.plan_id as string | undefined) || undefined
+
         let mappedPlanId: string | undefined
         if (priceId) {
           try { mappedPlanId = await planIdFromPrice(db, priceId) }
           catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
         }
+        const finalPlanId = mappedPlanId ?? metaPlanId
 
         const { error: upErr } = await db.from('user_subscriptions').upsert(
           {
             user_id: userId,
             subscription_id: sub.id,
-            price_id: priceId ?? undefined,              // Stripe price id
-            plan_id: mappedPlanId ?? undefined,          // Our plan key (primary_weekly, occasional_weekly)
-            status: sub.status,                          // 'active' | 'trialing' | ...
+            price_id: priceId ?? undefined,          // Stripe price id
+            plan_id: finalPlanId ?? undefined,       // Our plan key (primary_weekly, occasional_weekly)
+            status: sub.status,                      // 'active' | 'trialing' | 'canceled' | ...
             current_period_start: pStart ? pStart.toISOString() : null,
             current_period_end:   pEnd   ? pEnd.toISOString()   : null,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'user_id,subscription_id' },
+          { onConflict: 'user_id' },                 // one canonical gating row per user
         )
         if (upErr) throw upErr
 
+        console.info('[stripe-webhook] upserted user_subscriptions', {
+          userId, sub: sub.id, plan: finalPlanId, priceId, status: sub.status,
+        })
         return resp({ received: true })
       }
 
