@@ -4,7 +4,7 @@ import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
 /**
- * Secrets to set in Supabase → Project Settings → Functions → Secrets:
+ * Secrets in Supabase → Project Settings → Functions → Secrets:
  * - STRIPE_SECRET_KEY
  * - STRIPE_WEBHOOK_SECRET          (single secret)          [optional]
  * - STRIPE_WEBHOOK_SECRETS         (JSON array or CSV)      [preferred]
@@ -58,7 +58,7 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
 
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
-    .from('subscription_plans') // public.subscription_plans
+    .from('subscription_plans')
     .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     return resp({ error: 'Webhook secret not configured' }, 500)
   }
 
-  // Verify using async API for Edge runtimes
+  // Verify (Edge needs the async variant)
   let event: Stripe.Event | undefined
   let lastErr: unknown
   for (let i = 0; i < WEBHOOK_SECRETS.length; i++) {
@@ -138,18 +138,28 @@ Deno.serve(async (req) => {
           return resp({ ok: true })
         }
 
-        // Prefer period start/end taken from the first subscription item (newer Stripe API placement)
-        const item = sub.items?.data?.[0] as any | undefined
-        const priceId: string | null = item?.price?.id ?? null
+        // Fetch the full, expanded subscription so we reliably get period dates
+        // (some webhook payloads omit item-level period fields).
+        let full: Stripe.Subscription | null = null
+        if (event.type !== 'customer.subscription.deleted') {
+          try {
+            full = await stripe.subscriptions.retrieve(sub.id, { expand: ['items.data'] })
+          } catch (e) {
+            console.warn('[stripe-webhook] retrieve subscription failed; continuing with webhook object', e)
+          }
+        }
 
+        const src: any = full ?? (sub as any)
+        const item: any = src?.items?.data?.[0]
+
+        const priceId: string | null = item?.price?.id ?? null
         const pStartIso =
           secToIso(item?.current_period_start) ??
-          secToIso((sub as any).current_period_start) ?? // fallback for older API shape
+          secToIso(src?.current_period_start) ??
           null
-
         const pEndIso =
           secToIso(item?.current_period_end) ??
-          secToIso((sub as any).current_period_end) ?? // fallback for older API shape
+          secToIso(src?.current_period_end) ??
           null
 
         let mappedPlanId: string | undefined
@@ -162,9 +172,9 @@ Deno.serve(async (req) => {
           {
             user_id: userId,
             subscription_id: sub.id,
-            price_id: priceId ?? undefined,              // Stripe price id
-            plan_id: mappedPlanId ?? undefined,          // Our plan key
-            status: sub.status,                          // 'active' | 'trialing' | ...
+            price_id: priceId ?? undefined,
+            plan_id: mappedPlanId ?? undefined,
+            status: sub.status,
             current_period_start: pStartIso,
             current_period_end:   pEndIso,
             updated_at: new Date().toISOString(),
