@@ -24,6 +24,7 @@ export default function CreateAccountPage() {
 
   // If the user returns signed-in and we have a pending checkout, resume it.
   React.useEffect(() => {
+    (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
       if (!pendingRaw) return;
 
@@ -62,6 +63,7 @@ export default function CreateAccountPage() {
       } catch (e) {
         console.warn("Failed to resume pending checkout:", e);
       }
+    })();
   }, []); // run once on mount
 
   // ---- Handlers -------------------------------------------------------------
