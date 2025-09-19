@@ -48,7 +48,7 @@ const resp = (body: unknown, status = 200) =>
 // --- helpers ---
 async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, customerId: string) {
   const { data, error } = await db
-    .from('stripe_customers') // public.stripe_customers
+    .from('stripe_customers')
     .select('user_id')
     .eq('customer_id', customerId)
     .maybeSingle()
@@ -57,7 +57,6 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
 }
 
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
-  // IMPORTANT: match on stripe_price_id (not price_id)
   const { data, error } = await db
     .from('subscription_plans') // public.subscription_plans
     .select('id')
@@ -66,6 +65,9 @@ async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: str
   if (error) throw error
   return data?.id as string | undefined
 }
+
+const secToIso = (sec?: number | null) =>
+  typeof sec === 'number' && isFinite(sec) ? new Date(sec * 1000).toISOString() : null
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
@@ -115,7 +117,7 @@ Deno.serve(async (req) => {
         if (customerId && userId) {
           const { error } = await db.from('stripe_customers').upsert(
             { user_id: userId, customer_id: customerId, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' }, // one row per user
+            { onConflict: 'user_id' },
           )
           if (error) console.warn('[stripe-webhook] upsert stripe_customers failed', error)
         }
@@ -136,39 +138,46 @@ Deno.serve(async (req) => {
           return resp({ ok: true })
         }
 
-        const item    = sub.items?.data?.[0]
-        const priceId = item?.price?.id ?? null
-        const pStart  = sub.current_period_start ? new Date(sub.current_period_start * 1000) : null
-        const pEnd    = sub.current_period_end   ? new Date(sub.current_period_end   * 1000) : null
+        // Prefer period start/end taken from the first subscription item (newer Stripe API placement)
+        const item = sub.items?.data?.[0] as any | undefined
+        const priceId: string | null = item?.price?.id ?? null
 
-        // NEW: fallback to plan_id from subscription metadata (set at checkout)
-        const metaPlanId = (sub.metadata?.plan_id as string | undefined) || undefined
+        const pStartIso =
+          secToIso(item?.current_period_start) ??
+          secToIso((sub as any).current_period_start) ?? // fallback for older API shape
+          null
+
+        const pEndIso =
+          secToIso(item?.current_period_end) ??
+          secToIso((sub as any).current_period_end) ?? // fallback for older API shape
+          null
 
         let mappedPlanId: string | undefined
         if (priceId) {
           try { mappedPlanId = await planIdFromPrice(db, priceId) }
           catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
         }
-        const finalPlanId = mappedPlanId ?? metaPlanId
 
         const { error: upErr } = await db.from('user_subscriptions').upsert(
           {
             user_id: userId,
             subscription_id: sub.id,
-            price_id: priceId ?? undefined,          // Stripe price id
-            plan_id: finalPlanId ?? undefined,       // Our plan key (primary_weekly, occasional_weekly)
-            status: sub.status,                      // 'active' | 'trialing' | 'canceled' | ...
-            current_period_start: pStart ? pStart.toISOString() : null,
-            current_period_end:   pEnd   ? pEnd.toISOString()   : null,
+            price_id: priceId ?? undefined,              // Stripe price id
+            plan_id: mappedPlanId ?? undefined,          // Our plan key
+            status: sub.status,                          // 'active' | 'trialing' | ...
+            current_period_start: pStartIso,
+            current_period_end:   pEndIso,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'user_id' },                 // one canonical gating row per user
+          { onConflict: 'user_id,subscription_id' },
         )
         if (upErr) throw upErr
 
         console.info('[stripe-webhook] upserted user_subscriptions', {
-          userId, sub: sub.id, plan: finalPlanId, priceId, status: sub.status,
+          userId, subscription: sub.id, plan: mappedPlanId, priceId, status: sub.status,
+          pStartIso, pEndIso
         })
+
         return resp({ received: true })
       }
 
