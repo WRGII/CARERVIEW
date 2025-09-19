@@ -84,7 +84,7 @@ export default function ChoosePlan() {
         setTimeout(tick, 2000) // try again in 2s (≈1 minute total)
       } else {
         // Give a helpful message after waiting
-        setErr('Payment succeeded. We're still finalizing your subscription—this can take a moment. If this persists, refresh the page.')
+        setErr('Payment succeeded. We\'re still finalizing your subscription—this can take a moment. If this persists, refresh the page.')
       }
     }
 
