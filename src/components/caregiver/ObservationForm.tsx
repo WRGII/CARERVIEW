@@ -84,8 +84,8 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     error: cqError,
     refetch: cqRefetch
   } = useQuery({
-    queryKey: ['category-questions', user?.id, formType],
-    enabled: !authLoading && !!user?.id,     // ✅ login-first gate
+    queryKey: ['category-questions', user?.id, formType], // include filter in key
+    enabled: !authLoading && !!user?.id,
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchOnWindowFocus: false,
@@ -96,7 +96,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         .select(
           'category_id, category_name, type, category_order, question_id, question_text, question_order'
         )
-        .eq('type', formType)
+        .eq('type', formType) // ← filter ADL vs IADL
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
       if (error) throw new Error(error.message)
@@ -148,7 +148,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     })
 
     const result = Array.from(map.values())
-    // ✅ deterministic ADL-first, then category order
+    // deterministic ADL-first, then category order
     const orderOfType = (t: string) => (t === 'ADL' ? 0 : 1)
     result.sort((a, b) => (orderOfType(a.type ?? 'ADL') - orderOfType(b.type ?? 'ADL')) || (a.order - b.order))
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
@@ -221,7 +221,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         notes,
         caregiver_name,
         caregiver_email,
-        form_type: formType,
+        form_type: formType, // ← persist the chosen form type
       },
       answers,
       categoryNotes,
@@ -424,7 +424,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
                         onChange={(val) =>
                           setAnswers((prev) => ({ ...prev, [question.id]: val }))
                         }
-                        descriptions={legendMap}  // ✅ dynamic DB-driven
+                        descriptions={legendMap}
                         ariaLabel={`Set score for: ${question.text}`}
                       />
                     </div>
