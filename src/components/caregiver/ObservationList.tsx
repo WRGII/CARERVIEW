@@ -1,6 +1,7 @@
+// src/components/caregiver/ObservationList.tsx
 import React from 'react'
 import { useObservations } from '../../hooks/useObservations'
-import { Card, CardContent, CardHeader } from '../ui/Card'
+import { Card, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Loading } from '../ui/Loading'
 import { formatDate } from '../../lib/utils'
@@ -9,6 +10,30 @@ import { Eye, FileText, Download } from 'lucide-react'
 interface ObservationListProps {
   onViewObservation: (id: string) => void
   onExportObservation: (id: string, format: 'docx' | 'csv') => void
+}
+
+type ObservationRow = {
+  id: string
+  patient_name: string | null
+  observation_date: string
+  notes: string | null
+  caregiver_name: string | null
+  caregiver_email: string | null
+  created_at: string
+  updated_at: string
+  form_type?: 'ADL' | 'IADL' | null
+}
+
+const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | null }> = ({ type }) => {
+  if (!type) return null
+  // Subtle styling that works in light UI
+  const base =
+    'text-xs px-2 py-0.5 rounded-full border bg-white inline-flex items-center leading-none'
+  const tone =
+    type === 'ADL'
+      ? 'border-cyan-600 text-cyan-700'
+      : 'border-emerald-600 text-emerald-700'
+  return <span className={`${base} ${tone}`}>{type}</span>
 }
 
 export const ObservationList: React.FC<ObservationListProps> = ({
@@ -41,26 +66,22 @@ export const ObservationList: React.FC<ObservationListProps> = ({
 
   return (
     <div className="space-y-4">
-      {observations.map(observation => (
+      {(observations as ObservationRow[]).map((observation) => (
         <Card key={observation.id} className="bg-warm-white">
           <CardContent>
             <div className="flex items-center justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-slate-gray">
+                  <h3 className="text-lg font-semibold text-slate-gray truncate">
                     {observation.patient_name || 'Unnamed Patient'}
                   </h3>
-                  {observation.form_type && (
-                    <span className="text-xs px-2 py-0.5 rounded-full border bg-white">
-                      {observation.form_type}
-                    </span>
-                  )}
+                  <FormTypeChip type={observation.form_type ?? null} />
                 </div>
                 <p className="text-slate-gray/80">
                   Observed on {formatDate(observation.observation_date)}
                 </p>
                 {observation.notes && (
-                  <p className="text-sm text-slate-gray/60 mt-1">{observation.notes}</p>
+                  <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{observation.notes}</p>
                 )}
               </div>
               <div className="flex items-center space-x-2">
