@@ -1,3 +1,4 @@
+// src/hooks/useObservations.ts
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './useAuth'
@@ -53,8 +54,7 @@ export function useObservationById(id?: string | null) {
         .from('observations')
         .select(
           `
-          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
-          form_type,
+          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type,
           responses:responses (
             id, observation_id, question_id, score, notes, created_at, updated_at,
             question:questions (
@@ -86,11 +86,11 @@ type SavePayload = {
     notes?: string | null
     caregiver_name?: string | null
     caregiver_email?: string | null
-    form_type: 'ADL' | 'IADL'
+    form_type: 'ADL' | 'IADL'                 // ← NEW
   }
-  answers: Record<string, number | undefined>              // question_id -> score
-  categoryNotes: Record<string, string>                    // category_id -> note
-  questionCategoryMap: Record<string, string>              // question_id -> category_id
+  answers: Record<string, number | undefined> // question_id -> score
+  categoryNotes: Record<string, string>       // category_id -> note
+  questionCategoryMap: Record<string, string> // question_id -> category_id
 }
 
 export function useUpsertObservationAndResponses() {
@@ -116,7 +116,7 @@ export function useUpsertObservationAndResponses() {
         notes: observation.notes ?? null,
         caregiver_name: observation.caregiver_name ?? null,
         caregiver_email: observation.caregiver_email ?? null,
-        form_type: observation.form_type,
+        form_type: observation.form_type, // ← persist ADL/IADL tag
       }
 
       // Insert or update observation and return its id
