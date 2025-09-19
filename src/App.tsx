@@ -17,6 +17,7 @@ import CaregiverPage from "./pages/CaregiverPage";
 import ResetPassword from "./pages/ResetPassword";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 
 // Lazy page
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
@@ -88,6 +89,8 @@ export default function App() {
                   </Suspense>
                 }
               />
+
+              <Route path="/checkout-success" element={<CheckoutSuccess />} />
 
               {/* Admin */}
               <Route

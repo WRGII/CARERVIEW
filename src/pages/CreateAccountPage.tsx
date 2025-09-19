@@ -1,50 +1,17 @@
 // src/pages/CreateAccountPage.tsx
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../lib/supabaseClient";
 import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { PLANS, RETURN_URLS, type PlanKey } from "../config/stripe";
 
-/** DB row for app.subscription_plans */
-type SubscriptionPlan = {
-  id: string;
-  name: string;
-  interval: "week" | "month" | "year" | string;
-  price_cents: number;
-  stripe_price_id: string | null; // Stripe Price ID (null for free plans)
-};
-
-function formatPriceUSD(cents: number, interval: string) {
-  const dollars = (cents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  });
-  return `${dollars} / ${interval}`;
-}
-
-const PENDING_KEY = "cv_pending_checkout"; // { planId, promoCode }
+const PENDING_KEY = "cv_pending_checkout"; // { planKey, promoCode }
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
 
-  // ---- Load plans from the *app* schema ------------------------------------
-  const plansQ = useQuery({
-    queryKey: ["plans"],
-    queryFn: async (): Promise<SubscriptionPlan[]> => {
-      const { data, error } = await supabase
-        .schema("app")
-        .from("subscription_plans")
-        .select("id, name, interval, price_cents, stripe_price_id")
-        .order("price_cents", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 60_000,
-  });
-
   // ---- Local UI state -------------------------------------------------------
-  const [selectedPlanId, setSelectedPlanId] = React.useState<string | null>(null);
+  const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>('occasional_weekly');
   const [promoCode, setPromoCode] = React.useState<string>("");
 
   const [name, setName] = React.useState("");
@@ -55,21 +22,8 @@ export default function CreateAccountPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [info, setInfo] = React.useState<string | null>(null);
 
-  const selectedPlan = React.useMemo(
-    () => plansQ.data?.find((p) => p.id === selectedPlanId) || null,
-    [plansQ.data, selectedPlanId]
-  );
-
-  // Pick the cheapest as default when loaded
-  React.useEffect(() => {
-    if (!selectedPlanId && plansQ.data && plansQ.data.length > 0) {
-      setSelectedPlanId(plansQ.data[0].id);
-    }
-  }, [plansQ.data, selectedPlanId]);
-
   // If the user returns signed-in and we have a pending checkout, resume it.
   React.useEffect(() => {
-    (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
       if (!pendingRaw) return;
 
@@ -79,31 +33,24 @@ export default function CreateAccountPage() {
 
       try {
         const pending = JSON.parse(pendingRaw) as {
-          planId: string;
+          planKey: PlanKey;
           promoCode?: string | null;
         };
 
-        if (!plansQ.data) return;
-        const plan = plansQ.data.find((p) => p.id === pending.planId);
+        const plan = PLANS[pending.planKey];
         if (!plan) return;
 
-        // Free plan → no checkout
-        if ((plan.price_cents ?? 0) <= 0) {
-          localStorage.removeItem(PENDING_KEY);
-          navigate("/caregiver", { replace: true });
-          return;
-        }
-        if (!plan.stripe_price_id) {
-          console.warn("Paid plan missing stripe_price_id. Cannot start checkout.");
+        if (!plan.priceId) {
+          console.warn("Plan missing priceId. Cannot start checkout.");
           return;
         }
 
         // Start Supabase Edge Function checkout
         const { data, error } = await supabase.functions.invoke("stripe-checkout", {
           body: {
-            price_id: plan.stripe_price_id,
+            price_id: plan.priceId,
             promotionCode: pending.promoCode || null,
-            success_url: `${window.location.origin}/caregiver`,
+            success_url: RETURN_URLS.success,
             cancel_url: `${window.location.origin}/create-account?canceled=1`,
           },
         });
@@ -115,9 +62,7 @@ export default function CreateAccountPage() {
       } catch (e) {
         console.warn("Failed to resume pending checkout:", e);
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plansQ.data]); // run when plans load
+  }, []); // run once on mount
 
   // ---- Handlers -------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,10 +70,6 @@ export default function CreateAccountPage() {
     setError(null);
     setInfo(null);
 
-    if (!selectedPlan) {
-      setError("Please select a plan.");
-      return;
-    }
     if (!email || !password) {
       setError("Please enter your email and a password.");
       return;
@@ -136,6 +77,8 @@ export default function CreateAccountPage() {
 
     setBusy(true);
     try {
+      const selectedPlan = PLANS[selectedPlanKey];
+
       // 1) Create Auth user
       const { data, error: signErr } = await supabase.auth.signUp({
         email,
@@ -158,20 +101,15 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
-        // Free plan → caregiver; paid → Start Stripe Checkout
-        if (selectedPlan.price_cents <= 0) {
-          navigate("/caregiver", { replace: true });
-          return;
-        }
-        if (!selectedPlan.stripe_price_id) {
-          throw new Error("Selected paid plan is missing a Stripe price. Please contact support.");
+        if (!selectedPlan.priceId) {
+          throw new Error("Selected plan is missing a Stripe price. Please contact support.");
         }
 
         const { data: ck, error: fnErr } = await supabase.functions.invoke("stripe-checkout", {
           body: {
-            price_id: selectedPlan.stripe_price_id,
+            price_id: selectedPlan.priceId,
             promotionCode: promoCode || null,
-            success_url: `${window.location.origin}/caregiver`,
+            success_url: RETURN_URLS.success,
             cancel_url: `${window.location.origin}/create-account?canceled=1`,
           },
         });
@@ -186,7 +124,7 @@ export default function CreateAccountPage() {
       // 3) No session → email confirmation required. Save pending checkout.
       localStorage.setItem(
         PENDING_KEY,
-        JSON.stringify({ planId: selectedPlan.id, promoCode })
+        JSON.stringify({ planKey: selectedPlanKey, promoCode })
       );
       setInfo(
         "Check your inbox to confirm your email. After you sign in, we’ll finish setting up your subscription and caregiver account."
@@ -231,22 +169,14 @@ export default function CreateAccountPage() {
           </div>
 
           <div className="p-6">
-            {plansQ.isLoading ? (
-              <div className="text-slate-gray/70">Loading plans…</div>
-            ) : plansQ.error ? (
-              <div className="rounded-lg bg-peach-blush/20 border border-peach-blush p-4 text-slate-gray">
-                Could not load plans. Please try again shortly.
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {plansQ.data!.map((p) => {
-                    const selected = selectedPlanId === p.id;
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {Object.entries(PLANS).map(([key, plan]) => {
+                    const selected = selectedPlanKey === key;
                     return (
                       <button
-                        key={p.id}
+                        key={key}
                         type="button"
-                        onClick={() => setSelectedPlanId(p.id)}
+                        onClick={() => setSelectedPlanKey(key as PlanKey)}
                         className={[
                           "text-left rounded-xl border px-4 py-4 transition-all",
                           selected
@@ -255,11 +185,12 @@ export default function CreateAccountPage() {
                         ].join(" ")}
                         aria-pressed={selected}
                       >
-                        <div className="font-semibold text-slate-gray">{p.name}</div>
+                        <div className="font-semibold text-slate-gray">{plan.label}</div>
                         <div className="text-slate-gray/70 mt-1">
-                          {p.price_cents <= 0
-                            ? `US$0 / ${p.interval}`
-                            : formatPriceUSD(p.price_cents, p.interval)}
+                          ${(plan.price / 100).toFixed(2)} / week
+                        </div>
+                        <div className="text-xs text-slate-gray/60 mt-2">
+                          {plan.blurb}
                         </div>
                       </button>
                     );
@@ -267,7 +198,7 @@ export default function CreateAccountPage() {
                 </div>
 
                 {/* Promo code */}
-                <div className="mt-5">
+                <div className="mt-6">
                   <label className="block text-sm font-medium text-slate-gray mb-1">
                     Have a promo code? <span className="text-slate-gray/50">(optional)</span>
                   </label>
@@ -279,8 +210,6 @@ export default function CreateAccountPage() {
                     className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
                   />
                 </div>
-              </>
-            )}
           </div>
         </section>
 
@@ -297,7 +226,7 @@ export default function CreateAccountPage() {
             <div className="text-sm text-slate-gray/60">
               Selected plan:{" "}
               <span className="font-medium text-slate-gray">
-                {selectedPlan?.name ?? "—"}
+                {PLANS[selectedPlanKey]?.label ?? "—"}
               </span>
               {promoCode && (
                 <span className="ml-3 inline-flex items-center rounded-full border border-slate-gray/20 px-2 py-0.5 text-xs text-slate-gray">
@@ -362,7 +291,7 @@ export default function CreateAccountPage() {
 
             <button
               type="submit"
-              disabled={busy || plansQ.isLoading || !selectedPlan}
+              disabled={busy}
               aria-busy={busy}
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-6 py-3 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all"
             >

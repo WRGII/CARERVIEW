@@ -4,13 +4,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
-import type { PlanId } from '../hooks/useUserPlan'
-import { first30dWindowUtc } from '../lib/subPeriod'
 import Footer from '../components/common/Footer'
 import {
   PLANS,
   RETURN_URLS,
   getStripePriceId,
+  formatPrice,
   type PlanKey,
 } from '../config/stripe'
 
@@ -35,10 +34,10 @@ function HeaderLogo() {
   if (!logoUrl) return null
   return (
     <a href="/" className="absolute right-6 top-6 inline-flex">
-      {/* eslint-disable-next-line jsx-a11y/alt-text */}
       <img
         src={logoUrl}
         className="h-7 w-7 rounded-lg border border-slate-200/70 shadow-sm"
+        alt="CarerView Logo"
       />
     </a>
   )
@@ -50,8 +49,9 @@ export default function ChoosePlan() {
   const { data: plan, isLoading, refetch } = useUserPlan()
   const [searchParams] = useSearchParams()
   const statusParam = searchParams.get('status') // e.g. "success" after Stripe
+  const canceledParam = searchParams.get('canceled')
 
-  const [busy, setBusy] = React.useState<PlanId | null>(null)
+  const [busy, setBusy] = React.useState<PlanKey | null>(null)
   const [err, setErr] = React.useState<string | null>(null)
   const [coupon, setCoupon] = React.useState('')
 
@@ -84,53 +84,31 @@ export default function ChoosePlan() {
         setTimeout(tick, 2000) // try again in 2s (≈1 minute total)
       } else {
         // Give a helpful message after waiting
-        setErr('Payment succeeded. We’re still finalizing your subscription—this can take a moment. If this persists, refresh the page.')
+        setErr('Payment succeeded. We're still finalizing your subscription—this can take a moment. If this persists, refresh the page.')
       }
     }
 
-    // show a friendly “activating” banner right away
+    // show a friendly "activating" banner right away
     setErr(null)
     tick()
 
     return () => { cancelled = true }
   }, [statusParam, refetch, navigate])
 
-  /** Write the "free" subscription to the canonical public table */
-  const upsertLocalSub = async (
-    plan_id: PlanId,
-    startISO: string,
-    endISO: string
-  ) => {
-    if (!user?.id) throw new Error('No user')
-    const { error } = await supabase
-      .from('user_subscriptions') // public.user_subscriptions
-      .upsert({
-        user_id: user.id,
-        plan_id,
-        status: 'active',
-        current_period_start: startISO,
-        current_period_end: endISO,
-      })
-    if (error) throw error
-  }
-
-  async function startStripeCheckout(
-    which: Extract<PlanKey, 'primary_weekly' | 'occasional_weekly'>
-  ) {
+  async function startStripeCheckout(planKey: PlanKey) {
     try {
       setErr(null)
-      setBusy(which as PlanId)
+      setBusy(planKey)
 
       if (!user?.id) throw new Error('No user')
-      const priceId = getStripePriceId(which)
-      if (!priceId) throw new Error(`Missing Stripe price id for ${which}. Set it in .env`)
+      const priceId = getStripePriceId(planKey)
+      if (!priceId) throw new Error(`Missing Stripe price id for ${planKey}`)
 
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
-          plan_id: which,
           promotionCode: coupon.trim() || null,
-          success_url: RETURN_URLS.success, // e.g. https://.../choose-plan?status=success
+          success_url: RETURN_URLS.success,
           cancel_url: RETURN_URLS.cancel,
         },
       })
@@ -143,27 +121,6 @@ export default function ChoosePlan() {
       window.location.href = url
     } catch (e: any) {
       setErr(e?.message || 'Failed to start checkout')
-      setBusy(null)
-    }
-  }
-
-  const chooseFree = async () => {
-    try {
-      setErr(null)
-      setBusy('free')
-      if (!user?.id) throw new Error('No user')
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (error) throw error
-      const { start, end } = first30dWindowUtc(profile?.created_at)
-      await upsertLocalSub('free', start, end)
-      navigate('/caregiver', { replace: true })
-    } catch (e: any) {
-      setErr(e?.message || 'Failed to choose Free plan')
-    } finally {
       setBusy(null)
     }
   }
@@ -210,65 +167,78 @@ export default function ChoosePlan() {
         </div>
       )}
 
+      {canceledParam === '1' && (
+        <div className="mb-4 rounded-md border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-800">
+          Checkout was canceled. You can try again anytime.
+        </div>
+      )}
+
       {err && (
         <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           {err}
         </div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">{PLANS.primary_weekly.name}</div>
-          <div className="text-2xl font-bold mt-1">
-            $1<span className="text-base font-medium text-slate-500">/week</span>
+      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
+        {/* Occasional Caregiver */}
+        <div className="border rounded-2xl p-6 bg-white">
+          <div className="text-lg font-semibold">{PLANS.occasional_weekly.label}</div>
+          <div className="text-2xl font-bold mt-2">
+            {formatPrice(PLANS.occasional_weekly.price)}
+            <span className="text-base font-medium text-slate-500">/week</span>
           </div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
-            <li>• Up to 7 observations per week</li>
-            <li>• Best for daily/primary carers</li>
-          </ul>
-          <button
-            onClick={() => startStripeCheckout('primary_weekly')}
-            disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
-          >
-            {busy === 'primary_weekly' ? 'Redirecting…' : 'Choose Primary'}
-          </button>
-        </div>
-
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">{PLANS.occasional_weekly.name}</div>
-          <div className="text-2xl font-bold mt-1">
-            $0.50<span className="text-base font-medium text-slate-500">/week</span>
-          </div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+            {PLANS.occasional_weekly.description}
+          </p>
+          <ul className="mt-4 text-sm text-slate-600 space-y-1">
             <li>• 1 observation per week</li>
-            <li>• Casual / backup carers</li>
+            <li>• Perfect for occasional caregivers</li>
+            <li>• Full access to all features</li>
           </ul>
           <button
             onClick={() => startStripeCheckout('occasional_weekly')}
             disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60"
+            className="mt-6 w-full rounded-xl py-3 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60 font-semibold"
           >
             {busy === 'occasional_weekly' ? 'Redirecting…' : 'Choose Occasional'}
           </button>
         </div>
 
-        <div className="border rounded-2xl p-5 bg-white">
-          <div className="text-lg font-semibold">{PLANS.free.name}</div>
-          <div className="text-2xl font-bold mt-1">$0</div>
-          <ul className="mt-3 text-sm text-slate-600 space-y-1">
-            <li>• 3 total observations</li>
-            <li>• Only in the first 30 days</li>
-            <li>• Upgrade anytime</li>
+        {/* Primary Caregiver */}
+        <div className="border rounded-2xl p-6 bg-white relative">
+          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+            <span className="bg-cyan-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+              Most Popular
+            </span>
+          </div>
+          <div className="text-lg font-semibold">{PLANS.primary_weekly.label}</div>
+          <div className="text-2xl font-bold mt-2">
+            {formatPrice(PLANS.primary_weekly.price)}
+            <span className="text-base font-medium text-slate-500">/week</span>
+          </div>
+          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+            {PLANS.primary_weekly.description}
+          </p>
+          <ul className="mt-4 text-sm text-slate-600 space-y-1">
+            <li>• Up to 7 observations per week</li>
+            <li>• Best for primary caregivers</li>
+            <li>• Full access to all features</li>
+            <li>• Export capabilities</li>
           </ul>
           <button
-            onClick={chooseFree}
+            onClick={() => startStripeCheckout('primary_weekly')}
             disabled={busy !== null}
-            className="mt-4 w-full rounded-xl py-2 border bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-60"
+            className="mt-6 w-full rounded-xl py-3 border bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-60 font-semibold"
           >
-            {busy === 'free' ? 'Setting up…' : 'Choose Free'}
+            {busy === 'primary_weekly' ? 'Redirecting…' : 'Choose Primary'}
           </button>
         </div>
+      </div>
+
+      <div className="mt-8 text-center">
+        <p className="text-sm text-slate-600">
+          All plans include full access to CarerView features. Cancel anytime.
+        </p>
       </div>
 
       <Footer />

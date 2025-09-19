@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
-import { getStripePriceId, RETURN_URLS, type PlanKey } from '../config/stripe'
+import { RETURN_URLS } from '../config/stripe'
 
 type CreateCheckoutArgs = {
-  plan: PlanKey
+  priceId: string
   promotionCode?: string | null
   successUrl?: string
   cancelUrl?: string
@@ -17,12 +17,9 @@ type CheckoutResponse = {
 
 export const useCreateCheckoutSession = () => {
   return useMutation<CheckoutResponse, Error, CreateCheckoutArgs>({
-    mutationFn: async ({ plan, promotionCode = null, successUrl, cancelUrl }) => {
-      // If the plan is "free", skip Stripe entirely
-      const priceId = getStripePriceId(plan)
+    mutationFn: async ({ priceId, promotionCode = null, successUrl, cancelUrl }) => {
       if (!priceId) {
-        // No checkout step — the caller should route to /caregiver
-        return { url: undefined }
+        throw new Error('Price ID is required')
       }
 
       const {
@@ -32,8 +29,8 @@ export const useCreateCheckoutSession = () => {
       if (sessionError) throw sessionError
       if (!session?.access_token) throw new Error('Authentication required')
 
-      // Call Supabase Edge Function we deployed in Step 1
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+      // Call Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
           promotionCode: promotionCode || null,

@@ -5,6 +5,8 @@ import { LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import type { AuthUser } from '../../lib/auth'
 import { Button } from '../ui/Button'
+import { useUserPlan } from '../../hooks/useUserPlan'
+import { PLANS } from '../../config/stripe'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -16,6 +18,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
   const navigate = useNavigate()
   const [signOutError, setSignOutError] = useState<string | null>(null)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const { data: plan } = useUserPlan()
 
   const handleSignOut = async () => {
     console.log('[Layout] Sign out clicked')
@@ -53,6 +56,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
     }
   }
 
+  const planInfo = plan?.plan_id ? PLANS[plan.plan_id as keyof typeof PLANS] : null
+
   return (
     <div className="min-h-screen bg-warm-white">
       <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
@@ -69,6 +74,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, title, user }) => {
                 <div className="flex items-center space-x-2">
                   <p className="text-sm text-slate-gray/60 capitalize">{user.profile?.role} Portal</p>
                   <span className="text-slate-gray/40">•</span>
+                  {planInfo && (
+                    <>
+                      <span className="text-sm text-slate-gray/60">{planInfo.label}</span>
+                      <span className="text-slate-gray/40">•</span>
+                    </>
+                  )}
                   <div className="text-sm text-slate-gray/80">
                     <span className="font-medium">{user.profile?.display_name}</span>
                     <span className="text-slate-gray/60 ml-1">({user.email})</span>

@@ -1,27 +1,38 @@
 // src/config/stripe.ts
 
 // Keys your UI and hooks will use for plan selection
-export type PlanKey = 'primary_weekly' | 'occasional_weekly' | 'free'
+export type PlanKey = 'primary_weekly' | 'occasional_weekly'
 
-// Display metadata only — no secrets here
+// Display metadata with actual Stripe product information
 export const PLANS: Record<
   PlanKey,
-  { label: string; blurb: string; mode: 'subscription' | 'none' }
+  { 
+    label: string
+    blurb: string
+    mode: 'subscription'
+    productId: string
+    priceId: string
+    price: number // in cents
+    description: string
+  }
 > = {
-  primary_weekly: {
-    label: 'Primary Caregiver',
-    blurb: '7 observations / week',
-    mode: 'subscription',
-  },
   occasional_weekly: {
-    label: 'Occasional Caregiver',
+    label: 'CarerView Occasional Caregiver',
     blurb: '1 observation / week',
     mode: 'subscription',
+    productId: 'prod_T2OOrK0MXVPaEh',
+    priceId: 'price_1S6JbcGiqZeZmBYJuzntoZ9d',
+    price: 50, // $0.50 in cents
+    description: 'CarerView subscriptions for the occasion caregiver providing one (1) CarerView Observation each week.',
   },
-  free: {
-    label: 'Free',
-    blurb: '3 total in first 30 days',
-    mode: 'none',
+  primary_weekly: {
+    label: 'CareView Primary Caregiver',
+    blurb: '7 observations / week',
+    mode: 'subscription',
+    productId: 'prod_T2OMjy9HcKhTjW',
+    priceId: 'price_1S6JaCGiqZeZmBYJxGwZtSqL',
+    price: 100, // $1.00 in cents
+    description: 'CarerView subscription for primary caregivers providing up to seven (7) CarerView Observations each week.',
   },
 }
 
@@ -35,25 +46,22 @@ const ORIGIN =
 export const RETURN_URLS = {
   success:
     import.meta.env.VITE_STRIPE_RETURN_SUCCESS ||
-    `${ORIGIN}/caregiver`,
+    `${ORIGIN}/checkout-success`,
   cancel:
     import.meta.env.VITE_STRIPE_RETURN_CANCEL ||
-    `${ORIGIN}/create-account?canceled=1`,
+    `${ORIGIN}/choose-plan?canceled=1`,
 }
 
 /**
- * Lookup the Stripe Price ID for a plan from env (Vite injects VITE_* at build).
- * Returns null for "free" (no checkout) or if the env var is not set.
+ * Get the Stripe Price ID for a plan
  */
-export function getStripePriceId(plan: PlanKey): string | null {
-  switch (plan) {
-    case 'primary_weekly':
-      return import.meta.env.VITE_STRIPE_PRICE_PRIMARY_WEEKLY || null
-    case 'occasional_weekly':
-      return import.meta.env.VITE_STRIPE_PRICE_OCCASIONAL_WEEKLY || null
-    case 'free':
-      return null
-    default:
-      return null
-  }
+export function getStripePriceId(plan: PlanKey): string {
+  return PLANS[plan].priceId
+}
+
+/**
+ * Format price for display
+ */
+export function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`
 }
