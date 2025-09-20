@@ -12,6 +12,7 @@ import { Plus } from 'lucide-react'
 
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
+import InactivePlanNotice from "../components/caregiver/InactivePlanNotice";
 
 type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
