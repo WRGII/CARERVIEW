@@ -47,26 +47,29 @@ function AdminGuard({ children }: { children: JSX.Element }) {
 }
 
 function CaregiverGuard({ children }: { children: JSX.Element }) {
-  const { loading: authLoading, user } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
-  const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
-  const { data: plan, isLoading: planLoading } = useUserPlan();
+  const { loading: authLoading, user } = useAuth()
+  const { data: profile, isLoading: profileLoading } = useProfile(user?.id)
+  const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true"
+  const { data: plan, isLoading: planLoading } = useUserPlan()
 
   const prefetchEnabled =
-    !authLoading && !!user && !profileLoading && !!profile && !profile.disabled;
-  usePrefetchStatic(prefetchEnabled);
+    !authLoading && !!user && !profileLoading && !!profile && !profile.disabled
+  usePrefetchStatic(prefetchEnabled)
 
   if (authLoading || profileLoading || (requireSub && planLoading)) {
-    return <div className="p-6">Preparing your caregiver workspace…</div>;
+    return <div className="p-6">Preparing your caregiver workspace…</div>
   }
-  if (!user) return <Navigate to="/" replace />;
-  if (profile?.disabled)
-    return <div className="p-6 text-red-600">Account disabled.</div>;
-  if (requireSub && !hasActivePlan(plan))
-    return <Navigate to="/choose-plan" replace />;
+  if (!user) return <Navigate to="/" replace />
+  if (profile?.disabled) return <div className="p-6 text-red-600">Account disabled.</div>
 
-  return children;
+  // ✅ Only redirect if subscriptions are required AND user doesn't have an active plan
+  if (requireSub && !hasActivePlan(plan)) {
+    return <Navigate to="/choose-plan" replace />
+  }
+
+  return children
 }
+
 
 export default function App() {
   return (
