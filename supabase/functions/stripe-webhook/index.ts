@@ -1,8 +1,15 @@
-// supabase/functions/stripe-webhook/index.ts
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
+/**
+ * Secrets (Project Settings → Functions → Secrets):
+ * - STRIPE_SECRET_KEY
+ * - STRIPE_WEBHOOK_SECRET          (or)
+ * - STRIPE_WEBHOOK_SECRETS         (JSON array or CSV)
+ * - SUPABASE_URL
+ * - SUPABASE_SERVICE_ROLE_KEY
+ */
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
   httpClient: Stripe.createFetchHttpClient(),
@@ -37,6 +44,16 @@ const JSON_HEADERS = {
 const resp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 
+// ---------- helpers ----------
+const secToIso = (sec?: number | null) =>
+  typeof sec === 'number' && isFinite(sec) ? new Date(sec * 1000).toISOString() : null
+
+const addDaysIso = (isoStart: string, days: number) => {
+  const d = new Date(isoStart)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString()
+}
+
 async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, customerId: string) {
   const { data, error } = await db
     .from('stripe_customers')
@@ -49,7 +66,7 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
 
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
-    .from('subscription_plans')  // public table
+    .from('subscription_plans') // public table
     .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
@@ -57,9 +74,7 @@ async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: str
   return data?.id as string | undefined
 }
 
-const secToIso = (sec?: number | null) =>
-  typeof sec === 'number' && isFinite(sec) ? new Date(sec * 1000).toISOString() : null
-
+// ---------- handler ----------
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
   if (req.method !== 'POST')    return resp({ error: 'Method not allowed' }, 405)
@@ -128,48 +143,69 @@ Deno.serve(async (req) => {
           return resp({ ok: true })
         }
 
-        const item = sub.items?.data?.[0]
+        // Fetch the full subscription to reliably get period fields
+        let full: Stripe.Subscription | undefined
+        try {
+          full = await stripe.subscriptions.retrieve(sub.id, { expand: ['items.data'] })
+        } catch (e) {
+          console.warn('[stripe-webhook] retrieve subscription failed; using webhook payload', e)
+        }
 
+        const src: any = full ?? (sub as any)
+        const item: any = src?.items?.data?.[0]
         const priceId: string | null = item?.price?.id ?? null
-        // ✅ Fallback to item-level period dates if top-level ones are missing
-        const pStartIso =
-          secToIso((sub as any).current_period_start) ??
-          secToIso((item as any)?.current_period_start) ??
-          null
-        const pEndIso =
-          secToIso((sub as any).current_period_end) ??
-          secToIso((item as any)?.current_period_end) ??
+
+        // Try all sources for dates: top-level, item-level, then compute from anchor+interval
+        let pStartIso =
+          secToIso(src?.current_period_start) ??
+          secToIso(item?.current_period_start) ??
           null
 
-        console.info('[stripe-webhook] period dates', {
-          topLevel: {
-            start: (sub as any).current_period_start ?? null,
-            end:   (sub as any).current_period_end ?? null,
-          },
-          itemLevel: {
-            start: (item as any)?.current_period_start ?? null,
-            end:   (item as any)?.current_period_end ?? null,
-          },
+        let pEndIso =
+          secToIso(src?.current_period_end) ??
+          secToIso(item?.current_period_end) ??
+          null
+
+        if (!pStartIso) {
+          // last fallback: billing_cycle_anchor (start)
+          pStartIso = secToIso(src?.billing_cycle_anchor) ?? null
+        }
+        if (!pEndIso && pStartIso) {
+          // last fallback: derive from interval if we have it
+          const interval = item?.price?.recurring?.interval || src?.plan?.interval
+          if (interval === 'week') pEndIso = addDaysIso(pStartIso, 7)
+          else if (interval === 'month') pEndIso = addDaysIso(pStartIso, 30) // conservative
+        }
+
+        console.info('[stripe-webhook] resolved periods', {
+          topLevel: { start: src?.current_period_start ?? null, end: src?.current_period_end ?? null },
+          itemLevel: { start: item?.current_period_start ?? null, end: item?.current_period_end ?? null },
+          anchor: src?.billing_cycle_anchor ?? null,
+          interval: item?.price?.recurring?.interval ?? src?.plan?.interval ?? null,
           resolved: { pStartIso, pEndIso },
         })
 
+        // Prefer metadata.plan_id; fallback to price→plan mapping
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
-        if (priceId && !mappedPlanId) {
+        if (!mappedPlanId && priceId) {
           try { mappedPlanId = await planIdFromPrice(db, priceId) }
           catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
         }
 
+        // Build upsert row; only include dates when we have them (don’t overwrite with nulls)
+        const row: Record<string, any> = {
+          user_id: userId,
+          subscription_id: sub.id,
+          price_id: priceId ?? undefined,
+          plan_id: mappedPlanId ?? undefined,
+          status: sub.status,
+          updated_at: new Date().toISOString(),
+        }
+        if (pStartIso) row.current_period_start = pStartIso
+        if (pEndIso)   row.current_period_end   = pEndIso
+
         const { error: upErr } = await db.from('user_subscriptions').upsert(
-          {
-            user_id: userId,
-            subscription_id: sub.id,
-            price_id: priceId ?? undefined,
-            plan_id: mappedPlanId ?? undefined,
-            status: sub.status,
-            current_period_start: pStartIso,
-            current_period_end:   pEndIso,
-            updated_at: new Date().toISOString(),
-          },
+          row,
           { onConflict: 'user_id,subscription_id' },
         )
         if (upErr) throw upErr
