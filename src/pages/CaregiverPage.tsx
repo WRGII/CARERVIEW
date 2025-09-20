@@ -12,7 +12,10 @@ import { Plus } from 'lucide-react'
 
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
-import InactivePlanNotice from "../components/caregiver/InactivePlanNotice";
+
+import BillingPanel from '../components/caregiver/BillingPanel'
+import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
+import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 
 type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
@@ -21,22 +24,22 @@ export default function CaregiverPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, profile, loading, error } = useAuth()
+  const { data: plan } = useUserPlan()
+  const planActive = hasActivePlan(plan)
+
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
   const [exportingFor, setExportingFor] = useState<string | null>(null)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
-  // Check for success parameter from Stripe redirect
+  // Show ephemeral success after Stripe redirect (?success=true)
   React.useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setShowSuccessMessage(true)
-      // Clear the URL parameters
       const newUrl = new URL(window.location.href)
       newUrl.searchParams.delete('success')
       newUrl.searchParams.delete('plan')
       window.history.replaceState({}, '', newUrl.toString())
-      
-      // Hide success message after 5 seconds
       setTimeout(() => setShowSuccessMessage(false), 5000)
     }
   }, [searchParams])
@@ -56,7 +59,6 @@ export default function CaregiverPage() {
     if (exportingFor) return
     setExportingFor(observationId)
     try {
-      // Observation + nested responses + joins
       const { data: obs, error: obsErr } = await supabase
         .from('observations')
         .select(`
@@ -71,19 +73,15 @@ export default function CaregiverPage() {
         `)
         .eq('id', observationId)
         .single()
-
       if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`)
       if (!obs) throw new Error('Observation not found.')
 
-      // Legend (1–5)
       const { data: legend, error: legErr } = await supabase
         .from('legend')
         .select('*')
         .order('score', { ascending: true })
-
       if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`)
 
-      // Build categories-with-questions (defensive against nulls)
       const responses = (obs.responses ?? []) as Array<{
         question: {
           id: string
@@ -140,7 +138,6 @@ export default function CaregiverPage() {
   function renderHeader() {
     switch (viewMode) {
       case 'view':
-        // ViewObservation renders its own top bar (Back + Print)
         return null
       default:
         return (
@@ -188,7 +185,7 @@ export default function CaregiverPage() {
   return (
     <Layout title="Caregiver Dashboard" user={{ ...user, profile }}>
       <div className="space-y-6">
-        {/* Success message */}
+        {/* Ephemeral success after checkout */}
         {showSuccessMessage && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
@@ -216,7 +213,13 @@ export default function CaregiverPage() {
             </div>
           </div>
         )}
-        
+
+        {/* Billing + plan status (includes Manage billing button) */}
+        <BillingPanel />
+
+        {/* If not active, nudge to activate/upgrade */}
+        {!planActive && <InactivePlanNotice />}
+
         {renderHeader()}
         {renderBody()}
       </div>
