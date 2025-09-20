@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from "../../hooks/useAuth";            // ⬅️ add
+import PlanPill from "./PlanPill";                        // ⬅️ add (same folder as Header)
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -43,6 +45,7 @@ function useBrandingLogo() {
 
 export default function Header() {
   const { data: logoSrc, isLoading } = useBrandingLogo();
+  const { user } = useAuth(); // ⬅️ signed-in state
 
   return (
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
@@ -64,24 +67,41 @@ export default function Header() {
             <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
 
-          {/* Right: nav buttons */}
+          {/* Right: nav buttons + plan pill when signed in */}
           <div className="flex items-center gap-3">
-            <Link
-              to="/why"  // ✅ dedicated page
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Why you need CarerView"
-            >
-              Why you need CarerView
-            </Link>
+            {/* When signed out: show marketing links */}
+            {!user && (
+              <>
+                <Link
+                  to="/why"
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                  aria-label="Why you need CarerView"
+                >
+                  Why you need CarerView
+                </Link>
+                <Link
+                  to={{ pathname: "/", hash: "#get-started" }}
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                  aria-label="Go to Sign In"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
 
-            {/* Use pathname+hash so React Router updates the hash without a full reload */}
-            <Link
-              to={{ pathname: "/", hash: "#get-started" }}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Go to Sign In"
-            >
-              Sign In
-            </Link>
+            {/* When signed in: show plan + dashboard */}
+            {user && (
+              <>
+                <PlanPill /> {/* renders only if active plan */}
+                <Link
+                  to="/caregiver"
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                  aria-label="Go to Dashboard"
+                >
+                  Dashboard
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
