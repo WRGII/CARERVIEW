@@ -3,14 +3,6 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
-/**
- * Secrets in Supabase → Project Settings → Functions → Secrets:
- * - STRIPE_SECRET_KEY
- * - STRIPE_WEBHOOK_SECRET          (single secret)          [optional]
- * - STRIPE_WEBHOOK_SECRETS         (JSON array or CSV)      [preferred]
- * - SUPABASE_URL
- * - SUPABASE_SERVICE_ROLE_KEY
- */
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
   httpClient: Stripe.createFetchHttpClient(),
@@ -45,10 +37,9 @@ const JSON_HEADERS = {
 const resp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 
-// --- helpers ---
 async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, customerId: string) {
   const { data, error } = await db
-    .from('stripe_customers') // public.stripe_customers
+    .from('stripe_customers')
     .select('user_id')
     .eq('customer_id', customerId)
     .maybeSingle()
@@ -56,10 +47,9 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
   return data?.user_id as string | undefined
 }
 
-// ✅ FIXED: pass db in, use TABLE public.subscription_plans, match on stripe_price_id, return id
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
-    .from('subscription_plans')  // public.subscription_plans (table)
+    .from('subscription_plans')  // public table
     .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
@@ -89,7 +79,6 @@ Deno.serve(async (req) => {
     return resp({ error: 'Webhook secret not configured' }, 500)
   }
 
-  // Verify (Edge needs the async variant)
   let event: Stripe.Event | undefined
   let lastErr: unknown
   for (let i = 0; i < WEBHOOK_SECRETS.length; i++) {
@@ -139,14 +128,31 @@ Deno.serve(async (req) => {
           return resp({ ok: true })
         }
 
-        const item    = sub.items?.data?.[0]
-        const priceId = item?.price?.id ?? null
+        const item = sub.items?.data?.[0]
 
-        // Prefer subscription-level period fields (present on all API versions)
-        const pStartIso = secToIso(sub.current_period_start)
-        const pEndIso   = secToIso(sub.current_period_end)
+        const priceId: string | null = item?.price?.id ?? null
+        // ✅ Fallback to item-level period dates if top-level ones are missing
+        const pStartIso =
+          secToIso((sub as any).current_period_start) ??
+          secToIso((item as any)?.current_period_start) ??
+          null
+        const pEndIso =
+          secToIso((sub as any).current_period_end) ??
+          secToIso((item as any)?.current_period_end) ??
+          null
 
-        // Try to get plan_id from metadata first, then fallback to price lookup
+        console.info('[stripe-webhook] period dates', {
+          topLevel: {
+            start: (sub as any).current_period_start ?? null,
+            end:   (sub as any).current_period_end ?? null,
+          },
+          itemLevel: {
+            start: (item as any)?.current_period_start ?? null,
+            end:   (item as any)?.current_period_end ?? null,
+          },
+          resolved: { pStartIso, pEndIso },
+        })
+
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
         if (priceId && !mappedPlanId) {
           try { mappedPlanId = await planIdFromPrice(db, priceId) }
@@ -157,9 +163,9 @@ Deno.serve(async (req) => {
           {
             user_id: userId,
             subscription_id: sub.id,
-            price_id: priceId ?? undefined,          // Stripe price id
-            plan_id: mappedPlanId ?? undefined,      // Our plan key (primary_weekly, occasional_weekly)
-            status: sub.status,                      // 'active' | 'trialing' | ...
+            price_id: priceId ?? undefined,
+            plan_id: mappedPlanId ?? undefined,
+            status: sub.status,
             current_period_start: pStartIso,
             current_period_end:   pEndIso,
             updated_at: new Date().toISOString(),
