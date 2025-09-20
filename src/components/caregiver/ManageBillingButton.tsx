@@ -1,0 +1,38 @@
+import * as React from 'react'
+import { supabase } from '../../lib/supabaseClient'
+
+type Props = { className?: string }
+
+export default function ManageBillingButton({ className }: Props) {
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const onClick = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', { body: {} })
+      if (error) throw error
+      const url = (data as any)?.url
+      if (!url) throw new Error('No portal URL returned')
+      window.location.assign(url)
+    } catch (e: any) {
+      setError(e?.message || 'Failed to open billing portal')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className={className}>
+      <button
+        onClick={onClick}
+        disabled={loading}
+        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2 font-semibold disabled:opacity-60"
+      >
+        {loading ? 'Opening…' : 'Manage billing'}
+      </button>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+    </div>
+  )
+}
