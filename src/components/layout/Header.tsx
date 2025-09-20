@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
-import { useAuth } from "../../hooks/useAuth";            // ⬅️ add
-import PlanPill from "./PlanPill";                        // ⬅️ add (same folder as Header)
+import { useAuth } from "../../hooks/useAuth";
+// ⬇️ fix this line:
+import PlanPill from "../common/PlanPill";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
+
 
 /** Fetch the most recent logo_url from app.site_settings.
  *  Works even if public is the default schema, because we force schema('app').
