@@ -48,7 +48,7 @@ const resp = (body: unknown, status = 200) =>
 // --- helpers ---
 async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, customerId: string) {
   const { data, error } = await db
-    .from('stripe_customers')
+    .from('stripe_customers') // public.stripe_customers
     .select('user_id')
     .eq('customer_id', customerId)
     .maybeSingle()
@@ -56,15 +56,15 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
   return data?.user_id as string | undefined
 }
 
-async function planIdFromPrice(priceId: string) {
-  // Use public schema for plan lookups
+// ✅ FIXED: pass db in, use TABLE public.subscription_plans, match on stripe_price_id, return id
+async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
-    .from('v_plan_by_price')
-    .select('plan_id')
+    .from('subscription_plans')  // public.subscription_plans (table)
+    .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
   if (error) throw error
-  return data?.plan_id as string | undefined
+  return data?.id as string | undefined
 }
 
 const secToIso = (sec?: number | null) =>
@@ -139,34 +139,17 @@ Deno.serve(async (req) => {
           return resp({ ok: true })
         }
 
-        // Fetch the full, expanded subscription so we reliably get period dates
-        // (some webhook payloads omit item-level period fields).
-        let full: Stripe.Subscription | null = null
-        if (event.type !== 'customer.subscription.deleted') {
-          try {
-            full = await stripe.subscriptions.retrieve(sub.id, { expand: ['items.data'] })
-          } catch (e) {
-            console.warn('[stripe-webhook] retrieve subscription failed; continuing with webhook object', e)
-          }
-        }
+        const item    = sub.items?.data?.[0]
+        const priceId = item?.price?.id ?? null
 
-        const src: any = full ?? (sub as any)
-        const item: any = src?.items?.data?.[0]
-
-        const priceId: string | null = item?.price?.id ?? null
-        const pStartIso =
-          secToIso(item?.current_period_start) ??
-          secToIso(src?.current_period_start) ??
-          null
-        const pEndIso =
-          secToIso(item?.current_period_end) ??
-          secToIso(src?.current_period_end) ??
-          null
+        // Prefer subscription-level period fields (present on all API versions)
+        const pStartIso = secToIso(sub.current_period_start)
+        const pEndIso   = secToIso(sub.current_period_end)
 
         // Try to get plan_id from metadata first, then fallback to price lookup
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
-        if (priceId) {
-          try { mappedPlanId = mappedPlanId || await planIdFromPrice(priceId) }
+        if (priceId && !mappedPlanId) {
+          try { mappedPlanId = await planIdFromPrice(db, priceId) }
           catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
         }
 
@@ -174,9 +157,9 @@ Deno.serve(async (req) => {
           {
             user_id: userId,
             subscription_id: sub.id,
-            price_id: priceId ?? undefined,
-            plan_id: mappedPlanId ?? undefined,
-            status: sub.status,
+            price_id: priceId ?? undefined,          // Stripe price id
+            plan_id: mappedPlanId ?? undefined,      // Our plan key (primary_weekly, occasional_weekly)
+            status: sub.status,                      // 'active' | 'trialing' | ...
             current_period_start: pStartIso,
             current_period_end:   pEndIso,
             updated_at: new Date().toISOString(),
