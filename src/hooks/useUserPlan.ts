@@ -22,15 +22,22 @@ export interface UserPlan {
   current_period_start: string | null // ISO
   current_period_end: string | null   // ISO
   updated_at?: string | null
+  price_id?: string | null
 }
 
-/** Is the plan currently usable? (status + within period) */
+/** Is the plan currently usable? Require status + within time window. */
 export function hasActivePlan(plan?: UserPlan | null): boolean {
   if (!plan) return false
-  if (!(plan.status === 'active' || plan.status === 'trialing')) return false
-  if (!plan.current_period_end) return false
-  const endMs = new Date(plan.current_period_end).getTime()
-  return Number.isFinite(endMs) && Date.now() <= endMs
+  const okStatus = plan.status === 'active' || plan.status === 'trialing'
+  if (!okStatus) return false
+  if (!plan.current_period_start || !plan.current_period_end) return false
+
+  const now = Date.now()
+  const start = Date.parse(plan.current_period_start)
+  const end = Date.parse(plan.current_period_end)
+  if (Number.isNaN(start) || Number.isNaN(end)) return false
+
+  return start <= now && now < end
 }
 
 /** Optional helper for UI hints only */
@@ -47,37 +54,47 @@ export function getPlanLimits(planId: PlanId | null | undefined) {
   }
 }
 
-/** Read the user's current local subscription row (app.user_subscriptions) */
+/** Read the user's current subscription row (public.user_subscriptions) */
 export function useUserPlan() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['app.user_subscriptions', 'user-plan', user?.id],
+    queryKey: ['public.user_subscriptions', 'user-plan', user?.id],
     enabled: !!user?.id,
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null
 
+      // Pick the most relevant, currently-active-ish row
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select(
-          'user_id, plan_id, status, current_period_start, current_period_end, updated_at'
+          'user_id, plan_id, status, current_period_start, current_period_end, updated_at, price_id'
         )
         .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .order('current_period_end', { ascending: false, nullsLast: true })
+        .order('updated_at', { ascending: false, nullsLast: true })
+        .limit(1)
         .maybeSingle()
 
       if (error) throw error
 
-      const normalize = (v: unknown): string | null =>
-        typeof v === 'string' ? v : v ? new Date(v as any).toISOString() : null
+      const normalizeIso = (v: unknown): string | null =>
+        typeof v === 'string'
+          ? v
+          : v
+          ? new Date(v as any).toISOString()
+          : null
 
       return data
         ? {
             user_id: data.user_id,
             plan_id: (data.plan_id ?? null) as PlanId | null,
             status: (data.status ?? null) as PlanStatus | null,
-            current_period_start: normalize(data.current_period_start),
-            current_period_end: normalize(data.current_period_end),
-            updated_at: normalize(data.updated_at),
+            current_period_start: normalizeIso(data.current_period_start),
+            current_period_end: normalizeIso(data.current_period_end),
+            updated_at: normalizeIso(data.updated_at),
+            price_id: (data as any).price_id ?? null,
           }
         : null
     },
