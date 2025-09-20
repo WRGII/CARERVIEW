@@ -1,3 +1,4 @@
+// src/pages/LandingPage.tsx
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
@@ -19,7 +20,6 @@ export default function LandingPage() {
   // Smooth-scroll to #get-started if the page was opened with that hash
   useEffect(() => {
     if (location.hash === '#get-started') {
-      // small delay to ensure layout is ready
       setTimeout(() => {
         document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 50)
@@ -28,72 +28,52 @@ export default function LandingPage() {
 
   // --- helpers ---------------------------------------------------------------
 
-  const upsertProfileIfMissing = async (uid: string, displayName: string, emailAddr: string) => {
+  /** Ensure a profile exists and is valid. Returns the resulting profile. */
+  async function ensureProfile(userId: string, emailAddr: string | null, displayName: string | null) {
     const { data: prof, error: selErr } = await supabase
       .from('profiles')
-      .select('id, disabled, role')
-      .eq('id', uid)
+      .select('id, role, disabled')
+      .eq('id', userId)
       .maybeSingle()
     if (selErr) throw selErr
 
     if (!prof) {
       const { error: upErr } = await supabase.from('profiles').upsert({
-        id: uid,
+        id: userId,
         email: emailAddr ?? '',
         display_name: displayName ?? '',
         role: 'caregiver',
         disabled: false,
       })
       if (upErr) throw upErr
-    } else if (prof.disabled) {
-      await supabase.auth.signOut()
-      throw new Error('Account disabled. Please contact support.')
+      return { role: 'caregiver', disabled: false }
     }
+
+    return prof
   }
 
-  const routeByRole = async () => {
+  /** Route the newly-signed-in user based on their profile role. */
+  async function routeAfterLogin() {
+    // make sure session is live
+    await supabase.auth.getSession()
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    if (!user) {
-      navigate('/', { replace: true })
-      return
-    }
 
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('role, disabled, email, display_name')
-      .eq('id', user.id)
-      .maybeSingle()
+    if (!user) throw new Error('Signed in, but no active session was found.')
 
-    if (!prof) {
-      await supabase.from('profiles').upsert({
-        id: user.id,
-        email: user.email,
-        display_name: (user.user_metadata && user.user_metadata.display_name) || '',
-        role: 'caregiver',
-        disabled: false,
-      })
-      const { data: prof2 } = await supabase
-        .from('profiles')
-        .select('role, disabled')
-        .eq('id', user.id)
-        .single()
-
-      if (prof2?.disabled) {
-        await supabase.auth.signOut()
-        navigate('/', { replace: true })
-        return
-      }
-      navigate(prof2?.role === 'admin' ? '/admin' : '/caregiver', { replace: true })
-      return
-    }
+    const prof = await ensureProfile(
+      user.id,
+      user.email ?? null,
+      user.user_metadata?.display_name ?? null
+    )
 
     if (prof.disabled) {
       await supabase.auth.signOut()
-      navigate('/', { replace: true })
-      return
+      throw new Error('Account disabled. Please contact support.')
     }
+
     navigate(prof.role === 'admin' ? '/admin' : '/caregiver', { replace: true })
   }
 
@@ -101,6 +81,7 @@ export default function LandingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loading) return
     setLoading(true)
     setError(null)
     setInfo(null)
@@ -109,24 +90,23 @@ export default function LandingPage() {
       const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
       if (siErr) throw siErr
 
-      const user = data.user
-      if (user?.id) {
-        await upsertProfileIfMissing(
-          user.id,
-          user.user_metadata?.display_name ?? '',
-          user.email ?? ''
-        )
+      // Defensive: make sure we actually got a user back
+      const user = data?.user
+      if (!user) {
+        throw new Error('Sign-in failed. Please try again.')
       }
-      await routeByRole()
+
+      await routeAfterLogin()
     } catch (err: any) {
-      if (err?.message === 'Invalid login credentials') {
-        setError(
-          'Incorrect email or password. Please check your credentials or try resetting your password.'
-        )
-      } else {
-        setError(err?.message || 'Authentication failed')
-      }
+      const msg = err?.message || 'Authentication failed'
+      // Normalize common Supabase error string
+      setError(
+        msg === 'Invalid login credentials'
+          ? 'Incorrect email or password. Please check your credentials or try resetting your password.'
+          : msg
+      )
     } finally {
+      // Always clear the button state even if we navigated
       setLoading(false)
     }
   }
@@ -145,7 +125,7 @@ export default function LandingPage() {
       if (error) throw error
       setInfo('If that email exists, a reset link has been sent.')
     } catch (e: any) {
-      setError(e.message || 'Failed to send password reset email')
+      setError(e?.message || 'Failed to send password reset email')
     } finally {
       setSendingReset(false)
     }
@@ -182,7 +162,7 @@ export default function LandingPage() {
             </Link>
 
             <Link
-              to="/why"  // ✅ dedicated page
+              to="/why"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
               aria-label="Why you need CarerView"
             >
@@ -310,7 +290,7 @@ export default function LandingPage() {
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-peach-blush rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-slate-gray" />
+                    <CheckCircle className="w-5 h-5 text-warm-white" />
                   </div>
                   <div>
                     <h4 className="text-xl font-semibold text-slate-gray mb-2">Spot small shifts early</h4>
@@ -427,8 +407,8 @@ export default function LandingPage() {
               </div>
 
               <div>
-                <div className="w-16 h-16 bg-peach-blush/60 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-slate-gray" />
+                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-8 h-8 text-cyan-primary" />
                 </div>
                 <h4 className="text-lg font-semibold text-slate-gray mb-2">Portable</h4>
                 <p className="text-slate-gray/80">Works on phone, tablet, or computer.</p>
@@ -436,7 +416,6 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-12">
-              {/* REVISED: go to Create Account wizard */}
               <Link
                 to="/create-account"
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
@@ -488,7 +467,7 @@ export default function LandingPage() {
 
               <div className="mt-10 text-center">
                 <Link
-                  to="/why"  // ✅ dedicated page
+                  to="/why"
                   className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
                   aria-label="Why you need CarerView"
                 >
