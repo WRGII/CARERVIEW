@@ -56,14 +56,15 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
   return data?.user_id as string | undefined
 }
 
-async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
+async function planIdFromPrice(priceId: string) {
+  // Use public schema for plan lookups
   const { data, error } = await db
-    .from('subscription_plans')
-    .select('id')
+    .from('v_plan_by_price')
+    .select('plan_id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
   if (error) throw error
-  return data?.id as string | undefined
+  return data?.plan_id as string | undefined
 }
 
 const secToIso = (sec?: number | null) =>
@@ -162,9 +163,10 @@ Deno.serve(async (req) => {
           secToIso(src?.current_period_end) ??
           null
 
-        let mappedPlanId: string | undefined
+        // Try to get plan_id from metadata first, then fallback to price lookup
+        let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
         if (priceId) {
-          try { mappedPlanId = await planIdFromPrice(db, priceId) }
+          try { mappedPlanId = mappedPlanId || await planIdFromPrice(priceId) }
           catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
         }
 

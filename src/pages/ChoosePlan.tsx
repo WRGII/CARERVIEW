@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
+import { usePlans } from '../hooks/usePlans'
 import Footer from '../components/common/Footer'
 import {
   PLANS,
@@ -12,20 +13,26 @@ import {
   formatPrice,
   type PlanKey,
 } from '../config/stripe'
+import type { PlanRow } from '../types/plans'
 
 function HeaderLogo() {
   const [logoUrl, setLogoUrl] = React.useState<string | null>(null)
   React.useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const { data, error } = await supabase
-        .schema('app')
-        .from('site_settings')
-        .select('logo_url')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-      if (!cancelled && !error && data?.[0]?.logo_url) {
-        setLogoUrl(data[0].logo_url)
+      // Note: site_settings remains in app schema as per requirements
+      try {
+        const { data, error } = await supabase
+          .schema('app')
+          .from('site_settings')
+          .select('logo_url')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+        if (!cancelled && !error && data?.[0]?.logo_url) {
+          setLogoUrl(data[0].logo_url)
+        }
+      } catch {
+        // Fallback silently
       }
     })()
     return () => { cancelled = true }
@@ -47,6 +54,7 @@ export default function ChoosePlan() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: plan, isLoading, refetch } = useUserPlan()
+  const { data: dbPlans, isLoading: plansLoading } = usePlans()
   const [searchParams] = useSearchParams()
   const statusParam = searchParams.get('status') // e.g. "success" after Stripe
   const canceledParam = searchParams.get('canceled')
@@ -107,6 +115,7 @@ export default function ChoosePlan() {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
+          plan_id: planKey,
           promotionCode: coupon.trim() || null,
           success_url: RETURN_URLS.success,
           cancel_url: RETURN_URLS.cancel,
@@ -135,6 +144,14 @@ export default function ChoosePlan() {
             Continue
           </button>
         </p>
+      </div>
+    )
+  }
+
+  if (plansLoading) {
+    return (
+      <div className="p-6">
+        <h1 className="text-xl font-semibold mb-2">Loading plans...</h1>
       </div>
     )
   }

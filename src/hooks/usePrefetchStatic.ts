@@ -15,7 +15,9 @@ export async function prefetchChoosePlanAssets(qc?: QueryClient): Promise<void> 
     qc.prefetchQuery({
       queryKey: ['site_logo'],
       queryFn: async () => {
+        // Note: site_settings remains in app schema as per requirements
         const { data, error } = await supabase
+          .schema('app')
           .from('site_settings')
           .select('logo_url')
           .order('updated_at', { ascending: false })
@@ -27,15 +29,14 @@ export async function prefetchChoosePlanAssets(qc?: QueryClient): Promise<void> 
       staleTime: 5 * 60 * 1000,
     }),
 
-    // Plan list (app schema)
+    // Plan list (public schema)
     qc.prefetchQuery({
-      queryKey: ['subscription_plans'],
+      queryKey: ['plans'],
       queryFn: async () => {
         const { data, error } = await supabase
-          .schema('app')
-          .from('subscription_plans')
-          .select('id,name,interval,price_cents,currency,obs_limit,usage_window')
-          .order('id', { ascending: true })
+          .from('v_plan_by_price')
+          .select('plan_id, name, interval, price_cents, stripe_price_id')
+          .order('price_cents', { ascending: true })
         if (error) throw error
         return data ?? []
       },

@@ -4,11 +4,14 @@ import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { PLANS, RETURN_URLS, type PlanKey } from "../config/stripe";
+import { usePlans } from "../hooks/usePlans";
+import type { PlanRow } from "../types/plans";
 
 const PENDING_KEY = "cv_pending_checkout"; // { planKey, promoCode }
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
+  const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
   // ---- Local UI state -------------------------------------------------------
   const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>('occasional_weekly');
@@ -110,6 +113,7 @@ export default function CreateAccountPage() {
         const { data: ck, error: fnErr } = await supabase.functions.invoke("stripe-checkout", {
           body: {
             price_id: selectedPlan.priceId,
+            plan_id: selectedPlanKey,
             promotionCode: promoCode || null,
             success_url: RETURN_URLS.success,
             cancel_url: `${window.location.origin}/create-account?canceled=1`,

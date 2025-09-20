@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const price_id: string | null = body?.price_id ?? null
+    const plan_id: string | null = body?.plan_id ?? null
     const promotionCode: string | null = (body?.promotionCode || body?.coupon) ?? null
 
     // Derive default redirects; also validate provided URLs are allowed
@@ -127,8 +128,16 @@ Deno.serve(async (req) => {
       success_url,
       cancel_url,
       client_reference_id: user.id,
-      subscription_data: { metadata: { user_id: user.id } },
-      metadata: { user_id: user.id },
+      subscription_data: { 
+        metadata: { 
+          user_id: user.id,
+          ...(plan_id && { plan_id })
+        } 
+      },
+      metadata: { 
+        user_id: user.id,
+        ...(plan_id && { plan_id })
+      },
     })
 
     return resp({ url: session.url, id: session.id }, 200, origin)
