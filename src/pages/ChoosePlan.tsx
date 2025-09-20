@@ -73,7 +73,6 @@ export default function ChoosePlan() {
   }
 }, [requireSub, isLoading, plan, navigate])
 
-
   // After returning from Stripe (?status=success), poll until the webhook
   // has activated the subscription, then navigate to /caregiver.
   React.useEffect(() => {
