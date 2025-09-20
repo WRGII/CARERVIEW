@@ -1,22 +1,18 @@
-import { Link } from "react-router-dom";
+// src/components/layout/Header.tsx
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
-// ⬇️ fix this line:
-import PlanPill from "../common/PlanPill";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
-/** Fetch the most recent logo_url from app.site_settings.
- *  Works even if public is the default schema, because we force schema('app').
- *  If the table isn't found or RLS denies, we return a safe fallback path.
- */
+/** Fetch latest logo from app.site_settings (falls back safely). */
 function useBrandingLogo() {
   return useQuery({
     queryKey: ["branding", "logo"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .schema("app") // ✅ force the app schema
+        .schema("app")
         .from("site_settings")
         .select("logo_url, updated_at")
         .order("updated_at", { ascending: false })
@@ -31,7 +27,6 @@ function useBrandingLogo() {
       const raw = data?.logo_url ?? "";
       if (!raw) return FALLBACK_LOGO;
 
-      // If not absolute, treat as app-relative (Netlify-friendly)
       if (!/^https?:\/\//i.test(raw)) {
         const base = import.meta.env.BASE_URL ?? "/";
         return `${base}${raw.replace(/^\/+/, "")}`;
@@ -46,13 +41,40 @@ function useBrandingLogo() {
 
 export default function Header() {
   const { data: logoSrc, isLoading } = useBrandingLogo();
-  const { user } = useAuth(); // ⬅️ signed-in state
+  const { user, profile } = useAuth();
+  const location = useLocation();
+
+  // Auth + simple role routing (default to caregiver dashboard)
+  const isAuthed = !!user?.id;
+  const dashboardHref = "/caregiver"; // adjust if you later add role-based dashboards
+
+  // We always show “Why you need CarerView”.
+  // The rightmost button is:
+  // - “Sign In” (anonymous users, links to landing page sign-in anchor)
+  // - “Dashboard” (authenticated caregivers)
+  const rightButton = isAuthed ? (
+    <Link
+      to={dashboardHref}
+      className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+      aria-label="Go to your dashboard"
+    >
+      Dashboard
+    </Link>
+  ) : (
+    <Link
+      to={{ pathname: "/", hash: "#get-started" }}
+      className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+      aria-label="Go to Sign In"
+    >
+      Sign In
+    </Link>
+  );
 
   return (
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: Logo + App name -> always links to LandingPage "/" */}
+          {/* Left: Logo -> always links to LandingPage "/" */}
           <Link to="/" aria-label="CarerView home" className="flex items-center">
             {isLoading ? (
               <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
@@ -68,41 +90,17 @@ export default function Header() {
             <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
 
-          {/* Right: nav buttons + plan pill when signed in */}
+          {/* Right: nav buttons */}
           <div className="flex items-center gap-3">
-            {/* When signed out: show marketing links */}
-            {!user && (
-              <>
-                <Link
-                  to="/why"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                  aria-label="Why you need CarerView"
-                >
-                  Why you need CarerView
-                </Link>
-                <Link
-                  to={{ pathname: "/", hash: "#get-started" }}
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                  aria-label="Go to Sign In"
-                >
-                  Sign In
-                </Link>
-              </>
-            )}
+            <Link
+              to="/why"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Why you need CarerView"
+            >
+              Why you need CarerView
+            </Link>
 
-            {/* When signed in: show plan + dashboard */}
-            {user && (
-              <>
-                <PlanPill /> {/* renders only if active plan */}
-                <Link
-                  to="/caregiver"
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                  aria-label="Go to Dashboard"
-                >
-                  Dashboard
-                </Link>
-              </>
-            )}
+            {rightButton}
           </div>
         </div>
       </div>
