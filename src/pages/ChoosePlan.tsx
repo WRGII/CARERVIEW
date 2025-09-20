@@ -67,11 +67,12 @@ export default function ChoosePlan() {
 
   // If subscriptions are required and user already has an active plan, go in.
   React.useEffect(() => {
-    if (!requireSub) return
-    if (!isLoading && hasActivePlan(plan)) {
-      navigate('/caregiver', { replace: true })
-    }
-  }, [requireSub, isLoading, plan, navigate])
+  if (!requireSub) return
+  if (!isLoading && hasActivePlan(plan)) {
+    navigate('/caregiver', { replace: true })
+  }
+}, [requireSub, isLoading, plan, navigate])
+
 
   // After returning from Stripe (?status=success), poll until the webhook
   // has activated the subscription, then navigate to /caregiver.
