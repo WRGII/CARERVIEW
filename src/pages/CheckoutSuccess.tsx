@@ -1,123 +1,111 @@
 // src/pages/CheckoutSuccess.tsx
-import React from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CheckCircle, ArrowRight } from 'lucide-react'
-import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
-import { PLANS } from '../config/stripe'
+import React from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { useUserPlan, hasActivePlan } from "../hooks/useUserPlan";
+import { supabase } from "../lib/supabaseClient";
 
 export default function CheckoutSuccess() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { data: plan, isLoading, refetch } = useUserPlan()
-  const [isActivating, setIsActivating] = React.useState(true)
+  const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const sessionId = search.get("session_id"); // Stripe provides this when success_url uses {CHECKOUT_SESSION_ID}
+  const { user } = useAuth();
+  const { data: plan } = useUserPlan();
 
-  // Poll for subscription activation
+  const [status, setStatus] = React.useState<"waiting" | "ready" | "timeout" | "error">("waiting");
+  const [msg, setMsg] = React.useState<string>("Finalizing your subscription…");
+
+  // Helper to re-read the subscription row directly
+  const refetchPlan = React.useCallback(async () => {
+    if (!user?.id) return null;
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .select("user_id, plan_id, status, current_period_start, current_period_end, updated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }, [user?.id]);
+
   React.useEffect(() => {
-    if (hasActivePlan(plan)) {
-      setIsActivating(false)
-      return
-    }
+    let cancelled = false;
 
-    let tries = 0
-    const maxTries = 30 // 1 minute total
-    let cancelled = false
-
-    const pollForActivation = async () => {
-      if (cancelled) return
-      
-      const { data: latest } = await refetch()
-      if (hasActivePlan(latest)) {
-        setIsActivating(false)
-        return
+    (async () => {
+      // If already active (fast webhook), go immediately.
+      if (hasActivePlan(plan)) {
+        setStatus("ready");
+        navigate("/caregiver", { replace: true });
+        return;
       }
 
-      tries += 1
-      if (tries < maxTries) {
-        setTimeout(pollForActivation, 2000) // Check every 2 seconds
-      } else {
-        setIsActivating(false) // Stop polling after max tries
+      // Otherwise poll for ~15s (10 attempts * 1.5s)
+      for (let attempt = 1; attempt <= 10; attempt++) {
+        if (cancelled) return;
+        try {
+          const row = await refetchPlan();
+          if (
+            row &&
+            hasActivePlan({
+              user_id: row.user_id,
+              plan_id: (row.plan_id ?? null) as any,
+              status: (row.status ?? null) as any,
+              current_period_start: row.current_period_start as any,
+              current_period_end: row.current_period_end as any,
+              updated_at: row.updated_at as any,
+            })
+          ) {
+            setStatus("ready");
+            navigate("/caregiver", { replace: true });
+            return;
+          }
+        } catch {
+          // ignore and keep polling
+        }
+        if (attempt === 4) setMsg("Almost there… confirming your subscription.");
+        await new Promise((r) => setTimeout(r, 1500));
       }
-    }
 
-    const timer = setTimeout(pollForActivation, 1000) // Start after 1 second
+      // Still not active after polling
+      setStatus("timeout");
+      setMsg("We’re still waiting for Stripe to confirm your subscription.");
+    })();
+
     return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [plan, refetch])
-
-  const planInfo = plan?.plan_id ? PLANS[plan.plan_id as keyof typeof PLANS] : null
+      cancelled = true;
+    };
+  }, [plan, navigate, refetchPlan]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-mint-green/20 flex items-center justify-center">
-      <div className="max-w-md mx-auto p-6">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-gray/20 p-8 text-center">
-          {/* Success Icon */}
-          <div className="w-16 h-16 bg-mint-green/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-mint-green" />
+    <div className="max-w-lg mx-auto p-6">
+      <h1 className="text-2xl font-semibold text-slate-800 mb-2">Payment successful</h1>
+      <p className="text-slate-600 mb-4">{msg}</p>
+
+      <div className="rounded-xl border bg-white p-4">
+        <div className="text-sm text-slate-600 space-y-1">
+          <div>
+            <strong>Status:</strong> {status}
           </div>
-
-          {/* Title */}
-          <h1 className="text-2xl font-bold text-slate-gray mb-4">
-            Payment Successful!
-          </h1>
-
-          {/* Status Message */}
-          {isActivating ? (
-            <div className="mb-6">
-              <div className="inline-flex items-center gap-2 text-cyan-primary mb-2">
-                <div className="w-4 h-4 border-2 border-cyan-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">Activating your subscription...</span>
-              </div>
-              <p className="text-slate-gray/70 text-sm">
-                This usually takes just a few seconds.
-              </p>
-            </div>
-          ) : hasActivePlan(plan) ? (
-            <div className="mb-6">
-              <p className="text-slate-gray mb-2">
-                Your <strong>{planInfo?.label || 'subscription'}</strong> is now active!
-              </p>
-              <p className="text-slate-gray/70 text-sm">
-                You can now start creating observations.
-              </p>
-            </div>
-          ) : (
-            <div className="mb-6">
-              <p className="text-slate-gray mb-2">
-                Your payment was processed successfully.
-              </p>
-              <p className="text-slate-gray/70 text-sm">
-                If your subscription doesn't activate shortly, please contact support.
-              </p>
+          {sessionId && (
+            <div>
+              <strong>Stripe Session:</strong> {sessionId}
             </div>
           )}
-
-          {/* Action Button */}
-          <button
-            onClick={() => navigate('/caregiver', { replace: true })}
-            disabled={isActivating}
-            className="w-full inline-flex items-center justify-center gap-3 rounded-xl bg-cyan-primary px-6 py-3 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
-          >
-            {isActivating ? (
-              'Activating...'
-            ) : (
-              <>
-                Go to Dashboard
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-
-          {/* Support Link */}
-          <p className="mt-4 text-xs text-slate-gray/60">
-            Need help? Contact support at{' '}
-            <a href="mailto:support@carerview.com" className="text-cyan-primary hover:underline">
-              support@carerview.com
-            </a>
-          </p>
         </div>
+
+        {status === "timeout" && (
+          <div className="mt-4">
+            <button
+              className="px-4 py-2 rounded-lg border bg-slate-900 text-white"
+              onClick={() => navigate("/caregiver", { replace: true })}
+            >
+              Continue to Dashboard
+            </button>
+            <p className="text-xs text-slate-500 mt-2">
+              If you don’t see your plan after a few minutes, refresh the page or contact support.
+            </p>
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }
