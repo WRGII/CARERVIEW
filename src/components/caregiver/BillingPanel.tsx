@@ -1,5 +1,5 @@
 import React from 'react'
-import ManageBillingButton from '../billing/ManageBillingButton'
++ import ManageBillingButton from './ManageBillingButton'
 import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan'
 
 function PlanBadge({ planId }: { planId: string | null }) {
