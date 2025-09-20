@@ -76,7 +76,6 @@ function CaregiverGuard({ children }: { children: JSX.Element }) {
   return children;
 }
 
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
