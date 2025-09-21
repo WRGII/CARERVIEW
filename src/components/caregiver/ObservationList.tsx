@@ -38,7 +38,6 @@ const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }>
   return <span className={`${base} ${tone}`}>{label}</span>
 }
 
-
 export const ObservationList: React.FC<ObservationListProps> = ({ onViewObservation, onExportObservation }) => {
   const { data: observations, isLoading, error } = useObservations()
   if (isLoading) return <Loading message="Loading observations..." />
