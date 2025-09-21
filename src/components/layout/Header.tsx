@@ -1,3 +1,4 @@
+// src/components/layout/Header.tsx
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
@@ -26,7 +27,6 @@ function useBrandingLogo() {
       const raw = data?.logo_url ?? "";
       if (!raw) return FALLBACK_LOGO;
 
-      // If not absolute, treat as app-relative (Netlify-friendly)
       if (!/^https?:\/\//i.test(raw)) {
         const base = import.meta.env.BASE_URL ?? "/";
         return `${base}${raw.replace(/^\/+/, "")}`;
@@ -44,7 +44,7 @@ export default function Header() {
   const { user, profile, loading: authLoading } = useAuth();
 
   const isAuthed = !!user && !profile?.disabled;
-  const dashPath = (profile?.role === "admin") ? "/admin" : "/caregiver";
+  const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
   return (
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
@@ -73,27 +73,31 @@ export default function Header() {
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
               aria-label="Why you need CarerView"
             >
-              Why you need CarerView
+              <span className="whitespace-nowrap">Why you need CarerView</span>
             </Link>
 
-            {/* Only render Dashboard if auth finished and user exists; else show Sign In */}
+            {/* Auth-aware button */}
             {authLoading ? (
-              <div className="w-[108px] h-9 rounded-xl bg-slate-200 animate-pulse" aria-hidden />
+              <div className="w-[110px] h-9 rounded-xl bg-slate-200 animate-pulse" aria-hidden />
             ) : isAuthed ? (
               <Link
                 to={dashPath}
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
                 aria-label="Go to Dashboard"
+                data-testid="nav-dashboard"
               >
-                Dashboard
+                <span className="whitespace-nowrap text-slate-gray">Dashboard</span>
               </Link>
             ) : (
               <Link
-                to={{ pathname: "/", hash: "#get-started" }}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                // use a plain string with hash to avoid odd flex/text issues
+                to="/#get-started"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold hover:bg-peach-blush/20 transition-all duration-200"
                 aria-label="Go to Sign In"
+                data-testid="nav-signin"
               >
-                Sign In
+                {/* explicit span + color + no-wrap */}
+                <span className="whitespace-nowrap text-slate-gray">Sign In</span>
               </Link>
             )}
           </div>
