@@ -1,4 +1,3 @@
-// src/components/caregiver/ObservationList.tsx
 import React from 'react'
 import { useObservations } from '../../hooks/useObservations'
 import { Card, CardContent } from '../ui/Card'
@@ -21,19 +20,20 @@ type ObservationRow = {
   caregiver_email: string | null
   created_at: string
   updated_at: string
-  form_type?: 'ADL' | 'IADL' | null
+  form_type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null
 }
 
-const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | null }> = ({ type }) => {
+const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }> = ({ type }) => {
   if (!type) return null
-  // Subtle styling that works in light UI
-  const base =
-    'text-xs px-2 py-0.5 rounded-full border bg-white inline-flex items-center leading-none'
+  const base = 'text-xs px-2 py-0.5 rounded-full border bg-white inline-flex items-center leading-none'
   const tone =
     type === 'ADL'
       ? 'border-cyan-600 text-cyan-700'
-      : 'border-emerald-600 text-emerald-700'
-  return <span className={`${base} ${tone}`}>{type}</span>
+      : type === 'IADL'
+      ? 'border-emerald-600 text-emerald-700'
+      : 'border-violet-600 text-violet-700' // COMPREHENSIVE
+  const label = type === 'COMPREHENSIVE' ? 'ADL+IADL' : type
+  return <span className={`${base} ${tone}`}>{label}</span>
 }
 
 export const ObservationList: React.FC<ObservationListProps> = ({
