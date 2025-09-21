@@ -1,13 +1,18 @@
-// src/pages/ActiveCaregiversPage.tsx
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { Plus, CheckCircle2, XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
-import { Link } from "react-router-dom";
+
+// Shared app chrome + states
+import { Layout } from "../components/common/Layout";
+import { Loading } from "../components/ui/Loading";
+import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { useAuth } from "../hooks/useAuth";
 
 /** Generate a long random password so admin can "pre-create" a user.
  *  Because email confirmations are enabled in your project, this will NOT
- *  swap the admin's session.
+ *  swap the admin session.
  */
 function randomPassword(len = 24) {
   const alphabet =
@@ -28,8 +33,21 @@ type CaregiverRow = {
 
 export default function ActiveCaregiversPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { user, profile, loading, error } = useAuth();
 
-  // ---- Load caregivers ------------------------------------------------------
+  // ---------- Admin guard ----------
+  if (loading) return <Loading message="Loading admin view…" />;
+  if (error || !user) return <ErrorMessage message={error || "Authentication required."} />;
+  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />;
+  if (profile.disabled) return <ErrorMessage message="Account disabled." />;
+  if (profile.role !== "admin") {
+    // Non-admins get bounced to their dashboard
+    navigate("/caregiver", { replace: true });
+    return null;
+  }
+
+  // ---------- Data: caregivers ----------
   const caregiversQ = useQuery({
     queryKey: ["admin", "caregivers"],
     queryFn: async (): Promise<CaregiverRow[]> => {
@@ -45,7 +63,13 @@ export default function ActiveCaregiversPage() {
     staleTime: 30_000,
   });
 
-  // ---- Add caregiver (pre-create auth user + upsert profile) ----------------
+  // Where invitation confirmation should land the new user
+  const ORIGIN =
+    (typeof window !== "undefined" && window.location.origin) ||
+    (import.meta.env.PUBLIC_SITE_URL as string) ||
+    "";
+
+  // ---------- Add caregiver (pre-create + profile upsert) ----------
   const addM = useMutation({
     mutationFn: async (payload: { email: string; display_name: string }) => {
       const tempPassword = randomPassword();
@@ -54,19 +78,23 @@ export default function ActiveCaregiversPage() {
       const { data, error } = await supabase.auth.signUp({
         email: payload.email,
         password: tempPassword,
-        options: { data: { display_name: payload.display_name } },
+        options: {
+          data: { display_name: payload.display_name },
+          // After clicking the confirmation link, land inside your app:
+          emailRedirectTo: `${ORIGIN}/create-account?from=invite`,
+        },
       });
       if (error) throw error;
 
       const newUser = data.user;
       if (!newUser?.id) {
-        // No user id yet (e.g., email provider blocked); abort gracefully.
+        // No user id yet (e.g., provider deferred). Bubble a helpful message.
         throw new Error(
-          "Sign-up email sent. The user will appear after they confirm."
+          "Sign-up email sent. The caregiver will appear after they confirm."
         );
       }
 
-      // 2) Upsert their profile as caregiver (admin is allowed by your RLS)
+      // 2) Upsert profile as caregiver (allowed for admin by your RLS)
       const { error: upErr } = await supabase.from("profiles").upsert({
         id: newUser.id,
         email: payload.email,
@@ -83,7 +111,7 @@ export default function ActiveCaregiversPage() {
     },
   });
 
-  // ---- Toggle disabled (soft delete / restore) ------------------------------
+  // ---------- Toggle disabled (soft delete / restore) ----------
   const toggleM = useMutation({
     mutationFn: async (row: CaregiverRow) => {
       const { error } = await supabase
@@ -92,27 +120,25 @@ export default function ActiveCaregiversPage() {
         .eq("id", row.id);
       if (error) throw error;
     },
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["admin", "caregivers"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "caregivers"] });
+    },
   });
 
-  // ---- UI -------------------------------------------------------------------
+  // ---------- UI ----------
   return (
-    <div className="min-h-screen bg-warm-white">
+    <Layout title="Admin • Active Caregivers" user={{ ...user, profile }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Title row */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-gray">
-              Active Caregivers
-            </h1>
+            <h1 className="text-3xl font-bold text-slate-gray">Active Caregivers</h1>
             <p className="text-slate-gray/70">
               View, add, or temporarily disable caregiver accounts.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* NEW: Back to Admin Dashboard button */}
             <Link
               to="/admin"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
@@ -122,7 +148,6 @@ export default function ActiveCaregiversPage() {
               Admin Dashboard
             </Link>
 
-            {/* Refresh button (unchanged functionality) */}
             <button
               type="button"
               onClick={() => caregiversQ.refetch()}
@@ -142,9 +167,7 @@ export default function ActiveCaregiversPage() {
             <div className="w-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
               <Plus className="w-5 h-5 text-cyan-primary" />
             </div>
-            <h2 className="text-lg font-semibold text-slate-gray">
-              Add caregiver
-            </h2>
+            <h2 className="text-lg font-semibold text-slate-gray">Add caregiver</h2>
           </div>
 
           <AddForm
@@ -169,16 +192,14 @@ export default function ActiveCaregiversPage() {
             </h3>
           </div>
 
-        {caregiversQ.isLoading ? (
+          {caregiversQ.isLoading ? (
             <div className="p-6 text-slate-gray/70">Loading caregivers…</div>
           ) : caregiversQ.error ? (
-            <div className="p-6 text-red-700">
-              {(caregiversQ.error as Error).message}
+            <div className="p-6">
+              <ErrorMessage message={(caregiversQ.error as Error).message} />
             </div>
           ) : (caregiversQ.data?.length ?? 0) === 0 ? (
-            <div className="p-6 text-slate-gray/70">
-              No caregivers found yet.
-            </div>
+            <div className="p-6 text-slate-gray/70">No caregivers found yet.</div>
           ) : (
             <ul role="list" className="divide-y divide-slate-gray/10">
               {caregiversQ.data!.map((c) => (
@@ -236,7 +257,7 @@ export default function ActiveCaregiversPage() {
           this in a Phase-2.
         </p>
       </div>
-    </div>
+    </Layout>
   );
 }
 
