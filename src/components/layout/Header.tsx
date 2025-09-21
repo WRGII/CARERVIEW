@@ -1,12 +1,11 @@
-// src/components/layout/Header.tsx
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
-/** Fetch latest logo from app.site_settings (falls back safely). */
+/** Fetch the most recent logo_url from app.site_settings. */
 function useBrandingLogo() {
   return useQuery({
     queryKey: ["branding", "logo"],
@@ -27,6 +26,7 @@ function useBrandingLogo() {
       const raw = data?.logo_url ?? "";
       if (!raw) return FALLBACK_LOGO;
 
+      // If not absolute, treat as app-relative (Netlify-friendly)
       if (!/^https?:\/\//i.test(raw)) {
         const base = import.meta.env.BASE_URL ?? "/";
         return `${base}${raw.replace(/^\/+/, "")}`;
@@ -40,43 +40,19 @@ function useBrandingLogo() {
 }
 
 export default function Header() {
-  const { data: logoSrc, isLoading } = useBrandingLogo();
-  const { user, profile } = useAuth();
-  const location = useLocation();
+  const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
+  const { user, profile, loading: authLoading } = useAuth();
 
-  // Auth + simple role routing (default to caregiver dashboard)
-  const isAuthed = !!user?.id;
-  const dashboardHref = "/caregiver"; // adjust if you later add role-based dashboards
-
-  // We always show “Why you need CarerView”.
-  // The rightmost button is:
-  // - “Sign In” (anonymous users, links to landing page sign-in anchor)
-  // - “Dashboard” (authenticated caregivers)
-  const rightButton = isAuthed ? (
-    <Link
-      to={dashboardHref}
-      className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-      aria-label="Go to your dashboard"
-    >
-      Dashboard
-    </Link>
-  ) : (
-    <Link
-      to={{ pathname: "/", hash: "#get-started" }}
-      className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-      aria-label="Go to Sign In"
-    >
-      Sign In
-    </Link>
-  );
+  const isAuthed = !!user && !profile?.disabled;
+  const dashPath = (profile?.role === "admin") ? "/admin" : "/caregiver";
 
   return (
     <header className="bg-warm-white shadow-sm border-b border-slate-gray/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: Logo -> always links to LandingPage "/" */}
+          {/* Left: Logo + App name -> always links to LandingPage "/" */}
           <Link to="/" aria-label="CarerView home" className="flex items-center">
-            {isLoading ? (
+            {logoLoading ? (
               <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
             ) : (
               <img
@@ -100,7 +76,26 @@ export default function Header() {
               Why you need CarerView
             </Link>
 
-            {rightButton}
+            {/* Only render Dashboard if auth finished and user exists; else show Sign In */}
+            {authLoading ? (
+              <div className="w-[108px] h-9 rounded-xl bg-slate-200 animate-pulse" aria-hidden />
+            ) : isAuthed ? (
+              <Link
+                to={dashPath}
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                aria-label="Go to Dashboard"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                to={{ pathname: "/", hash: "#get-started" }}
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                aria-label="Go to Sign In"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </div>
