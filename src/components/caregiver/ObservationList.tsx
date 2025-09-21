@@ -1,3 +1,4 @@
+// src/components/caregiver/ObservationList.tsx
 import React from 'react'
 import { useObservations } from '../../hooks/useObservations'
 import { Card, CardContent } from '../ui/Card'
@@ -20,35 +21,25 @@ type ObservationRow = {
   caregiver_email: string | null
   created_at: string
   updated_at: string
-  form_type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null
+  /** DB value written by the form: ADL | IADL | BOTH */
+  form_type?: 'ADL' | 'IADL' | 'BOTH' | null
 }
 
-const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }> = ({ type }) => {
+const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'BOTH' | null }> = ({ type }) => {
   if (!type) return null
+  const label = type === 'BOTH' ? 'Comprehensive' : type
   const base = 'text-xs px-2 py-0.5 rounded-full border bg-white inline-flex items-center leading-none'
   const tone =
-    type === 'ADL'
-      ? 'border-cyan-600 text-cyan-700'
-      : type === 'IADL'
-      ? 'border-emerald-600 text-emerald-700'
-      : 'border-violet-600 text-violet-700' // COMPREHENSIVE
-  const label = type === 'COMPREHENSIVE' ? 'ADL+IADL' : type
+    type === 'ADL' ? 'border-cyan-600 text-cyan-700'
+    : type === 'IADL' ? 'border-emerald-600 text-emerald-700'
+    : 'border-indigo-600 text-indigo-700'
   return <span className={`${base} ${tone}`}>{label}</span>
 }
 
-export const ObservationList: React.FC<ObservationListProps> = ({
-  onViewObservation,
-  onExportObservation
-}) => {
+export const ObservationList: React.FC<ObservationListProps> = ({ onViewObservation, onExportObservation }) => {
   const { data: observations, isLoading, error } = useObservations()
-
-  if (isLoading) {
-    return <Loading message="Loading observations..." />
-  }
-
-  if (error) {
-    return <div className="text-red-600">Failed to load observations</div>
-  }
+  if (isLoading) return <Loading message="Loading observations..." />
+  if (error) return <div className="text-red-600">Failed to load observations</div>
 
   if (!observations || observations.length === 0) {
     return (
@@ -66,51 +57,29 @@ export const ObservationList: React.FC<ObservationListProps> = ({
 
   return (
     <div className="space-y-4">
-      {(observations as ObservationRow[]).map((observation) => (
-        <Card key={observation.id} className="bg-warm-white">
+      {(observations as ObservationRow[]).map((o) => (
+        <Card key={o.id} className="bg-warm-white">
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-slate-gray truncate">
-                    {observation.patient_name || 'Unnamed Patient'}
+                    {o.patient_name || 'Unnamed Patient'}
                   </h3>
-                  <FormTypeChip type={observation.form_type ?? null} />
+                  <FormTypeChip type={o.form_type ?? null} />
                 </div>
-                <p className="text-slate-gray/80">
-                  Observed on {formatDate(observation.observation_date)}
-                </p>
-                {observation.notes && (
-                  <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{observation.notes}</p>
-                )}
+                <p className="text-slate-gray/80">Observed on {formatDate(o.observation_date)}</p>
+                {o.notes && <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{o.notes}</p>}
               </div>
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewObservation(observation.id)}
-                  className="flex items-center space-x-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>View</span>
+                <Button variant="outline" size="sm" onClick={() => onViewObservation(o.id)} className="flex items-center space-x-2">
+                  <Eye className="w-4 h-4" /><span>View</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onExportObservation(observation.id, 'docx')}
-                  className="flex items-center space-x-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>DOCX</span>
+                <Button variant="outline" size="sm" onClick={() => onExportObservation(o.id, 'docx')} className="flex items-center space-x-2">
+                  <Download className="w-4 h-4" /><span>DOCX</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onExportObservation(observation.id, 'csv')}
-                  className="flex items-center space-x-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>CSV</span>
+                <Button variant="outline" size="sm" onClick={() => onExportObservation(o.id, 'csv')} className="flex items-center space-x-2">
+                  <Download className="w-4 h-4" /><span>CSV</span>
                 </Button>
               </div>
             </div>
