@@ -1,4 +1,3 @@
-// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
@@ -11,7 +10,6 @@ import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
-  /** 'COMPREHENSIVE' shows both ADL + IADL */
   formType: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   onComplete: () => void
 }
@@ -19,7 +17,7 @@ interface ObservationFormProps {
 export type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  type: 'ADL' | 'IADL'          // from view
+  type: string               // 'ADL' | 'IADL'
   category_order: number
   question_id: string
   question_text: string
@@ -29,7 +27,7 @@ export type CategoryQuestionRow = {
 type Category = {
   id: string
   name: string
-  type: 'ADL' | 'IADL'
+  type: string               // 'ADL' | 'IADL'
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -53,14 +51,18 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
+  // pretty name for the UI
+  const displayFormType =
+    formType === 'COMPREHENSIVE' ? 'Comprehensive (ADL + IADL)' : formType
+
   // --- date helpers ---
   const validateDate = (dateString: string): boolean => {
     if (!dateString) return false
     const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/
     if (!dateRegex.test(dateString)) return false
     const [month, day, year] = dateString.split('/').map(Number)
-    const d = new Date(year, month - 1, day)
-    return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day
+    const date = new Date(year, month - 1, day)
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
   }
 
   const handleDateChange = (value: string) => {
@@ -81,7 +83,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     isLoading: cqLoading,
     isError: cqIsError,
     error: cqError,
-    refetch: cqRefetch,
+    refetch: cqRefetch
   } = useQuery({
     queryKey: ['category-questions', user?.id, formType],
     enabled: !authLoading && !!user?.id,
@@ -90,77 +92,94 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<CategoryQuestionRow[]> => {
       if (!user?.id) return []
-      let q = supabase
+      let query = supabase
         .from('v_category_questions')
-        .select('category_id, category_name, type, category_order, question_id, question_text, question_order')
+        .select('category_id, category_name, type, category_order, question_id, question_text, question_order') as any
+
+      // For ADL or IADL, filter by type; for COMPREHENSIVE fetch all.
+      if (formType !== 'COMPREHENSIVE') {
+        query = query.eq('type', formType)
+      }
+
+      const { data, error } = await query
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
 
-      // Only filter by type when NOT comprehensive
-      if (formType !== 'COMPREHENSIVE') {
-        q = q.eq('type', formType)
-      }
-
-      const { data, error } = await q
       if (error) throw new Error(error.message)
       return (data as CategoryQuestionRow[]) || []
-    },
+    }
   })
 
-  // --- data: legend 1–5 ---
+  // --- data: legend 1–5 (auth-gated via hook) ---
   const { data: legendRows, isLoading: legendLoading, isError: legendIsError } = useLegend()
+
   const legendMap: Record<number, string> = React.useMemo(() => {
     const m: Record<number, string> = {}
-    ;(legendRows ?? []).forEach((r) => {
+    ;(legendRows ?? []).forEach(r => {
       if (typeof r.score === 'number' && r.description) m[r.score] = r.description
     })
     return m
   }, [legendRows])
 
-  // --- rows -> Category[] ---
+  // --- transform rows -> Category[] ---
   const categories: Category[] = React.useMemo(() => {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
     categoryQuestions.forEach((item) => {
-      if (!item.category_id || !item.category_name || !item.type || item.category_order == null || !item.question_id || !item.question_text || item.question_order == null) {
+      if (
+        !item.category_id ||
+        !item.category_name ||
+        !item.type ||
+        item.category_order == null ||
+        !item.question_id ||
+        !item.question_text ||
+        item.question_order == null
+      ) {
         return
       }
       if (!map.has(item.category_id)) {
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          type: item.type,
+          type: item.type ?? 'ADL',
           order: item.category_order,
-          questions: [],
+          questions: []
         })
       }
       map.get(item.category_id)!.questions.push({
         id: item.question_id,
         text: item.question_text,
-        order: item.question_order,
+        order: item.question_order
       })
     })
 
     const result = Array.from(map.values())
-    // ADL first, then IADL; within each, the configured category order
-    const ord = (t: 'ADL' | 'IADL') => (t === 'ADL' ? 0 : 1)
-    result.sort((a, b) => ord(a.type) - ord(b.type) || a.order - b.order)
+    // deterministic ADL-first, then category order
+    const orderOfType = (t: string) => (t === 'ADL' ? 0 : 1)
+    result.sort((a, b) => (orderOfType(a.type ?? 'ADL') - orderOfType(b.type ?? 'ADL')) || (a.order - b.order))
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
 
-  // --- question_id -> category_id map ---
+  // --- question_id -> category_id map (for saving responses) ---
   const questionCategoryMap: Record<string, string> = React.useMemo(() => {
     const map: Record<string, string> = {}
     categories.forEach((category) => {
-      category.questions.forEach((q) => (map[q.id] = category.id))
+      if (!category.id) return
+      category.questions.forEach((question) => {
+        if (!question.id) return
+        map[question.id] = category.id
+      })
     })
     return map
   }, [categories])
 
   // --- derived flags ---
-  const isValidDate = !!dateOfObservation && validateDate(dateOfObservation)
-  const hasAnyScore = React.useMemo(() => Object.values(answers).some((v) => typeof v === 'number'), [answers])
+  const isValidDate = dateOfObservation ? validateDate(dateOfObservation) : false
+  const hasAnyScore = React.useMemo(
+    () => Object.values(answers).some((v) => typeof v === 'number'),
+    [answers]
+  )
 
   // --- save ---
   const handleSave = async (exitAfterSave: boolean) => {
@@ -190,6 +209,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
       (user?.email || '').trim()
 
     const caregiver_email = (profile?.email || user?.email || '').trim()
+
     if (!emailRegex.test(caregiver_email)) {
       setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
       setIsSaving(false)
@@ -197,7 +217,6 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     }
 
     const formattedDate = formatDateForDB(dateOfObservation)
-    const formTypeForDb = formType === 'COMPREHENSIVE' ? 'BOTH' : formType
 
     const payload = {
       observationId: currentObservationId || undefined,
@@ -208,19 +227,23 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         notes,
         caregiver_name,
         caregiver_email,
-        form_type: formTypeForDb, // ADL | IADL | BOTH
+        // persist the chosen form type (ADL | IADL | COMPREHENSIVE)
+        form_type: formType,
       },
       answers,
       categoryNotes,
-      questionCategoryMap,
+      questionCategoryMap
     }
 
     try {
       const result = await upsertObservation.mutateAsync(payload)
       if (!currentObservationId) setCurrentObservationId(result.id)
+
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
-      if (exitAfterSave) onComplete()
-      else {
+
+      if (exitAfterSave) {
+        onComplete()
+      } else {
         setSaveSuccessMessage('Observation saved successfully!')
         setTimeout(() => setSaveSuccessMessage(null), 3000)
       }
@@ -235,23 +258,41 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     e.preventDefault()
     handleSave(true)
   }
-  const handleInterimSave = () => handleSave(false)
-  const setCategoryNote = (categoryId: string, value: string) => setCategoryNotes((prev) => ({ ...prev, [categoryId]: value }))
 
-  // --- loading & error states ---
-  if (authLoading || cqLoading || legendLoading) {
-    return <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-4">Loading questions…</div>
+  const handleInterimSave = () => {
+    handleSave(false)
   }
+
+  const setCategoryNote = (categoryId: string, value: string) => {
+    setCategoryNotes((prev) => ({ ...prev, [categoryId]: value }))
+  }
+
+  // --- loading & error states (include legend) ---
+  if (authLoading || cqLoading || legendLoading) {
+    return (
+      <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-4">
+        Loading questions…
+      </div>
+    )
+  }
+
   if (cqIsError || legendIsError) {
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-4">
-        <p className="text-slate-gray mb-2">Error loading questions or legend. Please try again.</p>
-        <button type="button" onClick={() => cqRefetch()} className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray">
+        <p className="text-slate-gray mb-2">
+          Error loading questions or legend. Please try again.
+        </p>
+        <button
+          type="button"
+          onClick={() => cqRefetch()}
+          className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
+        >
           Try again
         </button>
       </div>
     )
   }
+
   if (!categories || categories.length === 0) {
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6 text-center">
@@ -261,17 +302,14 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     )
   }
 
-  const headingSuffix = formType === 'COMPREHENSIVE' ? 'ADL + IADL' : formType
-
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">
-          Create New Observation <span className="text-slate-500">({headingSuffix})</span>
+          Create New Observation <span className="text-slate-500">({displayFormType})</span>
         </h2>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left */}
+          {/* Left Column */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-2">
@@ -295,8 +333,9 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
                 value={dateOfObservation}
                 onChange={(e) => handleDateChange(e.target.value)}
                 className={`w-full px-3 py-2 rounded-lg border ${
-                  dateError ? 'border-peach-blush focus:border-peach-blush focus:ring-peach-blush'
-                            : 'border-slate-gray/30 focus:border-cyan-primary focus:ring-cyan-primary'
+                  dateError
+                    ? 'border-peach-blush focus:border-peach-blush focus:ring-peach-blush'
+                    : 'border-slate-gray/30 focus:border-cyan-primary focus:ring-cyan-primary'
                 } focus:outline-none focus:ring-2 bg-warm-white text-slate-gray`}
                 placeholder="MM/DD/YYYY"
               />
@@ -309,7 +348,9 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
               </label>
               <select
                 value={modeOfObservation}
-                onChange={(e) => setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')}
+                onChange={(e) =>
+                  setModeOfObservation(e.target.value as 'In Person' | 'Voice Call' | 'Video Call')
+                }
                 className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
               >
                 <option value="In Person">In Person</option>
@@ -319,9 +360,11 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
             </div>
           </div>
 
-          {/* Right */}
+          {/* Right Column */}
           <div className="flex flex-col">
-            <label className="block text-sm font-medium text-slate-gray mb-2">Administrative Notes (Optional)</label>
+            <label className="block text-sm font-medium text-slate-gray mb-2">
+              Administrative Notes (Optional)
+            </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -333,6 +376,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         </div>
       </div>
 
+      {/* Legend Section */}
       <ScoreLegendDisplay />
 
       <div className="space-y-6">
@@ -342,20 +386,32 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
               <div className="flex items-center justify-between">
                 <div className="font-semibold text-slate-gray">
                   {category.name}{' '}
-                  <span className="text-slate-gray/60 text-sm">({category.type})</span>
+                  <span className="text-slate-gray/60 text-sm">
+                    ({category.type ?? 'ADL'})
+                  </span>
                 </div>
 
-                {/* scale swatch */}
+                {/* CarerView 1–5 ADL Scale Reference */}
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsDown className="w-3 h-3 text-white" />
                   </div>
                   <div className="flex space-x-1">
-                    <div className="w-8 h-6 bg-peach-blush rounded-sm flex items-center justify-center"><span className="text-xs font-bold text-white">1</span></div>
-                    <div className="w-8 h-6 bg-peach-blush/70 rounded-sm flex items-center justify-center"><span className="text-xs font-bold text-white">2</span></div>
-                    <div className="w-8 h-6 bg-cyan-primary/30 rounded-sm flex items-center justify-center"><span className="text-xs font-bold text-slate-gray">3</span></div>
-                    <div className="w-8 h-6 bg-mint-green/70 rounded-sm flex items-center justify-center"><span className="text-xs font-bold text-slate-gray">4</span></div>
-                    <div className="w-8 h-6 bg-mint-green rounded-sm flex items-center justify-center"><span className="text-xs font-bold text-slate-gray">5</span></div>
+                    <div className="w-8 h-6 bg-peach-blush rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">1</span>
+                    </div>
+                    <div className="w-8 h-6 bg-peach-blush/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">2</span>
+                    </div>
+                    <div className="w-8 h-6 bg-cyan-primary/30 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">3</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">4</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">5</span>
+                    </div>
                   </div>
                   <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <ThumbsUp className="w-3 h-3 text-white" />
@@ -366,15 +422,17 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
 
             <div className="p-4">
               <div className="space-y-4">
-                {category.questions.map((q) => (
-                  <div key={q.id} className="grid md:grid-cols-12 items-center gap-3">
-                    <div className="md:col-span-9 text-slate-gray">{q.text}</div>
+                {category.questions.map((question) => (
+                  <div key={question.id} className="grid md:grid-cols-12 items-center gap-3">
+                    <div className="md:col-span-9 text-slate-gray">{question.text}</div>
                     <div className="md:col-span-3">
                       <ScorePicker
-                        value={answers[q.id]}
-                        onChange={(val) => setAnswers((prev) => ({ ...prev, [q.id]: val }))}
+                        value={answers[question.id]}
+                        onChange={(val) =>
+                          setAnswers((prev) => ({ ...prev, [question.id]: val }))
+                        }
                         descriptions={legendMap}
-                        ariaLabel={`Set score for: ${q.text}`}
+                        ariaLabel={`Set score for: ${question.text}`}
                       />
                     </div>
                   </div>
@@ -399,12 +457,38 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
             {/* Category Save Buttons */}
             <div className="mt-6 pt-4 border-t border-slate-gray/20">
               <div className="flex items-center justify-end space-x-3">
-                <Button type="button" variant="outline" size="sm" onClick={() => handleSave(true)} disabled={isSaving || !isValidDate || !hasAnyScore}
-                  title={!isValidDate ? 'Enter a valid date (MM/DD/YYYY)' : !hasAnyScore ? 'Select at least one score' : undefined}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
                   <span>{isSaving ? 'Saving...' : 'Save & Exit'}</span>
                 </Button>
-                <Button type="button" variant="primary" size="sm" onClick={handleInterimSave} disabled={isSaving || !isValidDate || !hasAnyScore}
-                  title={!isValidDate ? 'Enter a valid date (MM/DD/YYYY)' : !hasAnyScore ? 'Select at least one score' : undefined}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleInterimSave}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
                   <span>{isSaving ? 'Saving...' : 'Save & Continue'}</span>
                 </Button>
               </div>
@@ -415,11 +499,23 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
 
       {/* Action bar */}
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="primary" disabled={upsertObservation.isPending || isSaving || !isValidDate || !hasAnyScore}
-          title={!isValidDate ? 'Enter a valid date (MM/DD/YYYY)' : !hasAnyScore ? 'Select at least one score' : undefined}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={upsertObservation.isPending || isSaving || !isValidDate || !hasAnyScore}
+          title={
+            !isValidDate
+              ? 'Enter a valid date in MM/DD/YYYY'
+              : !hasAnyScore
+              ? 'Select at least one score'
+              : undefined
+          }
+        >
           {upsertObservation.isPending || isSaving ? 'Saving...' : 'Create Observation'}
         </Button>
-        <Button type="button" variant="outline" onClick={onComplete}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={onComplete}>
+          Cancel
+        </Button>
       </div>
 
       {/* Inline guidance */}
@@ -430,8 +526,16 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         </div>
       )}
 
-      {saveError && <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">{saveError}</div>}
-      {saveSuccessMessage && <div className="mt-3 rounded-md border border-mint-green bg-mint-green/20 p-3 text-sm text-slate-gray">{saveSuccessMessage}</div>}
+      {saveError && (
+        <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">
+          {saveError}
+        </div>
+      )}
+      {saveSuccessMessage && (
+        <div className="mt-3 rounded-md border border-mint-green bg-mint-green/20 p-3 text-sm text-slate-gray">
+          {saveSuccessMessage}
+        </div>
+      )}
     </form>
   )
 }
