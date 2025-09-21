@@ -18,7 +18,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
-+ import CaregiverGuard from "./components/common/CaregiverGuard";
+import CaregiverGuard from "./components/common/CaregiverGuard";
 
 // Lazy page
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
