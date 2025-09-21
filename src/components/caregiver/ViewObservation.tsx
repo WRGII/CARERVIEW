@@ -35,9 +35,19 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     return <ErrorMessage message="Observation not found" />
   }
 
-  if (!observation.responses) {
-    var categorizedResponses = []
-  } else {
+  let categorizedResponses: Array<{
+    id: string
+    name: string
+    type: 'ADL' | 'IADL'
+    responses: Array<{
+      score: number
+      notes: string | null
+      question: { question_text: string; sort_order: number }
+      // category_notes?: string | null // if you enrich responses with this later
+    }>
+  }> = []
+
+  if (observation.responses) {
     const categoryMap = new Map<string, {
       id: string
       name: string
@@ -52,7 +62,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       }>
     }>()
 
-    observation.responses?.forEach(response => {
+    observation.responses.forEach(response => {
       const category = response.question?.category
       if (!category) return
 
@@ -60,7 +70,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         categoryMap.set(category.id, {
           id: category.id,
           name: category.name,
-          type: category.type,
+          type: category.type, // 'ADL' | 'IADL'
           responses: []
         })
       }
@@ -75,21 +85,19 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       })
     })
 
-    // Sort categories: ADL before IADL, then by name
     const categories = Array.from(categoryMap.values())
+
+    // FIX: sort by category.type (ADL first), then by name
     categories.sort((a, b) => {
-      if (a.category_type !== b.category_type) {
-        return a.category_type === 'ADL' ? -1 : 1
-      }
+      if (a.type !== b.type) return a.type === 'ADL' ? -1 : 1
       return a.name.localeCompare(b.name)
     })
 
-    // Sort questions within each category by sort_order
     categories.forEach(category => {
       category.responses.sort((a, b) => a.question.sort_order - b.question.sort_order)
     })
 
-    var categorizedResponses = categories
+    categorizedResponses = categories
   }
 
   return (
@@ -193,11 +201,11 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     {category.name}
                   </h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    (category.type ?? 'ADL') === 'ADL'
+                    category.type === 'ADL'
                       ? 'bg-cyan-primary/20 text-cyan-primary'
                       : 'bg-mint-green/60 text-slate-gray'
                   }`}>
-                    {category.type ?? 'ADL'}
+                    {category.type}
                   </span>
                 </div>
               </CardHeader>
@@ -226,21 +234,6 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                     </div>
                   ))}
                 </div>
-              
-              {/* Display category notes if any exist */}
-              {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes && (
-                <div className="mt-4 pt-4 border-t border-slate-gray/20">
-                  <div className="flex items-start space-x-3">
-                    <FileText className="w-4 h-4 text-slate-gray/60 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm text-slate-gray/70 mb-1">{category.name} Category Notes</p>
-                      <p className="text-slate-gray">
-                        {categorizedResponses.find(cat => cat.id === category.id)?.responses[0]?.category_notes}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
               </CardContent>
             </Card>
           ))}
