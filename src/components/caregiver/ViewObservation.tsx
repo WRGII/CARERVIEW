@@ -241,18 +241,79 @@ categories.sort((a, b) => {
         </div>
       ) : (
         <Card className="bg-warm-white">
-          <CardContent>
-            <div className="text-center py-8">
-              <FileText className="w-12 h-12 text-slate-gray/40 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-gray mb-2">No Responses</h3>
-              <p className="text-slate-gray/70">This observation has no recorded responses.</p>
-            </div>
-          </CardContent>
-        </Card>
+  <CardHeader>
+    <h3 className="text-lg font-semibold text-slate-gray">Observation Details</h3>
+  </CardHeader>
+  <CardContent>
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex items-center space-x-3">
+        <User className="w-5 h-5 text-slate-gray/60" />
+        <div>
+          <p className="text-sm text-slate-gray/70">Patient Name</p>
+          <p className="font-medium text-slate-gray">
+            {observation.patient_name || 'Unnamed Patient'}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-3">
+        <Calendar className="w-5 h-5 text-slate-gray/60" />
+        <div>
+          <p className="text-sm text-slate-gray/70">Observation Date</p>
+          <p className="font-medium text-slate-gray">
+            {formatDate(observation.observation_date)}
+          </p>
+        </div>
+      </div>
+
+      {/* NEW: Type */}
+      <div className="flex items-center space-x-3">
+        <Layers className="w-5 h-5 text-slate-gray/60" />
+        <div>
+          <p className="text-sm text-slate-gray/70">Observation Type</p>
+          <p className="font-medium text-slate-gray">
+            {observation.form_type === 'COMPREHENSIVE'
+              ? 'Comprehensive (ADL + IADL)'
+              : observation.form_type || '—'}
+          </p>
+        </div>
+      </div>
+
+      {observation.mode_of_observation && (
+        <div className="flex items-center space-x-3">
+          <Phone className="w-5 h-5 text-slate-gray/60" />
+          <div>
+            <p className="text-sm text-slate-gray/70">Mode of Observation</p>
+            <p className="font-medium text-slate-gray">{observation.mode_of_observation}</p>
+          </div>
+        </div>
       )}
 
-      {/* Score Legend Display */}
-      <ScoreLegendDisplay />
+      {observation.caregiver_name && (
+        <div className="flex items-center space-x-3">
+          <User className="w-5 h-5 text-slate-gray/60" />
+          <div>
+            <p className="text-sm text-slate-gray/70">Caregiver</p>
+            <p className="font-medium text-slate-gray">{observation.caregiver_name}</p>
+            {observation.caregiver_email && (
+              <p className="text-sm text-slate-gray/60">{observation.caregiver_email}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+
+    {observation.notes && (
+      <div className="mt-6 pt-4 border-t border-slate-gray/20">
+        <div className="flex items-start space-x-3">
+          <FileText className="w-5 h-5 text-slate-gray/60 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-slate-gray/70 mb-1">Notes</p>
+            <p className="text-slate-gray">{observation.notes}</p>
+          </div>
+        </div>
+      </div>
+    )}
+  </CardContent>
+</Card>
+
