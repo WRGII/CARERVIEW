@@ -88,10 +88,11 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     const categories = Array.from(categoryMap.values())
 
     // FIX: sort by category.type (ADL first), then by name
-    categories.sort((a, b) => {
-      if (a.type !== b.type) return a.type === 'ADL' ? -1 : 1
-      return a.name.localeCompare(b.name)
-    })
+    c// inside ViewObservation.tsx, replace the sort for categories:
+categories.sort((a, b) => {
+  if (a.type !== b.type) return a.type === 'ADL' ? -1 : 1
+  return a.name.localeCompare(b.name)
+})
 
     categories.forEach(category => {
       category.responses.sort((a, b) => a.question.sort_order - b.question.sort_order)
