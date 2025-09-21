@@ -1,8 +1,19 @@
 // src/lib/exports.ts
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx'
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
+  AlignmentType,
+} from 'docx'
 import { saveAs } from 'file-saver'
 
-// Types aligned to your runtime shapes and tolerant to missing joins
+// ---------- Types aligned to runtime shapes (null-safe on joins) -------------
 interface Legend {
   id: string
   score: number
@@ -13,7 +24,7 @@ interface Legend {
 interface Category {
   id: string
   name: string
-  type: string
+  type: 'ADL' | 'IADL' | string
   ada_definition?: string
   ot_definition?: string
   sort_order?: number
@@ -32,6 +43,8 @@ interface CategoryWithQuestions extends Category {
   questions: Question[]
 }
 
+type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE' | null | undefined
+
 interface ObservationWithResponses {
   id: string
   user_id: string
@@ -44,7 +57,8 @@ interface ObservationWithResponses {
   caregiver_email: string | null
   created_at: string
   updated_at: string
-  // Each response may or may not have the joined question/category (RLS, etc.)
+  form_type?: FormType
+  // Each response may or may not have the joined question/category
   responses: Array<{
     id: string
     observation_id: string
@@ -61,365 +75,423 @@ interface ObservationWithResponses {
       category?: {
         id: string
         name: string
-        category_type: string
+        type: 'ADL' | 'IADL'
       } | null
     } | null
   }>
 }
 
+// ---------- Helpers ----------------------------------------------------------
+const formTypeLabel = (t: FormType) =>
+  t === 'COMPREHENSIVE' ? 'Comprehensive (ADL + IADL)' : t || '—'
+
+const colorForScore = (score: number) => {
+  // hex (no #) strings for docx
+  // 1–2 = red-ish, 3 = amber/blue-ish, 4–5 = green-ish
+  if (score >= 4) return '059669' // green-600
+  if (score >= 3) return '0ea5e9' // sky-500
+  return 'dc2626' // red-600
+}
+
+const safeFile = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '_')
+
+// ---------- DOCX -------------------------------------------------------------
 export const exportToDOCX = async (
   observation: ObservationWithResponses,
   categories: CategoryWithQuestions[],
   legend: Legend[]
 ) => {
   const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        // Header
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'CarerView Observation Report',
-              bold: true,
-              size: 32,
-              color: '2563eb'
-            })
-          ],
-          spacing: { after: 400 }
-        }),
-
-        // Patient Information
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'Patient Information',
-              bold: true,
-              size: 28,
-              underline: {}
-            })
-          ],
-          spacing: { after: 200 }
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Patient: ${observation.patient_name || 'Unnamed Patient'}`,
-              size: 24
-            })
-          ]
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Observation Date: ${new Date(observation.observation_date).toLocaleDateString()}`,
-              size: 24
-            })
-          ]
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Report Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
-              size: 24
-            })
-          ]
-        }),
-
-        // Administrative Notes section (if present)
-        ...(observation.notes ? [
+    sections: [
+      {
+        properties: {},
+        children: [
+          // Title
           new Paragraph({
+            alignment: AlignmentType.CENTER,
             children: [
               new TextRun({
-                text: `${category.name} (${category.type ?? 'ADL'})`,
+                text: 'CarerView Observation Report',
                 bold: true,
-                size: 28,
-                underline: {}
-              })
+                size: 32,
+                color: '2563eb',
+              }),
             ],
-            spacing: { before: 400, after: 200 }
+            spacing: { after: 400 },
+          }),
+
+          // Patient / header info
+          new Paragraph({
+            children: [new TextRun({ text: 'Patient Information', bold: true, size: 28, underline: {} })],
+            spacing: { after: 200 },
           }),
           new Paragraph({
             children: [
               new TextRun({
-                text: observation.notes || '',
-                size: 24
-              })
+                text: `Patient: ${observation.patient_name || 'Unnamed Patient'}`,
+                size: 24,
+              }),
             ],
-            spacing: { after: 400 }
-          })
-        ] : [new Paragraph({ text: '', spacing: { after: 400 } })]),
-
-        // Assessment Results Header
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'Assessment Results',
-              bold: true,
-              size: 28,
-              underline: {}
-            })
-          ],
-          spacing: { before: 400, after: 200 }
-        }),
-
-        // Results by category
-        ...categories.flatMap(category => {
-          // ✅ FIX: use the joined category id safely
-          const categoryResponses = (observation.responses || []).filter(
-            r => r.question?.category?.id === category.id
-          )
-
-          if (categoryResponses.length === 0) return []
-
-          // Get category notes from the first response (they should all be the same for a category)
-          const categoryNotes = categoryResponses.length > 0 ? categoryResponses[0].category_notes : null
-          return [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `${category.name} (${category.category_type ?? 'general'})`,
-                  bold: true,
-                  size: 26,
-                  color: '1f2937'
-                })
-              ],
-              spacing: { before: 300, after: 200 }
-            }),
-
-            // Create table for this category's responses
-            new Table({
-              width: {
-                size: 100,
-                type: WidthType.PERCENTAGE,
-              },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 1 },
-                bottom: { style: BorderStyle.SINGLE, size: 1 },
-                left: { style: BorderStyle.SINGLE, size: 1 },
-                right: { style: BorderStyle.SINGLE, size: 1 },
-                insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-                insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-              },
-              rows: [
-                // Header row
-                new TableRow({
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Observation Date: ${new Date(observation.observation_date).toLocaleDateString()}`,
+                size: 24,
+              }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Observation Type: ${formTypeLabel(observation.form_type)}`,
+                size: 24,
+              }),
+            ],
+          }),
+          ...(observation.mode_of_observation
+            ? [
+                new Paragraph({
                   children: [
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Question', bold: true, size: 22 })]
-                      })],
-                      width: { size: 60, type: WidthType.PERCENTAGE }
+                    new TextRun({
+                      text: `Mode: ${observation.mode_of_observation}`,
+                      size: 24,
                     }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Score', bold: true, size: 22 })]
-                      })],
-                      width: { size: 15, type: WidthType.PERCENTAGE }
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Description', bold: true, size: 22 })]
-                      })],
-                      width: { size: 25, type: WidthType.PERCENTAGE }
-                    })
-                  ]
+                  ],
                 }),
-                // Data rows
-                ...categoryResponses.map(response =>
+              ]
+            : []),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Report Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+                size: 24,
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // Administrative Notes
+          ...(observation.notes
+            ? [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: 'Administrative Notes',
+                      bold: true,
+                      size: 28,
+                      underline: {},
+                    }),
+                  ],
+                  spacing: { before: 400, after: 200 },
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: observation.notes, size: 24 })],
+                  spacing: { after: 400 },
+                }),
+              ]
+            : []),
+
+          // Assessment Results header
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Assessment Results', bold: true, size: 28, underline: {} }),
+            ],
+            spacing: { before: 200, after: 200 },
+          }),
+
+          // Results by category
+          ...categories.flatMap((category) => {
+            const categoryResponses = (observation.responses || []).filter(
+              (r) => r.question?.category?.id === category.id
+            )
+            if (categoryResponses.length === 0) return []
+
+            const categoryNotes =
+              categoryResponses.length > 0 ? categoryResponses[0].category_notes : null
+
+            return [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${category.name} (${category.type ?? 'ADL'})`,
+                    bold: true,
+                    size: 26,
+                    color: '1f2937',
+                  }),
+                ],
+                spacing: { before: 300, after: 200 },
+              }),
+
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 1 },
+                  bottom: { style: BorderStyle.SINGLE, size: 1 },
+                  left: { style: BorderStyle.SINGLE, size: 1 },
+                  right: { style: BorderStyle.SINGLE, size: 1 },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+                },
+                rows: [
+                  // header row
                   new TableRow({
                     children: [
                       new TableCell({
-                        children: [new Paragraph({
-                          // ✅ FIX: guard missing joins
-                          children: [new TextRun({ text: response.question?.question_text || '(question unavailable)', size: 20 })]
-                        })]
+                        children: [
+                          new Paragraph({
+                            children: [new TextRun({ text: 'Question', bold: true, size: 22 })],
+                          }),
+                        ],
+                        width: { size: 60, type: WidthType.PERCENTAGE },
                       }),
                       new TableCell({
-                        children: [new Paragraph({
-                          children: [new TextRun({
-                            text: `${response.score}/5`,
-                            bold: true,
-                            size: 20,
-                            color: response.score >= 4 ? '059669' : response.score >= 3 ? 'ea580c' : 'dc2626'
-                          })]
-                        })]
+                        children: [
+                          new Paragraph({
+                            children: [new TextRun({ text: 'Score', bold: true, size: 22 })],
+                          }),
+                        ],
+                        width: { size: 15, type: WidthType.PERCENTAGE },
                       }),
                       new TableCell({
-                        children: [new Paragraph({
-                          children: [new TextRun({
-                            text: (legend.find(l => l.score === response.score)?.description) || '',
-                            size: 20
-                          })]
-                        })]
-                      })
-                    ]
-                  })
-                )
-              ]
-            }),
-
-            // Add category notes section if present
-            ...(categoryNotes ? [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `${category.name} Category Notes:`,
-                    bold: true,
-                    size: 22,
-                    color: '374151'
-                  })
+                        children: [
+                          new Paragraph({
+                            children: [new TextRun({ text: 'Description', bold: true, size: 22 })],
+                          }),
+                        ],
+                        width: { size: 25, type: WidthType.PERCENTAGE },
+                      }),
+                    ],
+                  }),
+                  // data rows
+                  ...categoryResponses.map((response) =>
+                    new TableRow({
+                      children: [
+                        new TableCell({
+                          children: [
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text:
+                                    response.question?.question_text ||
+                                    '(question unavailable)',
+                                  size: 20,
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                        new TableCell({
+                          children: [
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text: `${response.score}/5`,
+                                  bold: true,
+                                  size: 20,
+                                  color: colorForScore(response.score),
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                        new TableCell({
+                          children: [
+                            new Paragraph({
+                              children: [
+                                new TextRun({
+                                  text:
+                                    legend.find((l) => l.score === response.score)?.description ||
+                                    '',
+                                  size: 20,
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    })
+                  ),
                 ],
-                spacing: { before: 200, after: 100 }
               }),
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: categoryNotes,
-                    size: 20,
-                    color: '4b5563'
-                  })
-                ],
-                spacing: { after: 200 }
-              })
-            ] : []),
-            new Paragraph({ text: '', spacing: { after: 200 } }) // Spacing after table
-          ]
-        }),
 
-        // Scoring Legend
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'CARERVIEW 1-5 ADL SCALE',
-              bold: true,
-              size: 32,
-              color: '1f2937'
-            })
-          ],
-          spacing: { before: 600, after: 400 },
-          alignment: 'center'
-        }),
+              ...(categoryNotes
+                ? [
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: `${category.name} Category Notes:`,
+                          bold: true,
+                          size: 22,
+                          color: '374151',
+                        }),
+                      ],
+                      spacing: { before: 200, after: 100 },
+                    }),
+                    new Paragraph({
+                      children: [new TextRun({ text: categoryNotes, size: 20, color: '4b5563' })],
+                      spacing: { after: 200 },
+                    }),
+                  ]
+                : []),
 
-        // Scale visualization in text form
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: '1 (Total Assistance) → 2 (Constant Shared Effort) → 3 (Independent with Support) → 4 (Independent with Difficulty) → 5 (Fully Independent)',
-              size: 20,
-              color: '374151'
-            })
-          ],
-          spacing: { after: 400 },
-          alignment: 'center'
-        }),
+              new Paragraph({ text: '', spacing: { after: 200 } }),
+            ]
+          }),
 
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: 'Scoring Legend',
-              bold: true,
-              size: 28,
-              underline: {}
-            })
-          ],
-          spacing: { before: 200, after: 200 }
-        }),
+          // Legend
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: 'CARERVIEW 1–5 ADL SCALE',
+                bold: true,
+                size: 32,
+                color: '1f2937',
+              }),
+            ],
+            spacing: { before: 600, after: 200 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text:
+                  '1 (Total Assistance) → 2 (Constant Shared Effort) → 3 (Independent with Support) → 4 (Independent with Difficulty) → 5 (Fully Independent)',
+                size: 20,
+                color: '374151',
+              }),
+            ],
+            spacing: { after: 300 },
+          }),
 
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.SINGLE, size: 1 },
-            bottom: { style: BorderStyle.SINGLE, size: 1 },
-            left: { style: BorderStyle.SINGLE, size: 1 },
-            right: { style: BorderStyle.SINGLE, size: 1 },
-            insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-            insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-          },
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: 'Score', bold: true, size: 22 })] })],
-                  width: { size: 20, type: WidthType.PERCENTAGE }
-                }),
-                new TableCell({
-                  children: [new Paragraph({ children: [new TextRun({ text: 'Description', bold: true, size: 22 })] })],
-                  width: { size: 80, type: WidthType.PERCENTAGE }
-                })
-              ]
-            }),
-            ...legend.map(item =>
+          new Paragraph({
+            children: [new TextRun({ text: 'Scoring Legend', bold: true, size: 28, underline: {} })],
+            spacing: { before: 100, after: 200 },
+          }),
+
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 1 },
+              bottom: { style: BorderStyle.SINGLE, size: 1 },
+              left: { style: BorderStyle.SINGLE, size: 1 },
+              right: { style: BorderStyle.SINGLE, size: 1 },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+              insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+            },
+            rows: [
               new TableRow({
                 children: [
                   new TableCell({
-                    children: [new Paragraph({
-                      children: [new TextRun({
-                        text: item.score.toString(),
-                        bold: true,
-                        size: 20,
-                        color: item.score >= 7 ? '059669' : item.score >= 4 ? 'ea580c' : 'dc2626'
-                      })]
-                    })]
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun({ text: 'Score', bold: true, size: 22 })],
+                      }),
+                    ],
+                    width: { size: 20, type: WidthType.PERCENTAGE },
                   }),
                   new TableCell({
-                    children: [new Paragraph({ children: [new TextRun({ text: item.description, size: 20 })] })]
+                    children: [
+                      new Paragraph({
+                        children: [new TextRun({ text: 'Description', bold: true, size: 22 })],
+                      }),
+                    ],
+                    width: { size: 80, type: WidthType.PERCENTAGE },
+                  }),
+                ],
+              }),
+              ...legend
+                .slice()
+                .sort((a, b) => a.score - b.score)
+                .map((item) =>
+                  new TableRow({
+                    children: [
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [
+                              new TextRun({
+                                text: item.score.toString(),
+                                bold: true,
+                                size: 20,
+                                color: colorForScore(item.score),
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                      new TableCell({
+                        children: [
+                          new Paragraph({
+                            children: [new TextRun({ text: item.description, size: 20 })],
+                          }),
+                        ],
+                      }),
+                    ],
                   })
-                ]
-              })
-            )
-          ]
-        })
-      ]
-    }]
+                ),
+            ],
+          }),
+        ],
+      },
+    ],
   })
 
   const buffer = await Packer.toBuffer(doc)
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
-  const fileName = `observation-${(observation.patient_name || 'unnamed').replace(/[^a-zA-Z0-9]/g, '_')}-${observation.observation_date}.docx`
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  })
+  const fileName = `observation-${safeFile(observation.patient_name || 'unnamed')}-${
+    observation.observation_date
+  }.docx`
   saveAs(blob, fileName)
 }
 
+// ---------- CSV --------------------------------------------------------------
 export const exportToCSV = async (
   observation: ObservationWithResponses,
   categories: CategoryWithQuestions[],
   legend: Legend[]
 ) => {
-  // Helper to escape CSV values
   const escapeCSV = (value: unknown): string => {
     const s = (value ?? '').toString()
-    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"`
+      : s
   }
 
   const headers = [
     'Patient Name',
     'Observation Date',
+    'Observation Type',
+    'Mode',
     'Category',
     'Category Type',
     'Question',
     'Score',
     'Score Description',
     'Question Notes',
-    'Category Notes'
+    'Category Notes',
   ]
 
   const rows: string[][] = []
 
-  // Add observation info and responses (null-safe joins)
-  ;(observation.responses || []).forEach(response => {
+  ;(observation.responses || []).forEach((response) => {
     const category = response.question?.category
-    const legendDescription = legend.find(l => l.score === response.score)?.description || ''
-
+    const legendDescription = legend.find((l) => l.score === response.score)?.description || ''
     rows.push([
       observation.patient_name || 'Unnamed Patient',
       observation.observation_date,
+      formTypeLabel(observation.form_type),
+      observation.mode_of_observation || '',
       category?.name || '',
       category?.type || '',
       response.question?.question_text || '',
       response.score?.toString() || '',
       legendDescription,
       response.notes || '',
-      response.category_notes || ''
+      response.category_notes || '',
     ])
   })
 
@@ -427,13 +499,15 @@ export const exportToCSV = async (
     rows.push([
       observation.patient_name || 'Unnamed Patient',
       observation.observation_date,
+      formTypeLabel(observation.form_type),
+      observation.mode_of_observation || '',
       '',
       '',
       'No responses recorded',
       '',
       '',
       '',
-      observation.notes || ''
+      observation.notes || '',
     ])
   }
 
@@ -448,12 +522,17 @@ export const exportToCSV = async (
     [''],
     ['Scoring Legend:'],
     ['Score', 'Description'],
-    ...legend.map(item => [item.score.toString(), item.description])
+    ...legend
+      .slice()
+      .sort((a, b) => a.score - b.score)
+      .map((item) => [item.score.toString(), item.description]),
   ]
-    .map(row => row.map(escapeCSV).join(','))
+    .map((row) => row.map(escapeCSV).join(','))
     .join('\n')
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const fileName = `observation-${(observation.patient_name || 'unnamed').replace(/[^a-zA-Z0-9]/g, '_')}-${observation.observation_date}.csv`
+  const fileName = `observation-${safeFile(observation.patient_name || 'unnamed')}-${
+    observation.observation_date
+  }.csv`
   saveAs(blob, fileName)
 }
