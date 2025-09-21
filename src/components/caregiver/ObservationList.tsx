@@ -22,7 +22,7 @@ type ObservationRow = {
   created_at: string
   updated_at: string
   /** DB value written by the form: ADL | IADL | BOTH */
-  form_type?: 'ADL' | 'IADL' | 'BOTH' | null
+  form_type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null
 }
 
 const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'BOTH' | null }> = ({ type }) => {
