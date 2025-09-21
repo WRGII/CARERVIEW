@@ -170,7 +170,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="mt-4 text-sm text-slate-gray/60">Your CarerView Observation are Vital for the Care Plan!</p>
+          <p className="mt-4 text-sm text-slate-gray/60">Your Observations are Vital for their Care Plan!</p>
         </div>
 
         {/* Sub-hero Reassurance */}
