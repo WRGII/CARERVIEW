@@ -25,16 +25,19 @@ type ObservationRow = {
   form_type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null
 }
 
-const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'BOTH' | null }> = ({ type }) => {
+const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }> = ({ type }) => {
   if (!type) return null
-  const label = type === 'BOTH' ? 'Comprehensive' : type
   const base = 'text-xs px-2 py-0.5 rounded-full border bg-white inline-flex items-center leading-none'
   const tone =
-    type === 'ADL' ? 'border-cyan-600 text-cyan-700'
-    : type === 'IADL' ? 'border-emerald-600 text-emerald-700'
-    : 'border-indigo-600 text-indigo-700'
+    type === 'ADL'
+      ? 'border-cyan-600 text-cyan-700'
+      : type === 'IADL'
+      ? 'border-emerald-600 text-emerald-700'
+      : 'border-slate-500 text-slate-700' // COMPREHENSIVE
+  const label = type === 'COMPREHENSIVE' ? 'ADL + IADL' : type
   return <span className={`${base} ${tone}`}>{label}</span>
 }
+
 
 export const ObservationList: React.FC<ObservationListProps> = ({ onViewObservation, onExportObservation }) => {
   const { data: observations, isLoading, error } = useObservations()
