@@ -1,4 +1,3 @@
-// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
@@ -10,15 +9,17 @@ import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
+export type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE'
+
 interface ObservationFormProps {
-  formType: 'ADL' | 'IADL'
+  formType: FormType
   onComplete: () => void
 }
 
 export type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  type: string               // 'ADL' | 'IADL'
+  type: 'ADL' | 'IADL'
   category_order: number
   question_id: string
   question_text: string
@@ -28,7 +29,7 @@ export type CategoryQuestionRow = {
 type Category = {
   id: string
   name: string
-  type: string               // 'ADL' | 'IADL'
+  type: 'ADL' | 'IADL'
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -42,9 +43,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
-  const [modeOfObservation, setModeOfObservation] = useState<
-    'In Person' | 'Voice Call' | 'Video Call'
-  >('In Person')
+  const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
@@ -84,21 +83,27 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     error: cqError,
     refetch: cqRefetch
   } = useQuery({
-    queryKey: ['category-questions', user?.id, formType], // include filter in key
+    queryKey: ['category-questions', user?.id, formType],
     enabled: !authLoading && !!user?.id,
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<CategoryQuestionRow[]> => {
       if (!user?.id) return []
-      const { data, error } = await supabase
+      let q = supabase
         .from('v_category_questions')
-        .select(
-          'category_id, category_name, type, category_order, question_id, question_text, question_order'
-        )
-        .eq('type', formType) // ← filter ADL vs IADL
+        .select('category_id, category_name, type, category_order, question_id, question_text, question_order')
+
+      if (formType === 'COMPREHENSIVE') {
+        q = q.in('type', ['ADL', 'IADL'])
+      } else {
+        q = q.eq('type', formType)
+      }
+
+      const { data, error } = await q
         .order('category_order', { ascending: true })
         .order('question_order', { ascending: true })
+
       if (error) throw new Error(error.message)
       return (data as CategoryQuestionRow[]) || []
     }
@@ -135,7 +140,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          type: item.type ?? 'ADL',
+          type: item.type, // 'ADL' | 'IADL'
           order: item.category_order,
           questions: []
         })
@@ -148,9 +153,9 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     })
 
     const result = Array.from(map.values())
-    // deterministic ADL-first, then category order
-    const orderOfType = (t: string) => (t === 'ADL' ? 0 : 1)
-    result.sort((a, b) => (orderOfType(a.type ?? 'ADL') - orderOfType(b.type ?? 'ADL')) || (a.order - b.order))
+    // sort: ADL categories first, then by category order
+    const orderOfType = (t: 'ADL' | 'IADL') => (t === 'ADL' ? 0 : 1)
+    result.sort((a, b) => (orderOfType(a.type) - orderOfType(b.type)) || (a.order - b.order))
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
@@ -221,7 +226,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         notes,
         caregiver_name,
         caregiver_email,
-        form_type: formType, // ← persist the chosen form type
+        form_type: formType, // 'ADL' | 'IADL' | 'COMPREHENSIVE'
       },
       answers,
       categoryNotes,
@@ -295,11 +300,14 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     )
   }
 
+  const formTypeLabel =
+    formType === 'COMPREHENSIVE' ? 'ADL + IADL' : formType
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <h2 className="text-lg font-semibold mb-4">
-          Create New Observation <span className="text-slate-500">({formType})</span>
+          Create New Observation <span className="text-slate-500">({formTypeLabel})</span>
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
@@ -380,7 +388,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
                 <div className="font-semibold text-slate-gray">
                   {category.name}{' '}
                   <span className="text-slate-gray/60 text-sm">
-                    ({category.type ?? 'ADL'})
+                    ({category.type})
                   </span>
                 </div>
 
