@@ -178,7 +178,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
-                CARERVIEW 1-5 ADL SCALE
+                CarerView 1-5 ADL Scale
               </h2>
               <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
                 Our simple 1-5 scale helps you observe and communicate changes in daily living activities with clarity and consistency.
