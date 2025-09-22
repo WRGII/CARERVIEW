@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 
 export function Footer() {
@@ -42,6 +43,14 @@ export function Footer() {
         <p className="text-slate-600 text-sm mb-2">
           Built with caregivers &amp; clinicians in mind. Categories reflect widely used ADL &amp; IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
         </p>
+        <div className="mb-4">
+          <Link
+            to="/about"
+            className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+          >
+            About CarerView
+          </Link>
+        </div>
         <p className="text-slate-500 text-xs">
           © {year} CarerView App | All rights reserved | a GrifDigi company
         </p>

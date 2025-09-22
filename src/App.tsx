@@ -16,6 +16,7 @@ import WhyCarerView from "./pages/WhyCarerView";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import ResetPassword from "./pages/ResetPassword";
+import AboutPage from "./pages/AboutPage";
 
 import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
@@ -55,6 +56,7 @@ export default function App() {
               {/* Public */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/why" element={<WhyCarerView />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/create-account" element={<CreateAccountPage />} />
               <Route
                 path="/choose-plan"
