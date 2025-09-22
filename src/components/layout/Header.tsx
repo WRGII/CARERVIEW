@@ -43,6 +43,20 @@ export default function Header() {
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
+  // Add emergency sign out function for stuck states
+  const emergencySignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      // Clear any local storage that might be causing issues
+      localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token')
+      window.location.reload()
+    } catch (error) {
+      console.error('Emergency sign out error:', error)
+      window.location.reload()
+    }
+  }
+
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,10 +90,20 @@ export default function Header() {
           {/* Right: Navigation */}
           <div className="flex items-center gap-3">
             {authLoading ? (
-              <div
-                className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse"
-                aria-hidden
-              />
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse"
+                  aria-hidden
+                />
+                {/* Emergency reset button if loading takes too long */}
+                <button
+                  onClick={emergencySignOut}
+                  className="text-xs text-slate-500 hover:text-slate-700 underline"
+                  title="Click if the page seems stuck loading"
+                >
+                  Reset
+                </button>
+              </div>
             ) : isAuthed ? (
               <>
                 {/* Dashboard Button */}

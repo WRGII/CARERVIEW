@@ -75,22 +75,11 @@ export function useAuth() {
       setError(null)
 
       const nextUser = session?.user ?? null
-      console.log('[useAuth] load() - nextUser:', nextUser)
-      setUser(nextUser)
-
-      if (!nextUser) {
-        setProfile(null)
-        setIsAdmin(false)
-        return
-      }
-
-      const userId: string = nextUser.id
-      const emailAddr: string | null = nextUser.email ?? null
-
-      const prof = await upsertProfile(userId, emailAddr)
       
       // If profile couldn't be loaded or created, treat as unauthenticated
       if (!prof) {
+        // Force sign out to clear any stale session data
+        await supabase.auth.signOut()
         setUser(null)
         setProfile(null)
         setIsAdmin(false)
@@ -117,7 +106,10 @@ export function useAuth() {
       console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
     } catch (e: any) {
       console.error(e)
+      // Force sign out on any error to clear stale session
+      await supabase.auth.signOut()
       setError(e.message)
+      setUser(null)
       setProfile(null)
       setIsAdmin(false)
     }
@@ -128,9 +120,25 @@ export function useAuth() {
     // Keep loading true until INITIAL_SESSION (or first auth event) is processed
     setLoading(true)
 
+    // Add a timeout to prevent infinite loading states
+    const loadingTimeout = setTimeout(() => {
+      if (active) {
+        console.warn('[useAuth] Loading timeout reached, forcing unauthenticated state')
+        setLoading(false)
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        setError('Authentication timeout. Please refresh the page and try again.')
+      }
+    }, 10000) // 10 second timeout
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log('[useAuth] onAuthStateChange - Event:', _event, 'Session:', session)
       if (!active) return
+      
+      // Clear the loading timeout since we got an auth event
+      clearTimeout(loadingTimeout)
+      
       await load(session)
       // first event (including INITIAL_SESSION) will flip loading off
       setLoading(false)
@@ -138,6 +146,7 @@ export function useAuth() {
 
     return () => {
       active = false
+      clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
   }, [])
