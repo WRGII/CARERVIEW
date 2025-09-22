@@ -58,6 +58,44 @@ export default function App() {
               <Route path="/why" element={<WhyCarerView />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route 
+                path="/privacy-policy" 
+                element={
+                  <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                      <div className="text-center mb-16">
+                        <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-6">
+                          Privacy Policy
+                        </h1>
+                      </div>
+                      <div className="bg-warm-white rounded-2xl shadow-sm border border-slate-gray/10 p-8 md:p-12">
+                        <p className="text-slate-gray text-lg leading-relaxed">
+                          Content coming soon. We are committed to protecting your privacy and will provide detailed information about how we collect, use, and protect your personal information.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                } 
+              />
+              <Route 
+                path="/data-policy" 
+                element={
+                  <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                      <div className="text-center mb-16">
+                        <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-6">
+                          Data Policy
+                        </h1>
+                      </div>
+                      <div className="bg-warm-white rounded-2xl shadow-sm border border-slate-gray/10 p-8 md:p-12">
+                        <p className="text-slate-gray text-lg leading-relaxed">
+                          Content coming soon. We will provide comprehensive information about how we handle, store, and protect your data in accordance with industry best practices and regulatory requirements.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                } 
+              />
               <Route
                 path="/choose-plan"
                 element={
