@@ -1,4 +1,3 @@
-// src/pages/CaregiverPage.tsx
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
@@ -13,9 +12,11 @@ import { Plus } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
 
-import BillingPanel from '../components/caregiver/BillingPanel'
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
+import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
+import AccountMenu from '../components/caregiver/AccountMenu'
+// import BillingPanel from '../components/caregiver/BillingPanel' // (optional) page card
 
 type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
@@ -32,7 +33,6 @@ export default function CaregiverPage() {
   const [exportingFor, setExportingFor] = useState<string | null>(null)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
-  // Show ephemeral success after Stripe redirect (?success=true)
   React.useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setShowSuccessMessage(true)
@@ -44,7 +44,6 @@ export default function CaregiverPage() {
     }
   }, [searchParams])
 
-  // Auth / profile guards
   if (loading) return <Loading message="Loading caregiver dashboard..." />
   if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
@@ -135,25 +134,50 @@ export default function CaregiverPage() {
     }
   }
 
-  function renderHeader() {
-    switch (viewMode) {
-      case 'view':
-        return null
-      default:
-        return (
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
-            <Button
-              variant="primary"
-              onClick={() => navigate('/caregiver/observations/new')}
-              className="flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Observation</span>
-            </Button>
+  function HeaderBar() {
+    const who =
+      profile?.display_name?.trim() ||
+      profile?.email?.trim() ||
+      user.email ||
+      'Caregiver'
+    return (
+      <div className="bg-warm-white border border-slate-gray/20 rounded-2xl px-5 py-4">
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <div className="text-sm text-slate-gray/70 mb-0.5">
+              Caregiver Portal • CarerView Primary Caregiver
+            </div>
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <h1 className="text-2xl font-bold text-slate-gray">
+                Caregiver Dashboard
+              </h1>
+              <span className="text-slate-gray/60">Welcome {who}</span>
+            </div>
           </div>
-        )
-    }
+
+          {/* Account dropdown (Manage billing + Sign out) */}
+          <div className="flex items-center gap-3">
+            <AccountMenu />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  function ObservationsHeader() {
+    return (
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-slate-900">Your Observations</h2>
+        <Button
+          variant="primary"
+          onClick={() => navigate('/caregiver/observations/new')}
+          className="flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Observation</span>
+        </Button>
+      </div>
+    )
   }
 
   function renderBody() {
@@ -214,13 +238,20 @@ export default function CaregiverPage() {
           </div>
         )}
 
-        {/* Billing + plan status (includes Manage billing button) */}
-        <BillingPanel />
+        {/* New caregiver header with Account menu */}
+        <HeaderBar />
 
-        {/* If not active, nudge to activate/upgrade */}
+        {/* Optional nudge if subscription is not active */}
         {!planActive && <InactivePlanNotice />}
 
-        {renderHeader()}
+        {/* Score reference strip (CarerView 1–5 ADL Scale) */}
+        <ScoreLegendDisplay />
+
+        {/* (Optional) If you still want the billing card visible on page, uncomment: */}
+        {/* <BillingPanel /> */}
+
+        {/* Observations */}
+        {viewMode === 'list' && <ObservationsHeader />}
         {renderBody()}
       </div>
     </Layout>
