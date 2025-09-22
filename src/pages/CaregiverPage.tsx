@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import Layout from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { Button } from '../components/ui/Button'
@@ -12,10 +11,11 @@ import { Plus } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
 
-import BillingPanel from '../components/caregiver/BillingPanel'
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
-import AccountMenu from '../components/caregiver/AccountMenu'
+
+// NEW: caregiver header + compact legend banner
+import CaregiverHeader from '../components/caregiver/CaregiverHeader'
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
 
 type ViewMode = 'list' | 'view'
@@ -33,6 +33,7 @@ export default function CaregiverPage() {
   const [exportingFor, setExportingFor] = useState<string | null>(null)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
+  // Ephemeral success after Stripe redirect (?success=true)
   React.useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setShowSuccessMessage(true)
@@ -44,6 +45,7 @@ export default function CaregiverPage() {
     }
   }, [searchParams])
 
+  // Auth / profile guards
   if (loading) return <Loading message="Loading caregiver dashboard..." />
   if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
@@ -134,94 +136,85 @@ export default function CaregiverPage() {
     }
   }
 
-  // New combined header band (C replaces prior B)
-  const CaregiverHeaderBand = (
-    <div className="space-y-4">
-      {/* top row: title, welcome, Manage Account */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-slate-gray/60 text-xs mb-1">
-            Caregiver Portal · CareView Primary Caregiver
-          </div>
-          <h2 className="text-2xl font-bold text-slate-gray">
-            Caregiver Dashboard{' '}
-            {profile?.display_name && (
-              <span className="font-normal text-slate-gray/70">Welcome {profile.display_name}</span>
-            )}
-          </h2>
-        </div>
-        <AccountMenu />
+  function renderHeaderRow() {
+    if (viewMode === 'view') return null
+    return (
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
+        <Button
+          variant="primary"
+          onClick={() => navigate('/caregiver/observations/new')}
+          className="flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Observation</span>
+        </Button>
       </div>
-
-      {/* legend slab */}
-      <div className="rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
-        <div className="p-4 md:p-6">
-          <ScoreLegendDisplay compact />
-        </div>
-      </div>
-    </div>
-  )
+    )
+  }
 
   function renderBody() {
-    switch (viewMode) {
-      case 'view':
-        return currentObservationId ? (
-          <ViewObservation
-            observationId={currentObservationId}
-            onBack={() => {
-              setCurrentObservationId(null)
-              setViewMode('list')
-            }}
-          />
-        ) : (
-          <div className="bg-white border rounded-xl p-6">
-            <p className="text-slate-600">No observation selected</p>
-          </div>
-        )
-      default:
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-slate-gray">Your Observations</h3>
-              <Button
-                variant="primary"
-                onClick={() => navigate('/caregiver/observations/new')}
-                className="flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Observation</span>
-              </Button>
-            </div>
-
-            <ObservationList
-              onViewObservation={handleViewObservation}
-              onExportObservation={handleExportObservation}
-            />
-          </div>
-        )
+    if (viewMode === 'view') {
+      return currentObservationId ? (
+        <ViewObservation
+          observationId={currentObservationId}
+          onBack={() => {
+            setCurrentObservationId(null)
+            setViewMode('list')
+          }}
+        />
+      ) : (
+        <div className="bg-white border rounded-xl p-6">
+          <p className="text-slate-600">No observation selected</p>
+        </div>
+      )
     }
+    return (
+      <ObservationList
+        onViewObservation={handleViewObservation}
+        onExportObservation={handleExportObservation}
+      />
+    )
   }
 
   return (
-    // hideSignOut => we removed the old “Sign Out” from the page header; it’s now in AccountMenu
-    <Layout hideSignOut headerRight={null}>
-      {/* optional ephemeral success after checkout */}
+    <>
+      {/* Single global header is provided by MainLayout. This page renders only its own content. */}
+
+      {/* New caregiver header (with Manage Account dropdown) */}
+      <CaregiverHeader />
+
+      {/* Optional success toast after checkout */}
       {showSuccessMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-          <div className="text-sm font-medium text-green-800">
-            Payment successful! Your subscription is now active.
+        <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="ml-3 text-sm font-medium text-green-800">
+              Payment successful! Your subscription is now active.
+            </p>
           </div>
         </div>
       )}
 
-      {/* section C (new) – replaces the former caregiver header (B) */}
-      {CaregiverHeaderBand}
-
-      {/* plan nudges / billing blocks can stay below */}
+      {/* If not active, nudge to activate/upgrade */}
       {!planActive && <InactivePlanNotice />}
-      <BillingPanel />
 
-      {renderBody()}
-    </Layout>
+      {/* Legend banner – compact spacing on small screens */}
+      <div className="mt-4">
+        <div className="bg-warm-white border border-slate-gray/20 rounded-2xl shadow-sm p-3 sm:p-4 md:p-6">
+          <div className="scale-[0.98] sm:scale-100 origin-top">
+            <ScoreLegendDisplay />
+          </div>
+        </div>
+      </div>
+
+      {/* Observations */}
+      <div className="mt-6 space-y-4">
+        {renderHeaderRow()}
+        {renderBody()}
+      </div>
+    </>
   )
 }
