@@ -212,7 +212,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Clock className="w-8 h-8 text-cyan-primary" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Simple daily check-ins</h4>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">Simple check-ins</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
                   Spend just a few  minutes noting how things went across core Activities of Daily Living. Create quick check-ins or complete Observations anytime.
                 </p>
