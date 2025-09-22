@@ -1,6 +1,7 @@
 // src/pages/NewObservationPage.tsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -8,13 +9,25 @@ import { ErrorMessage } from '../components/ui/ErrorMessage'
 import ObservationForm from '../components/caregiver/ObservationForm'
 import { Button } from '../components/ui/Button'
 import { ClipboardList, Sparkles, Layers } from 'lucide-react'
+import { prefetchObservationFormAssets } from '../lib/prefetching'
 
 type Choice = 'ADL' | 'IADL' | 'COMPREHENSIVE'
 
 export default function NewObservationPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user, profile, loading, error } = useAuth()
   const [choice, setChoice] = React.useState<Choice | null>(null)
+
+  // Prefetch observation form data when the component loads
+  React.useEffect(() => {
+    if (user?.id && !choice) {
+      // Only prefetch when on the chooser screen (choice is null)
+      prefetchObservationFormAssets(queryClient, user.id).catch((err) => {
+        console.warn('Failed to prefetch observation form assets:', err)
+      })
+    }
+  }, [user?.id, choice, queryClient])
 
   // auth guards
   if (loading) return <Loading message="Preparing your new observation…" />

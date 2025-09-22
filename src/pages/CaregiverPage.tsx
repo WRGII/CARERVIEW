@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
@@ -16,12 +17,14 @@ import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
+import { prefetchObservationFormAssets } from '../lib/prefetching'
 
 type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
 
 export default function CaregiverPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const { user, profile, loading, error } = useAuth()
   const { data: plan } = useUserPlan()
@@ -31,6 +34,16 @@ export default function CaregiverPage() {
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
   const [exportingFor, setExportingFor] = useState<string | null>(null)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+
+  // Prefetch observation form data when dashboard loads for better UX
+  React.useEffect(() => {
+    if (user?.id) {
+      // Prefetch in the background when user lands on dashboard
+      prefetchObservationFormAssets(queryClient, user.id).catch((err) => {
+        console.warn('Failed to prefetch observation form assets:', err)
+      })
+    }
+  }, [user?.id, queryClient])
 
   // Ephemeral success after Stripe redirect (?success=true)
   React.useEffect(() => {
