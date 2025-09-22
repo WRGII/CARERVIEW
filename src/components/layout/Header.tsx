@@ -40,10 +40,11 @@ export default function Header() {
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
   return (
-    {/* lighter + subtle blur; keep border for separation */}
     <header className="bg-warm-white/95 backdrop-blur supports-[backdrop-filter]:bg-warm-white/80 border-b border-slate-gray/20">
+      {/* lighter + subtle blur; keep border for separation */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Left: logo & brand */}
           <Link to="/" aria-label="CarerView home" className="flex items-center">
             {logoLoading ? (
               <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
@@ -59,6 +60,7 @@ export default function Header() {
             <span className="text-xl font-bold text-slate-gray">CarerView</span>
           </Link>
 
+          {/* Right: nav buttons */}
           <div className="flex items-center gap-3">
             <Link
               to="/why"
@@ -69,7 +71,10 @@ export default function Header() {
             </Link>
 
             {authLoading ? (
-              <div className="w-[108px] h-9 rounded-xl bg-slate-200 animate-pulse" aria-hidden />
+              <div
+                className="w-[108px] h-9 rounded-xl bg-slate-200 animate-pulse"
+                aria-hidden
+              />
             ) : isAuthed ? (
               <Link
                 to={dashPath}
