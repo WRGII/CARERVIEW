@@ -63,7 +63,7 @@ export function Footer() {
               <div>
                 <span className="block text-slate-700 font-medium mb-1">Suggestions? Questions?</span>
                 <a 
-                  href="mailto:Amy@CarerView.com"
+                  href="mailto:william.griffith@grifdigi.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
                 >
                   Lina@CarerView.com
