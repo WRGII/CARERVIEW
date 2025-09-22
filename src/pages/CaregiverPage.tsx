@@ -14,8 +14,6 @@ import { exportToDOCX, exportToCSV } from '../lib/exports'
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 
-// Import AccountMenu directly instead of wrapping CaregiverHeader
-import AccountMenu from '../components/caregiver/AccountMenu'
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
 
 type ViewMode = 'list' | 'view'
@@ -142,7 +140,6 @@ export default function CaregiverPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
         <div className="flex items-center space-x-3">
-          <AccountMenu />
           <Button
             variant="primary"
             onClick={() => navigate('/caregiver/observations/new')}
@@ -213,14 +210,6 @@ export default function CaregiverPage() {
       {/* Observations */}
       <div className="mt-6 space-y-4">
         {renderHeaderRow()}
-        
-        {/* Add AccountMenu to the observations section header */}
-        {viewMode === 'list' && (
-          <div className="flex justify-end mb-4">
-            <AccountMenu />
-          </div>
-        )}
-        
         {renderBody()}
       </div>
     </>

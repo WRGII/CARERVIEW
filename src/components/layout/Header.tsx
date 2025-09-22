@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
+import { useUserPlan } from "../../hooks/useUserPlan";
+import PlanPill from "../common/PlanPill";
+import AccountMenu from "../caregiver/AccountMenu";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -35,6 +38,7 @@ function useBrandingLogo() {
 export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
+  const { data: plan } = useUserPlan();
 
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
@@ -45,30 +49,48 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left: logo & brand */}
-          <Link to="/" aria-label="CarerView home" className="flex items-center">
-            {logoLoading ? (
-              <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
-            ) : (
-              <img
-                src={logoSrc || FALLBACK_LOGO}
-                alt="CarerView Logo"
-                className="w-8 h-8 object-contain mr-3 rounded-md"
-                loading="eager"
-                decoding="async"
-              />
+          <div className="flex flex-col">
+            <Link to="/" aria-label="CarerView home" className="flex items-center">
+              {logoLoading ? (
+                <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
+              ) : (
+                <img
+                  src={logoSrc || FALLBACK_LOGO}
+                  alt="CarerView Logo"
+                  className="w-8 h-8 object-contain mr-3 rounded-md"
+                  loading="eager"
+                  decoding="async"
+                />
+              )}
+              <span className="text-xl font-bold text-slate-gray">CarerView</span>
+            </Link>
+            
+            {/* User and Plan Information for authenticated caregivers */}
+            {isAuthed && profile?.role === "caregiver" && (
+              <div className="ml-11 mt-1">
+                <div className="flex items-center gap-2 text-sm text-slate-gray/70">
+                  <span>Caregiver Portal • CarerView</span>
+                  <PlanPill />
+                </div>
+                <div className="text-sm text-slate-gray/60">
+                  Caregiver Dashboard Welcome {profile?.display_name || profile?.email || 'User'}
+                </div>
+              </div>
             )}
-            <span className="text-xl font-bold text-slate-gray">CarerView</span>
-          </Link>
+          </div>
 
           {/* Right: nav buttons */}
           <div className="flex items-center gap-3">
-            <Link
-              to="/why"
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Why you need CarerView"
-            >
-              Why you need CarerView
-            </Link>
+            {/* Show "Why you need CarerView" only for unauthenticated users */}
+            {!isAuthed && (
+              <Link
+                to="/why"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                aria-label="Why you need CarerView"
+              >
+                Why you need CarerView
+              </Link>
+            )}
 
             {authLoading ? (
               <div
@@ -76,13 +98,16 @@ export default function Header() {
                 aria-hidden
               />
             ) : isAuthed ? (
-              <Link
-                to={dashPath}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                aria-label="Go to Dashboard"
-              >
-                Dashboard
-              </Link>
+              <>
+                <Link
+                  to={dashPath}
+                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                  aria-label="Go to Dashboard"
+                >
+                  Dashboard
+                </Link>
+                <AccountMenu />
+              </>
             ) : (
               <Link
                 to={{ pathname: "/", hash: "#get-started" }}
