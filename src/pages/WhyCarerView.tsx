@@ -244,7 +244,8 @@ export default function WhyCarerView() {
         <div className="pt-12 pb-20 text-center">
           <div className="flex flex-col items-center justify-center mb-8">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray">
-              Why you need CarerView
+              Your Observations are Vital for Their Care Plan!
+
             </h1>
           </div>
 
