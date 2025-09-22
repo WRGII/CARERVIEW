@@ -75,11 +75,11 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
   }
 
   const blockMinH = compact ? 'min-h-[72px] md:min-h-[120px]' : 'min-h-[96px] md:min-h-[120px]'
-  const padX = compact ? 'px-4 md:px-6' : 'px-6'
-  const padY = compact ? 'py-3 md:py-4' : 'py-4'
+  const padX = compact ? 'px-3 md:px-4' : 'px-6'
+  const padY = compact ? 'py-2 md:py-3' : 'py-4'
   const titleSize = compact ? 'text-xl md:text-3xl' : 'text-2xl md:text-3xl'
-  const iconWrap = compact ? 'w-9 h-9 md:w-12 md:h-12' : 'w-12 h-12 md:w-16 md:h-16'
-  const icon = compact ? 'w-5 h-5 md:w-6 md:h-6' : 'w-6 h-6 md:w-8 md:h-8'
+  const iconWrap = compact ? 'w-8 h-8 md:w-10 md:h-10' : 'w-12 h-12 md:w-16 md:h-16'
+  const icon = compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-6 h-6 md:w-8 md:h-8'
   const gridCols = compact ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-1 md:grid-cols-5'
   const descText = compact ? 'text-[10px] md:text-xs' : 'text-xs md:text-sm'
 
@@ -87,14 +87,14 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     <div className={`bg-white border rounded-xl overflow-hidden ${className ?? ''}`}>
       <div className={`${padX} ${padY} bg-gradient-to-r from-blue-50 to-slate-50`}>
         {/* Title */}
-        <div className="text-center mb-4 md:mb-6">
+        <div className={`text-center ${compact ? 'mb-2 md:mb-3' : 'mb-4 md:mb-6'}`}>
           <h2 className={`${titleSize} font-bold text-slate-800 tracking-wide`}>
             CARERVIEW 1-5 ADL SCALE
           </h2>
         </div>
 
         {/* Horizontal Scale */}
-        <div className="flex items-center justify-center space-x-2 md:space-x-4">
+        <div className={`flex items-center justify-center ${compact ? 'space-x-1 md:space-x-2' : 'space-x-2 md:space-x-4'}`}>
           <div className="flex-shrink-0">
             <div className={`${iconWrap} bg-slate-600 rounded-full flex items-center justify-center`}>
               <ThumbsDown className={`${icon} text-white`} />
@@ -117,8 +117,8 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
                       {item.score}
                     </span>
                   </div>
-                  <div className="px-1 md:px-2 pb-2">
-                    <div className="text-center text-white font-semibold leading-tight text-[10px] md:text-sm">
+                  <div className={`${compact ? 'px-0.5 md:px-1 pb-1 md:pb-2' : 'px-1 md:px-2 pb-2'}`}>
+                    <div className={`text-center text-white font-semibold leading-tight ${compact ? 'text-[8px] md:text-xs' : 'text-[10px] md:text-sm'}`}>
                       {scoreInfo.title}
                     </div>
                   </div>
@@ -135,19 +135,19 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
         </div>
 
         {/* Detailed Descriptions */}
-        <div className={`mt-4 md:mt-6 grid ${gridCols} gap-2 md:gap-3`}>
+        <div className={`${compact ? 'mt-2 md:mt-3' : 'mt-4 md:mt-6'} grid ${gridCols} gap-1 md:gap-2`}>
           {filteredLegend.map((item) => {
             const scoreInfo = getScoreInfo(item.description)
             return (
               <div key={item.score} className="text-center">
                 <div
                   className={`inline-flex items-center justify-center rounded-full text-white font-bold mb-1 md:mb-2 ${
-                    compact ? 'w-7 h-7 text-xs' : 'w-8 h-8 text-sm'
+                    compact ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'
                   } ${getScoreColor(item.score)}`}
                 >
                   {item.score}
                 </div>
-                <div className={`text-slate-700 leading-relaxed ${descText}`}>
+                <div className={`text-slate-700 leading-tight ${descText}`}>
                   {scoreInfo.description || scoreInfo.title}
                 </div>
               </div>
