@@ -14,8 +14,8 @@ import { exportToDOCX, exportToCSV } from '../lib/exports'
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 
-// NEW: caregiver header + compact legend banner
-import CaregiverHeader from '../components/caregiver/CaregiverHeader'
+// Import AccountMenu directly instead of wrapping CaregiverHeader
+import AccountMenu from '../components/caregiver/AccountMenu'
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
 
 type ViewMode = 'list' | 'view'
@@ -141,14 +141,17 @@ export default function CaregiverPage() {
     return (
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-slate-900">Your Observations</h2>
-        <Button
-          variant="primary"
-          onClick={() => navigate('/caregiver/observations/new')}
-          className="flex items-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Observation</span>
-        </Button>
+        <div className="flex items-center space-x-3">
+          <AccountMenu />
+          <Button
+            variant="primary"
+            onClick={() => navigate('/caregiver/observations/new')}
+            className="flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Observation</span>
+          </Button>
+        </div>
       </div>
     )
   }
@@ -179,10 +182,7 @@ export default function CaregiverPage() {
 
   return (
     <>
-      {/* Single global header is provided by MainLayout. This page renders only its own content. */}
-
-      {/* New caregiver header (with Manage Account dropdown) */}
-      <CaregiverHeader />
+      {/* Global header is provided by MainLayout. Add caregiver-specific elements here. */}
 
       {/* Optional success toast after checkout */}
       {showSuccessMessage && (
@@ -213,6 +213,14 @@ export default function CaregiverPage() {
       {/* Observations */}
       <div className="mt-6 space-y-4">
         {renderHeaderRow()}
+        
+        {/* Add AccountMenu to the observations section header */}
+        {viewMode === 'list' && (
+          <div className="flex justify-end mb-4">
+            <AccountMenu />
+          </div>
+        )}
+        
         {renderBody()}
       </div>
     </>
