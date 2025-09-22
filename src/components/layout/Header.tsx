@@ -43,16 +43,6 @@ export default function Header() {
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
-  // Debug: Log header state on every render
-  console.log('[Header] Render state:', {
-    user: user ? { id: user.id, email: user.email } : null,
-    profile: profile ? { role: profile.role, disabled: profile.disabled } : null,
-    authLoading,
-    logoLoading,
-    isAuthed,
-    dashPath
-  });
-
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

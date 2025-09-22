@@ -23,7 +23,8 @@ export function useAuth() {
   // Make admin comparison case-insensitive to avoid false negatives
   const ADMIN_EMAIL = 'william.griffith@grifii.com'.toLowerCase()
 
-  async function upsertProfile(userId: string, email: string | null) {
+  async function upsertProfile(userId: string, email: string | null): Promise<Profile | null> {
+    try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -61,7 +62,10 @@ export function useAuth() {
       return updated as Profile
     }
 
-    return data as Profile
+      if (error) {
+        console.error('[useAuth] Profile fetch error:', error)
+        return null
+      }
   }
 
   async function load(session: any) {
@@ -76,7 +80,10 @@ export function useAuth() {
       if (!nextUser) {
         setProfile(null)
         setIsAdmin(false)
-        console.log('[useAuth] load() - No user, cleared profile and admin status')
+        if (insErr) {
+          console.error('[useAuth] Profile insert error:', insErr)
+          return null
+        }
         return
       }
 
@@ -93,12 +100,28 @@ export function useAuth() {
       console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
     } catch (e: any) {
       console.error(e)
-      setError(e.message ?? 'Failed to load auth/profile')
+        if (updErr) {
+          console.error('[useAuth] Profile update error:', updErr)
+        }
       setProfile(null)
+      // First, validate the current session with Supabase
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) {
+        console.error('[useAuth] Session validation error:', sessionError)
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        return
+      }
+
+      // Use the most current session data
+      const currentSession = sessionData?.session || session
       setIsAdmin(false)
-      console.log('[useAuth] load() - Error occurred, cleared profile and admin status')
     }
-  }
+    } catch (e: any) {
+      console.error('[useAuth] upsertProfile unexpected error:', e)
+      return null
+    }
 
   useEffect(() => {
     let active = true
@@ -106,19 +129,35 @@ export function useAuth() {
     setLoading(true)
 
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      
+      // If profile couldn't be loaded or created, treat as unauthenticated
+      if (!prof) {
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        setError('Unable to access your profile. Please sign in again.')
+        return
+      }
+
+      // If profile is disabled, sign out immediately
+      if (prof.disabled) {
+        await supabase.auth.signOut()
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        setError('Account disabled. Please contact support.')
+        return
+      }
+
       console.log('[useAuth] onAuthStateChange - Event:', _event, 'Session:', session)
       if (!active) return
       await load(session)
       // first event (including INITIAL_SESSION) will flip loading off
-      setLoading(false)
-      console.log('[useAuth] onAuthStateChange - Loading set to false')
     })
 
+      setUser(null)
     return () => {
       active = false
-      subscription.unsubscribe()
     }
   }, [])
 
