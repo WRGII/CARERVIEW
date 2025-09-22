@@ -62,10 +62,11 @@ export function useAuth() {
       return updated as Profile
     }
 
-      if (error) {
-        console.error('[useAuth] Profile fetch error:', error)
-        return null
-      }
+    return data as Profile
+    } catch (e: any) {
+      console.error('[useAuth] upsertProfile unexpected error:', e)
+      return null
+    }
   }
 
   async function load(session: any) {
@@ -80,10 +81,6 @@ export function useAuth() {
       if (!nextUser) {
         setProfile(null)
         setIsAdmin(false)
-        if (insErr) {
-          console.error('[useAuth] Profile insert error:', insErr)
-          return null
-        }
         return
       }
 
@@ -91,44 +88,6 @@ export function useAuth() {
       const emailAddr: string | null = nextUser.email ?? null
 
       const prof = await upsertProfile(userId, emailAddr)
-      setProfile(prof)
-      console.log('[useAuth] load() - Profile set:', prof)
-
-      // Email-based guard avoids race with DB trigger updating role.
-      // Compare in lower-case to prevent casing issues.
-      setIsAdmin((emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
-      console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
-    } catch (e: any) {
-      console.error(e)
-        if (updErr) {
-          console.error('[useAuth] Profile update error:', updErr)
-        }
-      setProfile(null)
-      // First, validate the current session with Supabase
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError) {
-        console.error('[useAuth] Session validation error:', sessionError)
-        setUser(null)
-        setProfile(null)
-        setIsAdmin(false)
-        return
-      }
-
-      // Use the most current session data
-      const currentSession = sessionData?.session || session
-      setIsAdmin(false)
-    }
-    } catch (e: any) {
-      console.error('[useAuth] upsertProfile unexpected error:', e)
-      return null
-    }
-
-  useEffect(() => {
-    let active = true
-    // Keep loading true until INITIAL_SESSION (or first auth event) is processed
-    setLoading(true)
-
-    const {
       
       // If profile couldn't be loaded or created, treat as unauthenticated
       if (!prof) {
@@ -148,16 +107,38 @@ export function useAuth() {
         setError('Account disabled. Please contact support.')
         return
       }
+      
+      setProfile(prof)
+      console.log('[useAuth] load() - Profile set:', prof)
 
+      // Email-based guard avoids race with DB trigger updating role.
+      // Compare in lower-case to prevent casing issues.
+      setIsAdmin((emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
+      console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
+    } catch (e: any) {
+      console.error(e)
+      setError(e.message)
+      setProfile(null)
+      setIsAdmin(false)
+    }
+  }
+
+  useEffect(() => {
+    let active = true
+    // Keep loading true until INITIAL_SESSION (or first auth event) is processed
+    setLoading(true)
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log('[useAuth] onAuthStateChange - Event:', _event, 'Session:', session)
       if (!active) return
       await load(session)
       // first event (including INITIAL_SESSION) will flip loading off
+      setLoading(false)
     })
 
-      setUser(null)
     return () => {
       active = false
+      subscription.unsubscribe()
     }
   }, [])
 
