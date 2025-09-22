@@ -44,13 +44,16 @@ export default function Header() {
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
   return (
-    <header className="bg-warm-white/95 backdrop-blur supports-[backdrop-filter]:bg-warm-white/80 border-b border-slate-gray/20">
-      {/* lighter + subtle blur; keep border for separation */}
+    <header className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: logo & brand */}
-          <div className="flex flex-col">
-            <Link to="/" aria-label="CarerView home" className="flex items-center">
+          {/* Left: Logo & Brand */}
+          <div className="flex items-center">
+            <Link 
+              to="/" 
+              aria-label="CarerView home" 
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
               {logoLoading ? (
                 <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
               ) : (
@@ -62,60 +65,55 @@ export default function Header() {
                   decoding="async"
                 />
               )}
-              <span className="text-xl font-bold text-slate-gray">CarerView</span>
-            </Link>
-            
-            {/* User and Plan Information for authenticated caregivers */}
-            {isAuthed && profile?.role === "caregiver" && (
-              <div className="ml-11 mt-1">
-                <div className="flex items-center gap-2 text-sm text-slate-gray/70">
-                  <span>Caregiver Portal • CarerView</span>
-                  <PlanPill />
-                </div>
-                <div className="text-sm text-slate-gray/60">
-                  Caregiver Dashboard Welcome {profile?.display_name || profile?.email || 'User'}
-                </div>
+              <div className="flex items-center">
+                <span className="text-xl font-bold text-slate-800 mr-3">CarerView</span>
+                {/* Show plan pill for authenticated caregivers */}
+                {isAuthed && profile?.role === "caregiver" && <PlanPill />}
               </div>
-            )}
+            </Link>
           </div>
 
-          {/* Right: nav buttons */}
+          {/* Right: Navigation */}
           <div className="flex items-center gap-3">
-            {/* Show "Why you need CarerView" only for unauthenticated users */}
-            {!isAuthed && (
-              <Link
-                to="/why"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                aria-label="Why you need CarerView"
-              >
-                Why you need CarerView
-              </Link>
-            )}
-
             {authLoading ? (
               <div
-                className="w-[108px] h-9 rounded-xl bg-slate-200 animate-pulse"
+                className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse"
                 aria-hidden
               />
             ) : isAuthed ? (
               <>
+                {/* Dashboard Button */}
                 <Link
                   to={dashPath}
-                  className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
                   aria-label="Go to Dashboard"
                 >
                   Dashboard
                 </Link>
+                
+                {/* Account Menu with Sign Out */}
                 <AccountMenu />
               </>
             ) : (
-              <Link
-                to={{ pathname: "/", hash: "#get-started" }}
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-                aria-label="Go to Sign In"
-              >
-                Sign In
-              </Link>
+              <>
+                {/* Why you need CarerView - only for unauthenticated users */}
+                <Link
+                  to="/why"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
+                  aria-label="Why you need CarerView"
+                >
+                  Why you need CarerView
+                </Link>
+                
+                {/* Sign In */}
+                <Link
+                  to={{ pathname: "/", hash: "#get-started" }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
+                  aria-label="Sign In"
+                >
+                  Sign In
+                </Link>
+              </>
             )}
           </div>
         </div>
