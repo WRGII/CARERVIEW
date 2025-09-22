@@ -173,6 +173,58 @@ export default function LandingPage() {
           <p className="mt-4 text-sm text-slate-gray/60">Your Observations are Vital for their Care Plan!</p>
         </div>
 
+        {/* CARERVIEW 1-5 ADL SCALE */}
+        <div className="py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
+          <div className="max-w-6xl mx-auto px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
+                CARERVIEW 1-5 ADL SCALE
+              </h2>
+              <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
+                Our simple 1-5 scale helps you observe and communicate changes in daily living activities with clarity and consistency.
+              </p>
+            </div>
+
+            {/* Horizontal Scale */}
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm">👎</span>
+              </div>
+              <div className="flex flex-1 max-w-4xl">
+                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">1</span>
+                  <span className="text-sm font-semibold text-center px-2">Total Assistance</span>
+                </div>
+                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">2</span>
+                  <span className="text-sm font-semibold text-center px-2">Constant Shared Effort</span>
+                </div>
+                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">3</span>
+                  <span className="text-sm font-semibold text-center px-2">Independent with Support</span>
+                </div>
+                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-gray">
+                  <span className="text-3xl font-bold mb-2">4</span>
+                  <span className="text-sm font-semibold text-center px-2">Independent with Difficulty</span>
+                </div>
+                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-gray">
+                  <span className="text-3xl font-bold mb-2">5</span>
+                  <span className="text-sm font-semibold text-center px-2">Fully Independent</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm">👍</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-slate-gray/70 text-lg">
+                From "Total Assistance" to "Fully Independent" — a clear framework for observing daily living activities
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* A shared language for care */}
         <div className="py-20">
           <div className="text-center mb-16">
@@ -227,58 +279,6 @@ export default function LandingPage() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        {/* CARERVIEW 1-5 ADL SCALE */}
-        <div className="py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
-                CARERVIEW 1-5 ADL SCALE
-              </h2>
-              <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
-                Our simple 1-5 scale helps you observe and communicate changes in daily living activities with clarity and consistency.
-              </p>
-            </div>
-
-            {/* Horizontal Scale */}
-            <div className="flex items-center justify-center space-x-4 mb-8">
-              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">👎</span>
-              </div>
-              <div className="flex flex-1 max-w-4xl">
-                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-white">
-                  <span className="text-3xl font-bold mb-2">1</span>
-                  <span className="text-sm font-semibold text-center px-2">Total Assistance</span>
-                </div>
-                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-white">
-                  <span className="text-3xl font-bold mb-2">2</span>
-                  <span className="text-sm font-semibold text-center px-2">Constant Shared Effort</span>
-                </div>
-                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-white">
-                  <span className="text-3xl font-bold mb-2">3</span>
-                  <span className="text-sm font-semibold text-center px-2">Independent with Support</span>
-                </div>
-                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-gray">
-                  <span className="text-3xl font-bold mb-2">4</span>
-                  <span className="text-sm font-semibold text-center px-2">Independent with Difficulty</span>
-                </div>
-                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-gray">
-                  <span className="text-3xl font-bold mb-2">5</span>
-                  <span className="text-sm font-semibold text-center px-2">Fully Independent</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">👍</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-slate-gray/70 text-lg">
-                From "Total Assistance" to "Fully Independent" — a clear framework for observing daily living activities
-              </p>
-            </div>
           </div>
         </div>
 
