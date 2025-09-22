@@ -250,9 +250,7 @@ export default function WhyCarerView() {
           </div>
 
           <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
-            Observing the changes in someone you love can be stressful. CarerView gives you a
-            simple way to observe and share what's getting easier, what's getting harder, and
-            how things shift day-to-day—so everyone on the care team talks using the same barometer.
+            Changes in a loved one’s abilities aren’t always steady or predictable—what happens today may look different tomorrow. CarerView helps you track these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust plans more effectively and support your loved one with confidence.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
