@@ -238,7 +238,7 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-xl font-semibold text-slate-gray mb-4">Trends you can trust</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
-                  See changes over days and weeks, not just how today felt. Observed trends highlight when to adjust routines or supports.
+                  Not just how it felt today, but observe changes over days - weeks - months. Observed trends highlight when to adjust routines or supports.
                 </p>
               </CardContent>
             </Card>
