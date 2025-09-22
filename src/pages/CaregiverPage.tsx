@@ -245,7 +245,7 @@ export default function CaregiverPage() {
         {!planActive && <InactivePlanNotice />}
 
         {/* Score reference strip (CarerView 1–5 ADL Scale) */}
-        <ScoreLegendDisplay />
+        <ScoreLegendDisplay compact className="mt-2" />
 
         {/* (Optional) If you still want the billing card visible on page, uncomment: */}
         {/* <BillingPanel /> */}
