@@ -61,7 +61,7 @@ export function Footer() {
             <h4 className="font-semibold text-slate-800 text-base mb-4">Contact</h4>
             <div className="space-y-2 text-sm text-slate-600">
               <div>
-                <span className="block text-slate-700 font-medium mb-1">Customer Service:</span>
+                <span className="block text-slate-700 font-medium mb-1">Questions or Suggestions? Customer Service:</span>
                 <a 
                   href="mailto:Amy@CarerView.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
