@@ -224,7 +224,7 @@ export default function LandingPage() {
                 <div className="w-16 h-16 bg-mint-green/60 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-8 h-8 text-slate-gray" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear, 1–5 scale</h4>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear 1–5 scale</h4>
                 <p className="text-slate-gray/80 leading-relaxed">
                   Easy wording —no medical jargon— grounded in occupational therapy best practices that families can understand.
                 </p>
