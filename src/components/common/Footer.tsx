@@ -66,7 +66,7 @@ export function Footer() {
                   href="mailto:Amy@CarerView.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
                 >
-                  Amy@CarerView.com
+                  Lina@CarerView.com
                 </a>
               </div>
               <div className="mt-3">
