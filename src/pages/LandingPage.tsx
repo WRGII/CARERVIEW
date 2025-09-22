@@ -173,34 +173,7 @@ export default function LandingPage() {
           <p className="mt-4 text-sm text-slate-gray/60">Your Observations are Vital for their Care Plan!</p>
         </div>
 
-        {/* Sub-hero Reassurance */}
-        <div className="py-16 text-center bg-gradient-to-r from-peach-blush/30 to-mint-green/20 rounded-3xl mb-20">
-          <h3 className="text-3xl font-bold text-slate-gray mb-6">You're not alone.</h3>
-          <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto leading-relaxed">
-            Caregiving comes with worry, doubt, and a thousand tiny decisions. CarerView offers a calm, consistent framework—so you can replace "I think…" with shared facts everyone understands.
-          </p>
-
-          {/* Testimonial */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <div className="bg-warm-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-slate-gray/10">
-              <div className="text-2xl text-cyan-primary mb-2">"</div>
-              <blockquote className="text-lg text-slate-gray/90 italic leading-relaxed mb-6">
-                My brother and my two cousins are the primary caregivers for our Auntie. Our emotions around her independence ability caused a lot of arguments. We love CarerView because it lets us have a common and easy system to discuss our observations of the entire situation.
-              </blockquote>
-              <div className="flex items-center justify-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-cyan-primary/20 to-mint-green/30 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-cyan-primary font-bold text-lg">BG</span>
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold text-slate-gray">Billy G.</div>
-                  <div className="text-slate-gray/70 text-sm">Denver, CO USA</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* How CarerView Helps */}
+        {/* A shared language for care */}
         <div className="py-20">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">A shared language for care</h3>
@@ -257,6 +230,58 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* CARERVIEW 1-5 ADL SCALE */}
+        <div className="py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
+          <div className="max-w-6xl mx-auto px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
+                CARERVIEW 1-5 ADL SCALE
+              </h2>
+              <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
+                Our simple 1-5 scale helps you observe and communicate changes in daily living activities with clarity and consistency.
+              </p>
+            </div>
+
+            {/* Horizontal Scale */}
+            <div className="flex items-center justify-center space-x-4 mb-8">
+              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm">👎</span>
+              </div>
+              <div className="flex flex-1 max-w-4xl">
+                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">1</span>
+                  <span className="text-sm font-semibold text-center px-2">Total Assistance</span>
+                </div>
+                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">2</span>
+                  <span className="text-sm font-semibold text-center px-2">Constant Shared Effort</span>
+                </div>
+                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-white">
+                  <span className="text-3xl font-bold mb-2">3</span>
+                  <span className="text-sm font-semibold text-center px-2">Independent with Support</span>
+                </div>
+                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-gray">
+                  <span className="text-3xl font-bold mb-2">4</span>
+                  <span className="text-sm font-semibold text-center px-2">Independent with Difficulty</span>
+                </div>
+                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-gray">
+                  <span className="text-3xl font-bold mb-2">5</span>
+                  <span className="text-sm font-semibold text-center px-2">Fully Independent</span>
+                </div>
+              </div>
+              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm">👍</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-slate-gray/70 text-lg">
+                From "Total Assistance" to "Fully Independent" — a clear framework for observing daily living activities
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Why Families Choose CarerView */}
         <div className="py-20 bg-gradient-to-r from-mint-green/30 to-peach-blush/20 rounded-3xl">
           <div className="max-w-6xl mx-auto px-8">
@@ -310,118 +335,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* What You'll Track */}
-        <div className="py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">What you'll observe</h3>
-            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
-              Simple living categories that reflect real daily life
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            <Card className="border-0 shadow-lg bg-warm-white">
-              <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Activities of Daily Living
-                </h4>
-                <div className="space-y-3">
-                  {[
-                    'Bathing & personal hygiene',
-                    'Dressing & grooming',
-                    'Eating & drinking',
-                    'Toileting & continence',
-                    'Mobility & transfers',
-                    'Safety awareness',
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-cyan-primary rounded-full"></div>
-                      <span className="text-slate-gray">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-warm-white">
-              <CardContent className="p-8">
-                <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Instrumental Activities
-                </h4>
-                <div className="space-y-3">
-                  {[
-                    'Medication management',
-                    'Meals & groceries',
-                    'Housekeeping & laundry',
-                    'Finances & paperwork',
-                    'Communication & memory',
-                    'Transportation & errands',
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-mint-green rounded-full"></div>
-                      <span className="text-slate-gray">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <p className="text-center text-slate-gray/60 mt-8 italic">
-            Observations are custom so CarerView fits your family's reality.
-          </p>
-        </div>
-
-        {/* Designed for Overwhelmed Days */}
-        <div className="py-20 bg-gradient-to-r from-peach-blush/20 to-mint-green/30 rounded-3xl">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <h3 className="text-4xl font-bold text-slate-gray mb-12">Designed for overwhelmed days</h3>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              <div>
-                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-8 h-8 text-cyan-primary" />
-                </div>
-                <h4 className="text-lg font-semibold text-slate-gray mb-2">Fast</h4>
-                <p className="text-slate-gray/80">Log only what's relevant; skip the rest.</p>
-              </div>
-
-              <div>
-                <div className="w-16 h-16 bg-peach-blush/60 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-8 h-8 text-slate-gray" />
-                </div>
-                <h4 className="text-lg font-semibold text-slate-gray mb-2">Kind</h4>
-                <p className="text-slate-gray/80">Supportive prompts in plain language.</p>
-              </div>
-
-              <div>
-                <div className="w-16 h-16 bg-mint-green/60 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-8 h-8 text-slate-gray" />
-                </div>
-                <h4 className="text-lg font-semibold text-slate-gray mb-2">Private</h4>
-                <p className="text-slate-gray/80">You control who sees what, always.</p>
-              </div>
-
-              <div>
-                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-8 h-8 text-cyan-primary" />
-                </div>
-                <h4 className="text-lg font-semibold text-slate-gray mb-2">Portable</h4>
-                <p className="text-slate-gray/80">Works on phone, tablet, or computer.</p>
-              </div>
-            </div>
-
-            <div className="mt-12">
-              <Link
-                to="/create-account"
-                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
-              >
-                Begin Observations today
-              </Link>
             </div>
           </div>
         </div>
@@ -513,6 +426,33 @@ export default function LandingPage() {
               <a href="#privacy" className="text-cyan-primary hover:text-cyan-hover font-medium underline">
                 Read our Privacy Promise
               </a>
+            </div>
+          </div>
+        </div>
+
+        {/* You're Not Alone - Moved from position 2 to position 7 */}
+        <div className="py-16 text-center bg-gradient-to-r from-peach-blush/30 to-mint-green/20 rounded-3xl mb-20">
+          <h3 className="text-3xl font-bold text-slate-gray mb-6">You're not alone.</h3>
+          <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto leading-relaxed">
+            Caregiving comes with worry, doubt, and a thousand tiny decisions. CarerView offers a calm, consistent framework—so you can replace "I think…" with shared facts everyone understands.
+          </p>
+
+          {/* Testimonial */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <div className="bg-warm-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-slate-gray/10">
+              <div className="text-2xl text-cyan-primary mb-2">"</div>
+              <blockquote className="text-lg text-slate-gray/90 italic leading-relaxed mb-6">
+                My brother and my two cousins are the primary caregivers for our Auntie. Our emotions around her independence ability caused a lot of arguments. We love CarerView because it lets us have a common and easy system to discuss our observations of the entire situation.
+              </blockquote>
+              <div className="flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-primary/20 to-mint-green/30 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-cyan-primary font-bold text-lg">BG</span>
+                </div>
+                <div className="text-left">
+                  <div className="font-semibold text-slate-gray">Billy G.</div>
+                  <div className="text-slate-gray/70 text-sm">Denver, CO USA</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
