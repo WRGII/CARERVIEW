@@ -1,67 +1,27 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabaseClient";
-import { ChevronDown } from "lucide-react";
+19:49:39 [vite] Internal server error: /home/project/src/components/layout/Header.tsx: Unexpected token, expected "," (44:12)
 
-export default function AccountMenu() {
-  const [open, setOpen] = React.useState(false);
-  const nav = useNavigate();
-  const close = () => setOpen(false);
-
-  const goManageBilling = () => {
-    // Re-use your ChoosePlan screen as the entry point to billing management.
-    nav("/choose-plan?manage=true");
-    close();
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    window.location.assign("/");
-  };
-
-  React.useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-      if (!target.closest?.("[data-account-menu]")) setOpen(false);
-    };
-    document.addEventListener("click", onDoc);
-    return () => document.removeEventListener("click", onDoc);
-  }, []);
-
-  return (
-    <div className="relative" data-account-menu>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        Manage Account <ChevronDown className="w-4 h-4" />
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-gray/20 bg-white shadow-lg z-50"
-        >
-          <button
-            onClick={goManageBilling}
-            className="w-full text-left px-4 py-2.5 text-sm text-slate-gray hover:bg-peach-blush/20"
-            role="menuitem"
-          >
-            Manage Billing
-          </button>
-          <div className="my-1 h-px bg-slate-gray/10" />
-          <button
-            onClick={signOut}
-            className="w-full text-left px-4 py-2.5 text-sm text-slate-gray hover:bg-peach-blush/20"
-            role="menuitem"
-          >
-            Sign Out
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+  42 |   return (
+  43 |     {/* lighter + subtle blur; keep border for separation */}
+> 44 |     <header className="bg-warm-white/95 backdrop-blur supports-[backdrop-filter]:bg-warm-white/80 border-b border-slate-gray/20">
+     |             ^
+  45 |       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  46 |         <div className="flex justify-between items-center h-16">
+  47 |           <Link to="/" aria-label="CarerView home" className="flex items-center">
+  Plugin: vite:react-babel
+  File: /home/project/src/components/layout/Header.tsx:44:12
+  42 |    return (
+  43 |      {/* lighter + subtle blur; keep border for separation */}
+  44 |      <header className="bg-warm-white/95 backdrop-blur supports-[backdrop-filter]:bg-warm-white/80 border-b border-slate-gray/20">
+     |              ^
+  45 |        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  46 |          <div className="flex justify-between items-center h-16">
+      at constructor (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:362:19)
+      at TypeScriptParserMixin.raise (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:3259:19)
+      at TypeScriptParserMixin.unexpected (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:3279:16)
+      at TypeScriptParserMixin.expect (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:3589:12)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:11182:14)
+      at TypeScriptParserMixin.parseExprAtom (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10849:23)
+      at TypeScriptParserMixin.parseExprAtom (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:6811:20)
+      at TypeScriptParserMixin.parseExprSubscripts (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10591:23)
+      at TypeScriptParserMixin.parseUpdate (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10576:21)
+      at TypeScriptParserMixin.parseMaybeUnary (file:///home/project/node_modules/@babel/parser/lib/index.js#cjs:10556:23)
