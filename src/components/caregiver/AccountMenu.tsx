@@ -17,6 +17,11 @@ export default function AccountMenu() {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      
+      // Debug: Check auth state after sign out
+      const { data: { user }, error } = await supabase.auth.getUser();
+      console.log('[AccountMenu] After signOut - User:', user, 'Error:', error);
+      
       // Redirect to landing page
       window.location.assign("/");
     } catch (error) {

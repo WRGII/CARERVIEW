@@ -70,11 +70,13 @@ export function useAuth() {
       setError(null)
 
       const nextUser = session?.user ?? null
+      console.log('[useAuth] load() - nextUser:', nextUser)
       setUser(nextUser)
 
       if (!nextUser) {
         setProfile(null)
         setIsAdmin(false)
+        console.log('[useAuth] load() - No user, cleared profile and admin status')
         return
       }
 
@@ -83,15 +85,18 @@ export function useAuth() {
 
       const prof = await upsertProfile(userId, emailAddr)
       setProfile(prof)
+      console.log('[useAuth] load() - Profile set:', prof)
 
       // Email-based guard avoids race with DB trigger updating role.
       // Compare in lower-case to prevent casing issues.
       setIsAdmin((emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
+      console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
     } catch (e: any) {
       console.error(e)
       setError(e.message ?? 'Failed to load auth/profile')
       setProfile(null)
       setIsAdmin(false)
+      console.log('[useAuth] load() - Error occurred, cleared profile and admin status')
     }
   }
 
@@ -103,10 +108,12 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('[useAuth] onAuthStateChange - Event:', _event, 'Session:', session)
       if (!active) return
       await load(session)
       // first event (including INITIAL_SESSION) will flip loading off
       setLoading(false)
+      console.log('[useAuth] onAuthStateChange - Loading set to false')
     })
 
     return () => {
