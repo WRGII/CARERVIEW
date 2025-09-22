@@ -1,107 +1,64 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { CreditCard, LogOut, ChevronDown, UserCog } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export default function AccountMenu() {
   const [open, setOpen] = React.useState(false);
-  const [busy, setBusy] = React.useState<"billing" | "signout" | null>(null);
-  const ref = React.useRef<HTMLDivElement | null>(null);
+  const nav = useNavigate();
+  const close = () => setOpen(false);
 
-  // Close on outside click / escape
+  const goManageBilling = () => {
+    // Re-use your ChoosePlan screen as the entry point to billing management.
+    nav("/choose-plan?manage=true");
+    close();
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    window.location.assign("/");
+  };
+
   React.useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onEsc);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onEsc);
+    const onDoc = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!target.closest?.("[data-account-menu]")) setOpen(false);
     };
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
   }, []);
 
-  async function goToBillingPortal() {
-    try {
-      setBusy("billing");
-      const { data, error } = await supabase.functions.invoke("stripe-portal", {
-        body: { return_to: "/caregiver" },
-      });
-      if (error) throw error;
-      const url = (data as any)?.url;
-      if (url) window.location.href = url;
-    } catch (e: any) {
-      alert(e?.message || "Failed to open billing portal.");
-    } finally {
-      setBusy(null);
-      setOpen(false);
-    }
-  }
-
-  async function signOut() {
-    try {
-      setBusy("signout");
-      await supabase.auth.signOut();
-      window.location.href = "/";
-    } catch (e: any) {
-      alert(e?.message || "Sign out failed.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
-    <div ref={ref} className="relative">
+    <div className="relative" data-account-menu>
       <button
-        type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        Manage Account
-        <ChevronDown className="w-4 h-4" />
+        Manage Account <ChevronDown className="w-4 h-4" />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-gray/20 bg-warm-white shadow-xl z-50 p-1"
+          className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-gray/20 bg-white shadow-lg z-50"
         >
           <button
-            onClick={goToBillingPortal}
-            disabled={busy === "billing"}
-            className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
+            onClick={goManageBilling}
+            className="w-full text-left px-4 py-2.5 text-sm text-slate-gray hover:bg-peach-blush/20"
             role="menuitem"
           >
-            <CreditCard className="w-4 h-4" />
-            {busy === "billing" ? "Opening billing…" : "Manage billing"}
+            Manage Billing
           </button>
-
-          {/* Optional future item: profile/preferences */}
-          <button
-            disabled
-            className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-gray/50 cursor-not-allowed"
-            role="menuitem"
-            title="Coming soon"
-          >
-            <UserCog className="w-4 h-4" />
-            Profile & preferences
-          </button>
-
           <div className="my-1 h-px bg-slate-gray/10" />
-
           <button
             onClick={signOut}
-            disabled={busy === "signout"}
-            className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
+            className="w-full text-left px-4 py-2.5 text-sm text-slate-gray hover:bg-peach-blush/20"
             role="menuitem"
           >
-            <LogOut className="w-4 h-4" />
-            {busy === "signout" ? "Signing out…" : "Sign out"}
+            Sign Out
           </button>
         </div>
       )}
