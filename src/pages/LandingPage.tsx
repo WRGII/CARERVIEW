@@ -145,7 +145,7 @@ export default function LandingPage() {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-gray/90 mb-8 leading-tight">
-            Clear Observations for Better Caregiving
+            Better Caregiving through Clear Observations
           </h2>
 
           <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
