@@ -75,6 +75,20 @@ export function useAuth() {
       setError(null)
 
       const nextUser = session?.user ?? null
+      const emailAddr = nextUser?.email ?? null
+      
+      // If no user, clear everything and return
+      if (!nextUser) {
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        return
+      }
+      
+      setUser(nextUser)
+      
+      // Try to load/create profile
+      const prof = await upsertProfile(nextUser.id, emailAddr)
       
       // If profile couldn't be loaded or created, treat as unauthenticated
       if (!prof) {
