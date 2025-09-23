@@ -19,7 +19,7 @@ export default function NewObservationPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user, profile, loading, error } = useAuth()
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories()
+  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories()
   const [choice, setChoice] = React.useState<Choice | null>(null)
 
   // Prefetch observation form data when the component loads
