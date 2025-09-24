@@ -112,8 +112,11 @@ export default function NewObservationPage() {
           <Button variant="outline" onClick={() => navigate('/caregiver')}>Cancel</Button>
         </div>
       }
+    )
     >
       <ObservationForm formType={choice} onComplete={handleComplete} />
     </Layout>
   )
+}
+  }
 }
