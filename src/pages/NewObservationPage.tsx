@@ -103,7 +103,7 @@ export default function NewObservationPage() {
   // form after choice
   return (
     <Layout 
-      title={`New ${choice === 'COMPREHENSIVE' ? 'Comprehensive' : choice} Observation`} 
+  // form after choice
       user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
@@ -111,12 +111,12 @@ export default function NewObservationPage() {
           <Button variant="outline" onClick={() => setChoice(null)}>← Change type</Button>
           <Button variant="outline" onClick={() => navigate('/caregiver')}>Cancel</Button>
         </div>
+      </Layout>
+    )
+  }
       }
     )
-    >
       <ObservationForm formType={choice} onComplete={handleComplete} />
     </Layout>
   )
-}
-  }
 }
