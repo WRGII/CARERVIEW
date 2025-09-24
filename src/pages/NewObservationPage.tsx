@@ -72,44 +72,33 @@ export default function NewObservationPage() {
           </p>
 
           {/* Observation Type Cards with Category Lists */}
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* ADL Observation */}
-            <div className="space-y-4">
+          {/* Simplified placeholder for debugging */}
+          <div className="bg-white border border-slate-200 rounded-xl p-8">
+            <p className="text-slate-600 text-lg">Placeholder for observation type selection.</p>
+            <div className="mt-4 space-y-2">
               <button
                 type="button"
                 onClick={() => setChoice('ADL')}
-                className="w-full text-left rounded-2xl border border-slate-200 bg-warm-white p-6 shadow-sm hover:shadow-md hover:border-cyan-primary/50 transition-all duration-200"
-        {/* Simplified placeholder for debugging */}
-        <div className="bg-white border border-slate-200 rounded-xl p-8">
-          <p className="text-slate-600 text-lg">Placeholder for observation type selection.</p>
-          <div className="mt-4 space-y-2">
-            <button
-              type="button"
-              onClick={() => setChoice('ADL')}
-              className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-            >
-              ADL Observation (Simple)
-            </button>
-            <button
-              type="button"
-              onClick={() => setChoice('IADL')}
-              className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-            >
-              IADL Observation (Simple)
-            </button>
-            <button
-              type="button"
-              onClick={() => setChoice('COMPREHENSIVE')}
-              className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-            >
-              Comprehensive Observation (Simple)
-            </button>
+                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
+              >
+                ADL Observation (Simple)
+              </button>
+              <button
+                type="button"
+                onClick={() => setChoice('IADL')}
+                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
+              >
+                IADL Observation (Simple)
+              </button>
+              <button
+                type="button"
+                onClick={() => setChoice('COMPREHENSIVE')}
+                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
+              >
+                Comprehensive Observation (Simple)
+              </button>
+            </div>
           </div>
-        </div>
-      </Layout>
-    )
-    )
-  }
 
   // form after choice
   return (
