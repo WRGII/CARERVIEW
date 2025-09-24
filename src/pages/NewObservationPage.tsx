@@ -108,6 +108,7 @@ export default function NewObservationPage() {
         </div>
       </Layout>
     )
+    )
   }
 
   // form after choice
