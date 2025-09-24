@@ -46,9 +46,12 @@ export const useCategories = () => {
         throw new Error(`Failed to fetch questions: ${questionsError.message}`)
       }
 
-      return categories.map(category => ({
+      const safeCategories = categories || []
+      const safeQuestions = questions || []
+
+      return safeCategories.map(category => ({
         ...category,
-        questions: questions.filter(q => q.category_id === category.id)
+        questions: safeQuestions.filter(q => q.category_id === category.id)
       }))
     }
   })
