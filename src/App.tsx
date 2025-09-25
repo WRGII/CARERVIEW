@@ -7,10 +7,8 @@ import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
 import { ErrorBoundary } from "./components/util/ErrorBoundary";
 
-// Guards & hooks
-import { useAuth } from "./hooks/useAuth";
-import { useProfile } from "./hooks/useProfile";
 import CaregiverGuard from "./components/common/CaregiverGuard";
+import AdminGuard from "./components/common/AdminGuard"; // ← NEW
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -25,27 +23,12 @@ import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "@/pages/AdminDeleteUser";
 
 import CaregiverPage from "./pages/CaregiverPage";
-import NewObservationPage from "./pages/NewObservationPage"; // chooser page (creates row then navigates)
-import ObservationEditPage from "./pages/ObservationEditPage"; // ← edit by :id page
+import NewObservationPage from "./pages/NewObservationPage";
+import ObservationEditPage from "./pages/ObservationEditPage";
 
-// Lazy
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 const queryClient = new QueryClient();
-
-/** Admin guard (kept local) */
-function AdminGuard({ children }: { children: JSX.Element }) {
-  const { loading: authLoading, user } = useAuth();
-  const { data: profile, isLoading: profileLoading } = useProfile(user?.id);
-
-  if (authLoading || profileLoading) return <div className="p-6">Loading…</div>;
-  if (!user) return <Navigate to="/" replace />;
-
-  const isAdmin = profile?.role === "admin" && !profile?.disabled;
-  if (!isAdmin) return <Navigate to="/caregiver" replace />;
-
-  return children;
-}
 
 export default function App() {
   return (
@@ -146,7 +129,7 @@ export default function App() {
                   }
                 />
 
-                {/* New Observation: chooser (creates observation and navigates) */}
+                {/* New Observation: chooser */}
                 <Route
                   path="/caregiver/observations/new"
                   element={
