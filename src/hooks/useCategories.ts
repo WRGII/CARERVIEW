@@ -1,7 +1,8 @@
+// src/hooks/useCategories.ts (optional polish)
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from './useAuth'
 
-// Define types locally
 interface Category {
   id: string
   name: string
@@ -11,7 +12,6 @@ interface Category {
   sort_order: number
   created_at: string
 }
-
 interface Question {
   id: string
   category_id: string
@@ -19,18 +19,21 @@ interface Question {
   sort_order: number
   created_at: string
 }
-
 interface CategoryWithQuestions extends Category {
   questions: Question[]
 }
 
 export const useCategories = () => {
+  const { user } = useAuth()
+
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: ['categories', user?.id],
+    enabled: !!user?.id,                   // ← don’t run until authenticated
+    staleTime: 10 * 60 * 1000,
     queryFn: async (): Promise<CategoryWithQuestions[]> => {
       const { data: categories, error: categoriesError } = await supabase
         .from('categories')
-        .select('*')
+        .select('id,name,type,ada_definition,ot_definition,sort_order,created_at')
         .order('sort_order')
 
       if (categoriesError) {
@@ -39,7 +42,7 @@ export const useCategories = () => {
 
       const { data: questions, error: questionsError } = await supabase
         .from('questions')
-        .select('*')
+        .select('id,category_id,question_text,sort_order,created_at')
         .order('sort_order')
 
       if (questionsError) {
@@ -48,8 +51,8 @@ export const useCategories = () => {
 
       return categories.map(category => ({
         ...category,
-        questions: questions.filter(q => q.category_id === category.id)
+        questions: questions.filter(q => q.category_id === category.id),
       }))
-    }
+    },
   })
 }
