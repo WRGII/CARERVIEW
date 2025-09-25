@@ -11,6 +11,7 @@ import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
+  observationId?: string            // ← NEW (optional)
   formType: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   onComplete: () => void
 }
