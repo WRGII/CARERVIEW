@@ -86,7 +86,7 @@ type SavePayload = {
     notes?: string | null
     caregiver_name?: string | null
     caregiver_email?: string | null
-    form_type: 'ADL' | 'IADL'                 // ← NEW
+    form_type: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   }
   answers: Record<string, number | undefined> // question_id -> score
   categoryNotes: Record<string, string>       // category_id -> note
