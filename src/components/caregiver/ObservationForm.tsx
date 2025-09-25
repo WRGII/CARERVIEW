@@ -11,7 +11,7 @@ import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
-  observationId?: string            // ← NEW (optional)
+  observationId?: string            // ← optional (edit existing)
   formType: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   onComplete: () => void
 }
@@ -52,10 +52,23 @@ export default function ObservationForm({ observationId, formType, onComplete }:
   const [dateError, setDateError] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(observationId ?? null)
-React.useEffect(() => {
-  // keep in sync if parent changes id
-  if (observationId) setCurrentObservationId(observationId)
-}, [observationId])
+
+  React.useEffect(() => {
+    // keep in sync if parent changes id
+    if (observationId) setCurrentObservationId(observationId)
+  }, [observationId])
+
+  // SAFETY TWEAK: prefill date to today's date if empty
+  React.useEffect(() => {
+    if (!dateOfObservation) {
+      const t = new Date()
+      const mm = String(t.getMonth() + 1).padStart(2, '0')
+      const dd = String(t.getDate()).padStart(2, '0')
+      const yyyy = t.getFullYear()
+      setDateOfObservation(`${mm}/${dd}/${yyyy}`) // MM/DD/YYYY
+    }
+  }, []) // run once on mount
+
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
