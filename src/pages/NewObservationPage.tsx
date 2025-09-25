@@ -25,28 +25,51 @@ export default function NewObservationPage() {
   if (profile.disabled) return <ErrorMessage message="Account disabled." />
 
   async function createAndStart(mode: FormType) {
-    try {
-      setBusy(true); setErr(null)
-      const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  try {
+    setBusy(true); setErr(null)
 
-      const { data, error } = await supabase
-        .from('observations')
-        .insert({
-          user_id: user.id,         // relies on your new column & RLS
-          form_type: mode,          // 'ADL' | 'IADL' | 'COMPREHENSIVE'
-          observation_date: today,
-        })
-        .select('id')
-        .single()
+    // Build required fields (avoid NOT NULL violations)
+    const today = new Date()
+    const yyyy = today.getFullYear()
+    const mm = String(today.getMonth() + 1).padStart(2, '0')
+    const dd = String(today.getDate()).padStart(2, '0')
+    const observation_date = `${yyyy}-${mm}-${dd}`
 
-      if (error) throw error
-      navigate(`/caregiver/observations/${data.id}`)
-    } catch (e: any) {
-      setErr(e.message ?? String(e))
-    } finally {
-      setBusy(false)
+    const caregiver_name =
+      (profile?.display_name?.trim?.() || '') ||
+      (profile?.email?.trim?.() || '') ||
+      (user?.email?.trim?.() || 'Caregiver')
+
+    const caregiver_email =
+      (profile?.email?.trim?.() || '') ||
+      (user?.email?.trim?.() || '')
+
+    // (Optional) mild sanity – email should not be empty if column is NOT NULL
+    if (!caregiver_email) {
+      throw new Error('Your account email is missing. Please sign out and sign in again, or contact support.')
     }
+
+    const { data, error } = await supabase
+      .from('observations')
+      .insert({
+        user_id: user!.id,               // RLS ensures it’s you
+        form_type: mode,                 // 'ADL' | 'IADL' | 'COMPREHENSIVE'
+        observation_date,                // YYYY-MM-DD
+        caregiver_name,                  // ← provide NOT NULL fields
+        caregiver_email,                 // ← provide NOT NULL fields
+        // optional fields left null: patient_name, notes, mode_of_observation
+      })
+      .select('id')
+      .single()
+
+    if (error) throw error
+    navigate(`/caregiver/observations/${data.id}`)
+  } catch (e: any) {
+    setErr(e?.message ?? String(e))
+  } finally {
+    setBusy(false)
   }
+}
 
   const Tile = ({
     title,
