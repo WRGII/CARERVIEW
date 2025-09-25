@@ -1,3 +1,4 @@
+// src/pages/CaregiverPage.tsx
 import React, { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -9,13 +10,10 @@ import { Button } from '../components/ui/Button'
 import { ObservationList } from '../components/caregiver/ObservationList'
 import { ViewObservation } from '../components/caregiver/ViewObservation'
 import { Plus } from 'lucide-react'
-
 import { supabase } from '../lib/supabaseClient'
 import { exportToDOCX, exportToCSV } from '../lib/exports'
-
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
-
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
 import { prefetchObservationFormAssets } from '../lib/prefetching'
 
@@ -35,17 +33,14 @@ export default function CaregiverPage() {
   const [exportingFor, setExportingFor] = useState<string | null>(null)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
-  // Prefetch observation form data when dashboard loads for better UX
   React.useEffect(() => {
     if (user?.id) {
-      // Prefetch in the background when user lands on dashboard
       prefetchObservationFormAssets(queryClient, user.id).catch((err) => {
         console.warn('Failed to prefetch observation form assets:', err)
       })
     }
   }, [user?.id, queryClient])
 
-  // Ephemeral success after Stripe redirect (?success=true)
   React.useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setShowSuccessMessage(true)
@@ -57,7 +52,7 @@ export default function CaregiverPage() {
     }
   }, [searchParams])
 
-  // Auth / profile guards
+  // Auth guards
   if (loading) return <Loading message="Loading caregiver dashboard..." />
   if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
@@ -148,7 +143,6 @@ export default function CaregiverPage() {
     }
   }
 
-
   function renderBody() {
     if (viewMode === 'view') {
       return currentObservationId ? (
@@ -174,9 +168,9 @@ export default function CaregiverPage() {
   }
 
   return (
-    <Layout 
-      title="Dashboard" 
-      user={{ ...user, profile }} 
+    <Layout
+      title="Dashboard"
+      user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
         <Button
@@ -189,10 +183,10 @@ export default function CaregiverPage() {
         </Button>
       }
     >
-      {/* Optional success toast after checkout */}
       {showSuccessMessage && (
         <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
+            {/* check icon */}
             <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -203,17 +197,14 @@ export default function CaregiverPage() {
         </div>
       )}
 
-      {/* If not active, nudge to activate/upgrade */}
       {!planActive && <InactivePlanNotice className="mb-6" />}
 
-      {/* Compact Legend Display */}
       <div className="mb-8">
         <div className="bg-warm-white border border-slate-gray/20 rounded-xl shadow-sm overflow-hidden">
           <ScoreLegendDisplay compact={true} />
         </div>
       </div>
 
-      {/* Observations */}
       <div className="space-y-6">
         {viewMode === 'list' && (
           <div className="flex items-center justify-between">
