@@ -43,13 +43,17 @@ export function useObservations() {
   })
 }
 
-/** Optional: fetch a single observation with nested responses (handy for ViewObservation) */
+/** =========================
+ * Fetch a single observation (auth via RLS)
+ * IMPORTANT: keep this hook key independent of auth
+ * ========================= */
 export function useObservationById(id?: string | null) {
-  const { user } = useAuth()
   return useQuery({
-    queryKey: ['observation', user?.id, id],
-    enabled: !!user?.id && !!id,
+    queryKey: ['observation', id],   // ← stable key that doesn’t mutate as auth resolves
+    enabled: !!id,
     queryFn: async () => {
+      if (!id) return null
+
       const { data, error } = await supabase
         .from('observations')
         .select(
@@ -64,7 +68,7 @@ export function useObservationById(id?: string | null) {
           )
         `
         )
-        .eq('id', id!)
+        .eq('id', id)
         .single()
 
       if (error) throw error
@@ -72,6 +76,9 @@ export function useObservationById(id?: string | null) {
     },
   })
 }
+
+// Back-compat alias: some files import { useObservation }
+export { useObservationById as useObservation }
 
 /** =========================
  * Mutation: upsert observation + responses (React Query v5)
@@ -116,7 +123,7 @@ export function useUpsertObservationAndResponses() {
         notes: observation.notes ?? null,
         caregiver_name: observation.caregiver_name ?? null,
         caregiver_email: observation.caregiver_email ?? null,
-        form_type: observation.form_type, // ← persist ADL/IADL tag
+        form_type: observation.form_type,
       }
 
       // Insert or update observation and return its id
@@ -165,9 +172,6 @@ export function useUpsertObservationAndResponses() {
     },
   })
 }
-
-// Back-compat alias: some files import { useObservation }
-export { useObservationById as useObservation }
 
 /** Optional: delete observation (and cascade responses if FK is ON DELETE CASCADE) */
 export function useDeleteObservation() {
