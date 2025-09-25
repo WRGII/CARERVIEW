@@ -1,30 +1,21 @@
 // src/hooks/useLegend.ts
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabaseClient';
-import { useAuth } from './useAuth';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "../lib/supabaseClient";
 
-export type LegendRow = {
-  score: number;
-  description: string;
-};
+type LegendRow = { score: number; description: string };
 
 export function useLegend() {
-  const { user, loading: authLoading } = useAuth();
-
   return useQuery({
-    queryKey: ['legend', user?.id],                 // cache per-user session
-    enabled: !authLoading && !!user?.id,            // ✅ login-first gate
-    staleTime: 10 * 60 * 1000,                      // 10 minutes
+    queryKey: ["legend"], // stable, no auth coupling
     queryFn: async (): Promise<LegendRow[]> => {
       const { data, error } = await supabase
-        .from('legend')
-        .select('score, description')                // only what we need
-        .order('score', { ascending: true });
+        .from("legend")
+        .select("score, description")
+        .order("score", { ascending: true });
 
-      if (error) {
-        throw new Error(`Failed to fetch legend: ${error.message}`);
-      }
-      return (data ?? []) as LegendRow[];
+      if (error) throw error;
+      return (data as LegendRow[]) ?? [];
     },
+    staleTime: 24 * 60 * 60 * 1000,
   });
 }
