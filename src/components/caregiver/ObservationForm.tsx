@@ -37,7 +37,7 @@ type Category = {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export default function ObservationForm({ formType, onComplete }: ObservationFormProps) {
+export default function ObservationForm({ observationId, formType, onComplete }: ObservationFormProps) {
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const upsertObservation = useUpsertObservationAndResponses()
