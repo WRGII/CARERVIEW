@@ -23,8 +23,8 @@ import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "@/pages/AdminDeleteUser";
 
 import CaregiverPage from "./pages/CaregiverPage";
-import NewObservationPage from "./pages/NewObservationPage"; // chooser page
-import ObservationForm from "./components/caregiver/ObservationForm"; // actual form
+import NewObservationPage from "./pages/NewObservationPage"; // chooser page (creates row then navigates)
+import ObservationEditPage from "./pages/ObservationEditPage"; // ← NEW: edit by :id page
 
 // Lazy
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
@@ -58,8 +58,8 @@ export default function App() {
               <Route path="/why" element={<WhyCarerView />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/create-account" element={<CreateAccountPage />} />
-              <Route 
-                path="/privacy-policy" 
+              <Route
+                path="/privacy-policy"
                 element={
                   <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -75,10 +75,10 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                } 
+                }
               />
-              <Route 
-                path="/data-policy" 
+              <Route
+                path="/data-policy"
                 element={
                   <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -94,7 +94,7 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                } 
+                }
               />
               <Route
                 path="/choose-plan"
@@ -143,7 +143,7 @@ export default function App() {
                 }
               />
 
-              {/* New Observation: chooser */}
+              {/* New Observation: chooser (creates observation and navigates) */}
               <Route
                 path="/caregiver/observations/new"
                 element={
@@ -153,33 +153,15 @@ export default function App() {
                 }
               />
 
-              {/* New Observation: ADL */}
+              {/* Edit existing observation by id */}
               <Route
-                path="/caregiver/observations/new/adl"
+                path="/caregiver/observations/:id"
                 element={
                   <CaregiverGuard>
-                    <ObservationForm
-                      formType="ADL"
-                      onComplete={() => (window.location.href = "/caregiver")}
-                    />
+                    <ObservationEditPage />
                   </CaregiverGuard>
                 }
               />
-
-              {/* New Observation: IADL */}
-              <Route
-                path="/caregiver/observations/new/iadl"
-                element={
-                  <CaregiverGuard>
-                    <ObservationForm
-                      formType="IADL"
-                      onComplete={() => (window.location.href = "/caregiver")}
-                    />
-                  </CaregiverGuard>
-                }
-              />
-
-              {/* NOTE: We'll add /caregiver/observations/new/comprehensive after the form supports it */}
             </Route>
 
             {/* Fallback */}
