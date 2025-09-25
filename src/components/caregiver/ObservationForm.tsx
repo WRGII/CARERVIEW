@@ -51,7 +51,11 @@ export default function ObservationForm({ observationId, formType, onComplete }:
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
   const [dateError, setDateError] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [currentObservationId, setCurrentObservationId] = useState<string | null>(null)
+  const [currentObservationId, setCurrentObservationId] = useState<string | null>(observationId ?? null)
+React.useEffect(() => {
+  // keep in sync if parent changes id
+  if (observationId) setCurrentObservationId(observationId)
+}, [observationId])
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
