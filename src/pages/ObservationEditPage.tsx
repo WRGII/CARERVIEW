@@ -1,12 +1,12 @@
 // src/pages/ObservationEditPage.tsx
 import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/common/Layout'
 import { Loading } from '../components/ui/Loading'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import ObservationForm from '../components/caregiver/ObservationForm'
+import { useObservationById } from '../hooks/useObservations'
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE'
 
@@ -14,18 +14,11 @@ export default function ObservationEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, profile, loading, error } = useAuth()
-  const [obs, setObs] = React.useState<{
-    id: string
-    user_id: string
-    form_type: FormType
-    observation_date: string | null
-    patient_name: string | null
-    notes: string | null
-    caregiver_name: string | null
-    caregiver_email: string | null
-  } | null>(null)
-  const [loadErr, setLoadErr] = React.useState<string | null>(null)
-  const [busy, setBusy] = React.useState(true)
+
+  // Guard early on params
+  if (!id) {
+    return <ErrorMessage message="Missing observation id in URL." />
+  }
 
   // Auth guards
   if (loading) return <Loading message="Loading observation…" />
@@ -33,45 +26,46 @@ export default function ObservationEditPage() {
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
   if (profile.disabled) return <ErrorMessage message="Account disabled." />
 
-  React.useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        if (!id) throw new Error('Missing observation id')
-        const { data, error: selErr } = await supabase
-          .from('observations')
-          .select('id,user_id,form_type,observation_date,patient_name,notes,caregiver_name,caregiver_email')
-          .eq('id', id)
-          .single()
-        if (selErr) throw new Error(selErr.message)
-        if (!cancelled) {
-          // Simple owner guard (RLS should already enforce)
-          if (data.user_id !== user.id) throw new Error('Not authorized to view this observation.')
-          setObs(data as any)
-        }
-      } catch (e: any) {
-        if (!cancelled) setLoadErr(e?.message || String(e))
-      } finally {
-        if (!cancelled) setBusy(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [id, user.id])
+  // Load observation via existing hook (RLS enforced)
+  const {
+    data: obs,
+    isLoading,
+    error: obsError,
+  } = useObservationById(id)
 
-  if (busy) return <Loading message="Loading observation…" />
-  if (loadErr) return <ErrorMessage message={loadErr} />
+  if (isLoading) return <Loading message="Fetching observation…" />
+  if (obsError) return <ErrorMessage message={`Error loading observation: ${String((obsError as any)?.message || obsError)}`} />
   if (!obs) return <ErrorMessage message="Observation not found." />
+
+  const formType = (obs.form_type || '') as FormType
+  if (!formType || !['ADL', 'IADL', 'COMPREHENSIVE'].includes(formType)) {
+    return <ErrorMessage message={`Observation has invalid form type: "${String(formType)}"`} />
+  }
 
   return (
     <Layout
       title="Edit Observation"
       user={{ ...user, profile }}
       hideSignOut={true}
-      headerRight={<button className="underline" onClick={() => navigate('/caregiver')}>Back to Dashboard</button>}
+      headerRight={
+        <button
+          type="button"
+          className="underline"
+          onClick={() => navigate('/caregiver')}
+        >
+          Back to Dashboard
+        </button>
+      }
     >
+      {/* Small sanity readout helps if anything goes wrong */}
+      <div className="mb-4 text-sm text-slate-600">
+        <div><strong>ID:</strong> {obs.id}</div>
+        <div><strong>Form:</strong> {formType}</div>
+      </div>
+
       <ObservationForm
         observationId={obs.id}
-        formType={obs.form_type}
+        formType={formType}
         onComplete={() => navigate('/caregiver', { replace: true })}
       />
     </Layout>
