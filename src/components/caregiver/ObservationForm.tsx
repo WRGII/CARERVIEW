@@ -1,9 +1,10 @@
+// src/components/caregiver/ObservationForm.tsx
 import React, { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabaseClient'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import { useLegend } from '../../hooks/useLegend'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
+import { useCategoryQuestions } from '../../hooks/useCategoryQuestions'
 import { Button } from '../ui/Button'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 import ScorePicker from '../ui/ScorePicker'
@@ -14,10 +15,11 @@ interface ObservationFormProps {
   onComplete: () => void
 }
 
-export type CategoryQuestionRow = {
+// Matches the rows returned by get_category_questions RPC
+type CategoryQuestionRow = {
   category_id: string
   category_name: string
-  type: string               // 'ADL' | 'IADL'
+  category_type: 'ADL' | 'IADL'
   category_order: number
   question_id: string
   question_text: string
@@ -27,7 +29,7 @@ export type CategoryQuestionRow = {
 type Category = {
   id: string
   name: string
-  type: string               // 'ADL' | 'IADL'
+  type: 'ADL' | 'IADL'
   order: number
   questions: { id: string; text: string; order: number }[]
 }
@@ -41,7 +43,8 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
 
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
-  const [modeOfObservation, setModeOfObservation] = useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
+  const [modeOfObservation, setModeOfObservation] =
+    useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
   const [notes, setNotes] = useState('')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
@@ -67,7 +70,8 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
 
   const handleDateChange = (value: string) => {
     setDateOfObservation(value)
-    if (value && !validateDate(value)) setDateError('Please enter a valid date in MM/DD/YYYY format')
+    if (value && !validateDate(value))
+      setDateError('Please enter a valid date in MM/DD/YYYY format')
     else setDateError('')
   }
 
@@ -77,45 +81,21 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  // --- data: category + questions (auth-gated) ---
+  // --- data: category + questions (via RPC hook) ---
   const {
     data: categoryQuestions,
     isLoading: cqLoading,
     isError: cqIsError,
     error: cqError,
-    refetch: cqRefetch
-  } = useQuery({
-    queryKey: ['category-questions', user?.id, formType],
-    enabled: !authLoading && !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    retry: 2,
-    refetchOnWindowFocus: false,
-    queryFn: async (): Promise<CategoryQuestionRow[]> => {
-      if (!user?.id) return []
-      let query = supabase
-        .from('v_category_questions')
-        .select('category_id, category_name, type, category_order, question_id, question_text, question_order') as any
-
-      // For ADL or IADL, filter by type; for COMPREHENSIVE fetch all.
-      if (formType !== 'COMPREHENSIVE') {
-        query = query.eq('type', formType)
-      }
-
-      const { data, error } = await query
-        .order('category_order', { ascending: true })
-        .order('question_order', { ascending: true })
-
-      if (error) throw new Error(error.message)
-      return (data as CategoryQuestionRow[]) || []
-    }
-  })
+    refetch: cqRefetch,
+  } = useCategoryQuestions(formType)
 
   // --- data: legend 1–5 (auth-gated via hook) ---
   const { data: legendRows, isLoading: legendLoading, isError: legendIsError } = useLegend()
 
   const legendMap: Record<number, string> = React.useMemo(() => {
     const m: Record<number, string> = {}
-    ;(legendRows ?? []).forEach(r => {
+    ;(legendRows ?? []).forEach((r) => {
       if (typeof r.score === 'number' && r.description) m[r.score] = r.description
     })
     return m
@@ -125,11 +105,11 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
   const categories: Category[] = React.useMemo(() => {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
-    categoryQuestions.forEach((item) => {
+    ;(categoryQuestions as CategoryQuestionRow[]).forEach((item) => {
       if (
         !item.category_id ||
         !item.category_name ||
-        !item.type ||
+        !item.category_type ||
         item.category_order == null ||
         !item.question_id ||
         !item.question_text ||
@@ -141,22 +121,25 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          type: item.type ?? 'ADL',
+          type: item.category_type,
           order: item.category_order,
-          questions: []
+          questions: [],
         })
       }
       map.get(item.category_id)!.questions.push({
         id: item.question_id,
         text: item.question_text,
-        order: item.question_order
+        order: item.question_order,
       })
     })
 
     const result = Array.from(map.values())
     // deterministic ADL-first, then category order
-    const orderOfType = (t: string) => (t === 'ADL' ? 0 : 1)
-    result.sort((a, b) => (orderOfType(a.type ?? 'ADL') - orderOfType(b.type ?? 'ADL')) || (a.order - b.order))
+    const orderOfType = (t: 'ADL' | 'IADL') => (t === 'ADL' ? 0 : 1)
+    result.sort(
+      (a, b) =>
+        orderOfType(a.type) - orderOfType(b.type) || a.order - b.order
+    )
     result.forEach((cat) => cat.questions.sort((a, b) => a.order - b.order))
     return result
   }, [categoryQuestions])
@@ -211,7 +194,9 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     const caregiver_email = (profile?.email || user?.email || '').trim()
 
     if (!emailRegex.test(caregiver_email)) {
-      setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
+      setSaveError(
+        'Your account email is missing or invalid. Please sign out and sign in again, or contact support.'
+      )
       setIsSaving(false)
       return
     }
@@ -232,13 +217,12 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
       },
       answers,
       categoryNotes,
-      questionCategoryMap
+      questionCategoryMap,
     }
 
     try {
       const result = await upsertObservation.mutateAsync(payload)
       if (!currentObservationId) setCurrentObservationId(result.id)
-
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
 
       if (exitAfterSave) {
@@ -280,7 +264,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-4">
         <p className="text-slate-gray mb-2">
-          Error loading questions or legend. Please try again.
+          {cqError ? String((cqError as any)?.message || cqError) : 'Error loading data.'}
         </p>
         <button
           type="button"
@@ -297,7 +281,9 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6 text-center">
         <p className="text-slate-gray mb-2">No questions available</p>
-        <p className="text-slate-gray/60 text-sm">Please contact support if this issue persists.</p>
+        <p className="text-slate-gray/60 text-sm">
+          Please contact support if this issue persists.
+        </p>
       </div>
     )
   }
@@ -387,7 +373,7 @@ export default function ObservationForm({ formType, onComplete }: ObservationFor
                 <div className="font-semibold text-slate-gray">
                   {category.name}{' '}
                   <span className="text-slate-gray/60 text-sm">
-                    ({category.type ?? 'ADL'})
+                    ({category.type})
                   </span>
                 </div>
 
