@@ -1,123 +1,146 @@
 // src/pages/NewObservationPage.tsx
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
-import { useCategories } from '../hooks/useCategories'
 import { Layout } from '../components/common/Layout'
-import { Loading } from '../components/ui/Loading'
-import { ErrorMessage } from '../components/ui/ErrorMessage'
-import ObservationForm from '../components/caregiver/ObservationForm'
 import { Button } from '../components/ui/Button'
-import { ClipboardList, ActivitySquare, Layers, ThumbsDown, ThumbsUp } from 'lucide-react'
-import { prefetchObservationFormAssets } from '../lib/prefetching'
-import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
+import { Card, CardContent } from '../components/ui/Card'
+import { ActivitySquare, ClipboardList, Layers } from 'lucide-react'
+import { ErrorMessage } from '../components/ui/ErrorMessage'
+import { Loading } from '../components/ui/Loading'
 
-type Choice = 'ADL' | 'IADL' | 'COMPREHENSIVE'
+type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE'
 
 export default function NewObservationPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { user, profile, loading, error } = useAuth()
-  const { data: categoriesData = [], isLoading: categoriesLoading } = useCategories()
-  const [choice, setChoice] = React.useState<Choice | null>(null)
+  const [busy, setBusy] = React.useState(false)
+  const [err, setErr] = React.useState<string | null>(null)
 
-  // Prefetch observation form data when the component loads
-  React.useEffect(() => {
-    if (user?.id && !choice) {
-      // Only prefetch when on the chooser screen (choice is null)
-      prefetchObservationFormAssets(queryClient, user.id).catch((err) => {
-        console.warn('Failed to prefetch observation form assets:', err)
-      })
-    }
-  }, [user?.id, choice, queryClient])
-
-  // auth guards
+  // Auth guards
   if (loading) return <Loading message="Preparing your new observation…" />
   if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
   if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
   if (profile.disabled) return <ErrorMessage message="Account disabled." />
 
-  const handleComplete = () => {
-    navigate('/caregiver', { replace: true })
+  async function createAndStart(mode: FormType) {
+    try {
+      setBusy(true); setErr(null)
+      const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+
+      const { data, error } = await supabase
+        .from('observations')
+        .insert({
+          user_id: user.id,         // relies on your new column & RLS
+          form_type: mode,          // 'ADL' | 'IADL' | 'COMPREHENSIVE'
+          observation_date: today,
+        })
+        .select('id')
+        .single()
+
+      if (error) throw error
+      navigate(`/caregiver/observations/${data.id}`)
+    } catch (e: any) {
+      setErr(e.message ?? String(e))
+    } finally {
+      setBusy(false)
+    }
   }
 
-  // Filter categories by type and sort by sort_order
-  const adlCategories = React.useMemo(() => {
-    if (!categoriesData) return []
-    return categoriesData
-      .filter(cat => cat.type === 'ADL' && cat.name !== 'CATEGORY') // Filter out placeholder categories
-      .sort((a, b) => a.sort_order - b.sort_order)
-  }, [categoriesData])
-
-  const iadlCategories = React.useMemo(() => {
-    if (!categoriesData) return []
-    return categoriesData
-      .filter(cat => cat.type === 'IADL' && cat.name !== 'CATEGORY') // Filter out placeholder categories
-      .sort((a, b) => a.sort_order - b.sort_order)
-  }, [categoriesData])
-
-  // chooser cards
-  if (!choice) {
-    return (
-      <Layout title="New Observation" user={{ ...user, profile }}>
-        <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">Choose observation type</h2>
-            <Button variant="outline" onClick={() => navigate('/caregiver')}>Back to Dashboard</Button>
-          </div>
-
-          <p className="text-slate-600">
-            Pick what you want to focus on today. You can always add more later.
-          </p>
-
-          {/* Observation Type Cards with Category Lists */}
-          {/* Simplified placeholder for debugging */}
-          <div className="bg-white border border-slate-200 rounded-xl p-8">
-            <p className="text-slate-600 text-lg">Placeholder for observation type selection.</p>
-            <div className="mt-4 space-y-2">
-              <button
-                type="button"
-                onClick={() => setChoice('ADL')}
-                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-              >
-                ADL Observation (Simple)
-              </button>
-              <button
-                type="button"
-                onClick={() => setChoice('IADL')}
-                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-              >
-                IADL Observation (Simple)
-              </button>
-              <button
-                type="button"
-                onClick={() => setChoice('COMPREHENSIVE')}
-                className="block w-full text-left p-4 border rounded-lg hover:bg-slate-50"
-              >
-                Comprehensive Observation (Simple)
-              </button>
+  const Tile = ({
+    title,
+    desc,
+    icon,
+    onClick,
+    badge,
+  }: {
+    title: string
+    desc: string
+    icon: React.ReactNode
+    onClick: () => void
+    badge?: string
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left focus:outline-none"
+      aria-label={title}
+      disabled={busy}
+    >
+      <Card className="bg-warm-white hover:shadow-lg transition-shadow duration-200 h-full disabled:opacity-60">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-cyan-primary/15 flex items-center justify-center shrink-0">
+              {icon}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-gray">{title}</h3>
+                {badge && (
+                  <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-mint-green/70 text-slate-gray border border-mint-green/70">
+                    {badge}
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-gray/80 mt-1">{desc}</p>
+              <div className="mt-4">
+                <span className="inline-flex items-center gap-2 rounded-lg border-2 border-slate-gray/30 px-3 py-1.5 text-sm font-semibold text-slate-gray">
+                  Start
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </Layout>
-    )
-  }
+        </CardContent>
+      </Card>
+    </button>
+  )
 
-  // form after choice
   return (
-    <Layout 
+    <Layout
       title="New Observation"
       user={{ ...user, profile }}
       hideSignOut={true}
-      headerRight={
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={() => setChoice(null)}>← Change type</Button>
-          <Button variant="outline" onClick={() => navigate('/caregiver')}>Cancel</Button>
-        </div>
-      }
+      headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>Back to Dashboard</Button>}
     >
-      <ObservationForm formType={choice} onComplete={handleComplete} />
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-gray">Create Observation</h1>
+          <p className="text-slate-gray/70">Choose the type of form to start.</p>
+        </div>
+
+        {err && <div className="text-red-600">{err}</div>}
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <Tile
+            title="ADL Observation"
+            desc="Activities of Daily Living (eating, dressing, bathing)"
+            icon={<ActivitySquare className="w-6 h-6 text-cyan-primary" />}
+            onClick={() => createAndStart('ADL')}
+          />
+          <Tile
+            title="IADL Observation"
+            desc="Instrumental ADLs (shopping, meds, housekeeping)"
+            icon={<ClipboardList className="w-6 h-6 text-cyan-primary" />}
+            onClick={() => createAndStart('IADL')}
+          />
+          <div className="md:col-span-2">
+            <Tile
+              title="Comprehensive Observation"
+              desc="ADL + IADL combined in one report"
+              icon={<Layers className="w-6 h-6 text-cyan-primary" />}
+              badge="Recommended"
+              onClick={() => createAndStart('COMPREHENSIVE')}
+            />
+          </div>
+        </div>
+
+        <div>
+          <Button variant="outline" onClick={() => navigate('/caregiver')} disabled={busy}>
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
     </Layout>
   )
 }
