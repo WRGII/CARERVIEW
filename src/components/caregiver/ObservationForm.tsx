@@ -11,13 +11,11 @@ import ScorePicker from '../ui/ScorePicker'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 
 interface ObservationFormProps {
-  /** When provided, we are editing an existing observation */
   observationId?: string
   formType: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   onComplete: () => void
 }
 
-/** Matches the rows returned by v_category_questions (canonical column: `type`) */
 type CategoryQuestionRow = {
   category_id: string
   category_name: string
@@ -59,20 +57,18 @@ export default function ObservationForm({
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(observationId ?? null)
 
   React.useEffect(() => {
-    // keep in sync if parent changes id
     if (observationId) setCurrentObservationId(observationId)
   }, [observationId])
 
-  // Prefill date to today on first mount (safer first-save path)
   React.useEffect(() => {
     if (!dateOfObservation) {
       const t = new Date()
       const mm = String(t.getMonth() + 1).padStart(2, '0')
       const dd = String(t.getDate()).padStart(2, '0')
       const yyyy = t.getFullYear()
-      setDateOfObservation(`${mm}/${dd}/${yyyy}`) // MM/DD/YYYY
+      setDateOfObservation(`${mm}/${dd}/${yyyy}`)
     }
-  }, []) // run once
+  }, [])
 
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
@@ -92,7 +88,8 @@ export default function ObservationForm({
 
   const handleDateChange = (value: string) => {
     setDateOfObservation(value)
-    if (value && !validateDate(value)) setDateError('Please enter a valid date in MM/DD/YYYY format')
+    if (value && !validateDate(value))
+      setDateError('Please enter a valid date in MM/DD/YYYY format')
     else setDateError('')
   }
 
@@ -102,7 +99,7 @@ export default function ObservationForm({
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  // --- data: category + questions (from view via hook) ---
+  // --- data: category + questions ---
   const {
     data: categoryQuestions,
     isLoading: cqLoading,
@@ -111,7 +108,7 @@ export default function ObservationForm({
     refetch: cqRefetch,
   } = useCategoryQuestions(formType)
 
-  // --- data: legend 1–5 (auth-gated via hook) ---
+  // --- data: legend ---
   const { data: legendRows, isLoading: legendLoading, isError: legendIsError } = useLegend()
 
   const legendMap: Record<number, string> = React.useMemo(() => {
@@ -122,7 +119,7 @@ export default function ObservationForm({
     return m
   }, [legendRows])
 
-  // --- transform rows -> Category[] ---
+  // --- transform rows -> categories ---
   const categories: Category[] = React.useMemo(() => {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
@@ -142,7 +139,7 @@ export default function ObservationForm({
         map.set(item.category_id, {
           id: item.category_id,
           name: item.category_name,
-          type: item.type,              // ← canonical column
+          type: item.type,
           order: item.category_order,
           questions: [],
         })
@@ -161,7 +158,7 @@ export default function ObservationForm({
     return result
   }, [categoryQuestions])
 
-  // --- question_id -> category_id map (for saving responses) ---
+  // --- question_id -> category_id map ---
   const questionCategoryMap: Record<string, string> = React.useMemo(() => {
     const map: Record<string, string> = {}
     categories.forEach((category) => {
@@ -211,7 +208,9 @@ export default function ObservationForm({
     const caregiver_email = (profile?.email || user?.email || '').trim()
 
     if (!emailRegex.test(caregiver_email)) {
-      setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
+      setSaveError(
+        'Your account email is missing or invalid. Please sign out and sign in again, or contact support.'
+      )
       setIsSaving(false)
       return
     }
@@ -227,7 +226,7 @@ export default function ObservationForm({
         notes,
         caregiver_name,
         caregiver_email,
-        form_type: formType, // ADL | IADL | COMPREHENSIVE
+        form_type: formType,
       },
       answers,
       categoryNotes,
@@ -265,7 +264,7 @@ export default function ObservationForm({
     setCategoryNotes((prev) => ({ ...prev, [categoryId]: value }))
   }
 
-  // --- loading & error states (include legend) ---
+  // --- loading & error states ---
   if (authLoading || cqLoading || legendLoading) {
     return (
       <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-4">
@@ -387,4 +386,156 @@ export default function ObservationForm({
               <div className="flex items-center justify-between">
                 <div className="font-semibold text-slate-gray">
                   {category.name}{' '}
-                  <span className="text-slate-gray/60 text-sm
+                  <span className="text-slate-gray/60 text-sm">
+                    ({category.type})
+                  </span>
+                </div>
+
+                {/* CarerView 1–5 ADL Scale Reference */}
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                  <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ThumbsDown className="w-3 h-3 text-white" />
+                  </div>
+                  <div className="flex space-x-1">
+                    <div className="w-8 h-6 bg-peach-blush rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">1</span>
+                    </div>
+                    <div className="w-8 h-6 bg-peach-blush/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">2</span>
+                    </div>
+                    <div className="w-8 h-6 bg-cyan-primary/30 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">3</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green/70 rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">4</span>
+                    </div>
+                    <div className="w-8 h-6 bg-mint-green rounded-sm flex items-center justify-center">
+                      <span className="text-xs font-bold text-slate-gray">5</span>
+                    </div>
+                  </div>
+                  <div className="w-6 h-6 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <ThumbsUp className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <div className="space-y-4">
+                {category.questions.map((question) => (
+                  <div key={question.id} className="grid md:grid-cols-12 items-center gap-3">
+                    <div className="md:col-span-9 text-slate-gray">{question.text}</div>
+                    <div className="md:col-span-3">
+                      <ScorePicker
+                        value={answers[question.id]}
+                        onChange={(val) =>
+                          setAnswers((prev) => ({ ...prev, [question.id]: val }))
+                        }
+                        descriptions={legendMap}
+                        ariaLabel={`Set score for: ${question.text}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                {/* Category Notes */}
+                <div className="mt-6 pt-4 border-t border-slate-gray/20">
+                  <label className="block text-sm font-medium text-slate-gray mb-2">
+                    {category.name} Category Notes (Optional)
+                  </label>
+                  <textarea
+                    value={categoryNotes[category.id] || ''}
+                    onChange={(e) => setCategoryNote(category.id, e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-gray/30 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary bg-warm-white text-slate-gray"
+                    placeholder={`Enter notes specific to ${category.name} observations...`}
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Category Save Buttons */}
+            <div className="mt-6 pt-4 border-t border-slate-gray/20">
+              <div className="flex items-center justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave(true)}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving…' : 'Save & Exit'}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={handleInterimSave}
+                  disabled={isSaving || !isValidDate || !hasAnyScore}
+                  title={
+                    !isValidDate
+                      ? 'Enter a valid date (MM/DD/YYYY)'
+                      : !hasAnyScore
+                      ? 'Select at least one score'
+                      : undefined
+                  }
+                  className="flex items-center space-x-2"
+                >
+                  <span>{isSaving ? 'Saving…' : 'Save & Continue'}</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Action bar */}
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={upsertObservation.isPending || isSaving || !isValidDate || !hasAnyScore}
+          title={
+            !isValidDate
+              ? 'Enter a valid date in MM/DD/YYYY'
+              : !hasAnyScore
+              ? 'Select at least one score'
+              : undefined
+          }
+        >
+          {upsertObservation.isPending || isSaving ? 'Saving…' : (isEditing ? 'Save Changes' : 'Create Observation')}
+        </Button>
+        <Button type="button" variant="outline" onClick={onComplete}>
+          Cancel
+        </Button>
+      </div>
+
+      {/* Inline guidance */}
+      {(!isValidDate || !hasAnyScore) && (
+        <div className="text-slate-gray/70 text-sm">
+          {!isValidDate && <div>• Enter a valid date in <strong>MM/DD/YYYY</strong>.</div>}
+          {!hasAnyScore && <div>• Select at least one score to save.</div>}
+        </div>
+      )}
+
+      {saveError && (
+        <div className="mt-3 rounded-md border border-peach-blush bg-peach-blush/20 p-3 text-sm text-slate-gray">
+          {saveError}
+        </div>
+      )}
+      {saveSuccessMessage && (
+        <div className="mt-3 rounded-md border border-mint-green bg-mint-green/20 p-3 text-sm text-slate-gray">
+          {saveSuccessMessage}
+        </div>
+      )}
+    </form>
+  )
+}
