@@ -4,10 +4,27 @@
   command = "npm run build"
   publish = "dist"
 
-# No [functions] section on purpose.
-# We don't want Netlify to look for serverless functions in this repo anymore.
-
+# SPA routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# === Cache strategy ===
+# Always revalidate index.html so the browser fetches the latest manifest/chunk names
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+  Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Cache hashed assets aggressively (immutable)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+  Cache-Control = "public, max-age=31536000, immutable"
+
+# (Optional) Cache the rest reasonably
+[[headers]]
+  for = "/*"
+  [headers.values]
+  Cache-Control = "public, max-age=600"
