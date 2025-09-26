@@ -46,16 +46,20 @@ export default function Header() {
   // Add emergency sign out function for stuck states
   const emergencySignOut = async () => {
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut();
       // Clear any local storage that might be causing issues
-      localStorage.removeItem('supabase.auth.token')
-      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token')
-      window.location.reload()
+      localStorage.removeItem("supabase.auth.token");
+      localStorage.removeItem(
+        "sb-" +
+          import.meta.env.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] +
+          "-auth-token"
+      );
+      window.location.reload();
     } catch (error) {
-      console.error('Emergency sign out error:', error)
-      window.location.reload()
+      console.error("Emergency sign out error:", error);
+      window.location.reload();
     }
-  }
+  };
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
@@ -63,9 +67,9 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Left: Logo & Brand */}
           <div className="flex items-center">
-            <Link 
-              to="/" 
-              aria-label="CarerView home" 
+            <Link
+              to="/"
+              aria-label="CarerView home"
               className="flex items-center hover:opacity-80 transition-opacity"
             >
               {logoLoading ? (
@@ -80,7 +84,9 @@ export default function Header() {
                 />
               )}
               <div className="flex items-center">
-                <span className="text-xl font-bold text-slate-800 mr-3">CarerView</span>
+                <span className="text-xl font-bold text-slate-800 mr-3">
+                  CarerView
+                </span>
                 {/* Show plan pill for authenticated caregivers */}
                 {isAuthed && profile?.role === "caregiver" && <PlanPill />}
               </div>
@@ -114,7 +120,7 @@ export default function Header() {
                 >
                   Dashboard
                 </Link>
-                
+
                 {/* Account Menu with Sign Out */}
                 <AccountMenu />
               </>
@@ -128,7 +134,16 @@ export default function Header() {
                 >
                   Why you need CarerView
                 </Link>
-                
+
+                {/* Pricing (unauthenticated) */}
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
+                  aria-label="Pricing"
+                >
+                  Pricing
+                </Link>
+
                 {/* Sign In */}
                 <Link
                   to={{ pathname: "/", hash: "#get-started" }}
