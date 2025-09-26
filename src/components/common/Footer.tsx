@@ -1,34 +1,36 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient'
+import React from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 
 export function Footer() {
-  const [logoUrl, setLogoUrl] = React.useState<string>('/CareView_logo_1_colored_highres.png')
+  const [logoUrl, setLogoUrl] = React.useState<string>(
+    "/CareView_logo_1_colored_highres.png"
+  );
 
   React.useEffect(() => {
-    let mounted = true
-    ;(async () => {
+    let mounted = true;
+    (async () => {
       try {
         const { data } = await supabase
-          .schema('app')
-          .from('site_settings')
-          .select('logo_url')
-          .order('updated_at', { ascending: false })
+          .schema("app")
+          .from("site_settings")
+          .select("logo_url")
+          .order("updated_at", { ascending: false })
           .limit(1)
-          .maybeSingle()
+          .maybeSingle();
 
-        if (!mounted) return
-        if (data?.logo_url) setLogoUrl(data.logo_url)
+        if (!mounted) return;
+        if (data?.logo_url) setLogoUrl(data.logo_url);
       } catch {
         // keep fallback
       }
-    })()
+    })();
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
-  const year = new Date().getFullYear()
+  const year = new Date().getFullYear();
 
   return (
     <footer className="w-full border-t border-slate-200 bg-white">
@@ -44,7 +46,10 @@ export function Footer() {
               />
             </div>
             <p className="text-slate-600 text-sm mb-4">
-              Built with caregivers & clinicians in mind. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
+              Built with caregivers & clinicians in mind. Categories reflect
+              widely used ADL & IADL frameworks and occupational-therapy best
+              practices, translated into everyday language families can use
+              together.
             </p>
             <div>
               <Link
@@ -58,19 +63,26 @@ export function Footer() {
 
           {/* Contact Information */}
           <div className="text-center md:text-left">
-            <h4 className="font-semibold text-slate-800 text-base mb-4">Contact</h4>
+            <h4 className="font-semibold text-slate-800 text-base mb-4">
+              Contact
+            </h4>
             <div className="space-y-2 text-sm text-slate-600">
               <div>
-                <span className="block text-slate-700 font-medium mb-1">Suggestions? Questions?</span>
-                <a 
-                  href="mailto:william.griffith@grifdigi.com"
+                <span className="block text-slate-700 font-medium mb-1">
+                  Suggestions? Questions?
+                </span>
+                {/* Fixed label+mailto mismatch; change to your preferred address */}
+                <a
+                  href="mailto:lina@carerview.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
                 >
-                  Lina@CarerView.com
+                  lina@carerview.com
                 </a>
               </div>
               <div className="mt-3">
-                <span className="block text-slate-700 font-medium mb-1">Locations:</span>
+                <span className="block text-slate-700 font-medium mb-1">
+                  Locations:
+                </span>
                 <div className="space-y-1">
                   <div>Christchurch, New Zealand</div>
                   <div>Denver, Colorado USA</div>
@@ -81,7 +93,9 @@ export function Footer() {
 
           {/* Policies */}
           <div className="text-center md:text-left">
-            <h4 className="font-semibold text-slate-800 text-base mb-4">Policies</h4>
+            <h4 className="font-semibold text-slate-800 text-base mb-4">
+              Policies
+            </h4>
             <div className="space-y-2">
               <div>
                 <Link
@@ -99,6 +113,14 @@ export function Footer() {
                   Data Policy
                 </Link>
               </div>
+              <div>
+                <Link
+                  to="/pricing"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  Pricing
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -111,8 +133,8 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
 
 // Provide default export too so either import style works.
-export default Footer
+export default Footer;
