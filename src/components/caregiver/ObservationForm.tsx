@@ -1,5 +1,5 @@
 // src/components/caregiver/ObservationForm.tsx
-import React, { useState } from 'react'
+import React, { useRef, useState, useEffect, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import { useLegend } from '../../hooks/useLegend'
@@ -45,6 +45,18 @@ export default function ObservationForm({
   const queryClient = useQueryClient()
   const upsertObservation = useUpsertObservationAndResponses()
 
+  // ---- CRITICAL: keep the observation id in a ref so it can’t go stale across renders/async
+  const obsIdRef = useRef<string | null>(observationId ?? null)
+  const [currentObservationId, setCurrentObservationId] = useState<string | null>(observationId ?? null)
+
+  // Keep state + ref in sync if parent prop changes
+  useEffect(() => {
+    if (observationId) {
+      obsIdRef.current = observationId
+      setCurrentObservationId(observationId)
+    }
+  }, [observationId])
+
   const [patientName, setPatientName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
   const [modeOfObservation, setModeOfObservation] =
@@ -54,13 +66,11 @@ export default function ObservationForm({
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
   const [dateError, setDateError] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [currentObservationId, setCurrentObservationId] = useState<string | null>(observationId ?? null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
 
-  React.useEffect(() => {
-    if (observationId) setCurrentObservationId(observationId)
-  }, [observationId])
-
-  React.useEffect(() => {
+  // Prefill date with today (MM/DD/YYYY) for a smooth first save
+  useEffect(() => {
     if (!dateOfObservation) {
       const t = new Date()
       const mm = String(t.getMonth() + 1).padStart(2, '0')
@@ -68,10 +78,7 @@ export default function ObservationForm({
       const yyyy = t.getFullYear()
       setDateOfObservation(`${mm}/${dd}/${yyyy}`)
     }
-  }, [])
-
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
+  }, []) // once
 
   const displayFormType =
     formType === 'COMPREHENSIVE' ? 'Comprehensive (ADL + IADL)' : formType
@@ -99,7 +106,7 @@ export default function ObservationForm({
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
   }
 
-  // --- data: category + questions ---
+  // --- data: category + questions (from view via hook) ---
   const {
     data: categoryQuestions,
     isLoading: cqLoading,
@@ -111,7 +118,7 @@ export default function ObservationForm({
   // --- data: legend ---
   const { data: legendRows, isLoading: legendLoading, isError: legendIsError } = useLegend()
 
-  const legendMap: Record<number, string> = React.useMemo(() => {
+  const legendMap: Record<number, string> = useMemo(() => {
     const m: Record<number, string> = {}
     ;(legendRows ?? []).forEach((r) => {
       if (typeof r.score === 'number' && r.description) m[r.score] = r.description
@@ -120,7 +127,7 @@ export default function ObservationForm({
   }, [legendRows])
 
   // --- transform rows -> categories ---
-  const categories: Category[] = React.useMemo(() => {
+  const categories: Category[] = useMemo(() => {
     if (!categoryQuestions) return []
     const map = new Map<string, Category>()
     ;(categoryQuestions as CategoryQuestionRow[]).forEach((item) => {
@@ -159,7 +166,7 @@ export default function ObservationForm({
   }, [categoryQuestions])
 
   // --- question_id -> category_id map ---
-  const questionCategoryMap: Record<string, string> = React.useMemo(() => {
+  const questionCategoryMap: Record<string, string> = useMemo(() => {
     const map: Record<string, string> = {}
     categories.forEach((category) => {
       if (!category.id) return
@@ -173,7 +180,7 @@ export default function ObservationForm({
 
   // --- derived flags ---
   const isValidDate = dateOfObservation ? validateDate(dateOfObservation) : false
-  const hasAnyScore = React.useMemo(
+  const hasAnyScore = useMemo(
     () => Object.values(answers).some((v) => typeof v === 'number'),
     [answers]
   )
@@ -208,17 +215,18 @@ export default function ObservationForm({
     const caregiver_email = (profile?.email || user?.email || '').trim()
 
     if (!emailRegex.test(caregiver_email)) {
-      setSaveError(
-        'Your account email is missing or invalid. Please sign out and sign in again, or contact support.'
-      )
+      setSaveError('Your account email is missing or invalid. Please sign out and sign in again, or contact support.')
       setIsSaving(false)
       return
     }
 
     const formattedDate = formatDateForDB(dateOfObservation)
 
+    // ALWAYS read the latest id from the ref (not from a possibly stale closure)
+    const effectiveId = obsIdRef.current || undefined
+
     const payload = {
-      observationId: currentObservationId || undefined,
+      observationId: effectiveId,
       observation: {
         patient_name: patientName,
         observation_date: formattedDate,
@@ -235,7 +243,13 @@ export default function ObservationForm({
 
     try {
       const result = await upsertObservation.mutateAsync(payload)
-      if (!currentObservationId) setCurrentObservationId(result.id)
+
+      // Update ref + state with the persisted id so subsequent saves UPDATE (not INSERT)
+      if (!obsIdRef.current) {
+        obsIdRef.current = result.id
+        setCurrentObservationId(result.id)
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
 
       if (exitAfterSave) {
@@ -299,15 +313,18 @@ export default function ObservationForm({
     )
   }
 
-  const isEditing = Boolean(currentObservationId)
+  const isEditing = Boolean(obsIdRef.current)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">
+        <h2 className="text-lg font-semibold mb-1">
           {isEditing ? 'Edit Observation' : 'Create New Observation'}{' '}
           <span className="text-slate-500">({displayFormType})</span>
         </h2>
+        {!isEditing && (
+          <p className="text-xs text-slate-500 mb-3">Draft (unsaved) — first save will create the observation.</p>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">
