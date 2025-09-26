@@ -250,7 +250,7 @@ export default function WhyCarerView() {
           </div>
 
           <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
-            Changes in a loved one’s abilities aren’t always steady or predictable—what happens today may look different tomorrow. CarerView helps you observe these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust plans more effectively and support your loved one with confidence.
+            Changes in a loved one’s abilities aren’t always steady or predictable—what happens today may look different tomorrow. CarerView helps you observe these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust care plans more effectively and with greater confidence.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
