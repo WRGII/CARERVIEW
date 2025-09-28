@@ -27,6 +27,16 @@ import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
 
+// src/App.tsx
+import { ActiveTeamProvider } from './context/ActiveTeam';
+export default function App() {
+  return (
+    <ActiveTeamProvider>
+      {/* your existing Router/Layout */}
+    </ActiveTeamProvider>
+  );
+}
+
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 const queryClient = new QueryClient();
