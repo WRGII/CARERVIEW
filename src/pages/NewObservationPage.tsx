@@ -1,78 +1,102 @@
 // src/pages/NewObservationPage.tsx
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { useAuth } from '../hooks/useAuth'
-import { Layout } from '../components/common/Layout'
-import { Button } from '../components/ui/Button'
-import { Card, CardContent } from '../components/ui/Card'
-import { ActivitySquare, ClipboardList, Layers } from 'lucide-react'
-import { ErrorMessage } from '../components/ui/ErrorMessage'
-import { Loading } from '../components/ui/Loading'
-import { useActiveTeam } from "../context/ActiveTeam";
-import { cvGetRemaining } from "../lib/cv";
-import { supabase } from "../lib/supabaseClient";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../hooks/useAuth';
+import { Layout } from '../components/common/Layout';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent } from '../components/ui/Card';
+import { ActivitySquare, ClipboardList, Layers } from 'lucide-react';
+import { ErrorMessage } from '../components/ui/ErrorMessage';
+import { Loading } from '../components/ui/Loading';
 
-type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE'
+import { useActiveTeam } from '../context/ActiveTeam';
+import { cvGetRemaining } from '../lib/cv';
+import { useMemberFrozen } from '../hooks/useMemberFrozen';
+
+type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
 
 export default function NewObservationPage() {
-  const navigate = useNavigate()
-  const { user, profile, loading, error } = useAuth()
-  const [busy, setBusy] = React.useState(false)
-  const [err, setErr] = React.useState<string | null>(null)
+  const navigate = useNavigate();
+  const { user, profile, loading, error } = useAuth();
+
+  const { teamId } = useActiveTeam();
+  const [remaining, setRemaining] = React.useState<number | null>(null);
+  const frozen = useMemberFrozen(teamId ?? null);
+
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
 
   // Auth guards
-  if (loading) return <Loading message="Preparing your new observation…" />
-  if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />
-  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />
-  if (profile.disabled) return <ErrorMessage message="Account disabled." />
+  if (loading) return <Loading message="Preparing your new observation…" />;
+  if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />;
+  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />;
+  if (profile.disabled) return <ErrorMessage message="Account disabled." />;
+
+  // Load remaining team quota
+  React.useEffect(() => {
+    (async () => {
+      if (!teamId) { setRemaining(null); return; }
+      try { setRemaining(await cvGetRemaining(teamId)); }
+      catch { setRemaining(null); }
+    })();
+  }, [teamId]);
 
   async function createAndStart(mode: FormType) {
-  try {
-    setBusy(true); setErr(null)
+    try {
+      setBusy(true); setErr(null);
 
-    // Build required fields (avoid NOT NULL violations)
-    const today = new Date()
-    const yyyy = today.getFullYear()
-    const mm = String(today.getMonth() + 1).padStart(2, '0')
-    const dd = String(today.getDate()).padStart(2, '0')
-    const observation_date = `${yyyy}-${mm}-${dd}`
+      if (!teamId) throw new Error('Create your Family Circle first.');
+      if (frozen) throw new Error('Seat frozen. Ask the owner to manage billing.');
+      if (remaining !== null && remaining <= 0) throw new Error('Team quota reached (100/year).');
 
-    const caregiver_name =
-      (profile?.display_name?.trim?.() || '') ||
-      (profile?.email?.trim?.() || '') ||
-      (user?.email?.trim?.() || 'Caregiver')
+      // Build required fields
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const observation_date = `${yyyy}-${mm}-${dd}`;
 
-    const caregiver_email =
-      (profile?.email?.trim?.() || '') ||
-      (user?.email?.trim?.() || '')
+      const caregiver_name =
+        (profile?.display_name?.trim?.() || '') ||
+        (profile?.email?.trim?.() || '') ||
+        (user?.email?.trim?.() || 'Caregiver');
 
-    // (Optional) mild sanity – email should not be empty if column is NOT NULL
-    if (!caregiver_email) {
-      throw new Error('Your account email is missing. Please sign out and sign in again, or contact support.')
+      const caregiver_email =
+        (profile?.email?.trim?.() || '') ||
+        (user?.email?.trim?.() || '');
+
+      if (!caregiver_email) {
+        throw new Error('Your account email is missing. Please sign out and sign in again, or contact support.');
+      }
+
+      const { data, error: insErr } = await supabase
+        .from('observations')
+        .insert({
+          user_id: user!.id,
+          form_type: mode,
+          observation_date,
+          caregiver_name,
+          caregiver_email,
+          team_id: teamId,
+          author_user_id: user!.id,
+          // optional: patient_name, notes, mode_of_observation
+        })
+        .select('id')
+        .single();
+
+      if (insErr) throw insErr;
+
+      // optimistic decrement
+      if (remaining !== null) setRemaining(Math.max(remaining - 1, 0));
+
+      navigate(`/caregiver/observations/${data.id}`);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setBusy(false);
     }
-
-    const { data, error } = await supabase
-      .from('observations')
-      .insert({
-        user_id: user!.id,               // RLS ensures it’s you
-        form_type: mode,                 // 'ADL' | 'IADL' | 'COMPREHENSIVE'
-        observation_date,                // YYYY-MM-DD
-        caregiver_name,                  // ← provide NOT NULL fields
-        caregiver_email,                 // ← provide NOT NULL fields
-        // optional fields left null: patient_name, notes, mode_of_observation
-      })
-      .select('id')
-      .single()
-
-    if (error) throw error
-    navigate(`/caregiver/observations/${data.id}`)
-  } catch (e: any) {
-    setErr(e?.message ?? String(e))
-  } finally {
-    setBusy(false)
   }
-}
 
   const Tile = ({
     title,
@@ -81,18 +105,18 @@ export default function NewObservationPage() {
     onClick,
     badge,
   }: {
-    title: string
-    desc: string
-    icon: React.ReactNode
-    onClick: () => void
-    badge?: string
+    title: string;
+    desc: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    badge?: string;
   }) => (
     <button
       type="button"
       onClick={onClick}
       className="w-full text-left focus:outline-none"
       aria-label={title}
-      disabled={busy}
+      disabled={busy || frozen || !teamId || (remaining !== null && remaining <= 0)}
     >
       <Card className="bg-warm-white hover:shadow-lg transition-shadow duration-200 h-full disabled:opacity-60">
         <CardContent className="p-6">
@@ -120,7 +144,7 @@ export default function NewObservationPage() {
         </CardContent>
       </Card>
     </button>
-  )
+  );
 
   return (
     <Layout
@@ -133,6 +157,12 @@ export default function NewObservationPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-gray">Create Observation</h1>
           <p className="text-slate-gray/70">Choose the type of form to start.</p>
+          {/* Status line */}
+          {!teamId && <p className="mt-2 text-sm text-amber-700">No Family Circle yet. Create it on your dashboard.</p>}
+          {teamId && remaining !== null && (
+            <p className="mt-2 text-sm text-slate-600">Team observations remaining this year: {remaining}</p>
+          )}
+          {frozen && <p className="mt-2 text-sm text-red-600">Seat frozen. Ask the owner to manage billing.</p>}
         </div>
 
         {err && <div className="text-red-600">{err}</div>}
@@ -168,5 +198,5 @@ export default function NewObservationPage() {
         </div>
       </div>
     </Layout>
-  )
+  );
 }
