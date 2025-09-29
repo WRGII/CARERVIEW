@@ -3,24 +3,9 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
-import { useUserPlan } from "../../hooks/useUserPlan";
+import { useUserPlan } from "../../hooks/useUserPlan";          // single import
 import PlanPill from "../common/PlanPill";
 import AccountMenu from "../caregiver/AccountMenu";
-import { useActiveTeam } from "../../context/ActiveTeam";
-import { useUserPlan } from "../../hooks/useUserPlan";
-// ...
-const { data: plan } = useUserPlan();
-const canUseTeam = plan?.plan_id === "family_qtr";
-// ...
-{isAuthed && canUseTeam && (
-  <Link
-    to="/team"
-    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
-    aria-label="Team"
-  >
-    Team
-  </Link>
-)}
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -51,31 +36,13 @@ function useBrandingLogo() {
   });
 }
 
-function useActivePatientName(teamId: string | null) {
-  return useQuery({
-    queryKey: ["cv", "teamPatient", teamId],
-    enabled: !!teamId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cv_team_patient")
-        .select("full_name")
-        .eq("team_id", teamId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data?.full_name ?? null;
-    },
-  });
-}
-
 export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
-  const { data: plan } = useUserPlan();
-  const { teamId, loading: teamLoading } = useActiveTeam();
-  const { data: patientName } = useActivePatientName(teamId ?? null);
+  const { data: plan } = useUserPlan();                      // hook inside component
+  const canUseTeam = plan?.plan_id === "family_qtr";
 
   const isAuthed = !!user && !profile?.disabled;
-  const isCaregiver = isAuthed && profile?.role === "caregiver";
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
   const emergencySignOut = async () => {
@@ -97,13 +64,9 @@ export default function Header() {
     <header className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Left: Logo & Brand */}
+          {/* Left: Brand */}
           <div className="flex items-center">
-            <Link
-              to="/"
-              aria-label="CarerView home"
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
+            <Link to="/" aria-label="CarerView home" className="flex items-center hover:opacity-80 transition-opacity">
               {logoLoading ? (
                 <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
               ) : (
@@ -115,30 +78,18 @@ export default function Header() {
                   decoding="async"
                 />
               )}
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold text-slate-800">
-                  CarerView
-                </span>
-                {/* Plan pill for caregivers */}
-                {isCaregiver && <PlanPill />}
-                {/* Active patient badge */}
-                {isCaregiver && teamId && (
-                  <span className="ml-2 inline-flex items-center rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-700">
-                    {teamLoading ? "Loading team…" : patientName ? `Patient: ${patientName}` : "Family Circle"}
-                  </span>
-                )}
+              <div className="flex items-center">
+                <span className="text-xl font-bold text-slate-800 mr-3">CarerView</span>
+                {isAuthed && profile?.role === "caregiver" && <PlanPill />}
               </div>
             </Link>
           </div>
 
-          {/* Right: Navigation */}
+          {/* Right: Nav */}
           <div className="flex items-center gap-3">
             {authLoading ? (
               <div className="flex items-center gap-2">
-                <div
-                  className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse"
-                  aria-hidden
-                />
+                <div className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse" aria-hidden />
                 <button
                   onClick={emergencySignOut}
                   className="text-xs text-slate-500 hover:text-slate-700 underline"
@@ -152,46 +103,41 @@ export default function Header() {
                 {/* Dashboard */}
                 <Link
                   to={dashPath}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
-                  aria-label="Go to Dashboard"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
                 >
                   Dashboard
                 </Link>
 
-                {/* Team settings (caregivers) */}
-                {isCaregiver && (
+                {/* Team (Family plan only) */}
+                {canUseTeam && (
                   <Link
                     to="/team"
-                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
-                    aria-label="Family Circle team settings"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
                   >
                     Team
                   </Link>
                 )}
 
-                {/* Account Menu */}
+                {/* Account */}
                 <AccountMenu />
               </>
             ) : (
               <>
                 <Link
                   to="/why"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
-                  aria-label="Why you need CarerView"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
                 >
                   Why you need CarerView
                 </Link>
                 <Link
                   to="/pricing"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
-                  aria-label="Pricing"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
                 >
                   Pricing
                 </Link>
                 <Link
                   to={{ pathname: "/", hash: "#get-started" }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
-                  aria-label="Sign In"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
                 >
                   Sign In
                 </Link>
