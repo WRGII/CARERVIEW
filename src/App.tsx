@@ -8,34 +8,28 @@ import HashScroll from "./components/util/HashScroll";
 import { ErrorBoundary } from "./components/util/ErrorBoundary";
 
 import CaregiverGuard from "./components/common/CaregiverGuard";
-import AdminGuard from "./components/common/AdminGuard"; // ← NEW
+import AdminGuard from "./components/common/AdminGuard";
 
-// Pages
 import LandingPage from "./pages/LandingPage";
 import WhyCarerView from "./pages/WhyCarerView";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import ResetPassword from "./pages/ResetPassword";
 import AboutPage from "./pages/AboutPage";
-import PricingPage from "./pages/PricingPage"; // ← ADDED
+import PricingPage from "./pages/PricingPage";
 
 import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
-import AdminDeleteUser from "@/pages/AdminDeleteUser";
+import AdminDeleteUser from "./pages/AdminDeleteUser";
 
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
 
-// src/App.tsx
-import { ActiveTeamProvider } from './context/ActiveTeam';
-export default function App() {
-  return (
-    <ActiveTeamProvider>
-      {/* your existing Router/Layout */}
-    </ActiveTeamProvider>
-  );
-}
+import AcceptInvite from "./pages/AcceptInvite";      // ← NEW
+import TeamSettings from "./pages/TeamSettings";      // ← NEW
+
+import { ActiveTeamProvider } from "./context/ActiveTeam"; // ← NEW
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -44,130 +38,103 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <HashScroll />
-          <Suspense fallback={<div className="p-6">Loading…</div>}>
-            <Routes>
-              <Route element={<MainLayout />}>
-                {/* Public */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/why" element={<WhyCarerView />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/pricing" element={<PricingPage />} /> {/* ← ADDED */}
-                <Route path="/create-account" element={<CreateAccountPage />} />
-                <Route
-                  path="/privacy-policy"
-                  element={
-                    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
-                      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                        <div className="text-center mb-16">
-                          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-6">
-                            Privacy Policy
-                          </h1>
-                        </div>
-                        <div className="bg-warm-white rounded-2xl shadow-sm border border-slate-gray/10 p-8 md:p-12">
-                          <p className="text-slate-gray text-lg leading-relaxed">
-                            Content coming soon. We are committed to protecting your privacy and will provide detailed information about how we collect, use, and protect your personal information.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                />
-                <Route
-                  path="/data-policy"
-                  element={
-                    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
-                      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                        <div className="text-center mb-16">
-                          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-6">
-                            Data Policy
-                          </h1>
-                        </div>
-                        <div className="bg-warm-white rounded-2xl shadow-sm border border-slate-gray/10 p-8 md:p-12">
-                          <p className="text-slate-gray text-lg leading-relaxed">
-                            Content coming soon. We will provide comprehensive information about how we handle, store, and protect your data in accordance with industry best practices and regulatory requirements.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                />
-                <Route
-                  path="/choose-plan"
-                  element={
-                    <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
-                      <ChoosePlan />
-                    </Suspense>
-                  }
-                />
-                <Route path="/checkout-success" element={<CheckoutSuccess />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+      <ActiveTeamProvider>
+        <BrowserRouter>
+          <ErrorBoundary>
+            <HashScroll />
+            <Suspense fallback={<div className="p-6">Loading…</div>}>
+              <Routes>
+                <Route element={<MainLayout />}>
+                  {/* Public */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/why" element={<WhyCarerView />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/create-account" element={<CreateAccountPage />} />
+                  <Route
+                    path="/choose-plan"
+                    element={
+                      <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
+                        <ChoosePlan />
+                      </Suspense>
+                    }
+                  />
+                  <Route path="/checkout-success" element={<CheckoutSuccess />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
-                {/* Admin */}
-                <Route
-                  path="/admin"
-                  element={
-                    <AdminGuard>
-                      <AdminPage />
-                    </AdminGuard>
-                  }
-                />
-                <Route
-                  path="/admin/caregivers"
-                  element={
-                    <AdminGuard>
-                      <ActiveCaregiversPage />
-                    </AdminGuard>
-                  }
-                />
-                <Route
-                  path="/admin/delete-user"
-                  element={
-                    <AdminGuard>
-                      <AdminDeleteUser />
-                    </AdminGuard>
-                  }
-                />
+                  {/* Invite accept route */}
+                  <Route path="/join" element={<AcceptInvite />} />   {/* ← NEW */}
 
-                {/* Caregiver */}
-                <Route
-                  path="/caregiver"
-                  element={
-                    <CaregiverGuard>
-                      <CaregiverPage />
-                    </CaregiverGuard>
-                  }
-                />
+                  {/* Admin */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminGuard>
+                        <AdminPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/caregivers"
+                    element={
+                      <AdminGuard>
+                        <ActiveCaregiversPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/delete-user"
+                    element={
+                      <AdminGuard>
+                        <AdminDeleteUser />
+                      </AdminGuard>
+                    }
+                  />
 
-                {/* New Observation: chooser */}
-                <Route
-                  path="/caregiver/observations/new"
-                  element={
-                    <CaregiverGuard>
-                      <NewObservationPage />
-                    </CaregiverGuard>
-                  }
-                />
+                  {/* Caregiver */}
+                  <Route
+                    path="/caregiver"
+                    element={
+                      <CaregiverGuard>
+                        <CaregiverPage />
+                      </CaregiverGuard>
+                    }
+                  />
+                  <Route
+                    path="/team"
+                    element={
+                      <CaregiverGuard>
+                        <TeamSettings />
+                      </CaregiverGuard>
+                    }
+                  />                                             {/* ← NEW */}
 
-                {/* Edit existing observation by id */}
-                <Route
-                  path="/caregiver/observations/:id"
-                  element={
-                    <CaregiverGuard>
-                      <ObservationEditPage />
-                    </CaregiverGuard>
-                  }
-                />
-              </Route>
+                  {/* Observations */}
+                  <Route
+                    path="/caregiver/observations/new"
+                    element={
+                      <CaregiverGuard>
+                        <NewObservationPage />
+                      </CaregiverGuard>
+                    }
+                  />
+                  <Route
+                    path="/caregiver/observations/:id"
+                    element={
+                      <CaregiverGuard>
+                        <ObservationEditPage />
+                      </CaregiverGuard>
+                    }
+                  />
+                </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
-      </BrowserRouter>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </ActiveTeamProvider>
     </QueryClientProvider>
   );
 }
