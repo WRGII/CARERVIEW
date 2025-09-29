@@ -4,6 +4,9 @@ import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
 
 type Member = { user_id: string; role: "owner"|"member"; state: "active"|"frozen"; joined_at: string };
 
+const { data: plan } = useUserPlan();
+if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
+
 export default function TeamSettings() {
   const { teamId, loading } = useActiveTeam();
   const [members, setMembers] = useState<Member[]>([]);
