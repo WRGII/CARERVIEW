@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { cvAcceptInvite } from "../lib/cv";
+import { supabase } from "../lib/supabaseClient";
 
 export default function AcceptInvite() {
   const [status, setStatus] = useState<"idle"|"ok"|"error">("idle");
@@ -9,11 +10,23 @@ export default function AcceptInvite() {
   const nav = useNavigate();
 
   useEffect(() => {
-    const t = params.get("t");
-    if (!t) { setStatus("error"); setMsg("Missing token"); return; }
-    cvAcceptInvite(t)
-      .then(() => { setStatus("ok"); nav("/caregiver"); })
-      .catch((e:any) => { setStatus("error"); setMsg(e.message ?? "Join failed"); });
+    (async () => {
+      const t = params.get("t");
+      if (!t) { setStatus("error"); setMsg("Missing token"); return; }
+
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) {
+        // not signed in → stash token and send to sign-in
+        localStorage.setItem("cv_join_token", t);
+        nav({ pathname: "/", search: "?join=1", hash: "#get-started" }, { replace: true });
+        return;
+      }
+
+      setStatus("idle");
+      cvAcceptInvite(t)
+        .then(() => { setStatus("ok"); nav("/caregiver", { replace: true }); })
+        .catch((e:any) => { setStatus("error"); setMsg(e.message ?? "Join failed"); });
+    })();
   }, []);
 
   if (status === "idle") return <div className="p-6">Joining…</div>;
