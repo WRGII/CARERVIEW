@@ -1,3 +1,4 @@
+// src/components/layout/Header.tsx
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
@@ -5,6 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan } from "../../hooks/useUserPlan";
 import PlanPill from "../common/PlanPill";
 import AccountMenu from "../caregiver/AccountMenu";
+import { useActiveTeam } from "../../context/ActiveTeam";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -35,19 +37,36 @@ function useBrandingLogo() {
   });
 }
 
+function useActivePatientName(teamId: string | null) {
+  return useQuery({
+    queryKey: ["cv", "teamPatient", teamId],
+    enabled: !!teamId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cv_team_patient")
+        .select("full_name")
+        .eq("team_id", teamId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.full_name ?? null;
+    },
+  });
+}
+
 export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
   const { data: plan } = useUserPlan();
+  const { teamId, loading: teamLoading } = useActiveTeam();
+  const { data: patientName } = useActivePatientName(teamId ?? null);
 
   const isAuthed = !!user && !profile?.disabled;
+  const isCaregiver = isAuthed && profile?.role === "caregiver";
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
-  // Add emergency sign out function for stuck states
   const emergencySignOut = async () => {
     try {
       await supabase.auth.signOut();
-      // Clear any local storage that might be causing issues
       localStorage.removeItem("supabase.auth.token");
       localStorage.removeItem(
         "sb-" +
@@ -55,8 +74,7 @@ export default function Header() {
           "-auth-token"
       );
       window.location.reload();
-    } catch (error) {
-      console.error("Emergency sign out error:", error);
+    } catch {
       window.location.reload();
     }
   };
@@ -83,12 +101,18 @@ export default function Header() {
                   decoding="async"
                 />
               )}
-              <div className="flex items-center">
-                <span className="text-xl font-bold text-slate-800 mr-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-slate-800">
                   CarerView
                 </span>
-                {/* Show plan pill for authenticated caregivers */}
-                {isAuthed && profile?.role === "caregiver" && <PlanPill />}
+                {/* Plan pill for caregivers */}
+                {isCaregiver && <PlanPill />}
+                {/* Active patient badge */}
+                {isCaregiver && teamId && (
+                  <span className="ml-2 inline-flex items-center rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-700">
+                    {teamLoading ? "Loading team…" : patientName ? `Patient: ${patientName}` : "Family Circle"}
+                  </span>
+                )}
               </div>
             </Link>
           </div>
@@ -101,7 +125,6 @@ export default function Header() {
                   className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse"
                   aria-hidden
                 />
-                {/* Emergency reset button if loading takes too long */}
                 <button
                   onClick={emergencySignOut}
                   className="text-xs text-slate-500 hover:text-slate-700 underline"
@@ -112,7 +135,7 @@ export default function Header() {
               </div>
             ) : isAuthed ? (
               <>
-                {/* Dashboard Button */}
+                {/* Dashboard */}
                 <Link
                   to={dashPath}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
@@ -121,12 +144,22 @@ export default function Header() {
                   Dashboard
                 </Link>
 
-                {/* Account Menu with Sign Out */}
+                {/* Team settings (caregivers) */}
+                {isCaregiver && (
+                  <Link
+                    to="/team"
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
+                    aria-label="Family Circle team settings"
+                  >
+                    Team
+                  </Link>
+                )}
+
+                {/* Account Menu */}
                 <AccountMenu />
               </>
             ) : (
               <>
-                {/* Why you need CarerView - only for unauthenticated users */}
                 <Link
                   to="/why"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
@@ -134,8 +167,6 @@ export default function Header() {
                 >
                   Why you need CarerView
                 </Link>
-
-                {/* Pricing (unauthenticated) */}
                 <Link
                   to="/pricing"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-all duration-200"
@@ -143,8 +174,6 @@ export default function Header() {
                 >
                   Pricing
                 </Link>
-
-                {/* Sign In */}
                 <Link
                   to={{ pathname: "/", hash: "#get-started" }}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-200"
