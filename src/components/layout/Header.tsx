@@ -22,7 +22,6 @@ const canUseTeam = plan?.plan_id === "family_qtr";
   </Link>
 )}
 
-
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
 function useBrandingLogo() {
