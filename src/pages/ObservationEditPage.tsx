@@ -1,3 +1,4 @@
+// src/pages/ObservationEditPage.tsx
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -16,7 +17,7 @@ export default function ObservationEditPage() {
   const { id } = useParams<{ id: string }>();
 
   const { user, profile, loading: authLoading, error: authError } = useAuth();
-  const { data: obs, isLoading: obsLoading, error: obsError } = useObservationById(id); // must include team_id, author_user_id
+  const { data: obs, isLoading: obsLoading, error: obsError } = useObservationById(id);
   const frozen = useMemberFrozen(obs?.team_id ?? null);
 
   if (!id) return <ErrorMessage message="Missing observation id in URL." />;
@@ -35,7 +36,7 @@ export default function ObservationEditPage() {
   if (!isValidType) return <ErrorMessage message={`Observation has invalid form type: "${String(formType)}"`} />;
 
   const isAuthor = obs.author_user_id === user.id;
-  const readOnly = !isAuthor || frozen; // author+active only may edit
+  const readOnly = !isAuthor || frozen;
 
   return (
     <Layout
@@ -66,7 +67,7 @@ export default function ObservationEditPage() {
         <ObservationForm
           observationId={obs.id}
           formType={formType}
-          readOnly={readOnly}                 {/* ensure the form respects this prop */}
+          readOnly={readOnly}
           onComplete={() => navigate("/caregiver", { replace: true })}
         />
       </ErrorBoundary>
