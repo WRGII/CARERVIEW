@@ -14,7 +14,7 @@ export default function CreateAccountPage() {
   const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
   // ---- Local UI state -------------------------------------------------------
-  const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>('occasional_weekly');
+  const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("occasional_weekly");
   const [promoCode, setPromoCode] = React.useState<string>("");
 
   const [name, setName] = React.useState("");
@@ -25,7 +25,31 @@ export default function CreateAccountPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [info, setInfo] = React.useState<string | null>(null);
 
-  // If the user returns signed-in and we have a pending checkout, resume it.
+  // ---- Invite resume after auth --------------------------------------------
+  React.useEffect(() => {
+    // If already signed in on mount, resume immediately
+    (async () => {
+      const tok = localStorage.getItem("cv_join_token");
+      if (!tok) return;
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess?.session) {
+        localStorage.removeItem("cv_join_token");
+        navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
+      }
+    })();
+
+    // Also listen for sign-in events
+    const sub = supabase.auth.onAuthStateChange((_evt, session) => {
+      const tok = localStorage.getItem("cv_join_token");
+      if (tok && session) {
+        localStorage.removeItem("cv_join_token");
+        navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
+      }
+    });
+    return () => sub.data.subscription.unsubscribe();
+  }, [navigate]);
+
+  // ---- Resume pending checkout after auth ----------------------------------
   React.useEffect(() => {
     (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
@@ -49,7 +73,6 @@ export default function CreateAccountPage() {
           return;
         }
 
-        // Start Supabase Edge Function checkout
         const { data, error } = await supabase.functions.invoke("stripe-checkout", {
           body: {
             price_id: plan.priceId,
@@ -67,7 +90,7 @@ export default function CreateAccountPage() {
         console.warn("Failed to resume pending checkout:", e);
       }
     })();
-  }, []); // run once on mount
+  }, []); // once on mount
 
   // ---- Handlers -------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,10 +151,7 @@ export default function CreateAccountPage() {
       }
 
       // 3) No session → email confirmation required. Save pending checkout.
-      localStorage.setItem(
-        PENDING_KEY,
-        JSON.stringify({ planKey: selectedPlanKey, promoCode })
-      );
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode }));
       setInfo(
         "Check your inbox to confirm your email. After you sign in, we’ll finish setting up your subscription and caregiver account."
       );
@@ -151,12 +171,8 @@ export default function CreateAccountPage() {
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">
-            Create your CarerView account
-          </h1>
-          <p className="mt-3 text-slate-gray/75">
-            Choose a plan, then create your caregiver account. You can cancel any time.
-          </p>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">Create your CarerView account</h1>
+          <p className="mt-3 text-slate-gray/75">Choose a plan, then create your caregiver account. You can cancel any time.</p>
           <p className="mt-2 text-slate-gray/70">
             Already have an account?{" "}
             <Link to="/#get-started" className="text-cyan-primary underline">
@@ -168,54 +184,50 @@ export default function CreateAccountPage() {
         {/* Choose a plan */}
         <section className="mb-8 rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
           <div className="px-6 py-5 border-b border-slate-gray/10 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
+            <div className="W-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-cyan-primary" />
             </div>
             <h2 className="text-lg font-semibold text-slate-gray">Choose a plan</h2>
           </div>
 
           <div className="p-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {Object.entries(PLANS).map(([key, plan]) => {
-                    const selected = selectedPlanKey === key;
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setSelectedPlanKey(key as PlanKey)}
-                        className={[
-                          "text-left rounded-xl border px-4 py-4 transition-all",
-                          selected
-                            ? "border-cyan-primary ring-2 ring-cyan-primary/30 bg-cyan-primary/5"
-                            : "border-slate-gray/20 hover:bg-peach-blush/10",
-                        ].join(" ")}
-                        aria-pressed={selected}
-                      >
-                        <div className="font-semibold text-slate-gray">{plan.label}</div>
-                        <div className="text-slate-gray/70 mt-1">
-                          ${(plan.price / 100).toFixed(2)} / week
-                        </div>
-                        <div className="text-xs text-slate-gray/60 mt-2">
-                          {plan.blurb}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Object.entries(PLANS).map(([key, plan]) => {
+                const selected = selectedPlanKey === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedPlanKey(key as PlanKey)}
+                    className={[
+                      "text-left rounded-xl border px-4 py-4 transition-all",
+                      selected
+                        ? "border-cyan-primary ring-2 ring-cyan-primary/30 bg-cyan-primary/5"
+                        : "border-slate-gray/20 hover:bg-peach-blush/10",
+                    ].join(" ")}
+                    aria-pressed={selected}
+                  >
+                    <div className="font-semibold text-slate-gray">{plan.label}</div>
+                    <div className="text-slate-gray/70 mt-1">${(plan.price / 100).toFixed(2)} / week</div>
+                    <div className="text-xs text-slate-gray/60 mt-2">{plan.blurb}</div>
+                  </button>
+                );
+              })}
+            </div>
 
-                {/* Promo code */}
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-slate-gray mb-1">
-                    Have a promo code? <span className="text-slate-gray/50">(optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.trim())}
-                    placeholder="Enter code"
-                    className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                  />
-                </div>
+            {/* Promo code */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-slate-gray mb-1">
+                Have a promo code? <span className="text-slate-gray/50">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.trim())}
+                placeholder="Enter code"
+                className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
+              />
+            </div>
           </div>
         </section>
 
@@ -231,9 +243,7 @@ export default function CreateAccountPage() {
 
             <div className="text-sm text-slate-gray/60">
               Selected plan:{" "}
-              <span className="font-medium text-slate-gray">
-                {PLANS[selectedPlanKey]?.label ?? "—"}
-              </span>
+              <span className="font-medium text-slate-gray">{PLANS[selectedPlanKey]?.label ?? "—"}</span>
               {promoCode && (
                 <span className="ml-3 inline-flex items-center rounded-full border border-slate-gray/20 px-2 py-0.5 text-xs text-slate-gray">
                   promo: {promoCode}
@@ -244,9 +254,7 @@ export default function CreateAccountPage() {
 
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">
-                Your name
-              </label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">Your name</label>
               <input
                 type="text"
                 value={name}
@@ -257,9 +265,7 @@ export default function CreateAccountPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">
-                Email address
-              </label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">Email address</label>
               <input
                 type="email"
                 required
@@ -271,9 +277,7 @@ export default function CreateAccountPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">Password</label>
               <input
                 type="password"
                 required
@@ -285,14 +289,10 @@ export default function CreateAccountPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-slate-gray">
-                {error}
-              </div>
+              <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-slate-gray">{error}</div>
             )}
             {info && (
-              <div className="rounded-lg bg-mint-green/30 border border-mint-green p-3 text-slate-gray">
-                {info}
-              </div>
+              <div className="rounded-lg bg-mint-green/30 border border-mint-green p-3 text-slate-gray">{info}</div>
             )}
 
             <button
@@ -305,9 +305,7 @@ export default function CreateAccountPage() {
               {!busy && <ArrowRight className="w-5 h-5" />}
             </button>
 
-            <p className="text-xs text-slate-gray/60">
-              By continuing you agree to the Terms. You can cancel a paid plan any time.
-            </p>
+            <p className="text-xs text-slate-gray/60">By continuing you agree to the Terms. You can cancel a paid plan any time.</p>
           </form>
         </section>
       </div>
