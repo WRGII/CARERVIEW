@@ -31,6 +31,19 @@ import TeamSettings from "./pages/TeamSettings";      // ← NEW
 
 import { ActiveTeamProvider } from "./context/ActiveTeam"; // ← NEW
 
+import TeamGuard from "./components/common/TeamGuard";
+// ...
+<Route
+  path="/team"
+  element={
+    <CaregiverGuard>
+      <TeamGuard>
+        <TeamSettingsPage />
+      </TeamGuard>
+    </CaregiverGuard>
+  }
+/>
+
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 const queryClient = new QueryClient();
