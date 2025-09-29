@@ -9,6 +9,9 @@ import { Card, CardContent } from '../components/ui/Card'
 import { ActivitySquare, ClipboardList, Layers } from 'lucide-react'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { Loading } from '../components/ui/Loading'
+import { useActiveTeam } from "../context/ActiveTeam";
+import { cvGetRemaining } from "../lib/cv";
+import { supabase } from "../lib/supabaseClient";
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE'
 
