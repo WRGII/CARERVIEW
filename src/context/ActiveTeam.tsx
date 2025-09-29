@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { cvGetActiveTeam, cvSetActiveTeam } from '../lib/cv';
-import { supabase } from '../supabaseClient';
+import { supabase } from "../lib/supabaseClient";
 
 type CtxValue = {
   teamId: string | null;
