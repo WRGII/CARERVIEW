@@ -66,12 +66,21 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
 
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
-    .from('subscription_plans') // public table
+    .from('subscription_plans') // public table with app plan ids in `id`
     .select('id')
     .eq('stripe_price_id', priceId)
     .maybeSingle()
   if (error) throw error
-  return data?.id as string | undefined
+  return data?.id as string | undefined // e.g., 'family_qtr' | 'primary_qtr' | 'free'
+}
+
+// NEW: enforce team seats against plan caps for all teams owned by user
+async function enforceSeats(db: ReturnType<typeof createClient>, ownerUserId: string, planId: string) {
+  const { error } = await db.rpc('cv_apply_plan_to_owner_teams', {
+    p_owner: ownerUserId,
+    p_plan_id: planId, // 'family_qtr' | 'primary_qtr' | 'free'
+  })
+  if (error) throw error
 }
 
 // ---------- handler ----------
@@ -82,33 +91,20 @@ Deno.serve(async (req) => {
   const rawBody = await req.text()
   const sig = req.headers.get('stripe-signature') ?? req.headers.get('Stripe-Signature') ?? ''
 
-  console.info('[stripe-webhook] debug', {
-    hasSigHeader: !!sig,
-    bodyLen: rawBody.length,
-    secretCount: WEBHOOK_SECRETS.length,
-  })
-
   if (!sig) return resp({ error: 'Missing Stripe-Signature header' }, 400)
-  if (WEBHOOK_SECRETS.length === 0) {
-    console.error('[stripe-webhook] no webhook secrets configured')
-    return resp({ error: 'Webhook secret not configured' }, 500)
-  }
+  if (WEBHOOK_SECRETS.length === 0) return resp({ error: 'Webhook secret not configured' }, 500)
 
   let event: Stripe.Event | undefined
   let lastErr: unknown
   for (let i = 0; i < WEBHOOK_SECRETS.length; i++) {
     try {
       event = await stripe.webhooks.constructEventAsync(rawBody, sig, WEBHOOK_SECRETS[i])
-      console.log(`[stripe-webhook] signature ok with secret #${i + 1} (${event.type})`)
       break
     } catch (e) {
       lastErr = e
     }
   }
-  if (!event) {
-    console.error('[stripe-webhook] invalid signature for all secrets', { lastErr: String(lastErr) })
-    return resp({ error: 'Invalid signature' }, 400)
-  }
+  if (!event) return resp({ error: 'Invalid signature' }, 400)
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY)
 
@@ -138,61 +134,42 @@ Deno.serve(async (req) => {
           (sub.metadata?.user_id as string | undefined) ||
           (await lookupUserIdFromCustomer(db, sub.customer as string))
 
-        if (!userId) {
-          console.warn('[stripe-webhook] no user_id for subscription', sub.id)
-          return resp({ ok: true })
-        }
+        if (!userId) return resp({ ok: true })
 
-        // Fetch the full subscription to reliably get period fields
+        // retrieve full subscription for accurate period fields
         let full: Stripe.Subscription | undefined
         try {
           full = await stripe.subscriptions.retrieve(sub.id, { expand: ['items.data'] })
-        } catch (e) {
-          console.warn('[stripe-webhook] retrieve subscription failed; using webhook payload', e)
+        } catch {
+          /* ignore; use webhook payload */
         }
 
         const src: any = full ?? (sub as any)
         const item: any = src?.items?.data?.[0]
         const priceId: string | null = item?.price?.id ?? null
 
-        // Try all sources for dates: top-level, item-level, then compute from anchor+interval
         let pStartIso =
           secToIso(src?.current_period_start) ??
-          secToIso(item?.current_period_start) ??
-          null
+          secToIso(item?.current_period_start) ?? null
 
         let pEndIso =
           secToIso(src?.current_period_end) ??
-          secToIso(item?.current_period_end) ??
-          null
+          secToIso(item?.current_period_end) ?? null
 
-        if (!pStartIso) {
-          // last fallback: billing_cycle_anchor (start)
-          pStartIso = secToIso(src?.billing_cycle_anchor) ?? null
-        }
+        if (!pStartIso) pStartIso = secToIso(src?.billing_cycle_anchor) ?? null
         if (!pEndIso && pStartIso) {
-          // last fallback: derive from interval if we have it
           const interval = item?.price?.recurring?.interval || src?.plan?.interval
           if (interval === 'week') pEndIso = addDaysIso(pStartIso, 7)
-          else if (interval === 'month') pEndIso = addDaysIso(pStartIso, 30) // conservative
+          else if (interval === 'month') pEndIso = addDaysIso(pStartIso, 30)
         }
 
-        console.info('[stripe-webhook] resolved periods', {
-          topLevel: { start: src?.current_period_start ?? null, end: src?.current_period_end ?? null },
-          itemLevel: { start: item?.current_period_start ?? null, end: item?.current_period_end ?? null },
-          anchor: src?.billing_cycle_anchor ?? null,
-          interval: item?.price?.recurring?.interval ?? src?.plan?.interval ?? null,
-          resolved: { pStartIso, pEndIso },
-        })
-
-        // Prefer metadata.plan_id; fallback to price→plan mapping
+        // Resolve app plan id
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
         if (!mappedPlanId && priceId) {
-          try { mappedPlanId = await planIdFromPrice(db, priceId) }
-          catch (e) { console.warn('[stripe-webhook] plan lookup failed for price', priceId, e) }
+          try { mappedPlanId = await planIdFromPrice(db, priceId) } catch {}
         }
 
-        // Build upsert row; only include dates when we have them (don’t overwrite with nulls)
+        // subscription row upsert
         const row: Record<string, any> = {
           user_id: userId,
           subscription_id: sub.id,
@@ -210,10 +187,12 @@ Deno.serve(async (req) => {
         )
         if (upErr) throw upErr
 
-        console.info('[stripe-webhook] upserted user_subscriptions', {
-          userId, subscription: sub.id, plan: mappedPlanId, priceId, status: sub.status,
-          pStartIso, pEndIso
-        })
+        // Enforce seats for all teams owned by this user
+        const effectivePlanId =
+          event.type === 'customer.subscription.deleted' ? 'free' :
+          (mappedPlanId ?? 'free')
+
+        await enforceSeats(db, userId, effectivePlanId)
 
         return resp({ received: true })
       }
