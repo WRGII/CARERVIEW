@@ -16,6 +16,21 @@ import InactivePlanNotice from '../components/caregiver/InactivePlanNotice'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay'
 import { prefetchObservationFormAssets } from '../lib/prefetching'
+import FamilyCircleSetup from "../components/caregiver/FamilyCircleSetup";
+import { useActiveTeam } from "../context/ActiveTeam";
+import { useUserPlan } from "../hooks/useUserPlan";
+
+export default function CaregiverPage() {
+  // ...your existing code
+
+  return (
+    <div className="space-y-6">
+      <FamilyCircleSetup />   {/* shows only when eligible */}
+      {/* rest of your dashboard */}
+    </div>
+  );
+}
+
 
 type ViewMode = 'list' | 'view'
 type ExportFormat = 'docx' | 'csv'
