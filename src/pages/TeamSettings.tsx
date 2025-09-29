@@ -2,6 +2,21 @@ import { useEffect, useState } from "react";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
 
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useActiveTeam } from "../context/ActiveTeam";
+import { useUserPlan } from "../hooks/useUserPlan";
+
+export default function TeamSettings() {
+  const { data: plan, isLoading: planLoading } = useUserPlan();
+  const { teamId, loading } = useActiveTeam();
+
+  if (planLoading) return null;
+  if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
+
+  // ...rest of your TeamSettings JSX
+}
+
 type Member = { user_id: string; role: "owner"|"member"; state: "active"|"frozen"; joined_at: string };
 
 const { data: plan } = useUserPlan();
