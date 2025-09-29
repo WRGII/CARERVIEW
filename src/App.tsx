@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./components/util/ErrorBoundary";
 
 import CaregiverGuard from "./components/common/CaregiverGuard";
 import AdminGuard from "./components/common/AdminGuard";
+import TeamGuard from "./components/common/TeamGuard";
 
 import LandingPage from "./pages/LandingPage";
 import WhyCarerView from "./pages/WhyCarerView";
@@ -26,23 +27,10 @@ import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
 
-import AcceptInvite from "./pages/AcceptInvite";      // ← NEW
-import TeamSettings from "./pages/TeamSettings";      // ← NEW
+import AcceptInvite from "./pages/AcceptInvite";
+import TeamSettings from "./pages/TeamSettings";
 
-import { ActiveTeamProvider } from "./context/ActiveTeam"; // ← NEW
-
-import TeamGuard from "./components/common/TeamGuard";
-// ...
-<Route
-  path="/team"
-  element={
-    <CaregiverGuard>
-      <TeamGuard>
-        <TeamSettingsPage />
-      </TeamGuard>
-    </CaregiverGuard>
-  }
-/>
+import { ActiveTeamProvider } from "./context/ActiveTeam";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -75,8 +63,8 @@ export default function App() {
                   <Route path="/checkout-success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
 
-                  {/* Invite accept route */}
-                  <Route path="/join" element={<AcceptInvite />} />   {/* ← NEW */}
+                  {/* Invite accept */}
+                  <Route path="/join" element={<AcceptInvite />} />
 
                   {/* Admin */}
                   <Route
@@ -113,14 +101,18 @@ export default function App() {
                       </CaregiverGuard>
                     }
                   />
+
+                  {/* Team (Family only) */}
                   <Route
                     path="/team"
                     element={
                       <CaregiverGuard>
-                        <TeamSettings />
+                        <TeamGuard>
+                          <TeamSettings />
+                        </TeamGuard>
                       </CaregiverGuard>
                     }
-                  />                                             {/* ← NEW */}
+                  />
 
                   {/* Observations */}
                   <Route
