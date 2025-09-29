@@ -1,29 +1,21 @@
-import { useEffect, useState } from "react";
-import { useActiveTeam } from "../context/ActiveTeam";
-import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
-
-import React from "react";
+// src/pages/TeamSettings.tsx
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useUserPlan } from "../hooks/useUserPlan";
+import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
+
+type Member = {
+  user_id: string;
+  role: "owner" | "member";
+  state: "active" | "frozen";
+  joined_at: string;
+};
 
 export default function TeamSettings() {
   const { data: plan, isLoading: planLoading } = useUserPlan();
   const { teamId, loading } = useActiveTeam();
 
-  if (planLoading) return null;
-  if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
-
-  // ...rest of your TeamSettings JSX
-}
-
-type Member = { user_id: string; role: "owner"|"member"; state: "active"|"frozen"; joined_at: string };
-
-const { data: plan } = useUserPlan();
-if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
-
-export default function TeamSettings() {
-  const { teamId, loading } = useActiveTeam();
   const [members, setMembers] = useState<Member[]>([]);
   const [owner, setOwner] = useState(false);
   const [email, setEmail] = useState("");
@@ -31,6 +23,11 @@ export default function TeamSettings() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Plan gate
+  if (planLoading) return null;
+  if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
+
+  // Load members + owner flag
   useEffect(() => {
     if (!teamId) return;
     let mounted = true;
@@ -41,12 +38,14 @@ export default function TeamSettings() {
         if (!mounted) return;
         setMembers(m);
         setOwner(o);
-      } catch (e:any) {
+      } catch (e: any) {
         if (!mounted) return;
         setError(e.message ?? "Failed to load team");
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [teamId]);
 
   async function onInvite() {
@@ -58,7 +57,7 @@ export default function TeamSettings() {
       const token = await cvCreateInvite(teamId, email.trim());
       setInviteLink(`${location.origin}/join?t=${encodeURIComponent(token)}`);
       setEmail("");
-    } catch (e:any) {
+    } catch (e: any) {
       setError(e.message ?? "Invite failed");
     } finally {
       setBusy(false);
@@ -77,7 +76,7 @@ export default function TeamSettings() {
       <section>
         <h2 className="font-medium mb-2">Caregivers</h2>
         <ul className="space-y-1">
-          {members.map(m => (
+          {members.map((m) => (
             <li key={m.user_id} className="text-sm">
               {m.role} · {m.state} · {new Date(m.joined_at).toLocaleString()}
             </li>
@@ -107,9 +106,8 @@ export default function TeamSettings() {
           </div>
           {inviteLink && (
             <div className="text-sm mt-2">
-              Invite link:&nbsp;
-              <code className="break-all">{inviteLink}</code>
-              <div className="text-slate-500">Copy this into an email now. Later you can send via your mailer.</div>
+              Invite link: <code className="break-all">{inviteLink}</code>
+              <div className="text-slate-500">Copy this into an email now.</div>
             </div>
           )}
         </section>
