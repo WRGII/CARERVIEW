@@ -7,6 +7,21 @@ import { useUserPlan } from "../../hooks/useUserPlan";
 import PlanPill from "../common/PlanPill";
 import AccountMenu from "../caregiver/AccountMenu";
 import { useActiveTeam } from "../../context/ActiveTeam";
+import { useUserPlan } from "../../hooks/useUserPlan";
+// ...
+const { data: plan } = useUserPlan();
+const canUseTeam = plan?.plan_id === "family_qtr";
+// ...
+{isAuthed && canUseTeam && (
+  <Link
+    to="/team"
+    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400"
+    aria-label="Team"
+  >
+    Team
+  </Link>
+)}
+
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
