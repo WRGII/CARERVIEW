@@ -15,7 +15,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { prefetchChoosePlanAssets } from "../hooks/usePrefetchStatic";
 import { Card, CardContent } from "../components/ui/Card";
-import Footer from "../components/common/Footer";
 
 export default function WhyCarerView() {
   // --- Personas --------------------------------------------------------------
@@ -627,7 +626,6 @@ export default function WhyCarerView() {
           </div>
         </section>
 
-        <Footer />
       </div>
     </div>
   );
