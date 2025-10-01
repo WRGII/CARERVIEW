@@ -1,10 +1,13 @@
 // src/pages/ResetPassword.tsx
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
 export default function ResetPassword() {
+  const navigate = useNavigate();
   const [tokenFound, setTokenFound] = useState(false);
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -24,9 +27,30 @@ export default function ResetPassword() {
     setSubmitting(true);
     setErr(null);
     setMsg(null);
+    
+    // Validate password confirmation
+    if (password !== confirmPassword) {
+      setErr('Passwords do not match. Please try again.');
+      setSubmitting(false);
+      return;
+    }
+    
+    if (password.length < 8) {
+      setErr('Password must be at least 8 characters long.');
+      setSubmitting(false);
+      return;
+    }
+    
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) setErr(error.message);
-    else setMsg('Password updated. You can now sign in.');
+    if (error) {
+      setErr(error.message);
+    } else {
+      setMsg('Password updated successfully! Redirecting to sign in...');
+      // Redirect to sign-in page after a brief delay
+      setTimeout(() => {
+        navigate('/#get-started', { replace: true });
+      }, 2000);
+    }
     setSubmitting(false);
   };
 
@@ -49,14 +73,27 @@ export default function ResetPassword() {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
+              placeholder="Enter your new password"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-gray">Confirm new password</span>
+            <input
+              type="password"
+              className="mt-1 w-full rounded-lg border-slate-gray/30 px-3 py-2"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              minLength={8}
+              required
+              placeholder="Re-enter your new password"
             />
           </label>
           {err && <div className="text-sm text-red-600">{err}</div>}
-          {msg && <div className="text-sm text-green-700">{msg}</div>}
+          {msg && <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">{msg}</div>}
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-cyan-primary text-white px-4 py-2 disabled:opacity-60"
+            className="w-full rounded-lg bg-cyan-primary text-white px-4 py-3 disabled:opacity-60 font-semibold hover:bg-cyan-hover transition-colors"
           >
             {submitting ? 'Updating…' : 'Update password'}
           </button>
