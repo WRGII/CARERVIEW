@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 import { usePlans } from '../hooks/usePlans'
-import Footer from '../components/common/Footer'
 import {
   PLANS,
   RETURN_URLS,
@@ -177,7 +176,7 @@ export default function ChoosePlan() {
 
   /** --------- Simple loading UIs --------- */
   if (manageParam) {
-    // Managing billing: show a tiny “opening portal” status while we invoke the function
+    // Managing billing: show a tiny "opening portal" status while we invoke the function
     return (
       <div className="p-6 max-w-xl mx-auto">
         <HeaderLogo />
@@ -334,7 +333,6 @@ export default function ChoosePlan() {
         </p>
       </div>
 
-      <Footer />
     </div>
   )
 }

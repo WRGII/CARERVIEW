@@ -1,16 +1,7 @@
 // src/pages/WhyCarerView.tsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Heart,
-  Shield,
-  Users,
-  FileText,
-  ArrowRight,
-  CheckCircle,
-  Clock,
-  Lock,
-} from "lucide-react";
+import { Heart, Shield, Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, Lock } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { prefetchChoosePlanAssets } from "../hooks/usePrefetchStatic";

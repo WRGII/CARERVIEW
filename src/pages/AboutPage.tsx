@@ -2,7 +2,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import Footer from '../components/common/Footer'
 
 export default function AboutPage() {
   return (
@@ -62,7 +61,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <Footer />
     </div>
   )
 }
