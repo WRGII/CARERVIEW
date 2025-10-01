@@ -45,20 +45,6 @@ export default function Header() {
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
-  const emergencySignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.removeItem("supabase.auth.token");
-      localStorage.removeItem(
-        "sb-" +
-          import.meta.env.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] +
-          "-auth-token"
-      );
-      window.location.reload();
-    } catch {
-      window.location.reload();
-    }
-  };
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
@@ -88,16 +74,7 @@ export default function Header() {
           {/* Right: Nav */}
           <div className="flex items-center gap-3">
             {authLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse" aria-hidden />
-                <button
-                  onClick={emergencySignOut}
-                  className="text-xs text-slate-500 hover:text-slate-700 underline"
-                  title="Click if the page seems stuck loading"
-                >
-                  Reset
-                </button>
-              </div>
+              <div className="w-[108px] h-9 rounded-lg bg-slate-200 animate-pulse" aria-hidden />
             ) : isAuthed ? (
               <>
                 {/* Dashboard */}
