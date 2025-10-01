@@ -27,7 +27,7 @@ export const PLANS: Record<
       'CarerView subscriptions for the occasion caregiver providing one (1) CarerView Observation each week.',
   },
   primary_weekly: {
-    label: 'CareView Primary Caregiver',
+    label: 'CarerView Primary Caregiver',
     blurb: '7 observations / week',
     mode: 'subscription',
     productId: 'prod_T2OMjy9HcKhTjW',
