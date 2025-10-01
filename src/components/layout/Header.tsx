@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan } from "../../hooks/useUserPlan";          // single import
-import PlanPill from "../common/PlanPill";
 import AccountMenu from "../caregiver/AccountMenu";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
@@ -66,7 +65,11 @@ export default function Header() {
               )}
               <div className="flex items-center">
                 <span className="text-xl font-bold text-slate-800 mr-3">CarerView</span>
-                {isAuthed && profile?.role === "caregiver" && <PlanPill />}
+                {isAuthed && profile?.role === "caregiver" && (
+                  <span className="text-sm text-slate-600 font-medium">
+                    Welcome {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
+                  </span>
+                )}
               </div>
             </Link>
           </div>
