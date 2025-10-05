@@ -495,7 +495,7 @@ export default function WhyCarerView() {
                 <img
                   src="/CareView_logo_1_colored_highres.png"
                   alt="CarerView Logo"
-                  className="w-12 h-12 object-contain"
+                  className="w-14 h-14 md:w-16 md:h-16 object-contain"
                 />
               </div>
 

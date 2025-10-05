@@ -42,7 +42,7 @@ export function Footer() {
               <img
                 src={logoUrl}
                 alt="CarerView"
-                className="w-6 h-6 object-contain opacity-80"
+                className="w-8 h-8 object-contain opacity-80"
               />
             </div>
             <p className="text-slate-600 text-sm mb-4">

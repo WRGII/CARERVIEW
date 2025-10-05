@@ -53,12 +53,12 @@ export default function Header() {
           <div className="flex items-center">
             <Link to="/" aria-label="CarerView home" className="flex items-center hover:opacity-80 transition-opacity">
               {logoLoading ? (
-                <div className="w-8 h-8 mr-3 rounded-md bg-slate-200 animate-pulse" />
+                <div className="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-md bg-slate-200 animate-pulse" />
               ) : (
                 <img
                   src={logoSrc || FALLBACK_LOGO}
                   alt="CarerView Logo"
-                  className="w-8 h-8 object-contain mr-3 rounded-md"
+                  className="w-10 h-10 md:w-12 md:h-12 object-contain mr-3 rounded-md"
                   loading="eager"
                   decoding="async"
                 />

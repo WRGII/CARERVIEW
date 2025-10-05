@@ -40,7 +40,7 @@ function HeaderLogo() {
     <a href="/" className="absolute right-6 top-6 inline-flex">
       <img
         src={logoUrl}
-        className="h-7 w-7 rounded-lg border border-slate-200/70 shadow-sm"
+        className="h-10 w-10 md:h-12 md:w-12 rounded-lg border border-slate-200/70 shadow-sm"
         alt="CarerView Logo"
       />
     </a>
