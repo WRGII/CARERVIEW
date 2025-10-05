@@ -104,6 +104,12 @@ export default function Header() {
             ) : (
               <>
                 <Link
+                  to="/about"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                >
+                  About
+                </Link>
+                <Link
                   to="/why"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
                 >
