@@ -340,54 +340,20 @@ export default function LandingPage() {
 
         {/* Sample Report Section */}
         <div id="sample-report" className="py-20">
-          <div className="text-center mb-16">
+          <div className="text-center">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">See the difference just one Observation makes</h3>
             <p className="text-2xl text-slate-gray/80 mb-8">From "I'm worried" to "Here's what changed."</p>
+
+            <div className="mt-8">
+              <Link
+                to="/why"
+                className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
+                aria-label="Why you need CarerView"
+              >
+                Why you need CarerView
+              </Link>
+            </div>
           </div>
-
-          <Card className="max-w-4xl mx-auto border-0 shadow-xl bg-warm-white">
-            <CardContent className="p-12">
-              <h4 className="text-2xl font-semibold text-slate-gray mb-8 text-center">
-                Each Observation report shows:
-              </h4>
-
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-cyan-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-warm-white" />
-                  </div>
-                  <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
-                      Daily notes summarized into clear trends
-                    </h5>
-                    <p className="text-slate-gray/80">See patterns emerge from your observations</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-mint-green rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-slate-gray" />
-                  </div>
-                  <div>
-                    <h5 className="text-lg font-semibold text-slate-gray mb-1">
-                      Gentle flags when support needs shift
-                    </h5>
-                    <p className="text-slate-gray/80">Know when it's time to adjust care approaches</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-10 text-center">
-                <Link
-                  to="/why"
-                  className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
-                  aria-label="Why you need CarerView"
-                >
-                  Why you need CarerView
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Trust & Privacy */}
