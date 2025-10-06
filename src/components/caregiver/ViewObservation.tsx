@@ -1,25 +1,51 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useObservation } from '../../hooks/useObservations'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
+import { Dropdown } from '../ui/Dropdown'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Loading } from '../ui/Loading'
 import { ErrorMessage } from '../ui/ErrorMessage'
 import { formatDate } from '../../lib/utils'
-import { ArrowLeft, User, Calendar, Phone, FileText, Printer, Layers } from 'lucide-react'
+import { ArrowLeft, User, Calendar, Phone, FileText, Printer, Layers, Download, Trash2, File, Table } from 'lucide-react'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
+
+type ExportFormat = 'docx' | 'csv'
 
 interface ViewObservationProps {
   observationId: string
   onBack: () => void
+  onExport: (observationId: string, format: ExportFormat) => void
+  onDelete: (observationId: string) => void
+  isExporting?: boolean
+  isDeleting?: boolean
 }
 
 export const ViewObservation: React.FC<ViewObservationProps> = ({
   observationId,
-  onBack
+  onBack,
+  onExport,
+  onDelete,
+  isExporting = false,
+  isDeleting = false
 }) => {
   const { data: observation, isLoading, error } = useObservation(observationId)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handlePrint = () => window.print()
+
+  const handleDeleteClick = () => {
+    setConfirmDelete(true)
+  }
+
+  const handleConfirmDelete = () => {
+    onDelete(observationId)
+    setConfirmDelete(false)
+  }
+
+  const handleCancelDelete = () => {
+    setConfirmDelete(false)
+  }
 
   if (isLoading) return <Loading message="Loading observation..." />
   if (error) return <ErrorMessage message={error.message || 'Failed to load observation'} />
@@ -104,10 +130,50 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
           </Button>
           <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
         </div>
-        <Button variant="outline" onClick={handlePrint} className="flex items-center space-x-2">
-          <Printer className="w-4 h-4" />
-          <span>Print</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={handlePrint} disabled={isExporting || isDeleting} className="flex items-center space-x-2">
+            <Printer className="w-4 h-4" />
+            <span>Print</span>
+          </Button>
+
+          <Dropdown
+            disabled={isExporting || isDeleting}
+            trigger={
+              <Button
+                variant="outline"
+                size="md"
+                disabled={isExporting || isDeleting}
+                className="flex items-center space-x-2"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </Button>
+            }
+            items={[
+              {
+                label: 'Export as DOCX',
+                icon: <File className="w-4 h-4" />,
+                onClick: () => onExport(observationId, 'docx')
+              },
+              {
+                label: 'Export as CSV',
+                icon: <Table className="w-4 h-4" />,
+                onClick: () => onExport(observationId, 'csv')
+              }
+            ]}
+          />
+
+          <Button
+            variant="destructive"
+            size="md"
+            onClick={handleDeleteClick}
+            disabled={isExporting || isDeleting}
+            className="flex items-center space-x-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Delete</span>
+          </Button>
+        </div>
       </div>
 
       {/* Header card with observation details */}
@@ -251,6 +317,23 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
 
       {/* Score Legend Display */}
       <ScoreLegendDisplay />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDelete}
+        title="Delete Observation?"
+        message={
+          observation
+            ? `Are you sure you want to delete the observation for "${observation.patient_name || 'Unnamed Patient'}" from ${formatDate(observation.observation_date)}? This action cannot be undone.`
+            : 'Are you sure you want to delete this observation? This action cannot be undone.'
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={isDeleting}
+        variant="danger"
+      />
     </div>
   )
 }

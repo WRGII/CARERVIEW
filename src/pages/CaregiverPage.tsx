@@ -166,6 +166,16 @@ export default function CaregiverPage() {
     }
   }
 
+  async function handleExportFromView(observationId: string, format: ExportFormat) {
+    await handleExportObservation(observationId, format);
+  }
+
+  async function handleDeleteFromView(observationId: string) {
+    await handleDeleteObservation(observationId);
+    setCurrentObservationId(null);
+    setViewMode('list');
+  }
+
   function renderBody() {
     if (viewMode === 'view') {
       return currentObservationId ? (
@@ -175,6 +185,10 @@ export default function CaregiverPage() {
             setCurrentObservationId(null);
             setViewMode('list');
           }}
+          onExport={handleExportFromView}
+          onDelete={handleDeleteFromView}
+          isExporting={exportingFor === currentObservationId}
+          isDeleting={deletingId === currentObservationId}
         />
       ) : (
         <div className="bg-white border rounded-xl p-6">
