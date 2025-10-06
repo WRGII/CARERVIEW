@@ -1,5 +1,4 @@
 import React from "react";
-import Header from "../layout/Header";
 import { supabase } from "../../lib/supabaseClient";
 
 type Props = {
@@ -7,9 +6,9 @@ type Props = {
   subtitle?: React.ReactNode;
   /** Put buttons on the right side of the page header (optional) */
   headerRight?: React.ReactNode;
-  /** Hide the legacy Sign Out action rendered by Layout (we’ll use AccountMenu instead). */
+  /** Hide the legacy Sign Out action rendered by Layout (we'll use AccountMenu instead). */
   hideSignOut?: boolean;
-  /** When provided, Layout can still show who’s logged in, etc. */
+  /** When provided, Layout can still show who's logged in, etc. */
   user?: { email?: string | null; profile?: { display_name?: string | null } | null } | null;
   children: React.ReactNode;
 };
@@ -29,7 +28,6 @@ export function Layout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {(title || subtitle || !hideSignOut || headerRight) && (
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
