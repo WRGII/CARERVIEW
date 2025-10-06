@@ -3,10 +3,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
-import { Layout } from '../components/common/Layout';
+import { PageContainer } from '../components/common/PageContainer';
+import { PageHeader } from '../components/common/PageHeader';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { ActivitySquare, ClipboardList, Layers } from 'lucide-react';
+import { SquareActivity as ActivitySquare, ClipboardList, Layers } from 'lucide-react';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Loading } from '../components/ui/Loading';
 
@@ -147,15 +148,15 @@ export default function NewObservationPage() {
   );
 
   return (
-    <Layout
-      title="New Observation"
-      user={{ ...user, profile }}
-      hideSignOut={true}
-      headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>Back to Dashboard</Button>}
-    >
+    <PageContainer>
+      <PageHeader
+        title="New Observation"
+        headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>Back to Dashboard</Button>}
+      />
+
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-gray">Create Observation</h1>
+          <h2 className="text-2xl font-bold text-slate-gray">Create Observation</h2>
           <p className="text-slate-gray/70">Choose the type of form to start.</p>
           {/* Status line */}
           {!teamId && <p className="mt-2 text-sm text-amber-700">No Family Circle yet. Create it on your dashboard.</p>}
@@ -197,6 +198,6 @@ export default function NewObservationPage() {
           </Button>
         </div>
       </div>
-    </Layout>
+    </PageContainer>
   );
 }

@@ -2,7 +2,8 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Layout } from "../components/common/Layout";
+import { PageContainer } from "../components/common/PageContainer";
+import { PageHeader } from "../components/common/PageHeader";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import ObservationForm from "../components/caregiver/ObservationForm";
@@ -39,16 +40,16 @@ export default function ObservationEditPage() {
   const readOnly = !isAuthor || frozen;
 
   return (
-    <Layout
-      title="Edit Observation"
-      user={{ ...user, profile }}
-      hideSignOut={true}
-      headerRight={
-        <button type="button" className="underline" onClick={() => navigate("/caregiver")}>
-          Back to Dashboard
-        </button>
-      }
-    >
+    <PageContainer>
+      <PageHeader
+        title="Edit Observation"
+        headerRight={
+          <button type="button" className="underline" onClick={() => navigate("/caregiver")}>
+            Back to Dashboard
+          </button>
+        }
+      />
+
       <div className="mb-4 text-sm text-slate-600 space-y-1">
         <div><strong>ID:</strong> {obs.id}</div>
         <div><strong>Form:</strong> {formType}</div>
@@ -71,6 +72,6 @@ export default function ObservationEditPage() {
           onComplete={() => navigate("/caregiver", { replace: true })}
         />
       </ErrorBoundary>
-    </Layout>
+    </PageContainer>
   );
 }

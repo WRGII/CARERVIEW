@@ -4,11 +4,11 @@ import Footer from "../common/Footer";
 
 export default function MainLayout() {
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh bg-gray-50 flex flex-col">
       <Header />
-      <main className="flex-1">
+      <div className="flex-1">
         <Outlet />
-      </main>
+      </div>
       <Footer />
     </div>
   );
