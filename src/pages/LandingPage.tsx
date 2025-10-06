@@ -341,7 +341,7 @@ export default function LandingPage() {
         {/* Sample Report Section */}
         <div id="sample-report" className="py-20">
           <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">See the difference a week makes</h3>
+            <h3 className="text-4xl font-bold text-slate-gray mb-6">See the difference just one Observation makes</h3>
             <p className="text-2xl text-slate-gray/80 mb-8">From "I'm worried" to "Here's what changed."</p>
           </div>
 
