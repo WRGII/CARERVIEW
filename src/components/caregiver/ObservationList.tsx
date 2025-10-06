@@ -1,15 +1,19 @@
 // src/components/caregiver/ObservationList.tsx
-import React from 'react'
+import React, { useState } from 'react'
 import { useObservations } from '../../hooks/useObservations'
 import { Card, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Loading } from '../ui/Loading'
+import { Dropdown } from '../ui/Dropdown'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { formatDate } from '../../lib/utils'
-import { Eye, FileText, Download } from 'lucide-react'
+import { Eye, FileText, Download, Trash2, File, Table } from 'lucide-react'
 
 interface ObservationListProps {
   onViewObservation: (id: string) => void
   onExportObservation: (id: string, format: 'docx' | 'csv') => void
+  onDeleteObservation: (id: string) => void
+  deletingId?: string | null
 }
 
 type ObservationRow = {
@@ -38,10 +42,32 @@ const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }>
   return <span className={`${base} ${tone}`}>{label}</span>
 }
 
-export const ObservationList: React.FC<ObservationListProps> = ({ onViewObservation, onExportObservation }) => {
+export const ObservationList: React.FC<ObservationListProps> = ({
+  onViewObservation,
+  onExportObservation,
+  onDeleteObservation,
+  deletingId
+}) => {
   const { data: observations, isLoading, error } = useObservations()
+  const [confirmDelete, setConfirmDelete] = useState<ObservationRow | null>(null)
+
   if (isLoading) return <Loading message="Loading observations..." />
   if (error) return <div className="text-red-600">Failed to load observations</div>
+
+  const handleDeleteClick = (observation: ObservationRow) => {
+    setConfirmDelete(observation)
+  }
+
+  const handleConfirmDelete = () => {
+    if (confirmDelete) {
+      onDeleteObservation(confirmDelete.id)
+      setConfirmDelete(null)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setConfirmDelete(null)
+  }
 
   if (!observations || observations.length === 0) {
     return (
@@ -57,37 +83,100 @@ export const ObservationList: React.FC<ObservationListProps> = ({ onViewObservat
     )
   }
 
+  const isDeleting = (id: string) => deletingId === id
+
   return (
-    <div className="space-y-4">
-      {(observations as ObservationRow[]).map((o) => (
-        <Card key={o.id} className="bg-warm-white">
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-slate-gray truncate">
-                    {o.patient_name || 'Unnamed Patient'}
-                  </h3>
-                  <FormTypeChip type={o.form_type ?? null} />
+    <>
+      <div className="space-y-4">
+        {(observations as ObservationRow[]).map((o) => {
+          const disabled = isDeleting(o.id)
+
+          return (
+            <Card key={o.id} className="bg-warm-white">
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-slate-gray truncate">
+                        {o.patient_name || 'Unnamed Patient'}
+                      </h3>
+                      <FormTypeChip type={o.form_type ?? null} />
+                    </div>
+                    <p className="text-slate-gray/80">Observed on {formatDate(o.observation_date)}</p>
+                    {o.notes && <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{o.notes}</p>}
+                  </div>
+                  <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewObservation(o.id)}
+                      disabled={disabled}
+                      className="flex items-center space-x-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>View</span>
+                    </Button>
+
+                    <Dropdown
+                      disabled={disabled}
+                      trigger={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={disabled}
+                          className="flex items-center space-x-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Download</span>
+                        </Button>
+                      }
+                      items={[
+                        {
+                          label: 'Export as DOCX',
+                          icon: <File className="w-4 h-4" />,
+                          onClick: () => onExportObservation(o.id, 'docx')
+                        },
+                        {
+                          label: 'Export as CSV',
+                          icon: <Table className="w-4 h-4" />,
+                          onClick: () => onExportObservation(o.id, 'csv')
+                        }
+                      ]}
+                    />
+
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteClick(o)}
+                      disabled={disabled}
+                      className="flex items-center space-x-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete</span>
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-slate-gray/80">Observed on {formatDate(o.observation_date)}</p>
-                {o.notes && <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{o.notes}</p>}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => onViewObservation(o.id)} className="flex items-center space-x-2">
-                  <Eye className="w-4 h-4" /><span>View</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => onExportObservation(o.id, 'docx')} className="flex items-center space-x-2">
-                  <Download className="w-4 h-4" /><span>DOCX</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => onExportObservation(o.id, 'csv')} className="flex items-center space-x-2">
-                  <Download className="w-4 h-4" /><span>CSV</span>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      <ConfirmDialog
+        isOpen={!!confirmDelete}
+        title="Delete Observation?"
+        message={
+          confirmDelete
+            ? `Are you sure you want to delete the observation for "${confirmDelete.patient_name || 'Unnamed Patient'}" from ${formatDate(confirmDelete.observation_date)}? This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={confirmDelete ? isDeleting(confirmDelete.id) : false}
+        variant="danger"
+      />
+    </>
   )
 }

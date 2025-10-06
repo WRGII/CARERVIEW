@@ -7,15 +7,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   variant = 'primary',
   size = 'md',
   className,
   children,
   ...props
-}) => {
+}, ref) => {
   const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
-  
+
   const variants = {
     primary: 'bg-cyan-primary text-warm-white hover:bg-cyan-hover focus:ring-cyan-primary',
     secondary: 'bg-slate-gray text-warm-white hover:bg-slate-gray/90 focus:ring-slate-gray',
@@ -32,10 +32,13 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      ref={ref}
       className={cn(baseClasses, variants[variant], sizes[size], className)}
       {...props}
     >
       {children}
     </button>
   )
-}
+})
+
+Button.displayName = 'Button'

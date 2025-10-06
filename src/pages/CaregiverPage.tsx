@@ -18,6 +18,8 @@ import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
 import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay';
 import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
+import { useDeleteObservation } from '../hooks/useObservations';
+import { useToast } from '../components/ui/ToastProvider';
 
 type ViewMode = 'list' | 'view';
 type ExportFormat = 'docx' | 'csv';
@@ -29,10 +31,13 @@ export default function CaregiverPage() {
   const { user, profile, loading, error } = useAuth();
   const { data: plan } = useUserPlan();
   const planActive = hasActivePlan(plan);
+  const { showToast } = useToast();
+  const deleteObservationMutation = useDeleteObservation();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
   const [exportingFor, setExportingFor] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   React.useEffect(() => {
@@ -63,6 +68,22 @@ export default function CaregiverPage() {
   function handleViewObservation(id: string) {
     setCurrentObservationId(id);
     setViewMode('view');
+  }
+
+  async function handleDeleteObservation(observationId: string) {
+    if (deletingId) return;
+    setDeletingId(observationId);
+
+    try {
+      await deleteObservationMutation.mutateAsync(observationId);
+      await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] });
+      showToast('Observation deleted successfully', 'success');
+    } catch (e: any) {
+      console.error('Delete failed:', e);
+      showToast(e?.message || 'Failed to delete observation', 'error');
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleExportObservation(observationId: string, format: ExportFormat) {
@@ -165,6 +186,8 @@ export default function CaregiverPage() {
       <ObservationList
         onViewObservation={handleViewObservation}
         onExportObservation={handleExportObservation}
+        onDeleteObservation={handleDeleteObservation}
+        deletingId={deletingId}
       />
     );
   }

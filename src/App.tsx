@@ -31,6 +31,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import TeamSettings from "./pages/TeamSettings";
 
 import { ActiveTeamProvider } from "./context/ActiveTeam";
+import { ToastProvider } from "./components/ui/ToastProvider";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -39,9 +40,10 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ActiveTeamProvider>
-        <BrowserRouter>
-          <ErrorBoundary>
+      <ToastProvider>
+        <ActiveTeamProvider>
+          <BrowserRouter>
+            <ErrorBoundary>
             <HashScroll />
             <Suspense fallback={<div className="p-6">Loading…</div>}>
               <Routes>
@@ -137,9 +139,10 @@ export default function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
-          </ErrorBoundary>
-        </BrowserRouter>
-      </ActiveTeamProvider>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </ActiveTeamProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
