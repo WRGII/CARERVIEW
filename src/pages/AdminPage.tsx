@@ -1,12 +1,12 @@
 // src/pages/AdminPage.tsx
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
-import { PageContainer } from "../components/common/PageContainer";
-import { PageHeader } from "../components/common/PageHeader";
-import { AggregateData } from "../components/admin/AggregateData";
+import { AggregateData } from "../components/admin/AggregateData"; // named import (kept)
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const { user, profile, loading, error } = useAuth();
 
   if (loading) return <div className="p-6">Loading admin dashboard...</div>;
@@ -17,14 +17,59 @@ export default function AdminPage() {
       </div>
     );
 
+  // Prefer display_name → email → fallback label
+  const display =
+    (profile?.display_name || "").trim() ||
+    profile?.email ||
+    user.email ||
+    "Admin";
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      // Try router navigation
+      navigate("/", { replace: true });
+      // Fallback: force hard reload to LandingPage
+      setTimeout(() => {
+        if (window.location.pathname !== "/") {
+          window.location.assign("/");
+        }
+      }, 50);
+    }
+  };
+
   return (
-    <PageContainer>
-      <PageHeader title="Admin Dashboard" />
+    <div className="mx-auto max-w-5xl p-6">
+      {/* Top bar: identity + logout */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="text-sm text-slate-gray">
+          <span className="font-semibold">{display}</span>
+          <span className="ml-2 inline-block rounded border border-slate-gray/30 px-2 py-0.5 text-xs">
+            Admin
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
+        >
+          Log out
+        </button>
+      </div>
 
-      <div className="space-y-6">
+      <h1 className="text-2xl font-semibold mb-4 text-slate-gray">Admin Dashboard</h1>
+
+      {/* System-wide aggregates / KPIs */}
+      <div className="mt-6">
+        {/* NEW: give AggregateData a link target so the "Active Caregivers" card can be clickable */}
         <AggregateData caregiversLink="/admin/caregivers" />
+      </div>
 
-        <div>
+      {/* Accessibility/backup link (remove once AggregateData uses the prop above) */}
+      <div className="mt-4">
         <Link
           to="/admin/caregivers"
           className="inline-flex items-center gap-2 rounded-lg border border-slate-gray/30 px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
@@ -32,8 +77,10 @@ export default function AdminPage() {
         >
           Manage caregivers
         </Link>
-        </div>
       </div>
-    </PageContainer>
+
+      {/* Add any other existing admin widgets/components below */}
+      {/* <OtherAdminWidget /> */}
+    </div>
   );
 }

@@ -2,11 +2,10 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
-import { Plus, CircleCheck as CheckCircle2, Circle as XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
+import { Plus, CheckCircle2, XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
 
 // Shared app chrome + states
-import { PageContainer } from "../components/common/PageContainer";
-import { PageHeader } from "../components/common/PageHeader";
+import { Layout } from "../components/common/Layout";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { useAuth } from "../hooks/useAuth";
@@ -128,12 +127,18 @@ export default function ActiveCaregiversPage() {
 
   // ---------- UI ----------
   return (
-    <PageContainer>
-      <PageHeader
-        title="Admin • Active Caregivers"
-        subtitle="View, add, or temporarily disable caregiver accounts."
-        headerRight={
-          <>
+    <Layout title="Admin • Active Caregivers" user={{ ...user, profile }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Title row */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-gray">Active Caregivers</h1>
+            <p className="text-slate-gray/70">
+              View, add, or temporarily disable caregiver accounts.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
             <Link
               to="/admin"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
@@ -142,6 +147,7 @@ export default function ActiveCaregiversPage() {
               <LayoutDashboard className="w-4 h-4" />
               Admin Dashboard
             </Link>
+
             <button
               type="button"
               onClick={() => caregiversQ.refetch()}
@@ -152,9 +158,8 @@ export default function ActiveCaregiversPage() {
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
 
         {/* Add form */}
         <div className="bg-white border border-slate-gray/20 rounded-2xl p-6 shadow-sm mb-10">
@@ -251,7 +256,8 @@ export default function ActiveCaregiversPage() {
           Supabase Edge Function with the service role (auth admin). We can add
           this in a Phase-2.
         </p>
-    </PageContainer>
+      </div>
+    </Layout>
   );
 }
 

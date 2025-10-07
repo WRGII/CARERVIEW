@@ -5,8 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
-import { PageContainer } from '../components/common/PageContainer';
-import { PageHeader } from '../components/common/PageHeader';
+import { Layout } from '../components/common/Layout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Button } from '../components/ui/Button';
@@ -208,21 +207,21 @@ export default function CaregiverPage() {
   }
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Dashboard"
-        headerRight={
-          <Button
-            variant="primary"
-            onClick={() => navigate('/caregiver/observations/new')}
-            className="flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Observation</span>
-          </Button>
-        }
-      />
-
+    <Layout
+      title="Dashboard"
+      user={{ ...user, profile }}
+      hideSignOut={true}
+      headerRight={
+        <Button
+          variant="primary"
+          onClick={() => navigate('/caregiver/observations/new')}
+          className="flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Observation</span>
+        </Button>
+      }
+    >
       {/* Show Family setup card when on Family plan with no team */}
       <FamilyCircleSetup />
 
@@ -258,6 +257,6 @@ export default function CaregiverPage() {
         )}
         {renderBody()}
       </div>
-    </PageContainer>
+    </Layout>
   );
 }
