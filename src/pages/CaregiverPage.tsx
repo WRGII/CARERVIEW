@@ -35,8 +35,12 @@ export default function CaregiverPage() {
   const { showToast } = useToast();
   const deleteObservationMutation = useDeleteObservation();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return searchParams.get('view') === 'observation' ? 'view' : 'list';
+  });
+  const [currentObservationId, setCurrentObservationId] = useState<string | null>(() => {
+    return searchParams.get('id') || null;
+  });
   const [exportingFor, setExportingFor] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -48,6 +52,19 @@ export default function CaregiverPage() {
       });
     }
   }, [user?.id, queryClient]);
+
+  React.useEffect(() => {
+    const viewParam = searchParams.get('view');
+    const idParam = searchParams.get('id');
+
+    if (viewParam === 'observation' && idParam) {
+      setViewMode('view');
+      setCurrentObservationId(idParam);
+    } else {
+      setViewMode('list');
+      setCurrentObservationId(null);
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     if (searchParams.get('success') === 'true') {
@@ -67,8 +84,7 @@ export default function CaregiverPage() {
   if (profile.disabled) return <ErrorMessage message="Account disabled." />;
 
   function handleViewObservation(id: string) {
-    setCurrentObservationId(id);
-    setViewMode('view');
+    navigate(`/caregiver?view=observation&id=${id}`);
   }
 
   async function handleDeleteObservation(observationId: string) {
@@ -173,8 +189,7 @@ export default function CaregiverPage() {
 
   async function handleDeleteFromView(observationId: string) {
     await handleDeleteObservation(observationId);
-    setCurrentObservationId(null);
-    setViewMode('list');
+    navigate('/caregiver');
   }
 
   function renderBody() {
@@ -182,10 +197,7 @@ export default function CaregiverPage() {
       return currentObservationId ? (
         <ViewObservation
           observationId={currentObservationId}
-          onBack={() => {
-            setCurrentObservationId(null);
-            setViewMode('list');
-          }}
+          onBack={() => navigate('/caregiver')}
           onExport={handleExportFromView}
           onDelete={handleDeleteFromView}
           isExporting={exportingFor === currentObservationId}
