@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { useAuth } from './useAuth'
 
 /** Canonical plan IDs in DB */
-export type PlanId = 'primary_weekly' | 'occasional_weekly' | 'free'
+export type PlanId = 'primary_weekly' | 'occasional_weekly' | 'free' | 'primary_qtr' | 'family_qtr'
 
 /** Mirror of what our webhooks may write */
 export type PlanStatus =
@@ -47,6 +47,10 @@ export function getPlanLimits(planId: PlanId | null | undefined) {
       return { obs_limit: 7, usage_window: 'week' as const }
     case 'occasional_weekly':
       return { obs_limit: 1, usage_window: 'week' as const }
+    case 'primary_qtr':
+      return { obs_limit: 30, usage_window: 'year' as const }
+    case 'family_qtr':
+      return { obs_limit: 100, usage_window: 'year' as const }
     case 'free':
       return { obs_limit: 3, usage_window: 'first30d' as const }
     default:

@@ -4,7 +4,7 @@ import { StripeProduct, formatPrice } from '../stripe-config';
 
 interface PricingCardProps {
   product: StripeProduct;
-  onSelectPlan: (priceId: string) => Promise<void>;
+  onSelectPlan: (priceId: string, planId: string) => Promise<void>;
   isPopular?: boolean;
 }
 
@@ -14,7 +14,7 @@ export function PricingCard({ product, onSelectPlan, isPopular = false }: Pricin
   const handleSelectPlan = async () => {
     setIsLoading(true);
     try {
-      await onSelectPlan(product.priceId);
+      await onSelectPlan(product.priceId, product.planId);
     } catch (error) {
       console.error('Error selecting plan:', error);
     } finally {

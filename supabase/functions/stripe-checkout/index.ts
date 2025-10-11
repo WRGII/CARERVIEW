@@ -85,6 +85,19 @@ Deno.serve(async (req) => {
     if (!priceId) return resp({ error: 'Missing price_id' }, 400)
     if (!planId) return resp({ error: 'Missing plan_id' }, 400)
 
+    // Validate plan_id exists and matches price_id
+    const { data: planData, error: planErr } = await db
+      .from('subscription_plans')
+      .select('id, stripe_price_id')
+      .eq('id', planId)
+      .maybeSingle()
+
+    if (planErr) throw planErr
+    if (!planData) return resp({ error: `Invalid plan_id: ${planId}` }, 400)
+    if (planData.stripe_price_id !== priceId) {
+      return resp({ error: `Price ID ${priceId} does not match plan ${planId}` }, 400)
+    }
+
     // 1) Ensure Stripe customer mapping for this user
     const { data: existing, error: mapErr } = await db
       .from('stripe_customers')

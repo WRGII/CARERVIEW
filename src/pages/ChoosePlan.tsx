@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 import { CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react';
@@ -31,22 +31,21 @@ export function ChoosePlan() {
     }
   }, [user, navigate, searchParams]);
 
-  const handleSelectPlan = async (priceId: string) => {
+  const handleSelectPlan = async (priceId: string, planId: string) => {
     if (!user) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          priceId,
-          userId: user.id,
-          userEmail: user.email,
-          successUrl: `${window.location.origin}/choose-plan?status=success`,
-          cancelUrl: `${window.location.origin}/choose-plan?status=cancel`,
+          price_id: priceId,
+          plan_id: planId,
+          success_url: `${window.location.origin}/checkout/success`,
+          cancel_url: `${window.location.origin}/choose-plan?status=cancel`,
         }),
       });
 
