@@ -33,3 +33,16 @@ export default function AcceptInvite() {
   if (status === "error") return <div className="p-6 text-red-600">{msg}</div>;
   return <div className="p-6">Joined. Redirecting…</div>;
 }
+// src/pages/AcceptInvite.tsx (core logic)
+const token = new URLSearchParams(location.search).get('t') || '';
+if (!token) { /* show error */ }
+
+const { data: teamId, error } = await supabase.rpc('cv_accept_invite', { p_token: token });
+if (error) throw error;
+
+const { error: setErr } = await supabase.rpc('cv_set_active_team', { p_team: teamId });
+if (setErr) throw setErr;
+
+// redirect to dashboard
+navigate('/caregiver', { replace: true });
+
