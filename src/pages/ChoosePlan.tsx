@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CircleCheck as CheckCircle, Circle as XCircle } from 'lucide-react';
 
 export function ChoosePlan() {
   const navigate = useNavigate();

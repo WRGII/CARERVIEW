@@ -63,6 +63,7 @@ export default function App() {
                     }
                   />
                   <Route path="/checkout-success" element={<CheckoutSuccess />} />
+                  <Route path="/payment-success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
 
                   {/* Invite accept */}

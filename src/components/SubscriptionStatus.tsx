@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { getProductByPriceId } from '../stripe-config';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { CircleCheck as CheckCircle, Clock, CircleAlert as AlertCircle } from 'lucide-react';
 
 interface SubscriptionData {
   subscription_status: string;
