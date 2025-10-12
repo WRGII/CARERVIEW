@@ -1,3 +1,4 @@
+// functions/stripe-webhook/index.ts
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import Stripe from 'npm:stripe@17.7.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
@@ -74,13 +75,17 @@ async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: str
   return data?.id as string | undefined // e.g., 'family_qtr' | 'primary_qtr' | 'free'
 }
 
-// NEW: enforce team seats against plan caps for all teams owned by user
+// Enforce seats on all teams owned by user. Do not fail the webhook if this fails.
 async function enforceSeats(db: ReturnType<typeof createClient>, ownerUserId: string, planId: string) {
-  const { error } = await db.rpc('cv_apply_plan_to_owner_teams', {
-    p_owner: ownerUserId,
-    p_plan_id: planId, // 'family_qtr' | 'primary_qtr' | 'free'
-  })
-  if (error) throw error
+  try {
+    const { error } = await db.rpc('cv_apply_plan_to_owner_teams', {
+      p_owner: ownerUserId,
+      p_plan_id: planId, // 'family_qtr' | 'primary_qtr' | 'free'
+    })
+    if (error) throw error
+  } catch (e) {
+    console.warn('[stripe-webhook] enforceSeats failed', e)
+  }
 }
 
 // ---------- handler ----------
@@ -104,7 +109,10 @@ Deno.serve(async (req) => {
       lastErr = e
     }
   }
-  if (!event) return resp({ error: 'Invalid signature' }, 400)
+  if (!event) {
+    console.warn('[stripe-webhook] invalid signature', lastErr)
+    return resp({ error: 'Invalid signature' }, 400)
+  }
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY)
 
@@ -166,16 +174,17 @@ Deno.serve(async (req) => {
         // Resolve app plan id
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
         if (!mappedPlanId && priceId) {
-          try { mappedPlanId = await planIdFromPrice(db, priceId) } catch {}
+          try { mappedPlanId = await planIdFromPrice(db, priceId) } catch {/* noop */}
         }
 
-        // subscription row upsert
+        // Upsert subscription row
         const row: Record<string, any> = {
           user_id: userId,
           subscription_id: sub.id,
           price_id: priceId ?? undefined,
           plan_id: mappedPlanId ?? undefined,
           status: sub.status,
+          cancel_at_period_end: !!sub.cancel_at_period_end,
           updated_at: new Date().toISOString(),
         }
         if (pStartIso) row.current_period_start = pStartIso
@@ -187,7 +196,8 @@ Deno.serve(async (req) => {
         )
         if (upErr) throw upErr
 
-        // Enforce seats for all teams owned by this user
+        // Determine effective app plan ID to apply to teams
+        // Deleted → force 'free'. Otherwise mapped plan or default to 'free'.
         const effectivePlanId =
           event.type === 'customer.subscription.deleted' ? 'free' :
           (mappedPlanId ?? 'free')
