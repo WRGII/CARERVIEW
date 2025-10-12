@@ -1,0 +1,174 @@
+* [33m6052c39[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Create comprehensive unit tests for date window helper functions
+* [33mfc97917[m Fix profile lookup inconsistency in getCurrentUser function
+* [33m1242523[m Fix typo in Stripe plan label
+* [33mbfa2027[m Replace plan pill with personalized welcome message for Primary Caregivers
+* [33mf975a60[m Updated ChoosePlan.tsx
+* [33m5965021[m Fix pricing navigation and footer visibility issues
+* [33m5b2f930[m Improve password reset flow with confirmation and redirection
+* [33mf97272e[m Remove reset button and function from Header
+* [33m58a6b68[m Updated App.tsx
+* [33md248e29[m Updated TeamSettings.tsx
+* [33m1b5a323[m Updated TeamSettings.tsx
+* [33m631b9ab[m Updated Header.tsx
+* [33ma5cffc1[m Updated TeamSettings.tsx
+* [33m921ecc9[m Updated App.tsx
+* [33m9cd2d58[m Updated TeamGuard.tsx
+* [33mdb45fa4[m Added TeamGuard.tsx
+* [33ma6cf8e4[m Updated Header.tsx
+* [33me499284[m Updated Header.tsx
+* [33m24764fc[m Deleted vite.config.ts.timestamp-1759185272077-4e98ce243f8c68.mjs
+* [33mb23547a[m Added vite.config.ts.timestamp-1759185272077-4e98ce243f8c68.mjs
+* [33m1e3aa9f[m Updated index.ts
+* [33m4cbc5d7[m Updated CreateAccountPage.tsx
+* [33mec30cb9[m Updated AcceptInvite.tsx
+* [33me8d4ede[m Updated ObservationEditPage.tsx
+* [33mac64c68[m Updated ObservationEditPage.tsx
+* [33ma3c7e94[m Updated NewObservationPage.tsx
+* [33me793f34[m Updated useMemberFrozen.ts
+* [33m431b345[m Added useMemberFrozen.ts
+* [33m1894c08[m Updated NewObservationPage.tsx
+* [33m02a1851[m Updated CaregiverPage.tsx
+* [33me3c4037[m Updated CaregiverPage.tsx
+* [33m6d28923[m Updated FamilyCircleSetup.tsx
+* [33m05ea1ab[m Added FamilyCircleSetup.tsx
+* [33m1feffec[m Updated ActiveTeam.tsx
+* [33m4efcc6b[m Updated cv.ts
+* [33m1fa30d6[m Added cv.ts
+* [33m03ed281[m Updated Header.tsx
+* [33mccb1788[m Updated TeamSettings.tsx
+* [33me4ba050[m Added TeamSettings.tsx
+* [33m7b05ec8[m Updated AcceptInvite.tsx
+* [33m3fe39c1[m Added AcceptInvite.tsx
+* [33m2c85b7a[m Updated App.tsx
+* [33m5a7a0a4[m Updated App.tsx
+* [33m50a6e89[m Updated ActiveTeam.tsx
+* [33m940df87[m Updated ActiveTeam.tsx
+* [33m5cff842[m Added ActiveTeam.tsx
+* [33m10f2484[m Updated cv.ts
+* [33md60aa67[m Updated cv.ts
+* [33m4f16ba4[m Added cv.ts
+* [33m5505f8a[m Updated WhyCarerView.tsx
+* [33m5672b8e[m Updated WhyCarerView.tsx
+* [33m2db5e3b[m Updated Footer.tsx
+* [33m306ba7b[m Updated Header.tsx
+* [33mf6503cf[m Updated App.tsx
+* [33m443f1c0[m Updated PricingPage.tsx
+* [33me837fdf[m Added PricingPage.tsx
+* [33m1ad0663[m Updated AccountMenu.tsx
+* [33mc822786[m Updated ChoosePlan.tsx
+* [33m848823a[m Updated netlify.toml
+* [33m902f321[m Updated AdminGuard.tsx
+* [33m7538e53[m Updated ObservationForm.tsx
+* [33meee199b[m Updated ObservationForm.tsx
+* [33m0523e65[m Updated ObservationForm.tsx
+* [33mbffffa3[m Updated useCategoryQuestions.ts
+* [33m8f319d6[m Updated useLegend.ts
+* [33m7bc04ab[m Updated useCategoryQuestions.ts
+* [33m7c6bf24[m Updated ObservationEditPage.tsx
+* [33m0c91e44[m Updated useObservations.ts
+* [33ma41c1b2[m Updated App.tsx
+* [33m2937577[m Updated AdminGuard.tsx
+* [33m4ce369a[m Added AdminGuard.tsx
+* [33m70bdb44[m Updated App.tsx
+* [33m8621577[m Updated ErrorBoundary.tsx
+* [33m1adf993[m Added ErrorBoundary.tsx
+* [33m2712381[m Updated ObservationForm.tsx
+* [33m0fce14e[m Updated ObservationEditPage.tsx
+* [33m74ae038[m Updated NewObservationPage.tsx
+* [33mee3727c[m Updated App.tsx
+* [33m4d446ac[m Updated ObservationForm.tsx
+* [33m09c469a[m Updated ObservationForm.tsx
+* [33med18210[m Updated ObservationForm.tsx
+* [33m592573a[m Updated ObservationEditPage.tsx
+* [33ma22c1c7[m Added ObservationEditPage.tsx
+* [33m5b7c455[m Updated ObservationForm.tsx
+* [33m3304f5b[m Updated useCategories.ts
+* [33mbffba37[m Updated useCategoryQuestions.ts
+* [33m3b51ab8[m Added useCategoryQuestions.ts
+* [33mb391c76[m Updated useObservations.ts
+* [33m7776232[m Deleted NewObservationType.tsx
+* [33m51f4c03[m Updated CaregiverPage.tsx
+* [33ma373f76[m Updated NewObservationPage.tsx
+* [33m87fb256[m Updated NewObservationPage.tsx
+* [33m7283bd6[m Fix JSX structure and missing closing tags
+* [33m700e547[m Updated NewObservationPage.tsx
+* [33mc1ff1e7[m Fix JSX syntax error in NewObservationPage
+* [33m50a1057[m Updated NewObservationPage.tsx
+* [33m1bf45ad[m Updated NewObservationPage.tsx
+* [33mc887e9d[m Updated NewObservationPage.tsx
+* [33m480c10f[m Updated NewObservationPage.tsx
+* [33med38200[m Updated NewObservationPage.tsx
+* [33m936f6c4[m Updated NewObservationPage.tsx
+* [33md8e1765[m Updated NewObservationPage.tsx
+* [33m377e455[m Simplify NewObservationPage rendering for debugging
+* [33m1bbed2b[m Add defensive checks to useCategories hook
+* [33m8785bfd[m Fix categoriesData undefined error
+* [33m1b1f1d4[m Update New Observation Page with Category Lists and ADL Scale
+* [33mf8b23e7[m Updated Footer.tsx
+* [33m57e151c[m Updated Footer.tsx
+* [33mac88a5f[m Updated LandingPage.tsx
+* [33meda4f0c[m Updated Footer.tsx
+* [33m94d99f1[m Updated Footer.tsx
+* [33m6d1aaab[m Updated Footer.tsx
+* [33m5b1319a[m Update Footer with Contact Information and Policy Links
+* [33mc0808f3[m Add About page with navigation integration
+* [33m3cbc5eb[m Implement prefetching for observation forms
+* [33m70785e7[m Fix Dashboard Layout and Double Header Issues
+* [33m95a8187[m Reorder landing page sections
+* [33m9f118f5[m Fix undefined variables in useAuth.ts
+* [33m6702174[m Fix persistent authentication state issue
+* [33md381a9f[m Updated useAuth.ts
+* [33mf00720c[m Fix authentication state management issues
+* [33m4452f44[m Add debugging logs to diagnose header authentication issue
+* [33mb0b7082[m Updated LandingPage.tsx
+* [33m63642db[m Updated LandingPage.tsx
+* [33mc81cfe7[m Updated LandingPage.tsx
+* [33m379502c[m Updated WhyCarerView.tsx
+* [33mb2a8b1c[m Updated WhyCarerView.tsx
+* [33m788cef5[m Updated WhyCarerView.tsx
+* [33m2c15945[m Updated WhyCarerView.tsx
+* [33mdf3b586[m Updated LandingPage.tsx
+* [33md060718[m Updated LandingPage.tsx
+* [33m8eb3cfa[m Updated LandingPage.tsx
+* [33mf10eda3[m Updated LandingPage.tsx
+* [33m31c1144[m Updated LandingPage.tsx
+* [33m7a581a0[m Updated WhyCarerView.tsx
+* [33m4094346[m Redesign Caregiver Header Component
+* [33m422b2cc[m Update Header for authenticated Caregiver users and remove duplicate buttons
+* [33mc029c03[m Fix duplicate header navigation menus
+* [33ma8eb6fb[m Updated CaregiverPage.tsx
+* [33m2c73d96[m Updated Header.tsx
+* [33m2fd8853[m Updated AccountMenu.tsx
+* [33m472dd3b[m Updated AccountMenu.tsx
+* [33m30da1a3[m Updated CaregiverPage.tsx
+* [33m89a8ec1[m Updated AccountMenu.tsx
+* [33m9a658b9[m Updated Layout.tsx
+* [33ma3ab0fa[m Updated Header.tsx
+* [33m8ba60da[m Updated CaregiverPage.tsx
+* [33m5d9088d[m Updated ScoreLegendDisplay.tsx
+* [33m510e75e[m Updated CaregiverPage.tsx
+* [33m03f3b5a[m Updated AccountMenu.tsx
+* [33m2ec49ee[m Added AccountMenu.tsx
+* [33m6203acd[m Updated Header.tsx
+* [33mded613f[m Updated LandingPage.tsx
+* [33m506dc6f[m Updated LandingPage.tsx
+* [33m7e5a56a[m Updated LandingPage.tsx
+* [33md13f59a[m Updated exports.ts
+* [33m9357bc6[m Updated ViewObservation.tsx
+* [33ma0078b0[m Updated ViewObservation.tsx
+* [33mae1b80c[m Updated ViewObservation.tsx
+* [33m61a3d45[m Updated NewObservationType.tsx
+* [33mdc730a3[m Updated ObservationList.tsx
+* [33macf982b[m Updated ObservationList.tsx
+* [33m6cbb223[m Updated ObservationList.tsx
+* [33m51e49e8[m Updated ObservationForm.tsx
+* [33mbcf1be8[m Updated App.tsx
+* [33m76d1946[m Updated App.tsx
+* [33m0527793[m Updated App.tsx
+* [33m55594dd[m Updated CaregiverGuard.tsx
+* [33m4536bcd[m Added CaregiverGuard.tsx
+* [33ma89b7aa[m Updated Header.tsx
+* [33maa04116[m Updated ViewObservation.tsx
+* [33m1cb8981[m Updated ObservationList.tsx
+* [33mc735da1[m Updated ObservationForm.tsx
+* [33mc8eb422[m Wire the route for NewObservationPag
