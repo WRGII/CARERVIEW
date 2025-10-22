@@ -32,6 +32,7 @@ import TeamSettings from "./pages/TeamSettings";
 
 import { ActiveTeamProvider } from "./context/ActiveTeam";
 import { ToastProvider } from "./components/ui/ToastProvider";
+import DatabaseStatus from "./components/common/DatabaseStatus";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -44,6 +45,7 @@ export default function App() {
         <ActiveTeamProvider>
           <BrowserRouter>
             <ErrorBoundary>
+            <DatabaseStatus />
             <HashScroll />
             <Suspense fallback={<div className="p-6">Loading…</div>}>
               <Routes>

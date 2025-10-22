@@ -12,10 +12,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: window.localStorage,
+    storageKey: 'careview-auth',
+    flowType: 'pkce',
   },
-  // We default to the public schema. Use supabase.schema('app') explicitly
-  // wherever you need to hit the app.* tables (e.g. subscription_plans).
-  db: { schema: 'public' },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'careview-web',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 })
 
 export default supabase
