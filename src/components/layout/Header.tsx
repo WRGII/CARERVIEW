@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
-import { useUserPlan } from "../../hooks/useUserPlan";          // single import
+import { useUserPlan } from "../../hooks/useUserPlan";
 import AccountMenu from "../caregiver/AccountMenu";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -38,12 +40,14 @@ function useBrandingLogo() {
 export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
-  const { data: plan } = useUserPlan();                      // hook inside component
+  const { data: plan } = useUserPlan();
   const canUseTeam = plan?.plan_id === "family_qtr";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
 
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm">
@@ -103,35 +107,98 @@ export default function Header() {
               </>
             ) : (
               <>
-                <Link
-                  to="/about"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                {/* Desktop Navigation - hidden on mobile */}
+                <div className="hidden md:flex items-center gap-3">
+                  <Link
+                    to="/about"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    to="/why"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                  >
+                    Why you need CarerView
+                  </Link>
+                  <Link
+                    to="/pricing"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                  >
+                    Pricing
+                  </Link>
+                  <Link
+                    to={{ pathname: "/", hash: "#get-started" }}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+
+                {/* Mobile Menu Button - visible only on mobile */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                  aria-expanded={mobileMenuOpen}
+                  aria-label="Toggle navigation menu"
                 >
-                  About
-                </Link>
-                <Link
-                  to="/why"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
-                >
-                  Why you need CarerView
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
-                >
-                  Pricing
-                </Link>
-                <Link
-                  to={{ pathname: "/", hash: "#get-started" }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
-                >
-                  Sign In
-                </Link>
+                  {mobileMenuOpen ? (
+                    <X className="h-6 w-6" aria-hidden="true" />
+                  ) : (
+                    <Menu className="h-6 w-6" aria-hidden="true" />
+                  )}
+                </button>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu - only for anonymous users */}
+      {!isAuthed && mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 md:hidden"
+            onClick={closeMobileMenu}
+            aria-hidden="true"
+          />
+
+          {/* Mobile Menu */}
+          <div className="fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-50 md:hidden">
+            <nav className="px-4 py-3 space-y-1">
+              <Link
+                to="/about"
+                onClick={closeMobileMenu}
+                className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                About
+              </Link>
+              <Link
+                to="/why"
+                onClick={closeMobileMenu}
+                className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                Why you need CarerView
+              </Link>
+              <Link
+                to="/pricing"
+                onClick={closeMobileMenu}
+                className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
+                to={{ pathname: "/", hash: "#get-started" }}
+                onClick={closeMobileMenu}
+                className="block w-full text-center px-4 py-3 text-base font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors mt-2"
+              >
+                Sign In
+              </Link>
+            </nav>
+          </div>
+        </>
+      )}
     </header>
   );
 }
