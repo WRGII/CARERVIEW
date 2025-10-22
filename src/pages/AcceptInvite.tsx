@@ -11,40 +11,51 @@ export default function AcceptInvite() {
 
   useEffect(() => {
     (async () => {
-      const token = params.get("t") || localStorage.getItem("cv_join_token") || "";
-      if (!token) { setStatus("error"); setMsg("Missing token"); return; }
+      const urlToken = params.get("t");
+      const storedToken = sessionStorage.getItem("cv_join_token");
+      const token = urlToken || storedToken || "";
+
+      if (!token) {
+        setStatus("error");
+        setMsg("Missing or invalid invitation token");
+        return;
+      }
 
       const { data: sess } = await supabase.auth.getSession();
       if (!sess?.session) {
-        localStorage.setItem("cv_join_token", token);
+        if (urlToken) {
+          sessionStorage.setItem("cv_join_token", urlToken);
+        }
         navigate({ pathname: "/", search: "?join=1", hash: "#get-started" }, { replace: true });
         return;
       }
 
       try {
         setStatus("idle");
-        // accept → returns team_id
+
         const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
         if (acceptErr) throw acceptErr;
 
-        // set active team
         const { error: setErr } = await supabase.rpc("cv_set_active_team", { p_team: teamId });
         if (setErr) throw setErr;
 
-        // cleanup and go
-        localStorage.removeItem("cv_join_token");
+        sessionStorage.removeItem("cv_join_token");
         setStatus("ok");
         navigate("/caregiver", { replace: true });
       } catch (e: any) {
+        sessionStorage.removeItem("cv_join_token");
         setStatus("error");
-        setMsg(e?.message || "Join failed");
+        setMsg(e?.message || "Failed to accept invitation");
       }
     })();
-    // only once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [params, navigate]);
 
-  if (status === "idle") return <div className="p-6">Joining…</div>;
-  if (status === "error") return <div className="p-6 text-red-600">{msg}</div>;
-  return <div className="p-6">Joined. Redirecting…</div>;
+  if (status === "idle") return <div className="p-6">Joining team…</div>;
+  if (status === "error") return (
+    <div className="p-6">
+      <div className="text-red-600 mb-4">{msg}</div>
+      <a href="/" className="text-cyan-primary hover:underline">Return to home</a>
+    </div>
+  );
+  return <div className="p-6">Successfully joined team. Redirecting…</div>;
 }
