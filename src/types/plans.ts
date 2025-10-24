@@ -1,8 +1,8 @@
 // src/types/plans.ts
 export type PlanRow = {
-  plan_id: 'free' | 'primary_weekly' | 'occasional_weekly' | string;
+  plan_id: 'free' | 'primary_qtr' | 'family_qtr' | string;
   name: string;
-  interval: 'week' | 'month' | 'none';
+  interval: 'quarter' | 'none';
   price_cents: number;
   stripe_price_id: string | null;
 };

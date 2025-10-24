@@ -1,13 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabaseClient';
 import { getProductByPriceId } from '../stripe-config';
 import { CircleCheck as CheckCircle, Clock, CircleAlert as AlertCircle } from 'lucide-react';
 
 interface SubscriptionData {
-  subscription_status: string;
+  status: string;
   price_id: string;
-  current_period_end: number;
+  current_period_end: string;
   cancel_at_period_end: boolean;
 }
 
@@ -16,14 +16,17 @@ export function SubscriptionStatus() {
     queryKey: ['user-subscription'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('stripe_user_subscriptions')
-        .select('*')
-        .single();
-      
+        .from('user_subscriptions')
+        .select('status, price_id, current_period_end, cancel_at_period_end')
+        .in('status', ['active', 'trialing'])
+        .order('current_period_end', { ascending: false, nullsLast: true })
+        .limit(1)
+        .maybeSingle();
+
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
-      
+
       return data as SubscriptionData | null;
     }
   });
@@ -37,7 +40,7 @@ export function SubscriptionStatus() {
     );
   }
 
-  if (!subscription || subscription.subscription_status === 'canceled') {
+  if (!subscription || subscription.status === 'canceled') {
     return (
       <div className="flex items-center space-x-2 text-sm text-gray-600">
         <AlertCircle className="w-4 h-4 text-yellow-500" />
@@ -47,8 +50,8 @@ export function SubscriptionStatus() {
   }
 
   const product = getProductByPriceId(subscription.price_id);
-  const isActive = subscription.subscription_status === 'active';
-  const periodEnd = new Date(subscription.current_period_end * 1000);
+  const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+  const periodEnd = new Date(subscription.current_period_end);
 
   return (
     <div className="flex items-center space-x-2 text-sm">
@@ -59,7 +62,7 @@ export function SubscriptionStatus() {
       )}
       <div>
         <span className="font-medium">
-          {product?.name || 'Unknown Plan'}
+          {product?.name.replace('CarerView - ', '').replace(' Plan', '') || 'Unknown Plan'}
         </span>
         {subscription.cancel_at_period_end ? (
           <span className="text-yellow-600 ml-2">

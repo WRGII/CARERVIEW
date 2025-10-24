@@ -1,13 +1,23 @@
 import React from 'react'
 import ManageBillingButton from './ManageBillingButton'
 import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan'
+import { STRIPE_PRODUCTS } from '../../stripe-config'
 
 function PlanBadge({ planId }: { planId: string | null }) {
   if (!planId) return null
-  const label =
-    planId === 'primary_weekly' ? 'Primary (7/wk)' :
-    planId === 'occasional_weekly' ? 'Occasional (1/wk)' :
-    planId === 'free' ? 'Free' : planId
+
+  if (planId === 'free') {
+    return (
+      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+        Free Observer
+      </span>
+    )
+  }
+
+  const product = STRIPE_PRODUCTS.find(p => p.planId === planId)
+  const label = product
+    ? `${product.name.replace('CarerView - ', '').replace(' Plan', '')} (${product.planId === 'primary_qtr' ? '30/year' : '100/year'})`
+    : planId
 
   return (
     <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
@@ -47,7 +57,6 @@ export default function BillingPanel() {
         <ManageBillingButton />
       </div>
 
-      {/* Optional: show period end when present */}
       {plan?.current_period_end && (
         <div className="mt-2 text-xs text-slate-500">
           Current period ends:&nbsp;

@@ -1,14 +1,18 @@
-// src/components/common/PlanPill.tsx
 import React from "react";
 import { hasActivePlan, useUserPlan } from "../../hooks/useUserPlan";
 import type { PlanId } from "../../hooks/useUserPlan";
-import { PLANS } from "../../config/stripe";
+import { STRIPE_PRODUCTS } from "../../stripe-config";
 
 function getPlanLabel(id: PlanId | null | undefined): string {
   if (!id) return "No plan";
-  if (id === "free") return "Free";
-  // PLANS only has paid plans
-  return PLANS[id as Exclude<PlanId, "free">]?.label ?? String(id);
+  if (id === "free") return "Free Observer";
+
+  const product = STRIPE_PRODUCTS.find(p => p.planId === id);
+  if (product) {
+    return product.name.replace('CarerView - ', '').replace(' Plan', '');
+  }
+
+  return String(id);
 }
 
 function formatShort(iso?: string | null) {
@@ -25,17 +29,15 @@ function formatShort(iso?: string | null) {
 export default function PlanPill() {
   const { data: plan } = useUserPlan();
 
-  // Only show if the user actually has an active plan
   if (!hasActivePlan(plan)) return null;
 
   const label = getPlanLabel(plan?.plan_id);
   const renews = formatShort(plan?.current_period_end);
 
-  // Color hint per plan
   const color =
-    plan?.plan_id === "primary_weekly"
+    plan?.plan_id === "primary_qtr"
       ? "bg-cyan-600 text-white"
-      : plan?.plan_id === "occasional_weekly"
+      : plan?.plan_id === "family_qtr"
       ? "bg-slate-700 text-white"
       : "bg-slate-200 text-slate-700";
 

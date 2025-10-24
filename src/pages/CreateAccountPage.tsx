@@ -3,18 +3,24 @@ import React from "react";
 import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
-import { PLANS, RETURN_URLS, type PlanKey } from "../config/stripe";
+import { STRIPE_PRODUCTS } from "../stripe-config";
 import { usePlans } from "../hooks/usePlans";
 import type { PlanRow } from "../types/plans";
 
-const PENDING_KEY = "cv_pending_checkout"; // { planKey, promoCode }
+type PlanKey = 'primary_qtr' | 'family_qtr';
+
+const PENDING_KEY = "cv_pending_checkout";
+
+const RETURN_URLS = {
+  success: `${window.location.origin}/checkout/success`,
+  cancel: `${window.location.origin}/create-account?canceled=1`,
+};
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
   const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
-  // ---- Local UI state -------------------------------------------------------
-  const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("occasional_weekly");
+  const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("primary_qtr");
   const [promoCode, setPromoCode] = React.useState<string>("");
 
   const [name, setName] = React.useState("");
@@ -25,9 +31,7 @@ export default function CreateAccountPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [info, setInfo] = React.useState<string | null>(null);
 
-  // ---- Invite resume after auth --------------------------------------------
   React.useEffect(() => {
-    // If already signed in on mount, resume immediately
     (async () => {
       const tok = localStorage.getItem("cv_join_token");
       if (!tok) return;
@@ -38,7 +42,6 @@ export default function CreateAccountPage() {
       }
     })();
 
-    // Also listen for sign-in events
     const sub = supabase.auth.onAuthStateChange((_evt, session) => {
       const tok = localStorage.getItem("cv_join_token");
       if (tok && session) {
@@ -49,7 +52,6 @@ export default function CreateAccountPage() {
     return () => sub.data.subscription.unsubscribe();
   }, [navigate]);
 
-  // ---- Resume pending checkout after auth ----------------------------------
   React.useEffect(() => {
     (async () => {
       const pendingRaw = localStorage.getItem(PENDING_KEY);
@@ -65,20 +67,21 @@ export default function CreateAccountPage() {
           promoCode?: string | null;
         };
 
-        const plan = PLANS[pending.planKey];
-        if (!plan) return;
+        const product = STRIPE_PRODUCTS.find(p => p.planId === pending.planKey);
+        if (!product) return;
 
-        if (!plan.priceId) {
+        if (!product.priceId) {
           console.warn("Plan missing priceId. Cannot start checkout.");
           return;
         }
 
         const { data, error } = await supabase.functions.invoke("stripe-checkout", {
           body: {
-            price_id: plan.priceId,
+            price_id: product.priceId,
+            plan_id: pending.planKey,
             promotionCode: pending.promoCode || null,
             success_url: RETURN_URLS.success,
-            cancel_url: `${window.location.origin}/create-account?canceled=1`,
+            cancel_url: RETURN_URLS.cancel,
           },
         });
         if (error) throw error;
@@ -90,9 +93,8 @@ export default function CreateAccountPage() {
         console.warn("Failed to resume pending checkout:", e);
       }
     })();
-  }, []); // once on mount
+  }, []);
 
-  // ---- Handlers -------------------------------------------------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -105,9 +107,11 @@ export default function CreateAccountPage() {
 
     setBusy(true);
     try {
-      const selectedPlan = PLANS[selectedPlanKey];
+      const selectedProduct = STRIPE_PRODUCTS.find(p => p.planId === selectedPlanKey);
+      if (!selectedProduct) {
+        throw new Error("Invalid plan selected");
+      }
 
-      // 1) Create Auth user
       const { data, error: signErr } = await supabase.auth.signUp({
         email,
         password,
@@ -116,9 +120,8 @@ export default function CreateAccountPage() {
       if (signErr) throw signErr;
 
       const user = data.user;
-      const session = data.session; // null if email confirmation required
+      const session = data.session;
 
-      // 2) If we have a session, upsert profile now; otherwise wait until they confirm.
       if (session && user?.id) {
         const { error: upErr } = await supabase.from("profiles").upsert({
           id: user.id,
@@ -129,17 +132,17 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
-        if (!selectedPlan.priceId) {
+        if (!selectedProduct.priceId) {
           throw new Error("Selected plan is missing a Stripe price. Please contact support.");
         }
 
         const { data: ck, error: fnErr } = await supabase.functions.invoke("stripe-checkout", {
           body: {
-            price_id: selectedPlan.priceId,
+            price_id: selectedProduct.priceId,
             plan_id: selectedPlanKey,
             promotionCode: promoCode || null,
             success_url: RETURN_URLS.success,
-            cancel_url: `${window.location.origin}/create-account?canceled=1`,
+            cancel_url: RETURN_URLS.cancel,
           },
         });
         if (fnErr) throw fnErr;
@@ -150,10 +153,9 @@ export default function CreateAccountPage() {
         return;
       }
 
-      // 3) No session → email confirmation required. Save pending checkout.
       localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode }));
       setInfo(
-        "Check your inbox to confirm your email. After you sign in, we’ll finish setting up your subscription and caregiver account."
+        "Check your inbox to confirm your email. After you sign in, we'll finish setting up your subscription and caregiver account."
       );
     } catch (err: any) {
       if (err?.message === "User already registered") {
@@ -166,7 +168,8 @@ export default function CreateAccountPage() {
     }
   };
 
-  // ---- UI -------------------------------------------------------------------
+  const selectedProduct = STRIPE_PRODUCTS.find(p => p.planId === selectedPlanKey);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -181,7 +184,6 @@ export default function CreateAccountPage() {
           </p>
         </header>
 
-        {/* Choose a plan */}
         <section className="mb-8 rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
           <div className="px-6 py-5 border-b border-slate-gray/10 flex items-center gap-3">
             <div className="W-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
@@ -192,13 +194,13 @@ export default function CreateAccountPage() {
 
           <div className="p-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              {Object.entries(PLANS).map(([key, plan]) => {
-                const selected = selectedPlanKey === key;
+              {STRIPE_PRODUCTS.map((product) => {
+                const selected = selectedPlanKey === product.planId;
                 return (
                   <button
-                    key={key}
+                    key={product.planId}
                     type="button"
-                    onClick={() => setSelectedPlanKey(key as PlanKey)}
+                    onClick={() => setSelectedPlanKey(product.planId as PlanKey)}
                     className={[
                       "text-left rounded-xl border px-4 py-4 transition-all",
                       selected
@@ -207,15 +209,20 @@ export default function CreateAccountPage() {
                     ].join(" ")}
                     aria-pressed={selected}
                   >
-                    <div className="font-semibold text-slate-gray">{plan.label}</div>
-                    <div className="text-slate-gray/70 mt-1">${(plan.price / 100).toFixed(2)} / week</div>
-                    <div className="text-xs text-slate-gray/60 mt-2">{plan.blurb}</div>
+                    <div className="font-semibold text-slate-gray">
+                      {product.name.replace('CarerView - ', '').replace(' Plan', '')}
+                    </div>
+                    <div className="text-slate-gray/70 mt-1">
+                      ${product.price.toFixed(2)} per quarter
+                    </div>
+                    <div className="text-xs text-slate-gray/60 mt-2">
+                      {product.planId === 'primary_qtr' ? '30 observations per year' : 'Up to 3 caregivers, 100 observations per year'}
+                    </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Promo code */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-slate-gray mb-1">
                 Have a promo code? <span className="text-slate-gray/50">(optional)</span>
@@ -231,7 +238,6 @@ export default function CreateAccountPage() {
           </div>
         </section>
 
-        {/* Create account */}
         <section className="rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
           <div className="px-6 py-5 border-b border-slate-gray/10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -243,7 +249,9 @@ export default function CreateAccountPage() {
 
             <div className="text-sm text-slate-gray/60">
               Selected plan:{" "}
-              <span className="font-medium text-slate-gray">{PLANS[selectedPlanKey]?.label ?? "—"}</span>
+              <span className="font-medium text-slate-gray">
+                {selectedProduct?.name.replace('CarerView - ', '').replace(' Plan', '') ?? "—"}
+              </span>
               {promoCode && (
                 <span className="ml-3 inline-flex items-center rounded-full border border-slate-gray/20 px-2 py-0.5 text-xs text-slate-gray">
                   promo: {promoCode}
