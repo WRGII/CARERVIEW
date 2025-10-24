@@ -58,11 +58,7 @@ export default function App() {
                   <Route path="/create-account" element={<CreateAccountPage />} />
                   <Route
                     path="/choose-plan"
-                    element={
-                      <Suspense fallback={<div className="p-6">Loading plan options…</div>}>
-                        <ChoosePlan />
-                      </Suspense>
-                    }
+                    element={<ChoosePlan />}
                   />
                   <Route path="/checkout-success" element={<CheckoutSuccess />} />
                   <Route path="/payment-success" element={<CheckoutSuccess />} />

@@ -6,9 +6,10 @@ interface PricingCardProps {
   product: StripeProduct;
   onSelectPlan: (priceId: string, planId: string) => Promise<void>;
   isPopular?: boolean;
+  isCurrentPlan?: boolean;
 }
 
-export function PricingCard({ product, onSelectPlan, isPopular = false }: PricingCardProps) {
+export function PricingCard({ product, onSelectPlan, isPopular = false, isCurrentPlan = false }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectPlan = async () => {
@@ -26,9 +27,17 @@ export function PricingCard({ product, onSelectPlan, isPopular = false }: Pricin
 
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg border-2 p-8 ${
+      isCurrentPlan ? 'border-green-500 scale-105' :
       isPopular ? 'border-blue-500 scale-105' : 'border-gray-200'
     }`}>
-      {isPopular && (
+      {isCurrentPlan && (
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+          <span className="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+            Current Plan
+          </span>
+        </div>
+      )}
+      {isPopular && !isCurrentPlan && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
             Most Popular
@@ -57,9 +66,11 @@ export function PricingCard({ product, onSelectPlan, isPopular = false }: Pricin
 
       <button
         onClick={handleSelectPlan}
-        disabled={isLoading}
+        disabled={isLoading || isCurrentPlan}
         className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-          isPopular
+          isCurrentPlan
+            ? 'bg-green-600 text-white cursor-default'
+            : isPopular
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
             : 'bg-gray-900 hover:bg-gray-800 text-white'
         } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center`}
@@ -69,6 +80,8 @@ export function PricingCard({ product, onSelectPlan, isPopular = false }: Pricin
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
             Processing...
           </>
+        ) : isCurrentPlan ? (
+          'Current Plan'
         ) : (
           'Choose Plan'
         )}
