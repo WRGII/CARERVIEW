@@ -6,6 +6,7 @@ import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 import { CircleCheck as CheckCircle, Circle as XCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import DeleteAccount from '../components/caregiver/DeleteAccount';
 
 export default function ChoosePlan() {
   const navigate = useNavigate();
@@ -208,6 +209,8 @@ export default function ChoosePlan() {
             ← Back to Dashboard
           </button>
         </div>
+
+        {isManageMode && <DeleteAccount />}
       </div>
     </div>
   );
