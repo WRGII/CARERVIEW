@@ -5,11 +5,10 @@ import { STRIPE_PRODUCTS } from "../../stripe-config";
 
 function getPlanLabel(id: PlanId | null | undefined): string {
   if (!id) return "No plan";
-  if (id === "free") return "Free Observer";
 
   const product = STRIPE_PRODUCTS.find(p => p.planId === id);
   if (product) {
-    return product.name.replace('CarerView - ', '').replace(' Plan', '');
+    return product.name;
   }
 
   return String(id);
@@ -35,7 +34,9 @@ export default function PlanPill() {
   const renews = formatShort(plan?.current_period_end);
 
   const color =
-    plan?.plan_id === "primary_qtr"
+    plan?.plan_id === "free"
+      ? "bg-slate-200 text-slate-700"
+      : plan?.plan_id === "primary_qtr"
       ? "bg-cyan-600 text-white"
       : plan?.plan_id === "family_qtr"
       ? "bg-slate-700 text-white"

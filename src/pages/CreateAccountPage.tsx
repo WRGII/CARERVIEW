@@ -7,7 +7,7 @@ import { STRIPE_PRODUCTS } from "../stripe-config";
 import { usePlans } from "../hooks/usePlans";
 import type { PlanRow } from "../types/plans";
 
-type PlanKey = 'primary_qtr' | 'family_qtr';
+type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 
 const PENDING_KEY = "cv_pending_checkout";
 
@@ -21,6 +21,14 @@ export default function CreateAccountPage() {
   const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
   const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("primary_qtr");
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planParam = params.get('plan');
+    if (planParam === 'free') setSelectedPlanKey('free');
+    else if (planParam === 'primary') setSelectedPlanKey('primary_qtr');
+    else if (planParam === 'family') setSelectedPlanKey('family_qtr');
+  }, []);
   const [promoCode, setPromoCode] = React.useState<string>("");
 
   const [name, setName] = React.useState("");
@@ -69,6 +77,12 @@ export default function CreateAccountPage() {
 
         const product = STRIPE_PRODUCTS.find(p => p.planId === pending.planKey);
         if (!product) return;
+
+        if (pending.planKey === 'free') {
+          localStorage.removeItem(PENDING_KEY);
+          navigate('/caregiver', { replace: true });
+          return;
+        }
 
         if (!product.priceId) {
           console.warn("Plan missing priceId. Cannot start checkout.");
@@ -132,6 +146,21 @@ export default function CreateAccountPage() {
         });
         if (upErr) throw upErr;
 
+        if (selectedPlanKey === 'free') {
+          const { error: subErr } = await supabase.from('user_subscriptions').upsert({
+            user_id: user.id,
+            subscription_id: `free_${user.id}`,
+            plan_id: 'free',
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            cancel_at_period_end: false,
+          }, { onConflict: 'user_id,subscription_id' });
+          if (subErr) console.warn('Failed to create free subscription record:', subErr);
+          navigate('/caregiver', { replace: true });
+          return;
+        }
+
         if (!selectedProduct.priceId) {
           throw new Error("Selected plan is missing a Stripe price. Please contact support.");
         }
@@ -193,7 +222,7 @@ export default function CreateAccountPage() {
           </div>
 
           <div className="p-6">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               {STRIPE_PRODUCTS.map((product) => {
                 const selected = selectedPlanKey === product.planId;
                 return (
@@ -210,31 +239,38 @@ export default function CreateAccountPage() {
                     aria-pressed={selected}
                   >
                     <div className="font-semibold text-slate-gray">
-                      {product.name.replace('CarerView - ', '').replace(' Plan', '')}
+                      {product.name}
+                      {product.planId === 'primary_qtr' && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-cyan-600 px-2 py-0.5 text-xs font-semibold text-white">Recommended</span>
+                      )}
                     </div>
                     <div className="text-slate-gray/70 mt-1">
-                      ${product.price.toFixed(2)} per quarter
+                      {product.planId === 'free' ? 'Always free' : `$${product.price.toFixed(2)} per quarter`}
                     </div>
                     <div className="text-xs text-slate-gray/60 mt-2">
-                      {product.planId === 'primary_qtr' ? '30 observations per year' : 'Up to 3 caregivers, 100 observations per year'}
+                      {product.planId === 'free' ? '3 observations per year' :
+                       product.planId === 'primary_qtr' ? '30 observations per year' :
+                       'Up to 3 caregivers, 100 observations per year'}
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-slate-gray mb-1">
-                Have a promo code? <span className="text-slate-gray/50">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.trim())}
-                placeholder="Enter code"
-                className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-              />
-            </div>
+            {selectedPlanKey !== 'free' && (
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-slate-gray mb-1">
+                  Have a promo code? <span className="text-slate-gray/50">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.trim())}
+                  placeholder="Enter code"
+                  className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
+                />
+              </div>
+            )}
           </div>
         </section>
 
@@ -250,9 +286,9 @@ export default function CreateAccountPage() {
             <div className="text-sm text-slate-gray/60">
               Selected plan:{" "}
               <span className="font-medium text-slate-gray">
-                {selectedProduct?.name.replace('CarerView - ', '').replace(' Plan', '') ?? "—"}
+                {selectedProduct?.name ?? "—"}
               </span>
-              {promoCode && (
+              {promoCode && selectedPlanKey !== 'free' && (
                 <span className="ml-3 inline-flex items-center rounded-full border border-slate-gray/20 px-2 py-0.5 text-xs text-slate-gray">
                   promo: {promoCode}
                 </span>

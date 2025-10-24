@@ -134,8 +134,9 @@ export default function ChoosePlan() {
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600">Plan:</span>
                     <span className="font-medium text-gray-900">
-                      {userPlan.plan_id === 'primary_qtr' ? 'Primary Caregiver Plan' :
-                       userPlan.plan_id === 'family_qtr' ? 'Family Circle Plan' :
+                      {userPlan.plan_id === 'free' ? 'Free Observer' :
+                       userPlan.plan_id === 'primary_qtr' ? 'Primary Caregiver' :
+                       userPlan.plan_id === 'family_qtr' ? 'Family Circle' :
                        userPlan.plan_id || 'Unknown'}
                     </span>
                     <span className="inline-flex items-center gap-1 text-green-700">
@@ -183,15 +184,16 @@ export default function ChoosePlan() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {STRIPE_PRODUCTS.map((product, index) => {
             const isCurrentPlan = userPlan?.plan_id === product.planId;
+            const isRecommended = product.planId === 'primary_qtr';
             return (
               <PricingCard
                 key={product.id}
                 product={product}
                 onSelectPlan={handleSelectPlan}
-                isPopular={index === 1}
+                isPopular={isRecommended}
                 isCurrentPlan={isCurrentPlan}
               />
             );

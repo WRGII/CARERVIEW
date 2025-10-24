@@ -11,11 +11,21 @@ export interface StripeProduct {
 
 export const STRIPE_PRODUCTS: StripeProduct[] = [
   {
+    id: 'free',
+    priceId: '',
+    planId: 'free',
+    name: 'Free Observer',
+    description: 'Make a note when you visit. Stay connected—free forever.',
+    price: 0,
+    currency: 'usd',
+    mode: 'subscription'
+  },
+  {
     id: 'prod_T8danfAgDGYrLJ',
     priceId: 'price_1SCMJYGiqZeZmBYJo31EKRFG',
     planId: 'primary_qtr',
-    name: 'CarerView - Primary Caregiver Plan',
-    description: '1 caregiver Features: 30 observations per year (~1 per week) Trend reports & PDF summaries. Billed: USD$12.50 every 3 months ( Less than $1/week), billed every. Seats:',
+    name: 'Primary Caregiver',
+    description: 'One caregiver, one clear record. 30 Observations a year keep trends visible and care plans on track.',
     price: 12.50,
     currency: 'usd',
     mode: 'subscription'
@@ -24,8 +34,8 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     id: 'prod_T8dapkbvd0XobR',
     priceId: 'price_1SCMJVGiqZeZmBYJkoSNcopS',
     planId: 'family_qtr',
-    name: 'CarerView - Family Circle Plan',
-    description: 'Seats: Up to 3 caregivers Features:100 shared observations per year. BIlled: USD$25.50 every three months (< $9/month) - a 33% savings compared to three Primary plans',
+    name: 'Family Circle',
+    description: 'Everyone\'s notes, one shared story. Up to 3 caregivers collaborate without friction.',
     price: 25.50,
     currency: 'usd',
     mode: 'subscription'

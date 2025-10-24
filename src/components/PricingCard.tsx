@@ -13,6 +13,10 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectPlan = async () => {
+    if (product.planId === 'free') {
+      window.location.href = '/create-account?plan=free';
+      return;
+    }
     setIsLoading(true);
     try {
       await onSelectPlan(product.priceId, product.planId);
@@ -47,11 +51,17 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
       
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">
-          {product.name.replace('CarerView - ', '')}
+          {product.name}
         </h3>
         <div className="text-3xl font-bold text-gray-900">
-          {formatPrice(product.price, product.currency)}
-          <span className="text-lg font-normal text-gray-600">/3 months</span>
+          {product.planId === 'free' ? (
+            <span>Always free</span>
+          ) : (
+            <>
+              {formatPrice(product.price, product.currency)}
+              <span className="text-lg font-normal text-gray-600">/quarter</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -92,30 +102,42 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
 
 function extractFeatures(description: string): string[] {
   const features: string[] = [];
-  
+
+  if (description.includes('3 Observations per year')) {
+    features.push('3 Observations per year');
+  }
+  if (description.includes('Join by invite')) {
+    features.push('Join by invite from a caregiver');
+  }
+  if (description.includes('Read updates')) {
+    features.push('Read updates in the family timeline');
+  }
+
   // Extract caregiver count
   const caregiverMatch = description.match(/(\d+|Up to \d+) caregiver/i);
   if (caregiverMatch) {
     features.push(`${caregiverMatch[1]} caregiver${caregiverMatch[1] !== '1' ? 's' : ''}`);
   }
-  
+
   // Extract observations
-  const observationsMatch = description.match(/(\d+)\s+(shared\s+)?observations per year/i);
+  const observationsMatch = description.match(/(\d+)\s+(shared\s+)?[Oo]bservations( a year| per year)/i);
   if (observationsMatch) {
     const shared = observationsMatch[2] ? 'shared ' : '';
-    features.push(`${observationsMatch[1]} ${shared}observations per year`);
+    features.push(`${observationsMatch[1]} ${shared}Observations per year`);
   }
-  
-  // Extract features
-  if (description.includes('Trend reports')) {
+
+  if (description.includes('clear record')) {
     features.push('Trend reports & PDF summaries');
   }
-  
-  // Extract savings info
-  const savingsMatch = description.match(/(\d+)% savings/i);
-  if (savingsMatch) {
-    features.push(`${savingsMatch[1]}% savings vs individual plans`);
+
+  if (description.includes('collaborate')) {
+    features.push('Shared weekly digest & reminders');
   }
-  
+
+  // Extract savings info
+  if (description.includes('33%')) {
+    features.push('33% savings vs three Primary plans');
+  }
+
   return features;
 }
