@@ -32,7 +32,36 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
-  // we’ll record one audit row per invocation
+  // Rate limiting check (10 requests per minute)
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+  const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
+  const { data: rateLimitCheck } = await srv.rpc('check_rate_limit', {
+    p_identifier: clientIp,
+    p_endpoint: 'admin-delete-user',
+    p_max_requests: 10,
+    p_window_minutes: 1
+  })
+
+  if (rateLimitCheck && !rateLimitCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: 'Rate limit exceeded',
+        retry_after: Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          ...CORS_HEADERS,
+          'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)),
+          'X-RateLimit-Limit': String(rateLimitCheck.limit),
+          'X-RateLimit-Remaining': String(rateLimitCheck.remaining),
+          'X-RateLimit-Reset': rateLimitCheck.reset_at
+        }
+      }
+    )
+  }
+
+  // we'll record one audit row per invocation
   let audit: {
     actor_id: string | null
     actor_email: string | null
@@ -75,8 +104,7 @@ Deno.serve(async (req) => {
     if (profErr) throw profErr
     if (me?.role !== 'admin') return json({ error: 'Admins only' }, 403)
 
-    // Service-role client (bypasses RLS for hard deletes + audit insert)
-    const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
+    // Service-role client already created for rate limiting, reuse it for operations
 
     // Find the user id by email
     const { data: found, error: findErr } = await srv

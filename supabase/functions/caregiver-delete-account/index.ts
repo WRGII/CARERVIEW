@@ -46,6 +46,35 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
+  // Rate limiting check (5 requests per minute for account deletion)
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+  const srvForRateLimit = createClient(SUPABASE_URL, SERVICE_ROLE)
+  const { data: rateLimitCheck } = await srvForRateLimit.rpc('check_rate_limit', {
+    p_identifier: clientIp,
+    p_endpoint: 'caregiver-delete-account',
+    p_max_requests: 5,
+    p_window_minutes: 1
+  })
+
+  if (rateLimitCheck && !rateLimitCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: 'Rate limit exceeded',
+        retry_after: Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          ...CORS_HEADERS,
+          'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)),
+          'X-RateLimit-Limit': String(rateLimitCheck.limit),
+          'X-RateLimit-Remaining': String(rateLimitCheck.remaining),
+          'X-RateLimit-Reset': rateLimitCheck.reset_at
+        }
+      }
+    )
+  }
+
   let audit: {
     actor_id: string | null
     actor_email: string | null

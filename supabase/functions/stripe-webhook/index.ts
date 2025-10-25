@@ -96,6 +96,32 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
   if (req.method !== 'POST')    return resp({ error: 'Method not allowed' }, 405)
 
+  // Rate limiting check (100 requests per minute for webhooks)
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'stripe'
+  const dbForRateLimit = createClient(SUPABASE_URL, SERVICE_KEY)
+  const { data: rateLimitCheck } = await dbForRateLimit.rpc('check_rate_limit', {
+    p_identifier: clientIp,
+    p_endpoint: 'stripe-webhook',
+    p_max_requests: 100,
+    p_window_minutes: 1
+  })
+
+  if (rateLimitCheck && !rateLimitCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: 'Rate limit exceeded',
+        retry_after: Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          ...JSON_HEADERS,
+          'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000))
+        }
+      }
+    )
+  }
+
   const rawBody = await req.text()
   const sig = req.headers.get('stripe-signature') ?? req.headers.get('Stripe-Signature') ?? ''
 
@@ -113,11 +139,13 @@ Deno.serve(async (req) => {
     }
   }
   if (!event) {
-    console.warn('[stripe-webhook] invalid signature', lastErr)
+    const errorMsg = lastErr instanceof Error ? lastErr.message : String(lastErr)
+    console.warn(`[stripe-webhook] Invalid signature: ${errorMsg}`)
     return resp({ error: 'Invalid signature' }, 400)
   }
 
-  const db = createClient(SUPABASE_URL, SERVICE_KEY)
+  // Reuse db instance from rate limiting
+  const db = dbForRateLimit
 
   // Idempotency check: skip if we've recently processed this event
   const now = Date.now()
