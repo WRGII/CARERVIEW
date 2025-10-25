@@ -73,10 +73,10 @@ export function Footer() {
                 </span>
                 {/* Fixed label+mailto mismatch; change to your preferred address */}
                 <a
-                  href="mailto:lina@carerview.com"
+                  href="mailto:CarerView@GrifDigi.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
                 >
-                  lina@carerview.com
+                  CarerView@GrifDigi.com
                 </a>
               </div>
               <div className="mt-3">
