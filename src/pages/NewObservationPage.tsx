@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { ActivitySquare, ClipboardList, Layers } from 'lucide-react';
+import { SquareActivity as ActivitySquare, ClipboardList, Layers } from 'lucide-react';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Loading } from '../components/ui/Loading';
 
