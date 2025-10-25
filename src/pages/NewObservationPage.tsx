@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
-import { Layout } from '../components/common/Layout';
+import { PageLayout } from '../components/layout/PageLayout';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { ActivitySquare, ClipboardList, Layers } from 'lucide-react';
@@ -147,7 +147,7 @@ export default function NewObservationPage() {
   );
 
   return (
-    <Layout
+    <PageLayout
       title="New Observation"
       user={{ ...user, profile }}
       hideSignOut={true}
@@ -197,6 +197,6 @@ export default function NewObservationPage() {
           </Button>
         </div>
       </div>
-    </Layout>
+    </PageLayout>
   );
 }

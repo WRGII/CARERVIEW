@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
-import { Layout } from '../components/common/Layout';
+import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Button } from '../components/ui/Button';
@@ -207,7 +207,7 @@ export default function CaregiverPage() {
   }
 
   return (
-    <Layout
+    <PageLayout
       title="Dashboard"
       user={{ ...user, profile }}
       hideSignOut={true}
@@ -257,6 +257,6 @@ export default function CaregiverPage() {
         )}
         {renderBody()}
       </div>
-    </Layout>
+    </PageLayout>
   );
 }

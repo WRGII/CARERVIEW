@@ -1,3 +1,16 @@
+/**
+ * PageLayout
+ *
+ * Inner layout component for individual page content.
+ * Use this component within pages that need:
+ * - A centered content container with max-width
+ * - Page title and subtitle
+ * - Optional header actions (buttons, etc.)
+ * - Optional sign-out functionality
+ *
+ * This is used INSIDE pages, while MainLayout provides the outer
+ * site-wide structure (Header/Footer).
+ */
 import React from "react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -6,14 +19,14 @@ type Props = {
   subtitle?: React.ReactNode;
   /** Put buttons on the right side of the page header (optional) */
   headerRight?: React.ReactNode;
-  /** Hide the legacy Sign Out action rendered by Layout (we'll use AccountMenu instead). */
+  /** Hide the legacy Sign Out action rendered by PageLayout (we'll use AccountMenu instead). */
   hideSignOut?: boolean;
-  /** When provided, Layout can still show who's logged in, etc. */
+  /** When provided, PageLayout can still show who's logged in, etc. */
   user?: { email?: string | null; profile?: { display_name?: string | null } | null } | null;
   children: React.ReactNode;
 };
 
-export function Layout({
+export function PageLayout({
   title,
   subtitle,
   headerRight,
@@ -54,4 +67,4 @@ export function Layout({
   );
 }
 
-export default Layout;
+export default PageLayout;

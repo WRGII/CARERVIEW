@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { Plus, CheckCircle2, XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
 
 // Shared app chrome + states
-import { Layout } from "../components/common/Layout";
+import { PageLayout } from "../components/layout/PageLayout";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { useAuth } from "../hooks/useAuth";
@@ -127,7 +127,7 @@ export default function ActiveCaregiversPage() {
 
   // ---------- UI ----------
   return (
-    <Layout title="Admin • Active Caregivers" user={{ ...user, profile }}>
+    <PageLayout title="Admin • Active Caregivers" user={{ ...user, profile }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Title row */}
         <div className="flex items-center justify-between mb-8">
@@ -257,7 +257,7 @@ export default function ActiveCaregiversPage() {
           this in a Phase-2.
         </p>
       </div>
-    </Layout>
+    </PageLayout>
   );
 }
 

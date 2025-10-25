@@ -2,7 +2,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Layout } from "../components/common/Layout";
+import { PageLayout } from "../components/layout/PageLayout";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import ObservationForm from "../components/caregiver/ObservationForm";
@@ -39,7 +39,7 @@ export default function ObservationEditPage() {
   const readOnly = !isAuthor || frozen;
 
   return (
-    <Layout
+    <PageLayout
       title="Edit Observation"
       user={{ ...user, profile }}
       hideSignOut={true}
@@ -71,6 +71,6 @@ export default function ObservationEditPage() {
           onComplete={() => navigate("/caregiver", { replace: true })}
         />
       </ErrorBoundary>
-    </Layout>
+    </PageLayout>
   );
 }
