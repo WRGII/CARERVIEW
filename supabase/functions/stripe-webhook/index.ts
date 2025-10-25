@@ -45,6 +45,9 @@ const JSON_HEADERS = {
 const resp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 
+// Track processed events to prevent duplicate processing
+const processedEvents = new Map<string, number>()
+
 // ---------- helpers ----------
 const secToIso = (sec?: number | null) =>
   typeof sec === 'number' && isFinite(sec) ? new Date(sec * 1000).toISOString() : null
@@ -116,6 +119,14 @@ Deno.serve(async (req) => {
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY)
 
+  // Idempotency check: skip if we've recently processed this event
+  const now = Date.now()
+  const lastProcessed = processedEvents.get(event.id)
+  if (lastProcessed && (now - lastProcessed) < 60000) {
+    console.log(`[stripe-webhook] Skipping duplicate event ${event.id}`)
+    return resp({ received: true, duplicate: true })
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -130,6 +141,7 @@ Deno.serve(async (req) => {
           )
           if (error) console.warn('[stripe-webhook] upsert stripe_customers failed', error)
         }
+        processedEvents.set(event.id, now)
         return resp({ received: true })
       }
 
@@ -204,14 +216,26 @@ Deno.serve(async (req) => {
 
         await enforceSeats(db, userId, effectivePlanId)
 
+        // Mark event as processed
+        processedEvents.set(event.id, now)
+        // Clean up old entries (keep only last 100)
+        if (processedEvents.size > 100) {
+          const entries = Array.from(processedEvents.entries())
+          entries.sort((a, b) => a[1] - b[1])
+          entries.slice(0, entries.length - 100).forEach(([id]) => processedEvents.delete(id))
+        }
+
         return resp({ received: true })
       }
 
       default:
+        // Mark non-critical events as processed too
+        processedEvents.set(event.id, now)
         return resp({ received: true })
     }
   } catch (err: any) {
     console.error('[stripe-webhook] handler error:', err?.message || err)
+    // Don't mark as processed on error - allow retry
     return resp({ error: 'Webhook handling failed' }, 500)
   }
 })

@@ -47,7 +47,7 @@ export default function InactivePlanNotice({ className = "" }: Props) {
             Choose a plan
           </Link>
           <Link
-            to="/checkout-success"
+            to="/checkout/success"
             className="inline-flex items-center rounded-lg border px-4 py-2 text-slate-800 hover:bg-white"
             title="If you just paid, this page will finalize once webhooks arrive."
           >
