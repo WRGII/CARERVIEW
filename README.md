@@ -20,9 +20,10 @@ For family caregivers to record and discuss observations using ADA and OT functi
 - **Frontend**: React 18 + TypeScript + Tailwind CSS
 - **State Management**: React Query for server state
 - **Database**: Supabase Postgres with Row Level Security
-- **Authentication**: Token-based access (no password auth)
-- **Deployment**: Netlify with serverless functions
-- **Exports**: @react-pdf/renderer and docx libraries
+- **Authentication**: Supabase Auth with email/password
+- **Deployment**: Bolt Publishing
+- **Edge Functions**: Supabase Edge Functions
+- **Exports**: docx and file-saver libraries
 
 ## Database Architecture
 
@@ -55,9 +56,10 @@ npm run build  # Build for production
 
 ## Deployment
 
-The application is publishing for MVP deployment with:
+The application is deployed using Bolt Publishing with:
+- One-click publishing to bolt.host
 - Automatic Supabase integration
-- Environment variable management
-- Netlify deployment
+- Environment variables from .env file
+- Custom domain support (carerview.com)
 
 Built with ❤️ for family caregiving assessment.

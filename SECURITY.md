@@ -30,8 +30,8 @@ If credentials have been exposed, follow these steps:
    - Update any CI/CD secrets
 
 4. **Update All Deployments**
-   - Update environment variables in hosting platform (Netlify)
-   - Redeploy application
+   - Update environment variables in .env file
+   - Republish application via Bolt Publishing
    - Update Supabase Functions with new keys
 
 5. **Verify Rotation**
@@ -127,12 +127,12 @@ All Supabase Edge Functions use:
 ### Production Recommendations
 1. Restrict to specific origins:
    ```typescript
-   'Access-Control-Allow-Origin': 'https://yourapp.com'
+   'Access-Control-Allow-Origin': 'https://carerview.com'
    ```
 
 2. Or validate origin dynamically:
    ```typescript
-   const allowedOrigins = ['https://app.carerview.com', 'https://carerview.com'];
+   const allowedOrigins = ['https://carerview.com', 'https://www.carerview.com'];
    const origin = req.headers.get('origin');
    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
    ```

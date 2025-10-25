@@ -1,8 +1,8 @@
-# Bolt.new Reconnection Guide
+# Bolt Reconnection Guide
 
 ## Overview
 
-This guide explains how the CarerView application maintains persistent connection to your Supabase database when reopening Bolt.new.
+This guide explains how the CarerView application maintains persistent connection to your Supabase database when reopening Bolt.new or accessing the published site.
 
 ## How It Works
 
@@ -125,11 +125,12 @@ If you need to retrieve your credentials:
 - No local database required
 - Database status indicator visible
 
-### Production (Netlify)
-- Uses environment variables from Netlify settings
+### Production (Bolt Publishing)
+- Uses environment variables from `.env` file (same as development)
 - Same Supabase database as development
-- Configure at: Netlify Dashboard → Site Settings → Environment Variables
-- Must match values in `.env` exactly
+- One-click publishing from Bolt interface
+- Environment variables automatically included in published build
+- Custom domain support available (carerview.com)
 
 ## Database Connection Configuration
 
