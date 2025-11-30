@@ -7,14 +7,16 @@ import { STRIPE_PRODUCTS } from '../stripe-config';
 import { CircleCheck as CheckCircle, Circle as XCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import DeleteAccount from '../components/caregiver/DeleteAccount';
+import { useActivateFreePlan } from '../hooks/useFreePlan';
 
 export default function ChoosePlan() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const { data: userPlan, isLoading: planLoading } = useUserPlan();
+  const { data: userPlan, isLoading: planLoading, refetch: refetchPlan } = useUserPlan();
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [managingBilling, setManagingBilling] = useState(false);
+  const activateFreePlanMutation = useActivateFreePlan();
 
   const isManageMode = searchParams.get('manage') === 'true';
   const activeSubscription = hasActivePlan(userPlan);
@@ -55,27 +57,58 @@ export default function ChoosePlan() {
   const handleSelectPlan = async (priceId: string, planId: string) => {
     if (!user) return;
 
+    // Handle free plan separately
+    if (planId === 'free') {
+      try {
+        const result = await activateFreePlanMutation.mutateAsync();
+
+        if (result.alreadyActive) {
+          setStatusMessage({
+            type: 'success',
+            message: 'You already have an active plan!'
+          });
+        } else {
+          setStatusMessage({
+            type: 'success',
+            message: 'Free plan activated successfully!'
+          });
+        }
+
+        // Refetch plan and redirect to dashboard
+        await refetchPlan();
+        setTimeout(() => navigate('/caregiver'), 1000);
+      } catch (error: any) {
+        console.error('Error activating free plan:', error);
+        setStatusMessage({
+          type: 'error',
+          message: error.message || 'Failed to activate free plan. Please try again.'
+        });
+      }
+      return;
+    }
+
+    // Handle paid plans via Stripe
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
+      // Use supabase.functions.invoke for proper authentication
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
           price_id: priceId,
           plan_id: planId,
           success_url: `${window.location.origin}/checkout/success`,
           cancel_url: `${window.location.origin}/choose-plan?status=cancel`,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+      if (error) {
+        console.error('Checkout error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
       }
 
-      const { url } = await response.json();
-      window.location.href = url;
+      if (!data?.url) {
+        throw new Error('No checkout URL received');
+      }
+
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
       setStatusMessage({

@@ -79,6 +79,27 @@ export default function CreateAccountPage() {
         if (!product) return;
 
         if (pending.planKey === 'free') {
+          // Create free plan subscription before navigating
+          try {
+            const now = new Date();
+            const oneYearFromNow = new Date(now);
+            oneYearFromNow.setFullYear(now.getFullYear() + 1);
+
+            await supabase
+              .from('user_subscriptions')
+              .insert({
+                user_id: user.id,
+                subscription_id: `free_${user.id}_${Date.now()}`,
+                plan_id: 'free',
+                status: 'active',
+                current_period_start: now.toISOString(),
+                current_period_end: oneYearFromNow.toISOString(),
+                cancel_at_period_end: false,
+              });
+          } catch (freeErr) {
+            console.error('Failed to create free subscription:', freeErr);
+            // Continue anyway - user can activate later
+          }
           localStorage.removeItem(PENDING_KEY);
           navigate('/caregiver', { replace: true });
           return;

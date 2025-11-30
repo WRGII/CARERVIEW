@@ -167,9 +167,22 @@ Deno.serve(async (req) => {
             { user_id: userId, customer_id: customerId, updated_at: new Date().toISOString() },
             { onConflict: 'user_id' },
           )
-          if (error) console.warn('[stripe-webhook] upsert stripe_customers failed', error)
+          if (error) {
+            console.warn(`[stripe-webhook] upsert stripe_customers failed: ${error.message}`, {
+              userId,
+              customerId,
+              errorCode: error.code
+            })
+          }
         }
-        processedEvents.set(event.id, now)
+
+        // Mark event as completed
+        await db.rpc('record_webhook_event', {
+          p_event_id: event.id,
+          p_event_type: event.type,
+          p_status: 'completed'
+        })
+
         return resp({ received: true })
       }
 
@@ -244,21 +257,23 @@ Deno.serve(async (req) => {
 
         await enforceSeats(db, userId, effectivePlanId)
 
-        // Mark event as processed
-        processedEvents.set(event.id, now)
-        // Clean up old entries (keep only last 100)
-        if (processedEvents.size > 100) {
-          const entries = Array.from(processedEvents.entries())
-          entries.sort((a, b) => a[1] - b[1])
-          entries.slice(0, entries.length - 100).forEach(([id]) => processedEvents.delete(id))
-        }
+        // Mark event as completed
+        await db.rpc('record_webhook_event', {
+          p_event_id: event.id,
+          p_event_type: event.type,
+          p_status: 'completed'
+        })
 
         return resp({ received: true })
       }
 
       default:
-        // Mark non-critical events as processed too
-        processedEvents.set(event.id, now)
+        // Mark non-critical events as completed
+        await db.rpc('record_webhook_event', {
+          p_event_id: event.id,
+          p_event_type: event.type,
+          p_status: 'completed'
+        })
         return resp({ received: true })
     }
   } catch (err: any) {
