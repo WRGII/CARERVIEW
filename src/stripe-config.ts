@@ -21,8 +21,8 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     mode: 'subscription'
   },
   {
-    id: 'prod_T8danfAgDGYrLJ',
-    priceId: 'price_1SCMJYGiqZeZmBYJo31EKRFG',
+    id: 'prod_TW2OREgJTTCsLC',
+    priceId: 'price_1SZ0JMGiCMwtCdgydBnTnX4a',
     planId: 'primary_qtr',
     name: 'Primary Caregiver',
     description: 'One caregiver, one clear record. 30 Observations a year keep trends visible and care plans on track.',
@@ -31,8 +31,8 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     mode: 'subscription'
   },
   {
-    id: 'prod_T8dapkbvd0XobR',
-    priceId: 'price_1SCMJVGiqZeZmBYJkoSNcopS',
+    id: 'prod_TW2RHuPJHLfg1L',
+    priceId: 'price_1SZ0MsGiCMwtCdgyT6uihjXf',
     planId: 'family_qtr',
     name: 'Family Circle',
     description: 'Everyone\'s notes, one shared story. Up to 3 caregivers collaborate without friction.',
