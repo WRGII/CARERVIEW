@@ -58,7 +58,7 @@ export function useObservationById(id?: string | null) {
         .from('observations')
         .select(
           `
-          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type,
+          id, user_id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type, team_id, author_user_id,
           responses:responses (
             id, observation_id, question_id, score, notes, created_at, updated_at,
             question:questions (

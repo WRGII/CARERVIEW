@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { callAdminDeleteUser } from "../lib/admin.ts";
+import { callAdminDeleteUser } from "../lib/admin";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL!,

@@ -72,8 +72,8 @@ export function useUserPlan() {
         )
         .eq('user_id', user.id)
         .in('status', ['active', 'trialing'])
-        .order('current_period_end', { ascending: false, nullsLast: true })
-        .order('updated_at', { ascending: false, nullsLast: true })
+        .order('current_period_end', { ascending: false })
+        .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 

@@ -1,0 +1,17 @@
+# CarerView Robots.txt
+User-agent: *
+Allow: /
+Allow: /why
+Allow: /about
+Allow: /pricing
+
+# Disallow authenticated pages
+Disallow: /caregiver
+Disallow: /admin
+Disallow: /team
+Disallow: /create-account
+Disallow: /choose-plan
+Disallow: /checkout
+
+# Sitemap
+Sitemap: https://carerview.com/sitemap.xml

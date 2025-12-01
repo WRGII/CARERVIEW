@@ -67,7 +67,6 @@ export default function ObservationEditPage() {
         <ObservationForm
           observationId={obs.id}
           formType={formType}
-          readOnly={readOnly}
           onComplete={() => navigate("/caregiver", { replace: true })}
         />
       </ErrorBoundary>

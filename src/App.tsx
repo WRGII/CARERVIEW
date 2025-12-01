@@ -61,7 +61,6 @@ export default function App() {
                     element={<ChoosePlan />}
                   />
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
-                  <Route path="/checkout/success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
 
                   {/* Invite accept */}

@@ -76,24 +76,25 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     }>()
 
     observation.responses.forEach((response) => {
-      const category = response.question?.category
-      if (!category) return
+      const questionData = Array.isArray(response.question) ? response.question[0] : response.question
+      const categoryData = questionData?.category ? (Array.isArray(questionData.category) ? questionData.category[0] : questionData.category) : null
+      if (!categoryData || !questionData) return
 
-      if (!categoryMap.has(category.id)) {
-        categoryMap.set(category.id, {
-          id: category.id,
-          name: category.name,
-          type: category.type, // 'ADL' | 'IADL'
+      if (!categoryMap.has(categoryData.id)) {
+        categoryMap.set(categoryData.id, {
+          id: categoryData.id,
+          name: categoryData.name,
+          type: categoryData.type, // 'ADL' | 'IADL'
           responses: []
         })
       }
 
-      categoryMap.get(category.id)!.responses.push({
+      categoryMap.get(categoryData.id)!.responses.push({
         score: response.score,
         notes: response.notes,
         question: {
-          question_text: response.question.question_text,
-          sort_order: response.question.sort_order
+          question_text: questionData.question_text,
+          sort_order: questionData.sort_order
         }
       })
     })

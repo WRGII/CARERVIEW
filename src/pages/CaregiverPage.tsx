@@ -113,14 +113,18 @@ export default function CaregiverPage() {
         .order('score', { ascending: true });
       if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`);
 
-      const responses = (obs.responses ?? []) as Array<{
-        question: {
-          id: string;
-          question_text: string;
-          sort_order: number;
-          category: { id: string; name: string; type: 'ADL' | 'IADL' } | null;
-        } | null;
-      }>;
+      const responses = (obs.responses ?? []).map(r => {
+        const q = Array.isArray(r.question) ? r.question[0] : r.question;
+        const c = q?.category ? (Array.isArray(q.category) ? q.category[0] : q.category) : null;
+        return {
+          question: q ? {
+            id: q.id,
+            question_text: q.question_text,
+            sort_order: q.sort_order,
+            category: c
+          } : null
+        };
+      });
 
       const catMap = new Map<
         string,

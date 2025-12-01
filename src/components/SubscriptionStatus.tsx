@@ -19,7 +19,7 @@ export function SubscriptionStatus() {
         .from('user_subscriptions')
         .select('status, price_id, current_period_end, cancel_at_period_end')
         .in('status', ['active', 'trialing'])
-        .order('current_period_end', { ascending: false, nullsLast: true })
+        .order('current_period_end', { ascending: false })
         .limit(1)
         .maybeSingle();
 

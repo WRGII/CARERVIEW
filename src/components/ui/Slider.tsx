@@ -45,7 +45,7 @@ export const Slider: React.FC<SliderProps> = ({
         className="absolute top-1/2 w-6 h-6 bg-blue-600 rounded-full border-2 border-white shadow-md transform -translate-y-1/2 -translate-x-1/2 pointer-events-none"
         style={{ left: `${percentage}%` }}
       />
-      <style jsx>{`
+      <style>{`
         .slider-track::-webkit-slider-thumb {
           appearance: none;
           width: 24px;
