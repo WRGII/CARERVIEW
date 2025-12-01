@@ -67,6 +67,7 @@ All user-facing tables have RLS enabled and policies configured:
 9. **stripe_customers** - Stripe customer mapping
 10. **stripe_subscriptions** - Stripe subscription data
 11. **stripe_orders** - Stripe order data
+12. **rate_limit_log** - Rate limiting audit data (service_role only)
 
 ### Critical RLS Rules
 
@@ -162,6 +163,7 @@ All SECURITY DEFINER functions MUST:
 
 ### Currently Logged
 - Admin user deletion (`admin_events` table)
+- Rate limit tracking (`rate_limit_log` table)
 
 ### Recommended Additions
 1. Team membership changes
@@ -188,27 +190,29 @@ INSERT INTO public.admin_events (
 ## Rate Limiting
 
 ### Current Status
-⚠️ **NO RATE LIMITING IMPLEMENTED**
+✅ **RATE LIMITING IMPLEMENTED**
 
-### Recommended Implementation
-Use Supabase Edge Functions with rate limiting:
+Rate limiting is active on all Edge Functions using the `check_rate_limit()` database function.
 
-```typescript
-// Example using Upstash Redis
-import { Ratelimit } from "@upstash/ratelimit";
+### Implementation Details
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-});
+**Protected Endpoints:**
+- `stripe-checkout`: 20 requests per minute
+- `stripe-webhook`: 100 requests per minute
+- `stripe-portal`: 20 requests per minute
+- `caregiver-delete-account`: 5 requests per minute
+- `admin-delete-user`: 5 requests per minute
 
-const identifier = req.headers.get("x-forwarded-for") ?? "anonymous";
-const { success } = await ratelimit.limit(identifier);
+**Data Storage:**
+- Rate limit data stored in `rate_limit_log` table
+- RLS enabled with service_role-only access
+- Tracks: identifier (IP), endpoint, request count, time window
+- Automatic cleanup recommended (7-day retention)
 
-if (!success) {
-  return new Response("Too many requests", { status: 429 });
-}
-```
+**Security:**
+- Only service_role can read/write rate limit logs
+- Users cannot query or modify rate limit data
+- Follows same pattern as `admin_events` (audit data)
 
 ## Authentication Security
 
