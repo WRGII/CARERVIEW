@@ -136,8 +136,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="pt-12 pb-20 text-center">
-          <div className="flex flex-col items-center justify-center mb-12">
+        <div className="pt-8 pb-10 text-center">
+          <div className="flex flex-col items-center justify-center mb-6">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-4">
               CarerView
             </h1>
@@ -147,29 +147,10 @@ export default function LandingPage() {
             Better Family and In-Home Caregiving through Clear Observations
           </h2>
 
-          <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+          <p className="mt-4 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             Observing the changes in someone you love can be stressful. And differing opinions among caregivers only adds to that stress...CarerView gives you a simple way to observe and share what's getting easier, what's getting harder, and how things shift day-to-day—so everyone on the care team talks using the same barometer.
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            {/* REVISED: go to Create Account wizard */}
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
-            >
-              Begin Observations Today <ArrowRight className="w-5 h-5" />
-            </Link>
-
-            <Link
-              to="/why"
-              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Why your family needs CarerView"
-            >
-              Why your family needs CarerView
-            </Link>
-          </div>
-
-          <p className="mt-4 text-sm text-slate-gray/60">Your Observations are Vital for their Care Plan!</p>
         </div>
 
         {/* CARERVIEW 1-5 ADL SCALE */}
@@ -221,6 +202,25 @@ export default function LandingPage() {
                 From "Total Assistance" to "Fully Independent" — a clear framework for observing daily living activities
               </p>
             </div>
+
+            <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link
+                to="/create-account"
+                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+              >
+                Begin Observations Today <ArrowRight className="w-5 h-5" />
+              </Link>
+
+              <Link
+                to="/why"
+                className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+                aria-label="Why your family needs CarerView"
+              >
+                Why your family needs CarerView
+              </Link>
+            </div>
+
+            <p className="mt-4 text-center text-sm text-slate-gray/60">Your Observations are Vital for their Care Plan!</p>
           </div>
         </div>
 
