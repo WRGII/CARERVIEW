@@ -370,7 +370,16 @@ export default function CreateAccountPage() {
               {!busy && <ArrowRight className="w-5 h-5" />}
             </button>
 
-            <p className="text-xs text-slate-gray/60">By continuing you agree to the Terms. You can cancel a paid plan any time.</p>
+            <p className="text-xs text-slate-gray/60">
+              By continuing you agree to our{" "}
+              <Link to="/privacy-policy" className="text-cyan-primary hover:text-cyan-hover underline">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link to="/data-policy" className="text-cyan-primary hover:text-cyan-hover underline">
+                Data Policy
+              </Link>. You can cancel a paid plan any time.
+            </p>
           </form>
         </section>
       </div>

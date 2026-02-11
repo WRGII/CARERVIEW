@@ -22,11 +22,13 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
+const ALLOWED_ORIGIN = PUBLIC_SITE_URL || '*'
+
 const JSON_HEADERS: Record<string, string> = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
   'Access-Control-Max-Age': '86400',
   Vary: 'Origin',
 }

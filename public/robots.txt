@@ -4,6 +4,8 @@ Allow: /
 Allow: /why
 Allow: /about
 Allow: /pricing
+Allow: /privacy-policy
+Allow: /data-policy
 
 # Disallow authenticated pages
 Disallow: /caregiver

@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
@@ -18,6 +18,9 @@ import CheckoutSuccess from "./pages/CheckoutSuccess";
 import ResetPassword from "./pages/ResetPassword";
 import AboutPage from "./pages/AboutPage";
 import PricingPage from "./pages/PricingPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import DataPolicyPage from "./pages/DataPolicyPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
@@ -55,6 +58,8 @@ export default function App() {
                   <Route path="/why" element={<WhyCarerView />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/data-policy" element={<DataPolicyPage />} />
                   <Route path="/create-account" element={<CreateAccountPage />} />
                   <Route
                     path="/choose-plan"
@@ -133,8 +138,8 @@ export default function App() {
                   />
                 </Route>
 
-                {/* Fallback */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
             </ErrorBoundary>
