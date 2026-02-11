@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, Shield, Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, Lock } from "lucide-react";
+import ObservationPreview from "../components/ObservationPreview";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { prefetchChoosePlanAssets } from "../hooks/usePrefetchStatic";
@@ -290,6 +291,11 @@ export default function WhyCarerView() {
                   ]}
                   dot="cyan"
                 />
+                <ObservationPreview
+                  questionText="Bathing & personal hygiene"
+                  selectedScore={4}
+                  accentColor="cyan"
+                />
               </CardContent>
             </Card>
 
@@ -308,6 +314,11 @@ export default function WhyCarerView() {
                     "Transportation & errands",
                   ]}
                   dot="mint"
+                />
+                <ObservationPreview
+                  questionText="Medication management"
+                  selectedScore={4}
+                  accentColor="mint"
                 />
               </CardContent>
             </Card>
