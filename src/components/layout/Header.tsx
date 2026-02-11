@@ -119,7 +119,7 @@ export default function Header() {
                     to="/why"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
                   >
-                    Why you need CarerView
+                    Why your family needs CarerView
                   </Link>
                   <Link
                     to="/pricing"
@@ -179,7 +179,7 @@ export default function Header() {
                 onClick={closeMobileMenu}
                 className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
               >
-                Why you need CarerView
+                Why your family needs CarerView
               </Link>
               <Link
                 to="/pricing"

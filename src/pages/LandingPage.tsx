@@ -163,9 +163,9 @@ export default function LandingPage() {
             <Link
               to="/why"
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Why you need CarerView"
+              aria-label="Why your family needs CarerView"
             >
-              Why you need CarerView
+              Why your family needs CarerView
             </Link>
           </div>
 
@@ -348,9 +348,9 @@ export default function LandingPage() {
               <Link
                 to="/why"
                 className="inline-flex items-center gap-3 rounded-xl border-2 border-cyan-primary px-8 py-4 text-lg font-semibold text-cyan-primary hover:bg-cyan-primary/10 transition-all duration-200"
-                aria-label="Why you need CarerView"
+                aria-label="Why your family needs CarerView"
               >
-                Why you need CarerView
+                Why your family needs CarerView
               </Link>
             </div>
           </div>
