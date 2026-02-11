@@ -46,10 +46,7 @@ export function Footer() {
               />
             </div>
             <p className="text-slate-600 text-sm mb-4">
-              Built with caregivers & clinicians in mind. Categories reflect
-              widely used ADL & IADL frameworks and occupational-therapy best
-              practices, translated into everyday language families can use
-              together.
+              Built with family and in-home caregivers in mind. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
             </p>
             <div>
               <Link
