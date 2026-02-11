@@ -232,34 +232,17 @@ export default function WhyCarerView() {
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HERO */}
-        <div className="pt-12 pb-20 text-center">
-          <div className="flex flex-col items-center justify-center mb-8">
+        <div className="pt-8 pb-10 text-center">
+          <div className="flex flex-col items-center justify-center mb-4">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray">
               Your Observations are Vital!
 
             </h1>
           </div>
 
-          <p className="mt-6 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
-            Changes in a loved one’s abilities aren’t always steady or predictable—what happens today may look different tomorrow. CarerView helps you observe these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust care plans more effectively and with greater confidence.
+          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+            Changes in a loved one's abilities aren't always steady or predictable—what happens today may look different tomorrow. CarerView helps you observe these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust care plans more effectively and with greater confidence.
           </p>
-
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
-            >
-              Begin Observation Now <ArrowRight className="w-5 h-5" />
-            </Link>
-
-            <Link
-              to={{ pathname: "/", hash: "#get-started" }}
-              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Sign In"
-            >
-              Sign In
-            </Link>
-          </div>
         </div>
 
         {/* HOW CARERVIEW HELPS */}
@@ -327,6 +310,23 @@ export default function WhyCarerView() {
           <p className="text-center text-slate-gray/60 mt-8 italic">
             Observations are custom so CarerView fits your family's reality.
           </p>
+
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/create-account"
+              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+            >
+              Begin Observation Now <ArrowRight className="w-5 h-5" />
+            </Link>
+
+            <Link
+              to={{ pathname: "/", hash: "#get-started" }}
+              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
+              aria-label="Sign In"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
 
         {/* PERSONAS - MOVED TO POSITION 2 */}
@@ -358,24 +358,6 @@ export default function WhyCarerView() {
                 </div>
               </article>
             ))}
-          </div>
-
-          {/* Relocated action buttons */}
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
-            >
-              Begin Observation Now <ArrowRight className="w-5 h-5" />
-            </Link>
-
-            <Link
-              to={{ pathname: "/", hash: "#get-started" }}
-              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Sign In"
-            >
-              Sign In
-            </Link>
           </div>
         </section>
 
