@@ -152,12 +152,12 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             }
             items={[
               {
-                label: 'Export as DOCX',
+                label: 'Word document (.docx)',
                 icon: <File className="w-4 h-4" />,
                 onClick: () => onExport(observationId, 'docx')
               },
               {
-                label: 'Export as CSV',
+                label: 'Spreadsheet (.csv)',
                 icon: <Table className="w-4 h-4" />,
                 onClick: () => onExport(observationId, 'csv')
               }

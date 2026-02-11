@@ -45,8 +45,8 @@ export function Footer() {
                 className="w-8 h-8 object-contain opacity-80"
               />
             </div>
-            <p className="text-slate-600 text-sm mb-4">
-              Built with family and in-home caregivers in mind. Categories reflect widely used ADL & IADL frameworks and occupational-therapy best practices, translated into everyday language families can use together.
+            <p className="text-slate-700 text-sm mb-4">
+              Built by caregivers, for caregivers. We translate clinical assessment frameworks into everyday language your whole family can use together.
             </p>
             <div>
               <Link
@@ -63,7 +63,7 @@ export function Footer() {
             <h4 className="font-semibold text-slate-800 text-base mb-4">
               Contact
             </h4>
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-slate-700">
               <div>
                 <span className="block text-slate-700 font-medium mb-1">
                   Suggestions? Questions?

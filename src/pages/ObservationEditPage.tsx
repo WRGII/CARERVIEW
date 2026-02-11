@@ -9,6 +9,8 @@ import ObservationForm from "../components/caregiver/ObservationForm";
 import { useObservationById } from "../hooks/useObservations";
 import { ErrorBoundary } from "../components/util/ErrorBoundary";
 import { useMemberFrozen } from "../hooks/useMemberFrozen";
+import Breadcrumbs from "../components/common/Breadcrumbs";
+import { Button } from "../components/ui/Button";
 
 type FormType = "ADL" | "IADL" | "COMPREHENSIVE";
 
@@ -38,23 +40,34 @@ export default function ObservationEditPage() {
   const isAuthor = obs.author_user_id === user.id;
   const readOnly = !isAuthor || frozen;
 
+  const formLabel = formType === 'COMPREHENSIVE' ? 'Comprehensive' : formType === 'ADL' ? 'Daily Living (ADL)' : 'Life Skills (IADL)';
+
   return (
     <PageLayout
-      title="Edit Observation"
+      title=""
       user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
-        <button type="button" className="underline" onClick={() => navigate("/caregiver")}>
+        <Button variant="outline" onClick={() => navigate("/caregiver")}>
           Back to Dashboard
-        </button>
+        </Button>
       }
     >
-      <div className="mb-4 text-sm text-slate-600 space-y-1">
-        <div><strong>ID:</strong> {obs.id}</div>
-        <div><strong>Form:</strong> {formType}</div>
-        {!isAuthor && <div className="text-amber-700">View only. You are not the author.</div>}
-        {isAuthor && frozen && <div className="text-red-600">Seat frozen. You cannot edit until the owner restores your seat.</div>}
-      </div>
+      <Breadcrumbs items={[
+        { label: 'Dashboard', to: '/caregiver' },
+        { label: `${formLabel} Observation` },
+      ]} />
+
+      {!isAuthor && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+          You're viewing someone else's observation. You can see the details but can't make changes.
+        </div>
+      )}
+      {isAuthor && frozen && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
+          Your spot on the care team is paused. The Family Circle owner can fix this from their billing settings.
+        </div>
+      )}
 
       <ErrorBoundary
         fallback={

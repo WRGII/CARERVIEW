@@ -1,9 +1,11 @@
 // src/components/caregiver/AccountMenu.tsx
 import React from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { ChevronDown, LogOut, CreditCard } from "lucide-react";
+import { ChevronDown, LogOut, CreditCard, GraduationCap } from "lucide-react";
+import { useOnboarding } from "../../hooks/useOnboarding";
 
 export default function AccountMenu() {
+  const { restartTutorial } = useOnboarding();
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -93,6 +95,16 @@ export default function AccountMenu() {
           >
             <CreditCard className="w-4 h-4 text-slate-500" aria-hidden="true" />
             Manage Billing
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { restartTutorial(); close(); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
+            role="menuitem"
+          >
+            <GraduationCap className="w-4 h-4 text-slate-500" aria-hidden="true" />
+            Restart Tutorial
           </button>
 
           <div className="my-1 h-px bg-slate-200" />
