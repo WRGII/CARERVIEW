@@ -158,6 +158,7 @@ export default function CreateAccountPage() {
       const session = data.session;
 
       if (session && user?.id) {
+        window.plausible('Signup', { props: { plan: selectedPlanKey } });
         const { error: upErr } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? email,

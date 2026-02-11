@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { Database, CheckCircle, XCircle, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDatabaseHealth } from '../../hooks/useDatabaseHealth';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function DatabaseStatus() {
+  const { isAdmin, loading: authLoading } = useAuth();
   const { isChecking, connectionStatus, schemaValidation, envValidation, overallStatus, retry } =
     useDatabaseHealth(true);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (authLoading || !isAdmin) {
+    return null;
+  }
 
   if (overallStatus === 'unchecked') {
     return null;

@@ -68,6 +68,7 @@ export default function ChoosePlan() {
             message: 'You already have an active plan!'
           });
         } else {
+          window.plausible('Plan Selected', { props: { plan: 'free' } });
           setStatusMessage({
             type: 'success',
             message: 'Free plan activated successfully!'
@@ -108,6 +109,7 @@ export default function ChoosePlan() {
         throw new Error('No checkout URL received');
       }
 
+      window.plausible('Plan Selected', { props: { plan: planId } });
       window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);

@@ -90,6 +90,7 @@ export default function NewObservationPage() {
       // optimistic decrement
       if (remaining !== null) setRemaining(Math.max(remaining - 1, 0));
 
+      window.plausible('Observation Created', { props: { type: mode } });
       navigate(`/caregiver/observations/${data.id}`);
     } catch (e: any) {
       setErr(e?.message ?? String(e));
