@@ -1,20 +1,12 @@
 // src/pages/LandingPage.tsx
-import React, { useEffect, useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { Shield, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, CalendarCheck, HeartHandshake, ScanSearch } from 'lucide-react'
+import React, { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, HeartHandshake, ScanSearch } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
+import AuthForm from '../components/common/AuthForm'
 
 export default function LandingPage() {
-  const navigate = useNavigate()
   const location = useLocation()
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
-  const [sendingReset, setSendingReset] = useState(false)
 
   // Smooth-scroll to #get-started if the page was opened with that hash
   useEffect(() => {
@@ -24,111 +16,6 @@ export default function LandingPage() {
       }, 50)
     }
   }, [location.hash])
-
-  // --- helpers ---------------------------------------------------------------
-
-  /** Ensure a profile exists and is valid. Returns the resulting profile. */
-  async function ensureProfile(userId: string, emailAddr: string | null, displayName: string | null) {
-    const { data: prof, error: selErr } = await supabase
-      .from('profiles')
-      .select('id, role, disabled')
-      .eq('id', userId)
-      .maybeSingle()
-    if (selErr) throw selErr
-
-    if (!prof) {
-      const { error: upErr } = await supabase.from('profiles').upsert({
-        id: userId,
-        email: emailAddr ?? '',
-        display_name: displayName ?? '',
-        role: 'caregiver',
-        disabled: false,
-      })
-      if (upErr) throw upErr
-      return { role: 'caregiver', disabled: false }
-    }
-
-    return prof
-  }
-
-  /** Route the newly-signed-in user based on their profile role. */
-  async function routeAfterLogin() {
-    // make sure session is live
-    await supabase.auth.getSession()
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) throw new Error('Signed in, but no active session was found.')
-
-    const prof = await ensureProfile(
-      user.id,
-      user.email ?? null,
-      user.user_metadata?.display_name ?? null
-    )
-
-    if (prof.disabled) {
-      await supabase.auth.signOut()
-      throw new Error('Account disabled. Please contact support.')
-    }
-
-    navigate(prof.role === 'admin' ? '/admin' : '/caregiver', { replace: true })
-  }
-
-  // --- submit handlers -------------------------------------------------------
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (loading) return
-    setLoading(true)
-    setError(null)
-    setInfo(null)
-
-    try {
-      const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password })
-      if (siErr) throw siErr
-
-      // Defensive: make sure we actually got a user back
-      const user = data?.user
-      if (!user) {
-        throw new Error('Sign-in failed. Please try again.')
-      }
-
-      await routeAfterLogin()
-    } catch (err: any) {
-      const msg = err?.message || 'Authentication failed'
-      // Normalize common Supabase error string
-      setError(
-        msg === 'Invalid login credentials'
-          ? 'Incorrect email or password. Please check your credentials or try resetting your password.'
-          : msg
-      )
-    } finally {
-      // Always clear the button state even if we navigated
-      setLoading(false)
-    }
-  }
-
-  const handlePasswordReset = async () => {
-    if (!email) {
-      setError('Enter your email above first.')
-      return
-    }
-    setSendingReset(true)
-    setError(null)
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-      if (error) throw error
-      setInfo('If that email exists, a reset link has been sent.')
-    } catch (e: any) {
-      setError(e?.message || 'Failed to send password reset email')
-    } finally {
-      setSendingReset(false)
-    }
-  }
 
   // --- UI --------------------------------------------------------------------
 
@@ -384,87 +271,18 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Auth form (Sign In only) */}
+        {/* Auth form */}
         <div id="get-started" className="py-20">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-12">
-              <h3 className="text-4xl font-bold text-slate-gray mb-6">Sign in to your account</h3>
-              <p className="text-xl text-slate-gray/80">
-                Return to your caregiver dashboard.
+          <div className="max-w-xl mx-auto">
+            <div className="text-center mb-10">
+              <h3 className="text-4xl font-bold text-slate-gray mb-4">
+                Get started today
+              </h3>
+              <p className="text-lg text-slate-gray/75 leading-relaxed">
+                Create an account or sign in to return to your caregiver dashboard.
               </p>
             </div>
-
-            <div className="bg-warm-white p-8 rounded-2xl shadow-xl border border-slate-gray/20">
-              {/* Logo in top left corner */}
-              <div className="flex justify-start mb-6">
-                <img
-                  src="/CareView_logo_1_colored_highres.png"
-                  alt="CarerView Logo"
-                  className="w-14 h-14 md:w-16 md:h-16 object-contain"
-                />
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-gray mb-2">Email address</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-gray mb-2">Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-3 text-base bg-warm-white text-slate-gray"
-                    placeholder="Your password"
-                  />
-                </div>
-
-                {error && (
-                  <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-4">
-                    <p className="text-slate-gray text-sm">{error}</p>
-                  </div>
-                )}
-
-                {info && (
-                  <div className="rounded-lg bg-mint-green/30 border border-mint-green p-4">
-                    <p className="text-slate-gray text-sm">{info}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-cyan-primary px-6 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all duration-200"
-                >
-                  {loading ? 'Signing in…' : 'Sign In'}
-                  {!loading && <ArrowRight className="w-5 h-5" />}
-                </button>
-              </form>
-
-              <div className="mt-6 flex items-center justify-between">
-                <button
-                  onClick={handlePasswordReset}
-                  disabled={sendingReset}
-                  className="text-sm text-cyan-primary hover:underline disabled:opacity-60"
-                >
-                  Forgot your password?
-                </button>
-
-                <Link to="/create-account" className="text-sm text-cyan-primary hover:underline">
-                  Create account
-                </Link>
-              </div>
-            </div>
+            <AuthForm initialMode="signin" showToggle={true} />
           </div>
         </div>
 
