@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { Heart, Shield, Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, Lock } from 'lucide-react'
+import { Shield, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, CalendarCheck, HeartHandshake, ScanSearch } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 
 export default function LandingPage() {
@@ -227,116 +227,75 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* A shared language for care */}
+        {/* Less confusion – Shared Language of Care */}
         <div className="py-20">
-          <div className="text-center mb-16">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">A shared language for care</h3>
+          <div className="text-center mb-14">
+            <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">Why it works</p>
+            <h3 className="text-4xl font-bold text-slate-gray mb-5">Less confusion &mdash; Shared Language of Care</h3>
+            <p className="text-xl text-slate-gray/70 max-w-2xl mx-auto leading-relaxed">
+              One consistent framework that brings family members, clinicians, and in-home caregivers onto the same page.
+            </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Clock className="w-8 h-8 text-cyan-primary" />
+          {/* Top row: 2 feature cards */}
+          <div className="grid gap-6 sm:grid-cols-2 mb-6">
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-warm-white group">
+              <CardContent className="p-8">
+                <div className="w-14 h-14 bg-cyan-primary/15 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-cyan-primary/25 transition-colors duration-300">
+                  <Clock className="w-7 h-7 text-cyan-primary" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Simple check-ins</h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Spend just a few  minutes noting how things went across core Activities of Daily Living. Create quick check-ins or complete Observations anytime.
+                <h4 className="text-xl font-semibold text-slate-gray mb-3">Simple check-ins</h4>
+                <p className="text-slate-gray/75 leading-relaxed">
+                  Spend just a few minutes noting how things went across core Activities of Daily Living. Create quick check-ins or complete Observations anytime.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-mint-green/60 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-8 h-8 text-slate-gray" />
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-warm-white group">
+              <CardContent className="p-8">
+                <div className="w-14 h-14 bg-peach-blush/60 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-peach-blush/80 transition-colors duration-300">
+                  <TrendingUp className="w-7 h-7 text-slate-gray" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Clear 1–5 scale</h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Easy wording —no medical jargon— grounded in occupational therapy best practices that families can understand.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-peach-blush/60 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="w-8 h-8 text-slate-gray" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Trends you can trust</h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Not just how it felt today, but observe changes over days - weeks - months. Observed trends highlight when to adjust routines or supports.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Users className="w-8 h-8 text-cyan-primary" />
-                </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">Bring everyone together</h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Share private Observations with family and clinicians so discussions start from the same definitions and data.
+                <h4 className="text-xl font-semibold text-slate-gray mb-3">Trends you can trust</h4>
+                <p className="text-slate-gray/75 leading-relaxed">
+                  Not just how it felt today — observe changes over days, weeks, and months. Patterns highlight when to adjust routines or supports.
                 </p>
               </CardContent>
             </Card>
           </div>
-        </div>
 
-        {/* Why Families Choose CarerView */}
-        <div className="py-20 bg-gradient-to-r from-mint-green/30 to-peach-blush/20 rounded-3xl">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="text-center mb-16">
-              <h3 className="text-4xl font-bold text-slate-gray mb-6">Less second-guessing. More peace of mind.</h3>
+          {/* Bottom row: 4 benefit items */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-gradient-to-br from-cyan-primary/8 to-cyan-primary/3 rounded-2xl p-6 border border-cyan-primary/15 hover:border-cyan-primary/30 transition-colors duration-300">
+              <div className="w-11 h-11 bg-cyan-primary/20 rounded-xl flex items-center justify-center mb-4">
+                <Stethoscope className="w-5 h-5 text-cyan-primary" />
+              </div>
+              <h4 className="text-base font-semibold text-slate-gray mb-2">Make doctor visits count</h4>
+              <p className="text-sm text-slate-gray/75 leading-relaxed">Arrive with specific observations instead of fuzzy memories.</p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-cyan-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-warm-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-semibold text-slate-gray mb-2">Make doctor visits count</h4>
-                    <p className="text-slate-gray/80">Arrive with specific observations instead of fuzzy memories.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-mint-green rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-slate-gray" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-semibold text-slate-gray mb-2">Reduce family friction</h4>
-                    <p className="text-slate-gray/80">Align siblings and supporters around the same facts and wording.</p>
-                  </div>
-                </div>
+            <div className="bg-gradient-to-br from-mint-green/20 to-mint-green/8 rounded-2xl p-6 border border-mint-green/30 hover:border-mint-green/50 transition-colors duration-300">
+              <div className="w-11 h-11 bg-mint-green/40 rounded-xl flex items-center justify-center mb-4">
+                <MessageCircle className="w-5 h-5 text-slate-600" />
               </div>
+              <h4 className="text-base font-semibold text-slate-gray mb-2">Reduce family friction</h4>
+              <p className="text-sm text-slate-gray/75 leading-relaxed">Align siblings and supporters around the same facts and wording.</p>
+            </div>
 
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-peach-blush rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-warm-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-semibold text-slate-gray mb-2">Spot small shifts early</h4>
-                    <p className="text-slate-gray/80">Gentle trends highlight when to adjust routines, medications, or supports.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-cyan-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <CheckCircle className="w-5 h-5 text-warm-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-semibold text-slate-gray mb-2">Honor your loved one</h4>
-                    <p className="text-slate-gray/80">
-                      Focus on what they <em>can</em> do today, while observing where help is needed.
-                    </p>
-                  </div>
-                </div>
+            <div className="bg-gradient-to-br from-peach-blush/40 to-peach-blush/15 rounded-2xl p-6 border border-peach-blush/40 hover:border-peach-blush/60 transition-colors duration-300">
+              <div className="w-11 h-11 bg-peach-blush/60 rounded-xl flex items-center justify-center mb-4">
+                <ScanSearch className="w-5 h-5 text-slate-600" />
               </div>
+              <h4 className="text-base font-semibold text-slate-gray mb-2">Spot small shifts early</h4>
+              <p className="text-sm text-slate-gray/75 leading-relaxed">Gentle trends highlight when to adjust routines, medications, or supports.</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-cyan-primary/8 to-mint-green/10 rounded-2xl p-6 border border-slate-200 hover:border-cyan-primary/25 transition-colors duration-300">
+              <div className="w-11 h-11 bg-cyan-primary/15 rounded-xl flex items-center justify-center mb-4">
+                <HeartHandshake className="w-5 h-5 text-cyan-primary" />
+              </div>
+              <h4 className="text-base font-semibold text-slate-gray mb-2">Honor your loved one</h4>
+              <p className="text-sm text-slate-gray/75 leading-relaxed">Focus on what they <em>can</em> do today, while observing where help is needed.</p>
             </div>
           </div>
         </div>
