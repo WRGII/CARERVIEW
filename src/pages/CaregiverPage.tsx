@@ -1,8 +1,8 @@
 // src/pages/CaregiverPage.tsx
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
 import { PageLayout } from '../components/layout/PageLayout';
@@ -248,6 +248,26 @@ export default function CaregiverPage() {
         <div className="bg-warm-white border border-slate-gray/20 rounded-xl shadow-sm overflow-hidden">
           <ScoreLegendDisplay compact={true} />
         </div>
+      </div>
+
+      <div className="mb-8">
+        <Link
+          to="/caregiver/dementia-scale"
+          className="group flex items-center justify-between rounded-xl border border-cyan-primary/30 bg-white px-5 py-4 shadow-sm hover:border-cyan-primary/60 hover:shadow-md transition-all duration-200"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-primary/10 flex items-center justify-center group-hover:bg-cyan-primary/20 transition-colors">
+              <BookOpen className="w-5 h-5 text-cyan-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Dementia Scale Reference</p>
+              <p className="text-xs text-slate-500 mt-0.5">Global Deterioration Scale (GDS) — 7 stages of cognitive decline</p>
+            </div>
+          </div>
+          <span className="text-xs font-medium text-cyan-primary group-hover:translate-x-0.5 transition-transform">
+            View &rarr;
+          </span>
+        </Link>
       </div>
 
       <div className="space-y-6">

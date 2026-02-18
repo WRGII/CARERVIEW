@@ -29,6 +29,7 @@ import AdminDeleteUser from "./pages/AdminDeleteUser";
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
+import DementiaScalePage from "./pages/DementiaScalePage";
 
 import AcceptInvite from "./pages/AcceptInvite";
 import TeamSettings from "./pages/TeamSettings";
@@ -133,6 +134,14 @@ export default function App() {
                     element={
                       <CaregiverGuard>
                         <ObservationEditPage />
+                      </CaregiverGuard>
+                    }
+                  />
+                  <Route
+                    path="/caregiver/dementia-scale"
+                    element={
+                      <CaregiverGuard>
+                        <DementiaScalePage />
                       </CaregiverGuard>
                     }
                   />
