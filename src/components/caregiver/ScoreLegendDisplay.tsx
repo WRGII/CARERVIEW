@@ -88,8 +88,11 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
       <div className={`${padX} ${padY} bg-gradient-to-r from-blue-50 to-slate-50`}>
         {/* Title */}
         <div className={`text-center ${compact ? 'mb-2 md:mb-3' : 'mb-4 md:mb-6'}`}>
+          <p className={`${compact ? 'text-xs md:text-sm' : 'text-sm md:text-base'} font-semibold text-slate-500 uppercase tracking-widest mb-0.5`}>
+            Activities of Daily Living
+          </p>
           <h2 className={`${titleSize} font-bold text-slate-800 tracking-wide`}>
-            CARERVIEW 1-5 ADL SCALE
+            CarerView 1–5 Scale
           </h2>
         </div>
 
@@ -113,12 +116,12 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
                   } ${isLast ? 'rounded-r-lg' : ''} relative`}
                 >
                   <div className="text-center pt-2 md:pt-4 pb-1 md:pb-2">
-                    <span className={`font-bold text-white ${compact ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'}`}>
+                    <span className={`font-bold text-slate-700 ${compact ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'}`}>
                       {item.score}
                     </span>
                   </div>
                   <div className={`${compact ? 'px-0.5 md:px-1 pb-1 md:pb-2' : 'px-1 md:px-2 pb-2'}`}>
-                    <div className={`text-center text-white font-semibold leading-tight ${compact ? 'text-[8px] md:text-xs' : 'text-[10px] md:text-sm'}`}>
+                    <div className={`text-center text-slate-700 font-semibold leading-tight ${compact ? 'text-[8px] md:text-xs' : 'text-[10px] md:text-sm'}`}>
                       {scoreInfo.title}
                     </div>
                   </div>
@@ -141,7 +144,7 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
             return (
               <div key={item.score} className="text-center">
                 <div
-                  className={`inline-flex items-center justify-center rounded-full text-white font-bold mb-1 md:mb-2 ${
+                  className={`inline-flex items-center justify-center rounded-full text-slate-700 font-bold mb-1 md:mb-2 ${
                     compact ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'
                   } ${getScoreColor(item.score)}`}
                 >

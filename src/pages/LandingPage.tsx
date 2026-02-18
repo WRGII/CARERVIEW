@@ -157,8 +157,11 @@ export default function LandingPage() {
         <div className="py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
           <div className="max-w-6xl mx-auto px-8">
             <div className="text-center mb-12">
+              <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
+                Activities of Daily Living
+              </p>
               <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
-                CarerView 1-5 ADL Scale
+                CarerView 1–5 Scale
               </h2>
               <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
                 Our simple 1-5 scale helps you observe and communicate changes in daily living activities with clarity and consistency.
@@ -171,23 +174,23 @@ export default function LandingPage() {
                 <span className="text-white text-sm">👎</span>
               </div>
               <div className="flex flex-1 max-w-4xl">
-                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-white">
+                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-2">1</span>
                   <span className="text-sm font-semibold text-center px-2">Total Assistance</span>
                 </div>
-                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-white">
+                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-2">2</span>
                   <span className="text-sm font-semibold text-center px-2">Constant Shared Effort</span>
                 </div>
-                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-white">
+                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-2">3</span>
                   <span className="text-sm font-semibold text-center px-2">Independent with Support</span>
                 </div>
-                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-gray">
+                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-2">4</span>
                   <span className="text-sm font-semibold text-center px-2">Independent with Difficulty</span>
                 </div>
-                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-gray">
+                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-2">5</span>
                   <span className="text-sm font-semibold text-center px-2">Fully Independent</span>
                 </div>
