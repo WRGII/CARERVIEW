@@ -244,7 +244,7 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-cyan-primary/15 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-cyan-primary/25 transition-colors duration-300">
                   <Clock className="w-7 h-7 text-cyan-primary" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-3">Simple check-ins</h4>
+                <h4 className="text-lg font-semibold text-slate-gray mb-3">Simple check-ins</h4>
                 <p className="text-slate-gray/75 leading-relaxed">
                   Spend just a few minutes noting how things went across core Activities of Daily Living. Create quick check-ins or complete Observations anytime.
                 </p>
@@ -256,7 +256,7 @@ export default function LandingPage() {
                 <div className="w-14 h-14 bg-peach-blush/60 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-peach-blush/80 transition-colors duration-300">
                   <TrendingUp className="w-7 h-7 text-slate-gray" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-3">Trends you can trust</h4>
+                <h4 className="text-lg font-semibold text-slate-gray mb-3">Trends you can trust</h4>
                 <p className="text-slate-gray/75 leading-relaxed">
                   Not just how it felt today — observe changes over days, weeks, and months. Patterns highlight when to adjust routines or supports.
                 </p>
@@ -270,32 +270,32 @@ export default function LandingPage() {
               <div className="w-11 h-11 bg-cyan-primary/20 rounded-xl flex items-center justify-center mb-4">
                 <Stethoscope className="w-5 h-5 text-cyan-primary" />
               </div>
-              <h4 className="text-base font-semibold text-slate-gray mb-2">Make doctor visits count</h4>
-              <p className="text-sm text-slate-gray/75 leading-relaxed">Arrive with specific observations instead of fuzzy memories.</p>
+              <h4 className="text-lg font-semibold text-slate-gray mb-2">Make doctor visits count</h4>
+              <p className="text-slate-gray/75 leading-relaxed">Arrive with specific observations instead of fuzzy memories.</p>
             </div>
 
             <div className="bg-gradient-to-br from-mint-green/20 to-mint-green/8 rounded-2xl p-6 border border-mint-green/30 hover:border-mint-green/50 transition-colors duration-300">
               <div className="w-11 h-11 bg-mint-green/40 rounded-xl flex items-center justify-center mb-4">
                 <MessageCircle className="w-5 h-5 text-slate-600" />
               </div>
-              <h4 className="text-base font-semibold text-slate-gray mb-2">Reduce family friction</h4>
-              <p className="text-sm text-slate-gray/75 leading-relaxed">Align siblings and supporters around the same facts and wording.</p>
+              <h4 className="text-lg font-semibold text-slate-gray mb-2">Reduce family friction</h4>
+              <p className="text-slate-gray/75 leading-relaxed">Align siblings and supporters around the same facts and wording.</p>
             </div>
 
             <div className="bg-gradient-to-br from-peach-blush/40 to-peach-blush/15 rounded-2xl p-6 border border-peach-blush/40 hover:border-peach-blush/60 transition-colors duration-300">
               <div className="w-11 h-11 bg-peach-blush/60 rounded-xl flex items-center justify-center mb-4">
                 <ScanSearch className="w-5 h-5 text-slate-600" />
               </div>
-              <h4 className="text-base font-semibold text-slate-gray mb-2">Spot small shifts early</h4>
-              <p className="text-sm text-slate-gray/75 leading-relaxed">Gentle trends highlight when to adjust routines, medications, or supports.</p>
+              <h4 className="text-lg font-semibold text-slate-gray mb-2">Spot small shifts early</h4>
+              <p className="text-slate-gray/75 leading-relaxed">Gentle trends highlight when to adjust routines, medications, or supports.</p>
             </div>
 
             <div className="bg-gradient-to-br from-cyan-primary/8 to-mint-green/10 rounded-2xl p-6 border border-slate-200 hover:border-cyan-primary/25 transition-colors duration-300">
               <div className="w-11 h-11 bg-cyan-primary/15 rounded-xl flex items-center justify-center mb-4">
                 <HeartHandshake className="w-5 h-5 text-cyan-primary" />
               </div>
-              <h4 className="text-base font-semibold text-slate-gray mb-2">Honor your loved one</h4>
-              <p className="text-sm text-slate-gray/75 leading-relaxed">Focus on what they <em>can</em> do today, while observing where help is needed.</p>
+              <h4 className="text-lg font-semibold text-slate-gray mb-2">Honor your loved one</h4>
+              <p className="text-slate-gray/75 leading-relaxed">Focus on what they <em>can</em> do today, while observing where help is needed.</p>
             </div>
           </div>
         </div>
