@@ -1,5 +1,4 @@
 import React from 'react'
-import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useLegend } from '../../hooks/useLegend'
 
 type Props = {
@@ -78,8 +77,6 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
   const padX = compact ? 'px-3 md:px-4' : 'px-6'
   const padY = compact ? 'py-2 md:py-3' : 'py-4'
   const titleSize = compact ? 'text-xl md:text-3xl' : 'text-2xl md:text-3xl'
-  const iconWrap = compact ? 'w-8 h-8 md:w-10 md:h-10' : 'w-12 h-12 md:w-16 md:h-16'
-  const icon = compact ? 'w-4 h-4 md:w-5 md:h-5' : 'w-6 h-6 md:w-8 md:h-8'
   const gridCols = compact ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-1 md:grid-cols-5'
   const descText = compact ? 'text-[10px] md:text-xs' : 'text-xs md:text-sm'
 
@@ -97,44 +94,34 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
         </div>
 
         {/* Horizontal Scale */}
-        <div className={`flex items-center justify-center ${compact ? 'space-x-1 md:space-x-2' : 'space-x-2 md:space-x-4'}`}>
-          <div className="flex-shrink-0">
-            <div className={`${iconWrap} bg-slate-600 rounded-full flex items-center justify-center`}>
-              <ThumbsDown className={`${icon} text-white`} />
-            </div>
-          </div>
-
-          <div className="flex flex-1 max-w-4xl">
-            {filteredLegend.map((item, index) => {
-              const scoreInfo = getScoreInfo(item.description)
-              const isLast = index === filteredLegend.length - 1
-              return (
-                <div
-                  key={item.score}
-                  className={`flex-1 ${getScoreColor(item.score)} ${blockMinH} ${
-                    index === 0 ? 'rounded-l-lg' : ''
-                  } ${isLast ? 'rounded-r-lg' : ''} relative`}
-                >
-                  <div className="text-center pt-2 md:pt-4 pb-1 md:pb-2">
-                    <span className={`font-bold text-slate-700 ${compact ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'}`}>
-                      {item.score}
-                    </span>
-                  </div>
-                  <div className={`${compact ? 'px-0.5 md:px-1 pb-1 md:pb-2' : 'px-1 md:px-2 pb-2'}`}>
-                    <div className={`text-center text-slate-700 font-semibold leading-tight ${compact ? 'text-[8px] md:text-xs' : 'text-[10px] md:text-sm'}`}>
-                      {scoreInfo.title}
-                    </div>
+        <div className="flex flex-1 max-w-4xl mx-auto rounded-lg overflow-hidden">
+          {filteredLegend.map((item, index) => {
+            const scoreInfo = getScoreInfo(item.description)
+            const isLast = index === filteredLegend.length - 1
+            return (
+              <div
+                key={item.score}
+                className={`flex-1 ${getScoreColor(item.score)} ${blockMinH} ${
+                  index === 0 ? 'rounded-l-lg' : ''
+                } ${isLast ? 'rounded-r-lg' : ''} relative`}
+              >
+                <div className="text-center pt-2 md:pt-4 pb-1 md:pb-2">
+                  <span className={`font-bold text-slate-700 ${compact ? 'text-lg md:text-2xl' : 'text-2xl md:text-3xl'}`}>
+                    {item.score}
+                  </span>
+                </div>
+                <div className={`${compact ? 'px-0.5 md:px-1 pb-1 md:pb-2' : 'px-1 md:px-2 pb-2'}`}>
+                  <div className={`text-center text-slate-700 font-semibold leading-tight ${compact ? 'text-[8px] md:text-xs' : 'text-[10px] md:text-sm'}`}>
+                    {scoreInfo.title}
                   </div>
                 </div>
-              )
-            })}
-          </div>
-
-          <div className="flex-shrink-0">
-            <div className={`${iconWrap} bg-slate-600 rounded-full flex items-center justify-center`}>
-              <ThumbsUp className={`${icon} text-white`} />
-            </div>
-          </div>
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>More help needed</span>
+          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>More independent</span>
         </div>
 
         {/* Detailed Descriptions */}
