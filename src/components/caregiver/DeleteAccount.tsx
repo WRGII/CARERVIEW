@@ -72,7 +72,7 @@ export default function DeleteAccount() {
             </p>
 
             <div className="bg-white border border-red-200 rounded-md p-4 mb-4">
-              <p className="text-sm font-medium text-gray-900 mb-2">
+              <p className="text-sm font-medium text-slate-700 mb-2">
                 The following data will be permanently deleted:
               </p>
               <ul className="space-y-1 text-sm text-gray-700">

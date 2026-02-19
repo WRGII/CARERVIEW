@@ -129,7 +129,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             <ArrowLeft className="w-4 h-4" />
             <span>Back to List</span>
           </Button>
-          <h2 className="text-xl font-semibold text-slate-900">View Observation</h2>
+          <h2 className="text-xl font-semibold text-slate-700">View Observation</h2>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handlePrint} disabled={isExporting || isDeleting} className="flex items-center space-x-2">

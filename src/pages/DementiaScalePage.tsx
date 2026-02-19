@@ -281,7 +281,7 @@ export default function DementiaScalePage() {
               <Info className="w-5 h-5 text-cyan-primary" />
             </div>
             <div className="space-y-3">
-              <h2 className="text-xl font-bold text-slate-900">
+              <h2 className="text-xl font-bold text-slate-700">
                 About the Global Deterioration Scale
               </h2>
               <div className="text-slate-600 leading-relaxed space-y-2 text-sm md:text-base">

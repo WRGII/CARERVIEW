@@ -274,7 +274,7 @@ export default function CaregiverPage() {
         {viewMode === 'list' && (
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Your Observations</h2>
+              <h2 className="text-2xl font-bold text-slate-700 mb-2">Your Observations</h2>
               <p className="text-slate-600">Track and manage your caregiver observations</p>
             </div>
           </div>

@@ -20,7 +20,7 @@ export default function WelcomeBanner() {
           <Heart className="w-5 h-5 text-cyan-600" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-900 mb-1">Welcome to CarerView</h3>
+          <h3 className="font-semibold text-slate-700 mb-1">Welcome to CarerView</h3>
           <p className="text-slate-700 text-sm leading-relaxed">
             You're in the right place. Start by creating your first observation whenever you're ready -- there's no rush.
             Each one helps the whole care team stay on the same page.

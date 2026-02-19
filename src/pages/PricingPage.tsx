@@ -40,7 +40,7 @@ export default function PricingPage() {
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-slate-700">
             Simple Plans for Better Caregiving
           </h1>
           <p className="mt-4 text-base leading-7 text-slate-600">
@@ -57,7 +57,7 @@ export default function PricingPage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Free Observer */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Free Observer</h2>
+            <h2 className="text-lg font-semibold text-slate-700">Free Observer</h2>
             <p className="mt-1 text-sm text-slate-500">Always free</p>
             <p className="mt-4 text-sm text-slate-600">
               Make a note when you visit. Stay connected—free forever.
@@ -82,7 +82,7 @@ export default function PricingPage() {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-cyan-600 px-3 py-1 text-xs font-semibold text-white">
               Recommended
             </div>
-            <h2 className="text-lg font-semibold text-slate-900">Primary Caregiver</h2>
+            <h2 className="text-lg font-semibold text-slate-700">Primary Caregiver</h2>
             <p className="mt-1 text-sm text-slate-700">
               <span className="font-semibold">$12.50</span> per quarter{" "}
               <span className="text-slate-500">(&lt; $1/week)</span>
@@ -111,7 +111,7 @@ export default function PricingPage() {
 
           {/* Family Circle */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">Family Circle</h2>
+            <h2 className="text-lg font-semibold text-slate-700">Family Circle</h2>
             <p className="mt-1 text-sm text-slate-700">
               <span className="font-semibold">$25.50</span> per quarter{" "}
               <span className="text-slate-500">(&lt; $9/month)</span>
@@ -139,12 +139,12 @@ export default function PricingPage() {
 
       {/* FAQs */}
       <section className="mx-auto max-w-3xl px-4 pb-24">
-        <h3 className="text-xl font-semibold text-slate-900">Questions & Answers</h3>
+        <h3 className="text-xl font-semibold text-slate-700">Questions & Answers</h3>
         <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
           {faqs.map((f, i) => (
             <details key={i} className="group p-4 [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex cursor-pointer items-center justify-between">
-                <span className="text-sm font-medium text-slate-900">{f.q}</span>
+                <span className="text-sm font-medium text-slate-700">{f.q}</span>
                 <ChevronDown className="h-5 w-5 text-slate-500 transition-transform group-open:rotate-180" />
               </summary>
               <p className="mt-2 text-sm leading-6 text-slate-600">{f.a}</p>

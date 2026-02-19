@@ -45,7 +45,7 @@ export function PageLayout({
         {(title || subtitle || !hideSignOut || headerRight) && (
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-              {title && <h1 className="text-3xl font-bold text-slate-900 mb-2">{title}</h1>}
+              {title && <h1 className="text-3xl font-bold text-slate-700 mb-2">{title}</h1>}
               {subtitle && <div className="text-slate-600">{subtitle}</div>}
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">

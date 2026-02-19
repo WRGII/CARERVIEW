@@ -15,7 +15,7 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-900">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">Score Reference</h3>
         </div>
         <div className="p-4 md:p-6">
           <div className="text-slate-500 text-center py-6 md:py-8">Loading score reference...</div>
@@ -28,7 +28,7 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-900">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">Score Reference</h3>
         </div>
         <div className="p-4 md:p-6">
           <div className="text-red-600 text-center py-6 md:py-8">Failed to load score reference</div>
@@ -41,7 +41,7 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-900">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">Score Reference</h3>
         </div>
         <div className="p-4 md:p-6">
           <div className="text-slate-500 text-center py-6 md:py-8">No score reference available</div>

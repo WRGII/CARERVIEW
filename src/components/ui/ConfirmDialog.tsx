@@ -109,7 +109,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <div className="flex-1 pt-1">
             <h2
               id="dialog-title"
-              className="text-lg font-semibold text-slate-900 mb-2"
+              className="text-lg font-semibold text-slate-700 mb-2"
             >
               {title}
             </h2>

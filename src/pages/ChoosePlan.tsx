@@ -134,7 +134,7 @@ export default function ChoosePlan() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-slate-700 mb-4">
             {isManageMode ? 'Manage Your Subscription' : 'Choose Your Plan'}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -163,12 +163,12 @@ export default function ChoosePlan() {
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <CreditCard className="w-5 h-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Current Subscription</h3>
+                  <h3 className="text-lg font-semibold text-slate-700">Current Subscription</h3>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-600">Plan:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-slate-700">
                       {userPlan.plan_id === 'free' ? 'Free Observer' :
                        userPlan.plan_id === 'primary_qtr' ? 'Primary Caregiver' :
                        userPlan.plan_id === 'family_qtr' ? 'Family Circle' :

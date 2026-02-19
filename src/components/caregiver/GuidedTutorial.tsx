@@ -81,7 +81,7 @@ export default function GuidedTutorial() {
             ))}
           </div>
 
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
+          <h3 className="text-lg font-semibold text-slate-700 mb-2">{step.title}</h3>
           <p className="text-slate-700 leading-relaxed mb-5">{step.body}</p>
 
           <div className="flex items-center justify-between">

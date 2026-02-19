@@ -106,7 +106,7 @@ export default function Header() {
 
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
+                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
                   aria-expanded={mobileMenuOpen}
                   aria-label="Toggle navigation menu"
                 >
@@ -123,19 +123,19 @@ export default function Header() {
                 <div className="hidden md:flex items-center gap-3">
                   <Link
                     to="/about"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
                     About
                   </Link>
                   <Link
                     to="/why"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
                     Why your family needs CarerView
                   </Link>
                   <Link
                     to="/pricing"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
                     Pricing
                   </Link>
@@ -150,7 +150,7 @@ export default function Header() {
                 {/* Mobile Menu Button - visible only on mobile */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
                   aria-expanded={mobileMenuOpen}
                   aria-label="Toggle navigation menu"
                 >
@@ -181,7 +181,7 @@ export default function Header() {
                   <Link
                     to={dashPath}
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     Dashboard
                   </Link>
@@ -189,7 +189,7 @@ export default function Header() {
                     <Link
                       to="/team"
                       onClick={closeMobileMenu}
-                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                     >
                       Family Circle
                     </Link>
@@ -197,7 +197,7 @@ export default function Header() {
                   <Link
                     to="/choose-plan?manage=true"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     Manage Billing
                   </Link>
@@ -207,7 +207,7 @@ export default function Header() {
                       await supabase.auth.signOut();
                       window.location.assign("/");
                     }}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     Sign Out
                   </button>
@@ -217,21 +217,21 @@ export default function Header() {
                   <Link
                     to="/about"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     About
                   </Link>
                   <Link
                     to="/why"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     Why your family needs CarerView
                   </Link>
                   <Link
                     to="/pricing"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     Pricing
                   </Link>
