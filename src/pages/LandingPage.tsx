@@ -41,8 +41,8 @@ export default function LandingPage() {
         </div>
 
         {/* CARERVIEW 1-5 ADL SCALE */}
-        <div className="py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
-          <div className="max-w-6xl mx-auto px-8">
+        <div className="py-12 sm:py-20 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8">
             <div className="text-center mb-12">
               <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
                 Activities of Daily Living
@@ -55,35 +55,33 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Horizontal Scale */}
-            <div className="flex items-center justify-center space-x-4 mb-8">
-              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">👎</span>
-              </div>
-              <div className="flex flex-1 max-w-4xl">
-                <div className="flex-1 bg-peach-blush min-h-[120px] rounded-l-lg flex flex-col items-center justify-center text-slate-700">
-                  <span className="text-3xl font-bold mb-2">1</span>
-                  <span className="text-sm font-semibold text-center px-2">Total Assistance</span>
+            {/* Scale — responsive grid: 2-col on mobile, 5-col on sm+ */}
+            <div className="mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
+                <div className="bg-peach-blush py-6 px-3 flex flex-col items-center justify-center text-slate-700 col-span-1 sm:rounded-l-xl">
+                  <span className="text-3xl font-bold mb-1">1</span>
+                  <span className="text-xs font-semibold text-center leading-snug">Total Assistance</span>
                 </div>
-                <div className="flex-1 bg-peach-blush/70 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
-                  <span className="text-3xl font-bold mb-2">2</span>
-                  <span className="text-sm font-semibold text-center px-2">Constant Shared Effort</span>
+                <div className="bg-peach-blush/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
+                  <span className="text-3xl font-bold mb-1">2</span>
+                  <span className="text-xs font-semibold text-center leading-snug">Constant Shared Effort</span>
                 </div>
-                <div className="flex-1 bg-cyan-primary/40 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
-                  <span className="text-3xl font-bold mb-2">3</span>
-                  <span className="text-sm font-semibold text-center px-2">Independent with Support</span>
+                <div className="bg-cyan-primary/40 py-6 px-3 flex flex-col items-center justify-center text-slate-700 col-span-2 sm:col-span-1">
+                  <span className="text-3xl font-bold mb-1">3</span>
+                  <span className="text-xs font-semibold text-center leading-snug">Independent with Support</span>
                 </div>
-                <div className="flex-1 bg-mint-green/70 min-h-[120px] flex flex-col items-center justify-center text-slate-700">
-                  <span className="text-3xl font-bold mb-2">4</span>
-                  <span className="text-sm font-semibold text-center px-2">Independent with Difficulty</span>
+                <div className="bg-mint-green/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
+                  <span className="text-3xl font-bold mb-1">4</span>
+                  <span className="text-xs font-semibold text-center leading-snug">Independent with Difficulty</span>
                 </div>
-                <div className="flex-1 bg-mint-green min-h-[120px] rounded-r-lg flex flex-col items-center justify-center text-slate-700">
-                  <span className="text-3xl font-bold mb-2">5</span>
-                  <span className="text-sm font-semibold text-center px-2">Fully Independent</span>
+                <div className="bg-mint-green py-6 px-3 flex flex-col items-center justify-center text-slate-700 sm:rounded-r-xl">
+                  <span className="text-3xl font-bold mb-1">5</span>
+                  <span className="text-xs font-semibold text-center leading-snug">Fully Independent</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">👍</span>
+              <div className="flex justify-between mt-2 px-1">
+                <span className="text-xs text-slate-400 font-medium">More assistance needed</span>
+                <span className="text-xs text-slate-400 font-medium">More independent</span>
               </div>
             </div>
 
