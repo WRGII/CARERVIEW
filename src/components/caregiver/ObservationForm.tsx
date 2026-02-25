@@ -68,6 +68,17 @@ export default function ObservationForm({
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasUnsavedChanges])
 
   useEffect(() => {
     if (!dateOfObservation) {
@@ -78,6 +89,12 @@ export default function ObservationForm({
       setDateOfObservation(`${mm}/${dd}/${yyyy}`)
     }
   }, [])
+
+  const hasFormContent = patientName.trim() !== '' || notes.trim() !== '' || Object.keys(answers).length > 0
+
+  useEffect(() => {
+    if (hasFormContent) setHasUnsavedChanges(true)
+  }, [hasFormContent])
 
   const displayFormType =
     formType === 'COMPREHENSIVE' ? t('obs_form.comprehensive_label') : formType
@@ -241,6 +258,7 @@ export default function ObservationForm({
       }
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] })
       setLastSavedAt(new Date())
+      setHasUnsavedChanges(false)
       if (isAutoSave) {
         setAutoSaveStatus('saved')
         setTimeout(() => setAutoSaveStatus('idle'), 3000)

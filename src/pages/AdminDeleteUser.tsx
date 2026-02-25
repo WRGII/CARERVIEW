@@ -1,31 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import React, { useState } from "react";
 import { callAdminDeleteUser } from "../lib/admin";
 import { useLocale } from "../i18n/LocaleContext";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+import { useAuth } from "../hooks/useAuth";
 
 export default function AdminDeleteUser() {
   const [email, setEmail] = useState("");
   const [out, setOut] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [me, setMe] = useState<{ email: string | null; role?: string } | null>(null);
+  const { profile, isAdmin, loading: authLoading } = useAuth();
   const { t } = useLocale();
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data.user;
-      setMe({
-        email: u?.email ?? null,
-        role: (u?.app_metadata as any)?.role ?? (u?.user_metadata as any)?.role,
-      });
-    });
-  }, []);
-
-  const canSee = !!me && me.role === "admin";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,21 +17,25 @@ export default function AdminDeleteUser() {
     try {
       const res = await callAdminDeleteUser(email.trim().toLowerCase());
       setOut(JSON.stringify(res, null, 2));
-    } catch (err: any) {
-      setOut(err?.message || String(err));
+    } catch (err: unknown) {
+      setOut(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
   }
 
-  if (!me) return <div className="p-6">{t('admin.checking_session')}</div>;
-  if (!canSee) return <div className="p-6">{t('admin.admins_only')}</div>;
+  if (authLoading) return <div className="p-6">{t('admin.checking_session')}</div>;
+  if (!isAdmin) return <div className="p-6">{t('admin.admins_only')}</div>;
 
   return (
     <div className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">{t('admin.delete_user_title')}</h1>
       <form onSubmit={onSubmit} className="flex gap-2 mb-4">
+        <label htmlFor="delete-user-email" className="sr-only">
+          {t('auth.email_label')}
+        </label>
         <input
+          id="delete-user-email"
           type="email"
           required
           placeholder="user@example.com"
@@ -56,7 +43,7 @@ export default function AdminDeleteUser() {
           onChange={(e) => setEmail(e.target.value)}
           className="flex-1 border rounded px-3 py-2"
         />
-        <button disabled={loading} className="px-4 py-2 border rounded">
+        <button disabled={loading} aria-busy={loading} className="px-4 py-2 border rounded">
           {loading ? t('common.deleting') : t('common.delete')}
         </button>
       </form>
@@ -64,7 +51,7 @@ export default function AdminDeleteUser() {
         {out ?? t('admin.result_placeholder')}
       </pre>
       <p className="text-xs opacity-70 mt-2">
-        {t('admin.signed_in_as')} {me.email} ({me.role ?? "no-role"})
+        {t('admin.signed_in_as')} {profile?.email ?? ''} ({profile?.role ?? 'no-role'})
       </p>
     </div>
   );

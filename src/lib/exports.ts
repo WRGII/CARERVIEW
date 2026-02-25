@@ -1,16 +1,4 @@
 // src/lib/exports.ts
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  BorderStyle,
-  AlignmentType,
-} from 'docx'
 import { saveAs } from 'file-saver'
 
 // ---------- Types aligned to runtime shapes (null-safe on joins) -------------
@@ -101,6 +89,19 @@ export const exportToDOCX = async (
   categories: CategoryWithQuestions[],
   legend: Legend[]
 ) => {
+  const {
+    Document,
+    Packer,
+    Paragraph,
+    TextRun,
+    Table,
+    TableRow,
+    TableCell,
+    WidthType,
+    BorderStyle,
+    AlignmentType,
+  } = await import('docx')
+
   const doc = new Document({
     sections: [
       {

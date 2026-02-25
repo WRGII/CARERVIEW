@@ -25,7 +25,7 @@ export function useLegend() {
       return ((data as RawLegendRow[]) ?? []).map((row) => ({
         score: row.score,
         description:
-          (row.translations as any)?.[locale] ?? row.description,
+          row.translations?.[locale] ?? row.description,
       }));
     },
     staleTime: 24 * 60 * 60 * 1000,
