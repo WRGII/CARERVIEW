@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
@@ -19,6 +20,7 @@ type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
 export default function NewObservationPage() {
   const navigate = useNavigate();
   const { user, profile, loading, error } = useAuth();
+  const { t } = useLocale();
 
   const { teamId } = useActiveTeam();
   const [remaining, setRemaining] = React.useState<number | null>(null);
@@ -28,10 +30,10 @@ export default function NewObservationPage() {
   const [err, setErr] = React.useState<string | null>(null);
 
   // Auth guards
-  if (loading) return <Loading message="Preparing your new observation…" />;
-  if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />;
-  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />;
-  if (profile.disabled) return <ErrorMessage message="Account disabled." />;
+  if (loading) return <Loading message={t('new_obs.loading')} />;
+  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
+  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
   // Load remaining team quota
   React.useEffect(() => {
@@ -46,9 +48,9 @@ export default function NewObservationPage() {
     try {
       setBusy(true); setErr(null);
 
-      if (!teamId) throw new Error('Create your Family Circle first.');
-      if (frozen) throw new Error('Seat frozen. Ask the owner to manage billing.');
-      if (remaining !== null && remaining <= 0) throw new Error('Team quota reached (100/year).');
+      if (!teamId) throw new Error(t('new_obs.no_circle'));
+      if (frozen) throw new Error(t('new_obs.seat_frozen'));
+      if (remaining !== null && remaining <= 0) throw new Error(t('new_obs.quota_reached'));
 
       // Build required fields
       const today = new Date();
@@ -67,7 +69,7 @@ export default function NewObservationPage() {
         (user?.email?.trim?.() || '');
 
       if (!caregiver_email) {
-        throw new Error('Your account email is missing. Please sign out and sign in again, or contact support.');
+        throw new Error(t('new_obs.email_missing'));
       }
 
       const { data, error: insErr } = await supabase
@@ -137,7 +139,7 @@ export default function NewObservationPage() {
               <p className="text-slate-gray/80 mt-1">{desc}</p>
               <div className="mt-4">
                 <span className="inline-flex items-center gap-2 rounded-lg border-2 border-slate-gray/30 px-3 py-1.5 text-sm font-semibold text-slate-gray">
-                  Start
+                  {t('common.start')}
                 </span>
               </div>
             </div>
@@ -149,44 +151,44 @@ export default function NewObservationPage() {
 
   return (
     <PageLayout
-      title="New Observation"
+      title={t('new_obs.page_title')}
       user={{ ...user, profile }}
       hideSignOut={true}
-      headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>Back to Dashboard</Button>}
+      headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>{t('common.back_dashboard')}</Button>}
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-gray">Create Observation</h1>
-          <p className="text-slate-gray/70">Choose the type of form to start.</p>
+          <h1 className="text-3xl font-bold text-slate-gray">{t('new_obs.create_title')}</h1>
+          <p className="text-slate-gray/70">{t('new_obs.choose_type')}</p>
           {/* Status line */}
-          {!teamId && <p className="mt-2 text-sm text-amber-700">No Family Circle yet. Create it on your dashboard.</p>}
+          {!teamId && <p className="mt-2 text-sm text-amber-700">{t('new_obs.no_circle')}</p>}
           {teamId && remaining !== null && (
-            <p className="mt-2 text-sm text-slate-600">Team observations remaining this year: {remaining}</p>
+            <p className="mt-2 text-sm text-slate-600">{t('new_obs.remaining_prefix')} {remaining}</p>
           )}
-          {frozen && <p className="mt-2 text-sm text-red-600">Seat frozen. Ask the owner to manage billing.</p>}
+          {frozen && <p className="mt-2 text-sm text-red-600">{t('new_obs.seat_frozen')}</p>}
         </div>
 
         {err && <div className="text-red-600">{err}</div>}
 
         <div className="grid gap-6 md:grid-cols-2">
           <Tile
-            title="ADL Observation"
-            desc="Activities of Daily Living (eating, dressing, bathing)"
+            title={t('new_obs.adl_title')}
+            desc={t('new_obs.adl_desc')}
             icon={<ActivitySquare className="w-6 h-6 text-cyan-primary" />}
             onClick={() => createAndStart('ADL')}
           />
           <Tile
-            title="IADL Observation"
-            desc="Instrumental ADLs (shopping, meds, housekeeping)"
+            title={t('new_obs.iadl_title')}
+            desc={t('new_obs.iadl_desc')}
             icon={<ClipboardList className="w-6 h-6 text-cyan-primary" />}
             onClick={() => createAndStart('IADL')}
           />
           <div className="md:col-span-2">
             <Tile
-              title="Comprehensive Observation"
-              desc="ADL + IADL combined in one report"
+              title={t('new_obs.comprehensive_title')}
+              desc={t('new_obs.comprehensive_desc')}
               icon={<Layers className="w-6 h-6 text-cyan-primary" />}
-              badge="Recommended"
+              badge={t('pricing.recommended')}
               onClick={() => createAndStart('COMPREHENSIVE')}
             />
           </div>
@@ -194,7 +196,7 @@ export default function NewObservationPage() {
 
         <div>
           <Button variant="outline" onClick={() => navigate('/caregiver')} disabled={busy}>
-            Back to Dashboard
+            {t('common.back_dashboard')}
           </Button>
         </div>
       </div>

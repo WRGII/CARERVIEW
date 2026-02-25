@@ -1,8 +1,10 @@
 import { X, Heart } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
+import { useLocale } from '../../i18n/LocaleContext';
 
 export default function WelcomeBanner() {
   const { showWelcome, dismissWelcome, isLoading } = useOnboarding();
+  const { t } = useLocale();
 
   if (isLoading || !showWelcome) return null;
 
@@ -11,7 +13,7 @@ export default function WelcomeBanner() {
       <button
         onClick={dismissWelcome}
         className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 transition-colors"
-        aria-label="Dismiss welcome message"
+        aria-label={t('welcome.dismiss_aria')}
       >
         <X className="w-4 h-4" />
       </button>
@@ -20,10 +22,9 @@ export default function WelcomeBanner() {
           <Heart className="w-5 h-5 text-cyan-600" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-700 mb-1">Welcome to CarerView</h3>
+          <h3 className="font-semibold text-slate-700 mb-1">{t('welcome.title')}</h3>
           <p className="text-slate-700 text-sm leading-relaxed">
-            You're in the right place. Start by creating your first observation whenever you're ready -- there's no rush.
-            Each one helps the whole care team stay on the same page.
+            {t('welcome.body')}
           </p>
         </div>
       </div>

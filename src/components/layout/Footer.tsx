@@ -1,8 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
+import { useLocale } from "../../i18n/LocaleContext";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 
 export function Footer() {
+  const { t } = useLocale();
   const [logoUrl, setLogoUrl] = React.useState<string>(
     "/CareView_logo_1_colored_highres.png"
   );
@@ -41,19 +44,19 @@ export function Footer() {
             <div className="flex items-center justify-center md:justify-start mb-4">
               <img
                 src={logoUrl}
-                alt="CarerView"
+                alt={t('common.app_name')}
                 className="w-8 h-8 object-contain opacity-80"
               />
             </div>
             <p className="text-slate-700 text-sm mb-4">
-              Built by caregivers, for caregivers. We translate clinical assessment frameworks into everyday language your whole family can use together.
+              {t('footer.tagline')}
             </p>
             <div>
               <Link
                 to="/about"
                 className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
               >
-                About CarerView
+                {t('footer.about_link')}
               </Link>
             </div>
           </div>
@@ -61,14 +64,13 @@ export function Footer() {
           {/* Contact Information */}
           <div className="text-center md:text-left">
             <h4 className="font-semibold text-slate-800 text-base mb-4">
-              Contact
+              {t('footer.contact')}
             </h4>
             <div className="space-y-2 text-sm text-slate-700">
               <div>
                 <span className="block text-slate-700 font-medium mb-1">
-                  Suggestions? Questions?
+                  {t('footer.suggestions')}
                 </span>
-                {/* Fixed label+mailto mismatch; change to your preferred address */}
                 <a
                   href="mailto:CarerView@GrifDigi.com"
                   className="text-cyan-primary hover:text-cyan-hover underline"
@@ -78,11 +80,11 @@ export function Footer() {
               </div>
               <div className="mt-3">
                 <span className="block text-slate-700 font-medium mb-1">
-                  Locations:
+                  {t('footer.locations')}
                 </span>
                 <div className="space-y-1">
-                  <div>Christchurch, New Zealand</div>
-                  <div>Denver, Colorado USA</div>
+                  <div>{t('footer.location_nz')}</div>
+                  <div>{t('footer.location_us')}</div>
                 </div>
               </div>
             </div>
@@ -91,7 +93,7 @@ export function Footer() {
           {/* Policies */}
           <div className="text-center md:text-left">
             <h4 className="font-semibold text-slate-800 text-base mb-4">
-              Policies
+              {t('footer.policies')}
             </h4>
             <div className="space-y-2">
               <div>
@@ -99,7 +101,7 @@ export function Footer() {
                   to="/privacy-policy"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
-                  Privacy Policy
+                  {t('footer.privacy_policy')}
                 </Link>
               </div>
               <div>
@@ -107,7 +109,7 @@ export function Footer() {
                   to="/data-policy"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
-                  Data Policy
+                  {t('footer.data_policy')}
                 </Link>
               </div>
               <div>
@@ -115,17 +117,18 @@ export function Footer() {
                   to="/pricing"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
-                  Pricing
+                  {t('footer.pricing_link')}
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Copyright Section */}
-        <div className="mt-12 pt-8 border-t border-slate-200 text-center">
+        {/* Language + Copyright Section */}
+        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <LanguageSwitcher />
           <p className="text-slate-500 text-xs">
-            © {year} CarerView App | All rights reserved | a GrifDigi company
+            {t('footer.copyright', { year })}
           </p>
         </div>
       </div>
@@ -133,5 +136,4 @@ export function Footer() {
   );
 }
 
-// Provide default export too so either import style works.
 export default Footer;

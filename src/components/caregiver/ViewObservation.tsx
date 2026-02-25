@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { useObservation } from '../../hooks/useObservations'
+import { useLocale } from '../../i18n/LocaleContext'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Dropdown } from '../ui/Dropdown'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Loading } from '../ui/Loading'
 import { ErrorMessage } from '../ui/ErrorMessage'
-import { formatDate } from '../../lib/utils'
+import { useFormatDate } from '../../hooks/useFormatDate'
 import { ArrowLeft, User, Calendar, Phone, FileText, Printer, Layers, Download, Trash2, File, Table } from 'lucide-react'
 import { ScoreLegendDisplay } from './ScoreLegendDisplay'
 
@@ -29,6 +30,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
   isExporting = false,
   isDeleting = false
 }) => {
+  const { t } = useLocale()
+  const { formatDate } = useFormatDate()
   const { data: observation, isLoading, error } = useObservation(observationId)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -47,9 +50,9 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
     setConfirmDelete(false)
   }
 
-  if (isLoading) return <Loading message="Loading observation..." />
-  if (error) return <ErrorMessage message={error.message || 'Failed to load observation'} />
-  if (!observation) return <ErrorMessage message="Observation not found" />
+  if (isLoading) return <Loading message={t('obs_list.loading')} />
+  if (error) return <ErrorMessage message={error.message || t('view_obs.load_error')} />
+  if (!observation) return <ErrorMessage message={t('caregiver.obs_not_found')} />
 
   // ---- Group responses by category -----------------------------------------
   let categorizedResponses: Array<{
@@ -117,7 +120,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
 
   const typeLabel =
     observation.form_type === 'COMPREHENSIVE'
-      ? 'Comprehensive (ADL + IADL)'
+      ? t('obs_form.comprehensive_label')
       : observation.form_type || '—'
 
   return (
@@ -127,14 +130,14 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         <div className="flex items-center space-x-4">
           <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to List</span>
+            <span>{t('view_obs.back')}</span>
           </Button>
-          <h2 className="text-xl font-semibold text-slate-700">View Observation</h2>
+          <h2 className="text-xl font-semibold text-slate-700">{t('view_obs.title')}</h2>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handlePrint} disabled={isExporting || isDeleting} className="flex items-center space-x-2">
             <Printer className="w-4 h-4" />
-            <span>Print</span>
+            <span>{t('view_obs.print')}</span>
           </Button>
 
           <Dropdown
@@ -147,17 +150,17 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                 className="flex items-center space-x-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Download</span>
+                <span>{t('common.download')}</span>
               </Button>
             }
             items={[
               {
-                label: 'Word document (.docx)',
+                label: t('obs_list.export_docx'),
                 icon: <File className="w-4 h-4" />,
                 onClick: () => onExport(observationId, 'docx')
               },
               {
-                label: 'Spreadsheet (.csv)',
+                label: t('obs_list.export_csv'),
                 icon: <Table className="w-4 h-4" />,
                 onClick: () => onExport(observationId, 'csv')
               }
@@ -172,7 +175,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             className="flex items-center space-x-2"
           >
             <Trash2 className="w-4 h-4" />
-            <span>Delete</span>
+            <span>{t('common.delete')}</span>
           </Button>
         </div>
       </div>
@@ -180,16 +183,16 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       {/* Header card with observation details */}
       <Card className="bg-warm-white">
         <CardHeader>
-          <h3 className="text-lg font-semibold text-slate-gray">Observation Details</h3>
+          <h3 className="text-lg font-semibold text-slate-gray">{t('view_obs.details')}</h3>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex items-center space-x-3">
               <User className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-gray/70">Patient Name</p>
+                <p className="text-sm text-slate-gray/70">{t('view_obs.patient_name')}</p>
                 <p className="font-medium text-slate-gray">
-                  {observation.patient_name || 'Unnamed Patient'}
+                  {observation.patient_name || t('obs_list.unnamed_patient')}
                 </p>
               </div>
             </div>
@@ -197,7 +200,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             <div className="flex items-center space-x-3">
               <Calendar className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-gray/70">Observation Date</p>
+                <p className="text-sm text-slate-gray/70">{t('view_obs.obs_date')}</p>
                 <p className="font-medium text-slate-gray">
                   {formatDate(observation.observation_date)}
                 </p>
@@ -208,7 +211,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             <div className="flex items-center space-x-3">
               <Layers className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-gray/70">Observation Type</p>
+                <p className="text-sm text-slate-gray/70">{t('view_obs.obs_type')}</p>
                 <p className="font-medium text-slate-gray">{typeLabel}</p>
               </div>
             </div>
@@ -217,7 +220,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-slate-gray/60" />
                 <div>
-                  <p className="text-sm text-slate-gray/70">Mode of Observation</p>
+                  <p className="text-sm text-slate-gray/70">{t('view_obs.mode')}</p>
                   <p className="font-medium text-slate-gray">{observation.mode_of_observation}</p>
                 </div>
               </div>
@@ -227,7 +230,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
               <div className="flex items-center space-x-3">
                 <User className="w-5 h-5 text-slate-gray/60" />
                 <div>
-                  <p className="text-sm text-slate-gray/70">Caregiver</p>
+                  <p className="text-sm text-slate-gray/70">{t('view_obs.caregiver')}</p>
                   <p className="font-medium text-slate-gray">{observation.caregiver_name}</p>
                   {observation.caregiver_email && (
                     <p className="text-sm text-slate-gray/60">{observation.caregiver_email}</p>
@@ -242,7 +245,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
               <div className="flex items-start space-x-3">
                 <FileText className="w-5 h-5 text-slate-gray/60 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm text-slate-gray/70 mb-1">Notes</p>
+                  <p className="text-sm text-slate-gray/70 mb-1">{t('view_obs.notes')}</p>
                   <p className="text-slate-gray">{observation.notes}</p>
                 </div>
               </div>
@@ -309,8 +312,8 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
           <CardContent>
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-slate-gray/40 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-gray mb-2">No Responses</h3>
-              <p className="text-slate-gray/70">This observation has no recorded responses.</p>
+              <h3 className="text-lg font-medium text-slate-gray mb-2">{t('view_obs.no_responses')}</h3>
+              <p className="text-slate-gray/70">{t('view_obs.no_responses_body')}</p>
             </div>
           </CardContent>
         </Card>
@@ -322,14 +325,14 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={confirmDelete}
-        title="Delete Observation?"
+        title={t('obs_list.delete_title')}
         message={
           observation
-            ? `Are you sure you want to delete the observation for "${observation.patient_name || 'Unnamed Patient'}" from ${formatDate(observation.observation_date)}? This action cannot be undone.`
-            : 'Are you sure you want to delete this observation? This action cannot be undone.'
+            ? t('obs_list.delete_confirm', { name: observation.patient_name || t('obs_list.unnamed_patient'), date: formatDate(observation.observation_date) })
+            : t('obs_list.delete_confirm_generic')
         }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isLoading={isDeleting}

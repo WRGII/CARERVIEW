@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
@@ -168,6 +169,7 @@ const stages: Stage[] = [
 
 function StageCard({ stage }: { stage: Stage }) {
   const [expanded, setExpanded] = useState(true);
+  const { t } = useLocale();
 
   return (
     <div
@@ -209,7 +211,7 @@ function StageCard({ stage }: { stage: Stage }) {
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
               <h4 className={`text-sm font-semibold ${stage.stageColor} uppercase tracking-wide mb-3`}>
-                Signs &amp; Symptoms
+                {t('dementia.signs_symptoms')}
               </h4>
               <ul className="space-y-2">
                 {stage.symptoms.map((symptom, i) => (
@@ -227,19 +229,19 @@ function StageCard({ stage }: { stage: Stage }) {
 
             <div>
               <h4 className={`text-sm font-semibold ${stage.stageColor} uppercase tracking-wide mb-3`}>
-                Expected Duration
+                {t('dementia.expected_duration')}
               </h4>
               <p className={`text-sm leading-relaxed ${stage.stageColor} opacity-90`}>
-                {stage.duration ?? 'Not applicable — this stage represents normal cognitive function.'}
+                {stage.duration ?? t('dementia.not_applicable')}
               </p>
 
               {stage.number >= 4 && (
                 <div className={`mt-4 p-3 rounded-xl bg-white/60 border ${stage.stageBorder}`}>
                   <p className={`text-xs font-medium ${stage.stageColor} opacity-80`}>
-                    {stage.number === 4 && 'Early dementia — a physician can now detect cognitive problems.'}
-                    {stage.number === 5 && 'Mid-stage — assistance with daily activities is now required.'}
-                    {stage.number === 6 && 'Mid-stage — comprehensive daily support is needed.'}
-                    {stage.number === 7 && 'Late-stage — full-time care and support is required.'}
+                    {stage.number === 4 && t('dementia.note_4')}
+                    {stage.number === 5 && t('dementia.note_5')}
+                    {stage.number === 6 && t('dementia.note_6')}
+                    {stage.number === 7 && t('dementia.note_7')}
                   </p>
                 </div>
               )}
@@ -253,15 +255,16 @@ function StageCard({ stage }: { stage: Stage }) {
 
 export default function DementiaScalePage() {
   const { user, profile, loading, error } = useAuth();
+  const { t } = useLocale();
 
-  if (loading) return <Loading message="Loading..." />;
-  if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />;
-  if (!profile) return <ErrorMessage message="Profile not found." />;
+  if (loading) return <Loading message={t('common.loading')} />;
+  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
 
   return (
     <PageLayout
-      title="Dementia Scale"
-      subtitle="Global Deterioration Scale (GDS) / Reisberg Scale"
+      title={t('dementia.page_title')}
+      subtitle={t('dementia.subtitle')}
       user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
@@ -270,7 +273,7 @@ export default function DementiaScalePage() {
           className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
         >
           <ArrowLeft className="w-4 h-4" />
-          Dashboard
+          {t('caregiver.dashboard_title')}
         </Link>
       }
     >
@@ -282,28 +285,23 @@ export default function DementiaScalePage() {
             </div>
             <div className="space-y-3">
               <h2 className="text-xl font-bold text-slate-700">
-                About the Global Deterioration Scale
+                {t('dementia.about_title')}
               </h2>
               <div className="text-slate-600 leading-relaxed space-y-2 text-sm md:text-base">
                 <p>
-                  The GDS — formally known as the <strong>Reisberg Scale</strong> — is the most widely used
-                  framework for staging dementia. It divides cognitive decline into seven stages based on
-                  memory loss and functional ability.
+                  {t('dementia.about_p1')}
                 </p>
                 <p>
-                  This scale is most relevant for people with{' '}
-                  <strong>Alzheimer's disease</strong>. Some other types of dementia (such as
-                  Frontotemporal dementia) do not always include memory loss and may not align
-                  precisely with these stages.
+                  {t('dementia.about_p2')}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-1">
                 {[
-                  { label: 'Stages 1–3', desc: 'No dementia diagnosis', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                  { label: 'Stage 4', desc: 'Early dementia', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-                  { label: 'Stages 5–6', desc: 'Middle dementia', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-                  { label: 'Stage 7', desc: 'Late dementia', color: 'bg-red-50 text-red-700 border-red-200' },
+                  { label: t('dementia.stages_13'), desc: t('dementia.stages_13_desc'), color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                  { label: t('dementia.stage_4'), desc: t('dementia.stage_4_desc'), color: 'bg-amber-50 text-amber-700 border-amber-200' },
+                  { label: t('dementia.stages_56'), desc: t('dementia.stages_56_desc'), color: 'bg-orange-50 text-orange-700 border-orange-200' },
+                  { label: t('dementia.stage_7'), desc: t('dementia.stage_7_desc'), color: 'bg-red-50 text-red-700 border-red-200' },
                 ].map((item) => (
                   <div
                     key={item.label}
@@ -319,7 +317,7 @@ export default function DementiaScalePage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">The Seven Stages</h2>
+          <h2 className="text-xl font-bold text-slate-800">{t('dementia.seven_stages')}</h2>
           <div className="space-y-3">
             {stages.map((stage) => (
               <StageCard key={stage.number} stage={stage} />
@@ -329,10 +327,7 @@ export default function DementiaScalePage() {
 
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
           <p className="text-xs text-slate-500 leading-relaxed">
-            <strong className="text-slate-600">Disclaimer:</strong> This information is provided for
-            educational purposes only and is not a substitute for professional medical advice,
-            diagnosis, or treatment. Always seek the guidance of a qualified healthcare provider
-            with any questions you may have regarding a medical condition.
+            <strong className="text-slate-600">{t('dementia.disclaimer_label')}</strong> {t('dementia.disclaimer_body')}
           </p>
         </div>
       </div>

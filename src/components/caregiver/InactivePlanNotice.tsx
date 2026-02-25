@@ -1,10 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
+import { useLocale } from '../../i18n/LocaleContext';
 
 type Props = { className?: string };
 
 export default function InactivePlanNotice({ className = "" }: Props) {
+  const { t } = useLocale();
   const requireSub = import.meta.env.VITE_REQUIRE_SUBSCRIPTION === "true";
   const { data: plan, isLoading, error } = useUserPlan();
 
@@ -18,10 +20,10 @@ export default function InactivePlanNotice({ className = "" }: Props) {
   // Optional detail line for debugging/user clarity
   const detail =
     plan?.status
-      ? `Status: ${plan.status}`
+      ? `${t('inactive.status_prefix')}${plan.status}`
       : error
-      ? "Could not read your subscription status."
-      : "No active subscription found.";
+      ? t('inactive.status_error')
+      : t('inactive.no_sub');
 
   return (
     <div
@@ -35,7 +37,7 @@ export default function InactivePlanNotice({ className = "" }: Props) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="font-semibold text-slate-800">
-            Your subscription isn’t active yet.
+            {t('inactive.title')}
           </div>
           <div className="text-slate-700 text-sm">{detail}</div>
         </div>
@@ -44,14 +46,14 @@ export default function InactivePlanNotice({ className = "" }: Props) {
             to="/choose-plan"
             className="inline-flex items-center rounded-lg border bg-slate-900 px-4 py-2 text-white hover:bg-slate-800"
           >
-            Choose a plan
+            {t('inactive.choose_plan')}
           </Link>
           <Link
             to="/checkout/success"
             className="inline-flex items-center rounded-lg border px-4 py-2 text-slate-800 hover:bg-white"
             title="If you just paid, this page will finalize once webhooks arrive."
           >
-            I just paid
+            {t('inactive.just_paid')}
           </Link>
         </div>
       </div>

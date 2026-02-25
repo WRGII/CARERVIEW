@@ -1,12 +1,13 @@
 // src/components/caregiver/ObservationList.tsx
 import React, { useState } from 'react'
 import { useObservations } from '../../hooks/useObservations'
+import { useLocale } from '../../i18n/LocaleContext'
 import { Card, CardContent } from '../ui/Card'
 import { Button } from '../ui/Button'
 import { Loading } from '../ui/Loading'
 import { Dropdown } from '../ui/Dropdown'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
-import { formatDate } from '../../lib/utils'
+import { useFormatDate } from '../../hooks/useFormatDate'
 import { Eye, FileText, Download, Trash2, File, Table } from 'lucide-react'
 
 interface ObservationListProps {
@@ -48,11 +49,13 @@ export const ObservationList: React.FC<ObservationListProps> = ({
   onDeleteObservation,
   deletingId
 }) => {
+  const { t } = useLocale()
+  const { formatDate } = useFormatDate()
   const { data: observations, isLoading, error } = useObservations()
   const [confirmDelete, setConfirmDelete] = useState<ObservationRow | null>(null)
 
-  if (isLoading) return <Loading message="Loading observations..." />
-  if (error) return <div className="text-red-600">Failed to load observations</div>
+  if (isLoading) return <Loading message={t('obs_list.loading')} />
+  if (error) return <div className="text-red-600">{t('obs_list.error')}</div>
 
   const handleDeleteClick = (observation: ObservationRow) => {
     setConfirmDelete(observation)
@@ -75,8 +78,8 @@ export const ObservationList: React.FC<ObservationListProps> = ({
         <CardContent>
           <div className="text-center py-8">
             <FileText className="w-12 h-12 text-slate-gray/40 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-gray mb-2">No Observations Yet</h3>
-            <p className="text-slate-gray/70">Create your first observation to get started.</p>
+            <h3 className="text-lg font-medium text-slate-gray mb-2">{t('obs_list.empty_title')}</h3>
+            <p className="text-slate-gray/70">{t('obs_list.empty_body')}</p>
           </div>
         </CardContent>
       </Card>
@@ -98,11 +101,11 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-slate-gray truncate">
-                        {o.patient_name || 'Unnamed Patient'}
+                        {o.patient_name || t('obs_list.unnamed_patient')}
                       </h3>
                       <FormTypeChip type={o.form_type ?? null} />
                     </div>
-                    <p className="text-slate-gray/80">Observed on {formatDate(o.observation_date)}</p>
+                    <p className="text-slate-gray/80">{t('obs_list.observed_on') + ' '}{formatDate(o.observation_date)}</p>
                     {o.notes && <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{o.notes}</p>}
                   </div>
                   <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
@@ -114,7 +117,7 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                       className="flex items-center space-x-2"
                     >
                       <Eye className="w-4 h-4" />
-                      <span>View</span>
+                      <span>{t('common.view')}</span>
                     </Button>
 
                     <Dropdown
@@ -127,17 +130,17 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                           className="flex items-center space-x-2"
                         >
                           <Download className="w-4 h-4" />
-                          <span>Download</span>
+                          <span>{t('common.download')}</span>
                         </Button>
                       }
                       items={[
                         {
-                          label: 'Export as DOCX',
+                          label: t('obs_list.export_docx'),
                           icon: <File className="w-4 h-4" />,
                           onClick: () => onExportObservation(o.id, 'docx')
                         },
                         {
-                          label: 'Export as CSV',
+                          label: t('obs_list.export_csv'),
                           icon: <Table className="w-4 h-4" />,
                           onClick: () => onExportObservation(o.id, 'csv')
                         }
@@ -152,7 +155,7 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                       className="flex items-center space-x-2"
                     >
                       <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
+                      <span>{t('common.delete')}</span>
                     </Button>
                   </div>
                 </div>
@@ -164,14 +167,14 @@ export const ObservationList: React.FC<ObservationListProps> = ({
 
       <ConfirmDialog
         isOpen={!!confirmDelete}
-        title="Delete Observation?"
+        title={t('obs_list.delete_title')}
         message={
           confirmDelete
-            ? `Are you sure you want to delete the observation for "${confirmDelete.patient_name || 'Unnamed Patient'}" from ${formatDate(confirmDelete.observation_date)}? This action cannot be undone.`
+            ? t('obs_list.delete_confirm', { name: confirmDelete.patient_name || t('obs_list.unnamed_patient'), date: formatDate(confirmDelete.observation_date) })
             : ''
         }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isLoading={confirmDelete ? isDeleting(confirmDelete.id) : false}

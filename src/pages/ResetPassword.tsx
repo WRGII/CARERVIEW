@@ -2,9 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useLocale } from '../i18n/LocaleContext';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const [tokenFound, setTokenFound] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,22 +32,22 @@ export default function ResetPassword() {
     
     // Validate password confirmation
     if (password !== confirmPassword) {
-      setErr('Passwords do not match. Please try again.');
+      setErr(t('reset_pw.mismatch'));
       setSubmitting(false);
       return;
     }
-    
+
     if (password.length < 8) {
-      setErr('Password must be at least 8 characters long.');
+      setErr(t('reset_pw.too_short'));
       setSubmitting(false);
       return;
     }
-    
+
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setErr(error.message);
     } else {
-      setMsg('Password updated successfully! Redirecting to sign in...');
+      setMsg(t('reset_pw.success'));
       // Redirect to sign-in page after a brief delay
       setTimeout(() => {
         navigate('/#get-started', { replace: true });
@@ -56,16 +58,16 @@ export default function ResetPassword() {
 
   return (
     <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-semibold text-slate-gray mb-4">Reset your password</h1>
+      <h1 className="text-2xl font-semibold text-slate-gray mb-4">{t('reset_pw.title')}</h1>
       {!tokenFound && (
         <p className="text-slate-gray/80">
-          We couldn’t find a recovery token. Please use the link from your email, or request a new reset.
+          {t('reset_pw.no_token')}
         </p>
       )}
       {tokenFound && (
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
-            <span className="text-sm text-slate-gray">New password</span>
+            <span className="text-sm text-slate-gray">{t('reset_pw.new_password')}</span>
             <input
               type="password"
               className="mt-1 w-full rounded-lg border-slate-gray/30 px-3 py-2"
@@ -73,11 +75,11 @@ export default function ResetPassword() {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
-              placeholder="Enter your new password"
+              placeholder={t('reset_pw.new_password_placeholder')}
             />
           </label>
           <label className="block">
-            <span className="text-sm text-slate-gray">Confirm new password</span>
+            <span className="text-sm text-slate-gray">{t('reset_pw.confirm_password')}</span>
             <input
               type="password"
               className="mt-1 w-full rounded-lg border-slate-gray/30 px-3 py-2"
@@ -85,7 +87,7 @@ export default function ResetPassword() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               minLength={8}
               required
-              placeholder="Re-enter your new password"
+              placeholder={t('reset_pw.confirm_placeholder')}
             />
           </label>
           {err && <div className="text-sm text-red-600">{err}</div>}
@@ -95,7 +97,7 @@ export default function ResetPassword() {
             disabled={submitting}
             className="w-full rounded-lg bg-cyan-primary text-white px-4 py-3 disabled:opacity-60 font-semibold hover:bg-cyan-hover transition-colors"
           >
-            {submitting ? 'Updating…' : 'Update password'}
+            {submitting ? t('reset_pw.updating') : t('reset_pw.submit')}
           </button>
         </form>
       )}

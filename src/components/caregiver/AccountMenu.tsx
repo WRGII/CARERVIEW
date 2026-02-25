@@ -3,9 +3,11 @@ import React from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { ChevronDown, LogOut, CreditCard, GraduationCap } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
+import { useLocale } from '../../i18n/LocaleContext';
 
 export default function AccountMenu() {
   const { restartTutorial } = useOnboarding();
+  const { t } = useLocale();
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -73,7 +75,7 @@ export default function AccountMenu() {
         aria-expanded={open}
         aria-controls={menuId}
       >
-        Manage Account
+        {t('account_menu.manage_account')}
         <ChevronDown
           className={`w-4 h-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden="true"
@@ -94,7 +96,7 @@ export default function AccountMenu() {
             role="menuitem"
           >
             <CreditCard className="w-4 h-4 text-slate-500" aria-hidden="true" />
-            Manage Billing
+            {t('billing.manage_btn')}
           </button>
 
           <button
@@ -104,7 +106,7 @@ export default function AccountMenu() {
             role="menuitem"
           >
             <GraduationCap className="w-4 h-4 text-slate-500" aria-hidden="true" />
-            Restart Tutorial
+            {t('account_menu.restart_tutorial')}
           </button>
 
           <div className="my-1 h-px bg-slate-200" />
@@ -116,7 +118,7 @@ export default function AccountMenu() {
             role="menuitem"
           >
             <LogOut className="w-4 h-4 text-slate-500" aria-hidden="true" />
-            Sign Out
+            {t('nav.sign_out')}
           </button>
         </div>
       )}

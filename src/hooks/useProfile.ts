@@ -8,6 +8,7 @@ export type Profile = {
   display_name: string | null;
   role: "admin" | "caregiver";
   disabled: boolean;
+  preferred_locale: string | null;
 };
 
 export function useProfile(userId?: string) {
@@ -17,7 +18,7 @@ export function useProfile(userId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, display_name, role, disabled")
+        .select("id, email, display_name, role, disabled, preferred_locale")
         .eq("id", userId!)
         .single();
 

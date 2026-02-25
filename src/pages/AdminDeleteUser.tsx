@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { callAdminDeleteUser } from "../lib/admin";
+import { useLocale } from "../i18n/LocaleContext";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL!,
@@ -12,6 +13,7 @@ export default function AdminDeleteUser() {
   const [out, setOut] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [me, setMe] = useState<{ email: string | null; role?: string } | null>(null);
+  const { t } = useLocale();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -39,12 +41,12 @@ export default function AdminDeleteUser() {
     }
   }
 
-  if (!me) return <div className="p-6">Checking session…</div>;
-  if (!canSee) return <div className="p-6">Admins only.</div>;
+  if (!me) return <div className="p-6">{t('admin.checking_session')}</div>;
+  if (!canSee) return <div className="p-6">{t('admin.admins_only')}</div>;
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin: Delete User by Email</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('admin.delete_user_title')}</h1>
       <form onSubmit={onSubmit} className="flex gap-2 mb-4">
         <input
           type="email"
@@ -55,14 +57,14 @@ export default function AdminDeleteUser() {
           className="flex-1 border rounded px-3 py-2"
         />
         <button disabled={loading} className="px-4 py-2 border rounded">
-          {loading ? "Deleting…" : "Delete"}
+          {loading ? t('common.deleting') : t('common.delete')}
         </button>
       </form>
       <pre className="bg-neutral-100 rounded p-3 text-sm overflow-auto min-h-[120px]">
-        {out ?? "Result will appear here"}
+        {out ?? t('admin.result_placeholder')}
       </pre>
       <p className="text-xs opacity-70 mt-2">
-        Signed in as: {me.email} ({me.role ?? "no-role"})
+        {t('admin.signed_in_as')} {me.email} ({me.role ?? "no-role"})
       </p>
     </div>
   );

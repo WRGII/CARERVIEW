@@ -4,8 +4,10 @@ import { Trash2, AlertTriangle } from 'lucide-react';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { deleteOwnAccount } from '../../lib/caregiver';
 import { supabase } from '../../lib/supabaseClient';
+import { useLocale } from '../../i18n/LocaleContext';
 
 export default function DeleteAccount() {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -25,15 +27,12 @@ export default function DeleteAccount() {
 
       if (!result.ok) {
         if (result.error === 'TEAM_OWNER_HAS_MEMBERS') {
-          const memberText = result.activeMemberCount === 1 ? 'member' : 'members';
-          setError(
-            `You cannot delete your account while you have ${result.activeMemberCount} active team ${memberText}. Please remove all team members from "${result.teamName}" before deleting your account.`
-          );
+          setError(`${t('delete_acct.team_block')} "${result.teamName}"`);
           setIsDeleting(false);
           return;
         }
 
-        setError(result.message || 'Account deletion failed. Please try again.');
+        setError(result.message || t('delete_acct.failed'));
         setIsDeleting(false);
         return;
       }
@@ -43,7 +42,7 @@ export default function DeleteAccount() {
       window.location.href = '/?deleted=true';
     } catch (err: any) {
       console.error('Delete account error:', err);
-      setError(err?.message || 'An unexpected error occurred. Please try again.');
+      setError(err?.message || t('common.unexpected_error'));
       setIsDeleting(false);
     }
   };
@@ -65,32 +64,32 @@ export default function DeleteAccount() {
 
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-red-900 mb-2">
-              Danger Zone
+              {t('delete_acct.danger_zone')}
             </h3>
             <p className="text-sm text-red-800 mb-4">
-              Permanently delete your account and all associated data. This action cannot be undone.
+              {t('delete_acct.description')}
             </p>
 
             <div className="bg-white border border-red-200 rounded-md p-4 mb-4">
               <p className="text-sm font-medium text-slate-700 mb-2">
-                The following data will be permanently deleted:
+                {t('delete_acct.will_delete')}
               </p>
               <ul className="space-y-1 text-sm text-gray-700">
                 <li className="flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2"></span>
-                  All observations and associated data
+                  {t('delete_acct.item_obs')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2"></span>
-                  Your subscription will be cancelled
+                  {t('delete_acct.item_sub')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2"></span>
-                  Team data and memberships (if applicable)
+                  {t('delete_acct.item_team')}
                 </li>
                 <li className="flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2"></span>
-                  Your profile and account information
+                  {t('delete_acct.item_profile')}
                 </li>
               </ul>
             </div>
@@ -107,7 +106,7 @@ export default function DeleteAccount() {
               className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Delete Account</span>
+              <span>{t('delete_acct.btn')}</span>
             </button>
           </div>
         </div>
@@ -115,10 +114,10 @@ export default function DeleteAccount() {
 
       <ConfirmDialog
         isOpen={showConfirm}
-        title="Delete Your Account?"
-        message="This action cannot be undone. All observations and data will be permanently deleted. Your subscription will be cancelled, and you will receive a confirmation email."
-        confirmLabel="Yes, Delete My Account"
-        cancelLabel="Cancel"
+        title={t('delete_acct.confirm_title')}
+        message={t('delete_acct.confirm_body')}
+        confirmLabel={t('delete_acct.confirm_yes')}
+        cancelLabel={t('common.cancel')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isLoading={isDeleting}

@@ -2,12 +2,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useLocale } from "../i18n/LocaleContext";
 
 export default function AcceptInvite() {
   const [status, setStatus] = useState<"idle" | "ok" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useLocale();
 
   useEffect(() => {
     (async () => {
@@ -17,7 +19,7 @@ export default function AcceptInvite() {
 
       if (!token) {
         setStatus("error");
-        setMsg("Missing or invalid invitation token");
+        setMsg(t('accept_invite.invalid_token'));
         return;
       }
 
@@ -45,17 +47,17 @@ export default function AcceptInvite() {
       } catch (e: any) {
         sessionStorage.removeItem("cv_join_token");
         setStatus("error");
-        setMsg(e?.message || "Failed to accept invitation");
+        setMsg(e?.message || t('accept_invite.failed'));
       }
     })();
   }, [params, navigate]);
 
-  if (status === "idle") return <div className="p-6">Joining team…</div>;
+  if (status === "idle") return <div className="p-6">{t('accept_invite.joining')}</div>;
   if (status === "error") return (
     <div className="p-6">
       <div className="text-red-600 mb-4">{msg}</div>
-      <a href="/" className="text-cyan-primary hover:underline">Return to home</a>
+      <a href="/" className="text-cyan-primary hover:underline">{t('common.go_home')}</a>
     </div>
   );
-  return <div className="p-6">Successfully joined team. Redirecting…</div>;
+  return <div className="p-6">{t('accept_invite.success')}</div>;
 }

@@ -2,6 +2,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useLocale } from "../i18n/LocaleContext";
 import { PageLayout } from "../components/layout/PageLayout";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -17,21 +18,22 @@ type FormType = "ADL" | "IADL" | "COMPREHENSIVE";
 export default function ObservationEditPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t } = useLocale();
 
   const { user, profile, loading: authLoading, error: authError } = useAuth();
   const { data: obs, isLoading: obsLoading, error: obsError } = useObservationById(id);
   const frozen = useMemberFrozen(obs?.team_id ?? null);
 
-  if (!id) return <ErrorMessage message="Missing observation id in URL." />;
+  if (!id) return <ErrorMessage message={t('obs_edit.missing_id')} />;
 
-  if (authLoading) return <Loading message="Loading observation…" />;
-  if (authError || !user) return <ErrorMessage message={authError || "Authentication required."} />;
-  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />;
-  if (profile.disabled) return <ErrorMessage message="Account disabled." />;
+  if (authLoading) return <Loading message={t('obs_edit.loading')} />;
+  if (authError || !user) return <ErrorMessage message={authError || t('common.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
+  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
-  if (obsLoading) return <Loading message="Fetching observation…" />;
+  if (obsLoading) return <Loading message={t('obs_edit.fetching')} />;
   if (obsError) return <ErrorMessage message={`Error loading observation: ${String((obsError as any)?.message || obsError)}`} />;
-  if (!obs) return <ErrorMessage message="Observation not found." />;
+  if (!obs) return <ErrorMessage message={t('caregiver.obs_not_found')} />;
 
   const formType = (obs.form_type || "") as FormType;
   const isValidType = formType === "ADL" || formType === "IADL" || formType === "COMPREHENSIVE";
@@ -40,7 +42,7 @@ export default function ObservationEditPage() {
   const isAuthor = obs.author_user_id === user.id;
   const readOnly = !isAuthor || frozen;
 
-  const formLabel = formType === 'COMPREHENSIVE' ? 'Comprehensive' : formType === 'ADL' ? 'Daily Living (ADL)' : 'Life Skills (IADL)';
+  const formLabel = formType === 'COMPREHENSIVE' ? t('obs_edit.form_comprehensive') : formType === 'ADL' ? t('obs_edit.form_adl') : t('obs_edit.form_iadl');
 
   return (
     <PageLayout
@@ -49,31 +51,31 @@ export default function ObservationEditPage() {
       hideSignOut={true}
       headerRight={
         <Button variant="outline" onClick={() => navigate("/caregiver")}>
-          Back to Dashboard
+          {t('common.back_dashboard')}
         </Button>
       }
     >
       <Breadcrumbs items={[
-        { label: 'Dashboard', to: '/caregiver' },
-        { label: `${formLabel} Observation` },
+        { label: t('caregiver.dashboard_title'), to: '/caregiver' },
+        { label: `${formLabel} ${t('obs_edit.observation_label')}` },
       ]} />
 
       {!isAuthor && (
         <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-          You're viewing someone else's observation. You can see the details but can't make changes.
+          {t('obs_edit.readonly_notice')}
         </div>
       )}
       {isAuthor && frozen && (
         <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-800">
-          Your spot on the care team is paused. The Family Circle owner can fix this from their billing settings.
+          {t('obs_edit.frozen_notice')}
         </div>
       )}
 
       <ErrorBoundary
         fallback={
           <div className="rounded-md border border-peach-blush bg-peach-blush/20 p-4 text-slate-800">
-            <div className="font-semibold mb-1">Couldn’t render the form.</div>
-            <div className="text-sm">Please refresh the page. If the error persists, there may be an issue in ObservationForm or its hooks.</div>
+            <div className="font-semibold mb-1">{t('obs_edit.render_error')}</div>
+            <div className="text-sm">{t('obs_edit.render_error_detail')}</div>
           </div>
         }
       >

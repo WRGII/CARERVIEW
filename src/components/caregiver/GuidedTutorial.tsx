@@ -2,30 +2,32 @@ import { useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useOnboarding } from '../../hooks/useOnboarding';
-
-const STEPS = [
-  {
-    path: '/caregiver',
-    title: 'Welcome to CarerView',
-    body: "You know your loved one best. Let's walk through how to capture your first observation. It only takes a few minutes.",
-    target: null,
-  },
-  {
-    path: '/caregiver',
-    title: 'Start an observation',
-    body: 'Tap "New Observation" whenever you want to record what you\'re seeing.',
-    target: '[data-tutorial="new-observation"]',
-  },
-  {
-    path: '/caregiver/observations/new',
-    title: 'Choose Daily Living Activities',
-    body: 'This is the most popular choice. It covers the daily basics -- eating, dressing, bathing, and getting around.',
-    target: '[data-tutorial="adl-tile"]',
-  },
-];
+import { useLocale } from '../../i18n/LocaleContext';
 
 export default function GuidedTutorial() {
   const { showTutorial, currentStep, setStep, completeTutorial, dismissTutorial } = useOnboarding();
+  const { t } = useLocale();
+
+  const STEPS = [
+    {
+      path: '/caregiver',
+      title: t('tutorial.step1_title'),
+      body: t('tutorial.step1_body'),
+      target: null,
+    },
+    {
+      path: '/caregiver',
+      title: t('tutorial.step2_title'),
+      body: t('tutorial.step2_body'),
+      target: '[data-tutorial="new-observation"]',
+    },
+    {
+      path: '/caregiver/observations/new',
+      title: t('tutorial.step3_title'),
+      body: t('tutorial.step3_body'),
+      target: '[data-tutorial="adl-tile"]',
+    },
+  ];
   const location = useLocation();
 
   const step = STEPS[currentStep];
@@ -65,7 +67,7 @@ export default function GuidedTutorial() {
           <button
             onClick={dismissTutorial}
             className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 transition-colors"
-            aria-label="Skip tutorial"
+            aria-label={t('tutorial.skip_aria')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -89,7 +91,7 @@ export default function GuidedTutorial() {
               onClick={dismissTutorial}
               className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
             >
-              Skip tutorial
+              {t('tutorial.skip')}
             </button>
             <div className="flex items-center gap-2">
               {currentStep > 0 && (
@@ -98,14 +100,14 @@ export default function GuidedTutorial() {
                   className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors min-h-[44px]"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back
+                  {t('common.back')}
                 </button>
               )}
               <button
                 onClick={handleNext}
                 className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors min-h-[44px]"
               >
-                {isLastStep ? 'Done' : 'Next'}
+                {isLastStep ? t('common.done') : t('common.next')}
                 {!isLastStep && <ArrowRight className="w-4 h-4" />}
               </button>
             </div>

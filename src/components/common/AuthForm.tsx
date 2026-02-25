@@ -4,6 +4,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchChoosePlanAssets } from "../../hooks/usePrefetchStatic";
+import { useLocale } from '../../i18n/LocaleContext';
 
 interface AuthFormProps {
   initialMode?: "signin" | "signup";
@@ -11,6 +12,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ initialMode = "signin", showToggle = true }: AuthFormProps) {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -43,7 +45,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
 
     if (prof?.disabled) {
       await supabase.auth.signOut();
-      throw new Error("Account disabled. Please contact support.");
+      throw new Error(t('common.account_disabled'));
     }
 
     if (!prof) {
@@ -66,11 +68,11 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
     if (siErr) {
       throw new Error(
         siErr.message === "Invalid login credentials"
-          ? "Incorrect email or password. Please check your credentials or try resetting your password."
+          ? t('auth.invalid_credentials')
           : siErr.message
       );
     }
-    if (!data?.user) throw new Error("Sign-in failed. Please try again.");
+    if (!data?.user) throw new Error(t('auth.signin_failed'));
 
     const prof = await upsertProfile(
       data.user.id,
@@ -91,7 +93,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t('auth.password_too_short'));
       return;
     }
 
@@ -102,7 +104,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
     try {
       await handleSignIn();
     } catch (err: any) {
-      setError(err?.message || "Authentication failed.");
+      setError(err?.message || t('auth.failed'));
     } finally {
       setLoading(false);
     }
@@ -110,7 +112,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
 
   const handlePasswordReset = async () => {
     if (!email.trim()) {
-      setError("Enter your email address above first.");
+      setError(t('auth.email_first'));
       return;
     }
     setSendingReset(true);
@@ -120,9 +122,9 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      setInfo("If that email exists in our system, a reset link has been sent.");
+      setInfo(t('auth.reset_sent'));
     } catch (e: any) {
-      setError(e?.message || "Failed to send password reset email.");
+      setError(e?.message || t('auth.reset_failed'));
     } finally {
       setSendingReset(false);
     }
@@ -134,13 +136,13 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
       <div className="bg-gradient-to-r from-cyan-primary/10 to-mint-green/15 px-8 pt-8 pb-6 flex items-center gap-5 border-b border-slate-gray/10">
         <img
           src="/CareView_logo_1_colored_highres.png"
-          alt="CarerView Logo"
+          alt={t('nav.logo_aria')}
           className="w-24 h-24 md:w-28 md:h-28 object-contain flex-shrink-0 drop-shadow-md"
         />
         <div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Welcome to</p>
-          <p className="text-2xl font-bold text-slate-gray leading-tight">CarerView</p>
-          <p className="text-sm text-slate-gray/65 mt-1">Caring made clearer, together.</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">{t('auth.welcome_to')}</p>
+          <p className="text-2xl font-bold text-slate-gray leading-tight">{t('common.app_name')}</p>
+          <p className="text-sm text-slate-gray/65 mt-1">{t('auth.tagline')}</p>
         </div>
       </div>
 
@@ -156,7 +158,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
                   isSignUp ? "bg-warm-white text-slate-gray shadow-sm" : "text-slate-gray/60 hover:text-slate-gray"
                 }`}
               >
-                Create account
+                {t('auth.create_account_tab')}
               </button>
               <button
                 type="button"
@@ -165,7 +167,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
                   !isSignUp ? "bg-warm-white text-slate-gray shadow-sm" : "text-slate-gray/60 hover:text-slate-gray"
                 }`}
               >
-                Sign in
+                {t('auth.sign_in_tab')}
               </button>
             </div>
           </div>
@@ -174,24 +176,24 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
         {isSignUp ? (
           <div className="space-y-5">
             <p className="text-slate-gray/75 text-sm leading-relaxed">
-              Choose your plan and set up your caregiver account — it only takes a minute.
+              {t('auth.signup_body')}
             </p>
             <Link
               to="/create-account"
               onMouseEnter={kickoffPrefetch}
               className="w-full inline-flex items-center justify-center gap-3 rounded-xl bg-cyan-primary px-6 py-3.5 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200"
             >
-              Get started <ArrowRight className="w-5 h-5" />
+              {t('auth.get_started')} <ArrowRight className="w-5 h-5" />
             </Link>
             <p className="text-center text-xs text-slate-gray/55">
-              Free plan available. No credit card required to try.
+              {t('auth.free_note')}
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div>
               <label htmlFor="auth-email" className="block text-sm font-semibold text-slate-gray mb-1.5">
-                Email address
+                {t('auth.email_label')}
               </label>
               <input
                 id="auth-email"
@@ -202,13 +204,13 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
                 onChange={(e) => setEmail(e.target.value)}
                 onFocus={kickoffPrefetch}
                 className="w-full rounded-lg border border-slate-gray/25 bg-warm-white text-slate-gray px-4 py-2.5 text-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary"
-                placeholder="your.email@example.com"
+                placeholder={t('auth.email_placeholder')}
               />
             </div>
 
             <div>
               <label htmlFor="auth-password" className="block text-sm font-semibold text-slate-gray mb-1.5">
-                Password
+                {t('auth.password_label')}
               </label>
               <input
                 id="auth-password"
@@ -219,7 +221,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-slate-gray/25 bg-warm-white text-slate-gray px-4 py-2.5 text-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary"
-                placeholder="Your password"
+                placeholder={t('auth.password_placeholder')}
               />
             </div>
 
@@ -244,11 +246,11 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Signing in…
+                  {t('auth.signing_in')}
                 </>
               ) : (
                 <>
-                  Sign in <ArrowRight className="w-5 h-5" />
+                  {t('nav.sign_in')} <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
@@ -260,14 +262,14 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
                 disabled={sendingReset}
                 className="text-sm text-cyan-primary hover:underline disabled:opacity-60"
               >
-                {sendingReset ? "Sending…" : "Forgot your password?"}
+                {sendingReset ? t('auth.sending_reset') : t('auth.forgot_password')}
               </button>
               <Link
                 to="/create-account"
                 onMouseEnter={kickoffPrefetch}
                 className="text-sm text-cyan-primary hover:underline"
               >
-                Create account
+                {t('auth.create_account_link')}
               </Link>
             </div>
           </form>

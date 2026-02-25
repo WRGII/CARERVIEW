@@ -5,53 +5,34 @@ import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock } from "
 import ObservationPreview from "../components/ObservationPreview";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
+import { useLocale } from "../i18n/LocaleContext";
 
 export default function WhyCarerView() {
-  // --- Personas --------------------------------------------------------------
+  const { t } = useLocale();
+
   const personas = [
     {
-      title: "Long-distance family coordination",
-      quote:
-        "“I’m out of town. I hated feeling out of the loop. CarerView lets me check the latest observations before I call.”",
-      bullets: [
-        "See updates in one place—no more hunting for info.",
-        "Review trends to prep for phone calls and visits.",
-        "Share only what each person needs to see.",
-      ],
+      title: t('why.persona1_title'),
+      quote: t('why.persona1_quote'),
+      bullets: [t('why.persona1_b1'), t('why.persona1_b2'), t('why.persona1_b3')],
     },
     {
-      title: "Sandwich-generation caregiver",
-      quote:
-        "“Between my kids and Mum’s appointments, I forget details. CarerView captures patterns so I bring clear notes to the doctor.”",
-      bullets: [
-        "Capture incidents and routines as they happen.",
-        "Create clinic-ready summaries from real-life notes.",
-        "Make calmer decisions with shared context.",
-      ],
+      title: t('why.persona2_title'),
+      quote: t('why.persona2_quote'),
+      bullets: [t('why.persona2_b1'), t('why.persona2_b2'), t('why.persona2_b3')],
     },
     {
-      title: "Rotating helpers / paid caregivers",
-      quote:
-        "“We needed smooth hand-offs. With CarerView, every shift sees what changed and what works.”",
-      bullets: [
-        "Keep a living playbook of triggers and what helps.",
-        "Track who did what for clear accountability.",
-        "Reduce repeat questions and missed details.",
-      ],
+      title: t('why.persona3_title'),
+      quote: t('why.persona3_quote'),
+      bullets: [t('why.persona3_b1'), t('why.persona3_b2'), t('why.persona3_b3')],
     },
     {
-      title: "Hospital-to-home transitions",
-      quote:
-        "“Discharge instructions felt overwhelming. CarerView helped us monitor the first weeks and escalate with evidence.”",
-      bullets: [
-        "Log observations aligned to the care plan.",
-        "Highlight concerning trends early.",
-        "Share concise updates with clinicians.",
-      ],
+      title: t('why.persona4_title'),
+      quote: t('why.persona4_quote'),
+      bullets: [t('why.persona4_b1'), t('why.persona4_b2'), t('why.persona4_b3')],
     },
   ];
 
-  // --- UI --------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,25 +40,22 @@ export default function WhyCarerView() {
         <div className="pt-8 pb-10 text-center">
           <div className="flex flex-col items-center justify-center mb-4">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray">
-              Your Observations are Vital!
-
+              {t('why.hero_title')}
             </h1>
           </div>
-
           <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
-            Changes in a loved one's abilities aren't always steady or predictable—what happens today may look different tomorrow. CarerView helps you observe these ups and downs over time, revealing the real trends that matter. With that clarity, your care team can adjust care plans more effectively and with greater confidence.
+            {t('why.hero_body')}
           </p>
         </div>
 
-        {/* HOW CARERVIEW HELPS */}
-        {/* WHAT YOU'LL TRACK - MOVED TO POSITION 1 */}
+        {/* WHAT YOU'LL TRACK */}
         <div className="py-20">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              What you'll Observe
+              {t('why.track_title')}
             </h3>
             <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
-              Simple living categories that reflect real daily life
+              {t('why.track_body')}
             </p>
           </div>
 
@@ -85,21 +63,17 @@ export default function WhyCarerView() {
             <Card className="border-0 shadow-lg bg-warm-white">
               <CardContent className="p-8">
                 <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Activities of Daily Living
+                  {t('why.adl_title')}
                 </h4>
                 <BulletList
                   bullets={[
-                    "Bathing & personal hygiene",
-                    "Dressing & grooming",
-                    "Eating & drinking",
-                    "Toileting & continence",
-                    "Mobility & transfers",
-                    "Safety awareness",
+                    t('why.adl_1'), t('why.adl_2'), t('why.adl_3'),
+                    t('why.adl_4'), t('why.adl_5'), t('why.adl_6'),
                   ]}
                   dot="cyan"
                 />
                 <ObservationPreview
-                  questionText="Bathing & personal hygiene"
+                  questionText={t('why.adl_1')}
                   selectedScore={4}
                   accentColor="cyan"
                 />
@@ -109,21 +83,17 @@ export default function WhyCarerView() {
             <Card className="border-0 shadow-lg bg-warm-white">
               <CardContent className="p-8">
                 <h4 className="text-2xl font-semibold text-slate-gray mb-6 text-center">
-                  Instrumental Activities
+                  {t('why.iadl_title')}
                 </h4>
                 <BulletList
                   bullets={[
-                    "Medication management",
-                    "Meals & groceries",
-                    "Housekeeping & laundry",
-                    "Finances & paperwork",
-                    "Communication & memory",
-                    "Transportation & errands",
+                    t('why.iadl_1'), t('why.iadl_2'), t('why.iadl_3'),
+                    t('why.iadl_4'), t('why.iadl_5'), t('why.iadl_6'),
                   ]}
                   dot="mint"
                 />
                 <ObservationPreview
-                  questionText="Medication management"
+                  questionText={t('why.iadl_1')}
                   selectedScore={4}
                   accentColor="mint"
                 />
@@ -132,7 +102,7 @@ export default function WhyCarerView() {
           </div>
 
           <p className="text-center text-slate-gray/60 mt-8 italic">
-            Observations are custom so CarerView fits your family's reality.
+            {t('why.custom_note')}
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -140,27 +110,25 @@ export default function WhyCarerView() {
               to="/create-account"
               className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
             >
-              Begin Observation Now <ArrowRight className="w-5 h-5" />
+              {t('why.cta_begin')} <ArrowRight className="w-5 h-5" />
             </Link>
-
             <Link
               to={{ pathname: "/", hash: "#get-started" }}
               className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-              aria-label="Sign In"
+              aria-label={t('why.cta_signin')}
             >
-              Sign In
+              {t('why.cta_signin')}
             </Link>
           </div>
         </div>
 
-        {/* PERSONAS - MOVED TO POSITION 2 */}
+        {/* PERSONAS */}
         <section className="pb-12">
           <div className="text-center mb-10">
             <h3 className="text-3xl font-bold text-slate-gray">
-              Built for real caregiving situations
+              {t('why.personas_title')}
             </h3>
           </div>
-
           <div className="grid gap-6 sm:grid-cols-2 items-stretch">
             {personas.map((p) => (
               <article
@@ -185,72 +153,48 @@ export default function WhyCarerView() {
           </div>
         </section>
 
-        {/* HOW CARERVIEW HELPS - MOVED TO POSITION 3 */}
+        {/* HOW CARERVIEW HELPS */}
         <div className="py-20">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-bold text-slate-gray mb-6">
-              A shared language for care
+              {t('why.shared_lang_title')}
             </h3>
           </div>
-
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Clock className="w-8 h-8 text-cyan-primary" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Simple Observations
-                </h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Spend just a few minutes noting how things went across core Activities of
-                  Daily Living. Create quick check-ins or complete Observations anytime.
-                </p>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">{t('why.how1_title')}</h4>
+                <p className="text-slate-gray/80 leading-relaxed">{t('why.how1_body')}</p>
               </CardContent>
             </Card>
-
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-mint-green/60 rounded-full flex items-center justify-center mx-auto mb-6">
                   <CheckCircle className="w-8 h-8 text-slate-gray" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Easy 1–5 scale
-                </h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Clear wording—no medical jargon—grounded in occupational therapy
-                  best practices that families can understand.
-                </p>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">{t('why.how2_title')}</h4>
+                <p className="text-slate-gray/80 leading-relaxed">{t('why.how2_body')}</p>
               </CardContent>
             </Card>
-
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-peach-blush/60 rounded-full flex items-center justify-center mx-auto mb-6">
                   <FileText className="w-8 h-8 text-slate-gray" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Trends you can trust
-                </h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  See changes over days - weeks - months, not just how today felt. Observed trends
-                  highlight when to adjust routines or supports.
-                </p>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">{t('why.how3_title')}</h4>
+                <p className="text-slate-gray/80 leading-relaxed">{t('why.how3_body')}</p>
               </CardContent>
             </Card>
-
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-cyan-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Users className="w-8 h-8 text-cyan-primary" />
                 </div>
-                <h4 className="text-xl font-semibold text-slate-gray mb-4">
-                  Bring everyone together
-                </h4>
-                <p className="text-slate-gray/80 leading-relaxed">
-                  Share private Observations with family and clinicians so discussions start
-                  from the same definitions and data.
-                </p>
+                <h4 className="text-xl font-semibold text-slate-gray mb-4">{t('why.how4_title')}</h4>
+                <p className="text-slate-gray/80 leading-relaxed">{t('why.how4_body')}</p>
               </CardContent>
             </Card>
           </div>
@@ -261,77 +205,21 @@ export default function WhyCarerView() {
           <div className="max-w-xl mx-auto">
             <div className="text-center mb-10">
               <h3 className="text-4xl font-bold text-slate-gray mb-4">
-                Bring trend data to the conversation
+                {t('why.cta_trend_title')}
               </h3>
               <p className="text-lg text-slate-gray/75 leading-relaxed">
-                Start noticing together, decide together, and care together — CarerView is your shared compass.
+                {t('why.cta_trend_body')}
               </p>
             </div>
             <AuthForm initialMode="signup" showToggle={true} />
           </div>
         </section>
-
       </div>
     </div>
   );
 }
 
-/* ----- tiny presentational helpers to keep JSX tidy ----- */
-
-function FeatureLine({
-  tone,
-  title,
-  blurb,
-}: {
-  tone: "cyan" | "mint" | "peach" | "cyanSolid";
-  title: string;
-  blurb: string;
-}) {
-  const bg =
-    tone === "cyan"
-      ? "bg-cyan-primary"
-      : tone === "mint"
-      ? "bg-mint-green"
-      : tone === "peach"
-      ? "bg-peach-blush"
-      : "bg-cyan-primary";
-  const icon =
-    tone === "cyanSolid" ? (
-      <CheckCircle className="w-5 h-5 text-warm-white" />
-    ) : (
-      <CheckCircle className="w-5 h-5 text-slate-gray" />
-    );
-  const circleTone =
-    tone === "cyanSolid"
-      ? "bg-cyan-primary"
-      : tone === "mint"
-      ? "bg-mint-green"
-      : tone === "peach"
-      ? "bg-peach-blush"
-      : "bg-cyan-primary";
-
-  return (
-    <div className="flex items-start space-x-4">
-      <div
-        className={`w-8 h-8 ${circleTone} rounded-full flex items-center justify-center flex-shrink-0 mt-1`}
-      >
-        {icon}
-      </div>
-      <div>
-        <h4 className="text-xl font-semibold text-slate-gray mb-2">{title}</h4>
-        <p className="text-slate-gray/80">{blurb}</p>
-      </div>
-    </div>
-  );
-}
-
-function BulletList({
-  bullets,
-  dot,
-}: {
-  bullets: string[];
-  dot: "cyan" | "mint";
-}) {
+function BulletList({ bullets, dot }: { bullets: string[]; dot: "cyan" | "mint" }) {
   const dotClass = dot === "mint" ? "bg-mint-green" : "bg-cyan-primary";
   return (
     <div className="space-y-3">
@@ -341,61 +229,6 @@ function BulletList({
           <span className="text-slate-gray">{item}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-function MiniBlock({
-  icon,
-  title,
-  blurb,
-  tone,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  blurb: string;
-  tone?: "peach" | "mint" | "cyan";
-}) {
-  const bg =
-    tone === "mint"
-      ? "bg-mint-green/60"
-      : tone === "peach"
-      ? "bg-peach-blush/60"
-      : "bg-cyan-primary/20";
-  const iconWrap = `w-16 h-16 ${bg} rounded-full flex items-center justify-center mx-auto mb-4`;
-  return (
-    <div>
-      <div className={iconWrap}>{icon}</div>
-      <h4 className="text-lg font-semibold text-slate-gray mb-2">{title}</h4>
-      <p className="text-slate-gray/80">{blurb}</p>
-    </div>
-  );
-}
-
-function TrustBlock({
-  icon,
-  title,
-  blurb,
-  tone,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  blurb: string;
-  tone?: "peach" | "mint" | "cyan";
-}) {
-  const bg =
-    tone === "mint"
-      ? "bg-mint-green/60"
-      : tone === "peach"
-      ? "bg-peach-blush/60"
-      : "bg-cyan-primary/20";
-  return (
-    <div>
-      <div className={`w-16 h-16 ${bg} rounded-full flex items-center justify-center mx-auto mb-4`}>
-        {icon}
-      </div>
-      <h4 className="text-lg font-semibold text-slate-gray mb-2">{title}</h4>
-      <p className="text-slate-gray/80">{blurb}</p>
     </div>
   );
 }

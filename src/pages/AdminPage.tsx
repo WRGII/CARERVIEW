@@ -4,16 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { AggregateData } from "../components/admin/AggregateData"; // named import (kept)
+import { useLocale } from "../i18n/LocaleContext";
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const { user, profile, loading, error } = useAuth();
+  const { t } = useLocale();
 
-  if (loading) return <div className="p-6">Loading admin dashboard...</div>;
+  if (loading) return <div className="p-6">{t('admin.loading')}</div>;
   if (error || !user)
     return (
       <div className="p-6 text-red-600">
-        {error || "Authentication required."}
+        {error || t('common.auth_required')}
       </div>
     );
 
@@ -48,7 +50,7 @@ export default function AdminPage() {
         <div className="text-sm text-slate-gray">
           <span className="font-semibold">{display}</span>
           <span className="ml-2 inline-block rounded border border-slate-gray/30 px-2 py-0.5 text-xs">
-            Admin
+            {t('admin.role_badge')}
           </span>
         </div>
         <button
@@ -56,11 +58,11 @@ export default function AdminPage() {
           onClick={handleSignOut}
           className="rounded border border-slate-gray/30 px-3 py-1 text-sm hover:bg-peach-blush/20 text-slate-gray"
         >
-          Log out
+          {t('nav.sign_out')}
         </button>
       </div>
 
-      <h1 className="text-2xl font-semibold mb-4 text-slate-gray">Admin Dashboard</h1>
+      <h1 className="text-2xl font-semibold mb-4 text-slate-gray">{t('admin.title')}</h1>
 
       {/* System-wide aggregates / KPIs */}
       <div className="mt-6">
@@ -75,7 +77,7 @@ export default function AdminPage() {
           className="inline-flex items-center gap-2 rounded-lg border border-slate-gray/30 px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
           aria-label="Manage active caregivers"
         >
-          Manage caregivers
+          {t('admin.manage_caregivers')}
         </Link>
       </div>
 

@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLegend } from '../../hooks/useLegend'
+import { useLocale } from '../../i18n/LocaleContext'
 
 type Props = {
   /** Smaller paddings / heights / text on small screens. Backward-compatible (optional). */
@@ -9,16 +10,17 @@ type Props = {
 }
 
 export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className }) => {
+  const { t } = useLocale()
   const { data: legend, isLoading, error } = useLegend()
 
   if (isLoading) {
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-700">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">{t('obs_list.score_reference')}</h3>
         </div>
         <div className="p-4 md:p-6">
-          <div className="text-slate-500 text-center py-6 md:py-8">Loading score reference...</div>
+          <div className="text-slate-500 text-center py-6 md:py-8">{t('obs_list.score_ref_loading')}</div>
         </div>
       </div>
     )
@@ -28,10 +30,10 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-700">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">{t('obs_list.score_reference')}</h3>
         </div>
         <div className="p-4 md:p-6">
-          <div className="text-red-600 text-center py-6 md:py-8">Failed to load score reference</div>
+          <div className="text-red-600 text-center py-6 md:py-8">{t('obs_list.score_ref_error')}</div>
         </div>
       </div>
     )
@@ -41,10 +43,10 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
     return (
       <div className={`bg-white border rounded-xl ${className ?? ''}`}>
         <div className="px-4 py-3 border-b bg-slate-50">
-          <h3 className="font-semibold text-slate-700">Score Reference</h3>
+          <h3 className="font-semibold text-slate-700">{t('obs_list.score_reference')}</h3>
         </div>
         <div className="p-4 md:p-6">
-          <div className="text-slate-500 text-center py-6 md:py-8">No score reference available</div>
+          <div className="text-slate-500 text-center py-6 md:py-8">{t('obs_list.score_ref_empty')}</div>
         </div>
       </div>
     )
@@ -86,10 +88,10 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
         {/* Title */}
         <div className={`text-center ${compact ? 'mb-2 md:mb-3' : 'mb-4 md:mb-6'}`}>
           <p className={`${compact ? 'text-xs md:text-sm' : 'text-sm md:text-base'} font-semibold text-slate-500 uppercase tracking-widest mb-0.5`}>
-            Activities of Daily Living
+            {t('scale.section_label')}
           </p>
           <h2 className={`${titleSize} font-bold text-slate-800 tracking-wide`}>
-            CarerView 1–5 Scale
+            {t('scale.title')}
           </h2>
         </div>
 
@@ -120,8 +122,8 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
           })}
         </div>
         <div className="flex justify-between mt-1">
-          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>More help needed</span>
-          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>More independent</span>
+          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>{t('scale.more_help')}</span>
+          <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-slate-400`}>{t('scale.more_independent')}</span>
         </div>
 
         {/* Detailed Descriptions */}

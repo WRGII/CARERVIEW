@@ -5,12 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { hasActivePlan, type UserPlan } from "../hooks/useUserPlan";
+import { useLocale } from "../i18n/LocaleContext";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const sessionId = params.get("session_id") || "";
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLocale();
 
   const normalizeISO = (v: unknown): string | null =>
     typeof v === "string" ? v : v ? new Date(v as any).toISOString() : null;
@@ -68,7 +70,7 @@ export default function CheckoutSuccess() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Finalizing your subscription…</p>
+        <p className="text-gray-600">{t('checkout.finalizing')}</p>
       </div>
     );
   }
@@ -77,15 +79,15 @@ export default function CheckoutSuccess() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
-          <h1 className="text-2xl font-semibold text-slate-800 mb-2">Sign in required</h1>
+          <h1 className="text-2xl font-semibold text-slate-800 mb-2">{t('checkout.signin_required')}</h1>
           <p className="text-slate-600 mb-6">
-            Please sign in again so we can confirm your subscription status.
+            {t('checkout.signin_body')}
           </p>
           <button
             onClick={() => navigate("/login")}
             className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
           >
-            Sign in
+            {t('nav.sign_in')}
           </button>
         </div>
       </div>
@@ -113,9 +115,9 @@ export default function CheckoutSuccess() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-slate-800 mb-2">Payment received</h1>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-2">{t('checkout.payment_received')}</h1>
               <p className="text-slate-500 mb-6">
-                We're activating your plan. This usually takes just a few seconds.
+                {t('checkout.activating')}
               </p>
             </>
           ) : (
@@ -125,16 +127,16 @@ export default function CheckoutSuccess() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h1 className="text-2xl font-semibold text-slate-800 mb-2">You're all set</h1>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-2">{t('checkout.all_set')}</h1>
               <p className="text-slate-500 mb-6">
-                {planLabel ? `Your ${planLabel} plan is now active.` : "Your plan is now active."} Redirecting to your dashboard…
+                {planLabel ? t('checkout.plan_active_named', { plan: planLabel }) : t('checkout.plan_active')} {t('checkout.redirecting')}
               </p>
             </>
           )}
 
           {(isError || tookTooLong) && waiting && (
             <div className="mb-6 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-4 text-left">
-              Taking longer than expected. You can refresh or head to your dashboard — access will appear once activation completes.
+              {t('checkout.taking_long')}
             </div>
           )}
 
@@ -144,14 +146,14 @@ export default function CheckoutSuccess() {
                 onClick={() => refetch()}
                 className="px-5 py-2.5 rounded-lg border border-gray-200 text-slate-700 hover:bg-gray-50 transition-colors text-sm font-medium"
               >
-                Refresh
+                {t('common.refresh')}
               </button>
             )}
             <button
               onClick={() => navigate("/caregiver", { replace: true })}
               className="px-5 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors text-sm font-medium"
             >
-              Go to dashboard
+              {t('nav.dashboard')}
             </button>
           </div>
         </div>

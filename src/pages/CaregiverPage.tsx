@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus, BookOpen } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
@@ -33,6 +34,7 @@ export default function CaregiverPage() {
   const planActive = hasActivePlan(plan);
   const { showToast } = useToast();
   const deleteObservationMutation = useDeleteObservation();
+  const { t } = useLocale();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
@@ -60,10 +62,10 @@ export default function CaregiverPage() {
   }, [searchParams]);
 
   // Auth guards
-  if (loading) return <Loading message="Loading caregiver dashboard..." />;
-  if (error || !user) return <ErrorMessage message={error || 'Authentication required.'} />;
-  if (!profile) return <ErrorMessage message="Profile not found. Please contact support." />;
-  if (profile.disabled) return <ErrorMessage message="Account disabled." />;
+  if (loading) return <Loading message={t('caregiver.loading')} />;
+  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
+  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
   function handleViewObservation(id: string) {
     setCurrentObservationId(id);
@@ -77,10 +79,10 @@ export default function CaregiverPage() {
     try {
       await deleteObservationMutation.mutateAsync(observationId);
       await queryClient.invalidateQueries({ queryKey: ['observations', user?.id] });
-      showToast('Observation deleted successfully', 'success');
+      showToast(t('caregiver.obs_deleted'), 'success');
     } catch (e: any) {
       console.error('Delete failed:', e);
-      showToast(e?.message || 'Failed to delete observation', 'error');
+      showToast(e?.message || t('caregiver.obs_delete_failed'), 'error');
     } finally {
       setDeletingId(null);
     }
@@ -104,14 +106,14 @@ export default function CaregiverPage() {
         `)
         .eq('id', observationId)
         .single();
-      if (obsErr) throw new Error(`Failed to load observation: ${obsErr.message}`);
-      if (!obs) throw new Error('Observation not found.');
+      if (obsErr) throw new Error(`${t('caregiver.obs_load_failed')}: ${obsErr.message}`);
+      if (!obs) throw new Error(t('caregiver.obs_not_found'));
 
       const { data: legend, error: legErr } = await supabase
         .from('legend')
         .select('*')
         .order('score', { ascending: true });
-      if (legErr) throw new Error(`Failed to load legend: ${legErr.message}`);
+      if (legErr) throw new Error(`${t('caregiver.legend_load_failed')}: ${legErr.message}`);
 
       const responses = (obs.responses ?? []).map(r => {
         const q = Array.isArray(r.question) ? r.question[0] : r.question;
@@ -196,7 +198,7 @@ export default function CaregiverPage() {
         />
       ) : (
         <div className="bg-white border rounded-xl p-6">
-          <p className="text-slate-600">No observation selected</p>
+          <p className="text-slate-600">{t('caregiver.no_obs_selected')}</p>
         </div>
       );
     }
@@ -212,7 +214,7 @@ export default function CaregiverPage() {
 
   return (
     <PageLayout
-      title="Dashboard"
+      title={t('caregiver.dashboard_title')}
       user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
@@ -222,7 +224,7 @@ export default function CaregiverPage() {
           className="flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
-          <span>New Observation</span>
+          <span>{t('caregiver.new_obs_btn')}</span>
         </Button>
       }
     >
@@ -236,7 +238,7 @@ export default function CaregiverPage() {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <p className="ml-3 text-sm font-medium text-green-800">
-              Payment successful! Your subscription is now active.
+              {t('caregiver.payment_success')}
             </p>
           </div>
         </div>
@@ -260,12 +262,12 @@ export default function CaregiverPage() {
               <BookOpen className="w-5 h-5 text-cyan-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-800">Dementia Scale Reference</p>
-              <p className="text-xs text-slate-500 mt-0.5">Global Deterioration Scale (GDS) — 7 stages of cognitive decline</p>
+              <p className="text-sm font-semibold text-slate-800">{t('caregiver.dementia_ref_title')}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('caregiver.dementia_ref_body')}</p>
             </div>
           </div>
           <span className="text-xs font-medium text-cyan-primary group-hover:translate-x-0.5 transition-transform">
-            View &rarr;
+            {t('common.view_arrow')}
           </span>
         </Link>
       </div>
@@ -274,8 +276,8 @@ export default function CaregiverPage() {
         {viewMode === 'list' && (
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-700 mb-2">Your Observations</h2>
-              <p className="text-slate-600">Track and manage your caregiver observations</p>
+              <h2 className="text-2xl font-bold text-slate-700 mb-2">{t('caregiver.observations_title')}</h2>
+              <p className="text-slate-600">{t('caregiver.observations_body')}</p>
             </div>
           </div>
         )}

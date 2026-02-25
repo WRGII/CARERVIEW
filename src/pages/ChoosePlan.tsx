@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useLocale } from '../i18n/LocaleContext';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
 import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
@@ -12,6 +13,7 @@ import { useActivateFreePlan } from '../hooks/useFreePlan';
 export default function ChoosePlan() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLocale();
   const [searchParams] = useSearchParams();
   const { data: userPlan, isLoading: planLoading, refetch: refetchPlan } = useUserPlan();
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -27,12 +29,12 @@ export default function ChoosePlan() {
     if (status === 'success') {
       setStatusMessage({
         type: 'success',
-        message: 'Payment successful! Your subscription is now active.'
+        message: t('caregiver.payment_success')
       });
     } else if (status === 'cancel') {
       setStatusMessage({
         type: 'error',
-        message: 'Payment was cancelled. You can try again anytime.'
+        message: t('choose_plan.cancelled')
       });
     }
   }, [searchParams]);
@@ -49,7 +51,7 @@ export default function ChoosePlan() {
       console.error('Error opening billing portal:', error);
       setStatusMessage({
         type: 'error',
-        message: 'Failed to open billing portal. Please try again.'
+        message: t('billing.portal_failed')
       });
       setManagingBilling(false);
     }
@@ -57,7 +59,7 @@ export default function ChoosePlan() {
 
   const handleSelectPlan = async (priceId: string, planId: string) => {
     if (!user) {
-      setStatusMessage({ type: 'error', message: 'You must be signed in to select a plan.' });
+      setStatusMessage({ type: 'error', message: t('choose_plan.auth_required') });
       return;
     }
     if (checkoutLoading) return;
@@ -71,10 +73,10 @@ export default function ChoosePlan() {
         const result = await activateFreePlanMutation.mutateAsync();
 
         if (result.alreadyActive) {
-          setStatusMessage({ type: 'success', message: 'You already have an active plan!' });
+          setStatusMessage({ type: 'success', message: t('choose_plan.already_active') });
         } else {
           window.plausible('Plan Selected', { props: { plan: 'free' } });
-          setStatusMessage({ type: 'success', message: 'Free plan activated successfully!' });
+          setStatusMessage({ type: 'success', message: t('choose_plan.free_activated') });
         }
 
         await refetchPlan();
@@ -83,7 +85,7 @@ export default function ChoosePlan() {
         console.error('Error activating free plan:', error);
         setStatusMessage({
           type: 'error',
-          message: error.message || 'Failed to activate free plan. Please try again.'
+          message: error.message || t('choose_plan.activate_failed')
         });
       } finally {
         setCheckoutLoading(null);
@@ -127,7 +129,7 @@ export default function ChoosePlan() {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-600">Loading subscription information...</p>
+          <p className="text-gray-600">{t('choose_plan.loading')}</p>
         </div>
       </div>
     );
@@ -138,10 +140,10 @@ export default function ChoosePlan() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-700 mb-4">
-            {isManageMode ? 'Manage Your Subscription' : 'Choose Your Plan'}
+            {isManageMode ? t('choose_plan.manage_title') : t('choose_plan.title')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Select the plan that best fits your caregiving needs. All plans include comprehensive observation tracking and detailed reports.
+            {t('choose_plan.subtitle')}
           </p>
         </div>
 
@@ -166,25 +168,25 @@ export default function ChoosePlan() {
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <CreditCard className="w-5 h-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-slate-700">Current Subscription</h3>
+                  <h3 className="text-lg font-semibold text-slate-700">{t('choose_plan.current_sub')}</h3>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-600">Plan:</span>
+                    <span className="text-gray-600">{t('choose_plan.plan_label')}</span>
                     <span className="font-medium text-slate-700">
-                      {userPlan.plan_id === 'free' ? 'Free Observer' :
-                       userPlan.plan_id === 'primary_qtr' ? 'Primary Caregiver' :
-                       userPlan.plan_id === 'family_qtr' ? 'Family Circle' :
+                      {userPlan.plan_id === 'free' ? t('pricing.plan_free_name') :
+                       userPlan.plan_id === 'primary_qtr' ? t('pricing.plan_primary_name') :
+                       userPlan.plan_id === 'family_qtr' ? t('pricing.plan_family_name') :
                        userPlan.plan_id || 'Unknown'}
                     </span>
                     <span className="inline-flex items-center gap-1 text-green-700">
                       <span className="h-2 w-2 rounded-full bg-green-500" />
-                      {userPlan.status === 'active' ? 'Active' : userPlan.status}
+                      {userPlan.status === 'active' ? t('common.active') : userPlan.status}
                     </span>
                   </div>
                   {userPlan.current_period_end && (
                     <div className="text-gray-600">
-                      Renews on: {new Date(userPlan.current_period_end).toLocaleDateString('en-US', {
+                      {t('choose_plan.renews_on')} {new Date(userPlan.current_period_end).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric'
@@ -198,7 +200,7 @@ export default function ChoosePlan() {
                 disabled={managingBilling}
                 className="ml-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
-                {managingBilling ? 'Opening...' : 'Manage Billing'}
+                {managingBilling ? t('common.opening') : t('billing.manage_btn')}
               </button>
             </div>
           </div>
@@ -209,13 +211,13 @@ export default function ChoosePlan() {
             <div className="flex items-start space-x-3">
               <XCircle className="w-5 h-5 text-amber-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-amber-900 mb-1">No Active Subscription</h3>
+                <h3 className="font-semibold text-amber-900 mb-1">{t('choose_plan.no_sub_title')}</h3>
                 <p className="text-sm text-amber-800">
                   {userPlan.status === 'canceled'
-                    ? 'Your subscription has been canceled. Select a plan below to reactivate.'
+                    ? t('choose_plan.sub_cancelled')
                     : userPlan.status === 'past_due'
-                    ? 'Your subscription payment is past due. Please update your billing information.'
-                    : 'Select a plan below to get started with CareView.'}
+                    ? t('choose_plan.sub_past_due')
+                    : t('choose_plan.sub_default')}
                 </p>
               </div>
             </div>
@@ -241,13 +243,13 @@ export default function ChoosePlan() {
 
         <div className="text-center mt-12">
           <p className="text-gray-600 mb-4">
-            Need help choosing? Contact our support team.
+            {t('choose_plan.need_help')}
           </p>
           <button
             onClick={() => navigate('/caregiver')}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
-            ← Back to Dashboard
+            {t('common.back_dashboard')}
           </button>
         </div>
 

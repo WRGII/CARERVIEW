@@ -7,6 +7,8 @@ import { useUserPlan } from "../../hooks/useUserPlan";
 import AccountMenu from "../caregiver/AccountMenu";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import LanguageSwitcher from "../common/LanguageSwitcher";
+import { useLocale } from "../../i18n/LocaleContext";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
 
@@ -41,6 +43,7 @@ export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
   const { data: plan } = useUserPlan();
+  const { t } = useLocale();
   const canUseTeam = plan?.plan_id === "family_qtr";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -55,23 +58,23 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Left: Brand */}
           <div className="flex items-center">
-            <Link to="/" aria-label="CarerView home" className="flex items-center hover:opacity-80 transition-opacity">
+            <Link to="/" aria-label={t('nav.home_aria')} className="flex items-center hover:opacity-80 transition-opacity">
               {logoLoading ? (
                 <div className="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-md bg-slate-200 animate-pulse" />
               ) : (
                 <img
                   src={logoSrc || FALLBACK_LOGO}
-                  alt="CarerView Logo"
+                  alt={t('nav.logo_aria')}
                   className="w-10 h-10 md:w-12 md:h-12 object-contain mr-3 rounded-md"
                   loading="eager"
                   decoding="async"
                 />
               )}
               <div className="flex items-center">
-                <span className="text-xl font-bold text-slate-800 mr-3">CarerView</span>
+                <span className="text-xl font-bold text-slate-800 mr-3">{t('common.app_name')}</span>
                 {isAuthed && profile?.role === "caregiver" && (
                   <span className="text-sm text-slate-600 font-medium">
-                    Welcome {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
+                    {t('nav.welcome')} {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
                   </span>
                 )}
               </div>
@@ -89,7 +92,7 @@ export default function Header() {
                     to={dashPath}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
                   >
-                    Dashboard
+                    {t('nav.dashboard')}
                   </Link>
 
                   {canUseTeam && (
@@ -97,10 +100,11 @@ export default function Header() {
                       to="/team"
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
                     >
-                      Family Circle
+                      {t('nav.family_circle')}
                     </Link>
                   )}
 
+                  <LanguageSwitcher />
                   <AccountMenu />
                 </div>
 
@@ -108,7 +112,7 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
                   aria-expanded={mobileMenuOpen}
-                  aria-label="Toggle navigation menu"
+                  aria-label={t('nav.toggle_menu')}
                 >
                   {mobileMenuOpen ? (
                     <X className="h-6 w-6" aria-hidden="true" />
@@ -125,25 +129,26 @@ export default function Header() {
                     to="/about"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
-                    About
+                    {t('nav.about')}
                   </Link>
                   <Link
                     to="/why"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
-                    Why your family needs CarerView
+                    {t('nav.why_carerview')}
                   </Link>
                   <Link
                     to="/pricing"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
-                    Pricing
+                    {t('nav.pricing')}
                   </Link>
+                  <LanguageSwitcher />
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
                   >
-                    Sign In
+                    {t('nav.sign_in')}
                   </Link>
                 </div>
 
@@ -152,7 +157,7 @@ export default function Header() {
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
                   aria-expanded={mobileMenuOpen}
-                  aria-label="Toggle navigation menu"
+                  aria-label={t('nav.toggle_menu')}
                 >
                   {mobileMenuOpen ? (
                     <X className="h-6 w-6" aria-hidden="true" />
@@ -183,7 +188,7 @@ export default function Header() {
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Dashboard
+                    {t('nav.dashboard')}
                   </Link>
                   {canUseTeam && (
                     <Link
@@ -191,7 +196,7 @@ export default function Header() {
                       onClick={closeMobileMenu}
                       className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                     >
-                      Family Circle
+                      {t('nav.family_circle')}
                     </Link>
                   )}
                   <Link
@@ -199,8 +204,11 @@ export default function Header() {
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Manage Billing
+                    {t('nav.manage_billing')}
                   </Link>
+                  <div className="px-4 py-2">
+                    <LanguageSwitcher />
+                  </div>
                   <button
                     onClick={async () => {
                       closeMobileMenu();
@@ -209,7 +217,7 @@ export default function Header() {
                     }}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Sign Out
+                    {t('nav.sign_out')}
                   </button>
                 </>
               ) : (
@@ -219,28 +227,31 @@ export default function Header() {
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    About
+                    {t('nav.about')}
                   </Link>
                   <Link
                     to="/why"
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Why your family needs CarerView
+                    {t('nav.why_carerview')}
                   </Link>
                   <Link
                     to="/pricing"
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Pricing
+                    {t('nav.pricing')}
                   </Link>
+                  <div className="px-4 py-2">
+                    <LanguageSwitcher />
+                  </div>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
                     onClick={closeMobileMenu}
                     className="block w-full text-center px-4 py-3 text-base font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors mt-2 min-h-[44px]"
                   >
-                    Sign In
+                    {t('nav.sign_in')}
                   </Link>
                 </>
               )}

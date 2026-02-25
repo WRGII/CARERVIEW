@@ -25,6 +25,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "./pages/AdminDeleteUser";
+const AdminTranslationsPage = lazy(() => import("./pages/AdminTranslationsPage"));
 
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
@@ -37,6 +38,7 @@ import TeamSettings from "./pages/TeamSettings";
 import { ActiveTeamProvider } from "./context/ActiveTeam";
 import { ToastProvider } from "./components/ui/ToastProvider";
 import DatabaseStatus from "./components/common/DatabaseStatus";
+import AppLocaleWrapper from "./i18n/AppLocaleWrapper";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
@@ -46,6 +48,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
+        <AppLocaleWrapper>
         <ActiveTeamProvider>
           <BrowserRouter>
             <ErrorBoundary>
@@ -94,6 +97,14 @@ export default function App() {
                     element={
                       <AdminGuard>
                         <AdminDeleteUser />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/translations"
+                    element={
+                      <AdminGuard>
+                        <AdminTranslationsPage />
                       </AdminGuard>
                     }
                   />
@@ -154,6 +165,7 @@ export default function App() {
             </ErrorBoundary>
           </BrowserRouter>
         </ActiveTeamProvider>
+        </AppLocaleWrapper>
       </ToastProvider>
     </QueryClientProvider>
   );

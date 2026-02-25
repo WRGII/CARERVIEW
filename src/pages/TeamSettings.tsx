@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useUserPlan } from "../hooks/useUserPlan";
 import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
+import { useLocale } from "../i18n/LocaleContext";
 
 type Member = {
   user_id: string;
@@ -15,6 +16,7 @@ type Member = {
 export default function TeamSettings() {
   const { data: plan, isLoading: planLoading } = useUserPlan();
   const { teamId, loading } = useActiveTeam();
+  const { t } = useLocale();
 
   const [members, setMembers] = useState<Member[]>([]);
   const [owner, setOwner] = useState(false);
@@ -40,7 +42,7 @@ export default function TeamSettings() {
         setOwner(o);
       } catch (e: any) {
         if (!mounted) return;
-        setError(e.message ?? "Failed to load team");
+        setError(e.message ?? t('team.load_failed'));
       }
     })();
     return () => {
@@ -58,40 +60,40 @@ export default function TeamSettings() {
       setInviteLink(`${location.origin}/join?t=${encodeURIComponent(token)}`);
       setEmail("");
     } catch (e: any) {
-      setError(e.message ?? "Invite failed");
+      setError(e.message ?? t('team.invite_failed'));
     } finally {
       setBusy(false);
     }
   }
 
-  if (loading) return <div className="p-6">Loading…</div>;
-  if (!teamId) return <div className="p-6">Create your Family Circle first.</div>;
+  if (loading) return <div className="p-6">{t('common.loading')}</div>;
+  if (!teamId) return <div className="p-6">{t('team.no_circle')}</div>;
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Family Circle</h1>
+      <h1 className="text-2xl font-semibold">{t('team.title')}</h1>
 
       {error && <div className="text-red-600">{error}</div>}
 
       <section>
-        <h2 className="font-medium mb-2">Caregivers</h2>
+        <h2 className="font-medium mb-2">{t('team.caregivers')}</h2>
         <ul className="space-y-1">
           {members.map((m) => (
             <li key={m.user_id} className="text-sm">
               {m.role} · {m.state} · {new Date(m.joined_at).toLocaleString()}
             </li>
           ))}
-          {members.length === 0 && <li className="text-sm text-slate-500">No members yet.</li>}
+          {members.length === 0 && <li className="text-sm text-slate-500">{t('team.no_members')}</li>}
         </ul>
       </section>
 
       {owner && (
         <section className="space-y-2">
-          <h2 className="font-medium">Invite caregiver</h2>
+          <h2 className="font-medium">{t('team.invite_title')}</h2>
           <div className="flex gap-2">
             <input
               type="email"
-              placeholder="caregiver@email"
+              placeholder={t('team.invite_placeholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="border rounded px-3 py-2 w-72"
@@ -101,13 +103,13 @@ export default function TeamSettings() {
               disabled={busy || !email}
               className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
             >
-              {busy ? "Sending…" : "Invite"}
+              {busy ? t('common.sending') : t('team.invite_btn')}
             </button>
           </div>
           {inviteLink && (
             <div className="text-sm mt-2">
-              Invite link: <code className="break-all">{inviteLink}</code>
-              <div className="text-slate-500">Copy this into an email now.</div>
+              {t('team.invite_link_label')} <code className="break-all">{inviteLink}</code>
+              <div className="text-slate-500">{t('team.invite_copy_note')}</div>
             </div>
           )}
         </section>

@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
+import { useLocale } from '../../i18n/LocaleContext'
 import { useLegend } from '../../hooks/useLegend'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
 import { useCategoryQuestions } from '../../hooks/useCategoryQuestions'
@@ -40,6 +41,7 @@ export default function ObservationForm({
   formType,
   onComplete,
 }: ObservationFormProps) {
+  const { t } = useLocale()
   const { user, profile, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const upsertObservation = useUpsertObservationAndResponses()
@@ -78,7 +80,7 @@ export default function ObservationForm({
   }, [])
 
   const displayFormType =
-    formType === 'COMPREHENSIVE' ? 'Comprehensive (ADL + IADL)' : formType
+    formType === 'COMPREHENSIVE' ? t('obs_form.comprehensive_label') : formType
 
   const validateDate = (dateString: string): boolean => {
     if (!dateString) return false
@@ -92,7 +94,7 @@ export default function ObservationForm({
   const handleDateChange = (value: string) => {
     setDateOfObservation(value)
     if (value && !validateDate(value))
-      setDateError('Please enter a valid date in MM/DD/YYYY format')
+      setDateError(t('obs_form.date_error'))
     else setDateError('')
   }
 
@@ -180,19 +182,19 @@ export default function ObservationForm({
     }
 
     if (!dateOfObservation) {
-      setDateError('Date of observation is required')
+      setDateError(t('obs_form.date_required'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('error')
       return
     }
     if (!validateDate(dateOfObservation)) {
-      setDateError('Please enter a valid date in MM/DD/YYYY format')
+      setDateError(t('obs_form.date_error'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('error')
       return
     }
     if (!hasAnyScore) {
-      if (!isAutoSave) setSaveError('Please select at least one score before saving.')
+      if (!isAutoSave) setSaveError(t('obs_form.score_required'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('idle')
       return
@@ -206,7 +208,7 @@ export default function ObservationForm({
     const caregiver_email = (profile?.email || user?.email || '').trim()
 
     if (!emailRegex.test(caregiver_email)) {
-      setSaveError('Your account email is missing or invalid. Please sign out and sign in again.')
+      setSaveError(t('obs_form.email_invalid'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('error')
       return
@@ -247,7 +249,7 @@ export default function ObservationForm({
         onComplete()
       }
     } catch (e: any) {
-      setSaveError(e?.message || 'Failed to save observation.')
+      setSaveError(e?.message || t('obs_form.save_error'))
       if (isAutoSave) setAutoSaveStatus('error')
     } finally {
       if (!isAutoSave) setIsSaving(false)
@@ -286,7 +288,7 @@ export default function ObservationForm({
   if (authLoading || cqLoading || legendLoading) {
     return (
       <div className="text-slate-gray/60 bg-warm-white border border-slate-gray/20 rounded-xl p-6 text-center">
-        Loading your observation form…
+        {t('obs_form.loading')}
       </div>
     )
   }
@@ -295,14 +297,14 @@ export default function ObservationForm({
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-6">
         <p className="text-slate-gray mb-3">
-          {cqError ? String((cqError as any)?.message || cqError) : 'Error loading data.'}
+          {cqError ? String((cqError as any)?.message || cqError) : t('obs_form.error_loading')}
         </p>
         <button
           type="button"
           onClick={() => cqRefetch()}
           className="rounded-lg border border-slate-gray/30 px-4 py-2 text-sm font-medium hover:bg-peach-blush/20 text-slate-gray transition-colors"
         >
-          Try again
+          {t('common.try_again')}
         </button>
       </div>
     )
@@ -311,8 +313,8 @@ export default function ObservationForm({
   if (!categories || categories.length === 0) {
     return (
       <div className="bg-warm-white border border-slate-gray/20 rounded-xl p-8 text-center">
-        <p className="text-slate-gray mb-2">No questions available</p>
-        <p className="text-slate-gray/60 text-sm">Please contact support if this issue persists.</p>
+        <p className="text-slate-gray mb-2">{t('obs_form.no_questions')}</p>
+        <p className="text-slate-gray/60 text-sm">{t('obs_form.contact_support')}</p>
       </div>
     )
   }
@@ -325,8 +327,8 @@ export default function ObservationForm({
       {/* Top guidance banner */}
       <div className="bg-cyan-primary/8 border border-cyan-primary/20 rounded-xl px-5 py-4">
         <p className="text-slate-700 text-sm leading-relaxed">
-          <span className="font-semibold text-slate-800">Fill in as much or as little as you like.</span>{' '}
-          You don't need to answer every question — even a few scores are helpful. Your work saves automatically every 45 seconds once you've entered at least one score.
+          <span className="font-semibold text-slate-800">{t('obs_form.guidance_bold')}</span>{' '}
+          {t('obs_form.guidance_body')}
         </p>
       </div>
 
@@ -336,28 +338,28 @@ export default function ObservationForm({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 className="text-base font-semibold text-slate-800">
-                {isEditing ? 'Edit Observation' : 'New Observation'}
+                {isEditing ? t('obs_form.edit_title') : t('obs_form.new_title')}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">{displayFormType}</p>
             </div>
             <div className="flex items-center gap-3">
               {/* Auto-save status */}
               {autoSaveStatus === 'saving' && (
-                <span className="text-xs text-slate-400">Saving…</span>
+                <span className="text-xs text-slate-400">{t('obs_form.saving')}</span>
               )}
               {autoSaveStatus === 'saved' && (
-                <span className="text-xs text-cyan-primary font-medium">Saved</span>
+                <span className="text-xs text-cyan-primary font-medium">{t('obs_form.saved')}</span>
               )}
               {autoSaveStatus === 'error' && (
-                <span className="text-xs text-red-500">Save failed</span>
+                <span className="text-xs text-red-500">{t('obs_form.save_failed')}</span>
               )}
               {lastSavedAt && autoSaveStatus === 'idle' && (
-                <span className="text-xs text-slate-400">Last saved {formatLastSaved(lastSavedAt)}</span>
+                <span className="text-xs text-slate-400">{t('obs_form.last_saved') + ' '}{formatLastSaved(lastSavedAt)}</span>
               )}
               {/* Progress pill */}
               {totalQuestions > 0 && (
                 <span className="text-xs bg-slate-100 text-slate-600 rounded-full px-3 py-1 font-medium">
-                  {scoredCount} of {totalQuestions} scored
+                  {t('obs_form.scored_count', { scored: scoredCount, total: totalQuestions })}
                 </span>
               )}
             </div>
@@ -369,20 +371,20 @@ export default function ObservationForm({
             {/* Person being observed */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Person being observed
+                {t('obs_form.patient_label')}
               </label>
               <input
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors placeholder:text-slate-400"
-                placeholder="Their name"
+                placeholder={t('obs_form.patient_placeholder')}
               />
             </div>
 
             {/* Date */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Date of observation
+                {t('obs_form.date_label')}
               </label>
               <input
                 type="text"
@@ -401,7 +403,7 @@ export default function ObservationForm({
             {/* How you observed */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                How did you observe?
+                {t('obs_form.mode_label')}
               </label>
               <select
                 value={modeOfObservation}
@@ -410,9 +412,9 @@ export default function ObservationForm({
                 }
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors"
               >
-                <option value="In Person">In Person</option>
-                <option value="Voice Call">Voice Call</option>
-                <option value="Video Call">Video Call</option>
+                <option value="In Person">{t('obs_form.mode_in_person')}</option>
+                <option value="Voice Call">{t('obs_form.mode_voice')}</option>
+                <option value="Video Call">{t('obs_form.mode_video')}</option>
               </select>
             </div>
           </div>
@@ -420,13 +422,13 @@ export default function ObservationForm({
           {/* Overall notes */}
           <div className="mt-4">
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              Overall notes <span className="text-slate-400 font-normal">(optional)</span>
+              {t('obs_form.notes_label')} <span className="text-slate-400 font-normal">{t('common.optional_parens')}</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 resize-none bg-white text-slate-800 text-base transition-colors placeholder:text-slate-400"
-              placeholder="Any general observations about today's visit…"
+              placeholder={t('obs_form.notes_placeholder')}
               rows={3}
             />
           </div>
@@ -436,15 +438,15 @@ export default function ObservationForm({
       {/* Score reference — compact inline strip */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Score reference — tap a number on each question to record your observation</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('obs_form.score_ref_label')}</p>
         </div>
         <div className="grid grid-cols-5 divide-x divide-slate-100">
           {[
-            { score: 1, label: 'Total Assistance', bg: 'bg-peach-blush' },
-            { score: 2, label: 'Constant Shared Effort', bg: 'bg-peach-blush/60' },
-            { score: 3, label: 'Independent with Support', bg: 'bg-cyan-primary/25' },
-            { score: 4, label: 'Independent with Difficulty', bg: 'bg-mint-green/60' },
-            { score: 5, label: 'Fully Independent', bg: 'bg-mint-green' },
+            { score: 1, label: t('scale.1'), bg: 'bg-peach-blush' },
+            { score: 2, label: t('scale.2'), bg: 'bg-peach-blush/60' },
+            { score: 3, label: t('scale.3'), bg: 'bg-cyan-primary/25' },
+            { score: 4, label: t('scale.4'), bg: 'bg-mint-green/60' },
+            { score: 5, label: t('scale.5'), bg: 'bg-mint-green' },
           ].map(({ score, label, bg }) => (
             <div key={score} className={`${bg} py-3 px-1 text-center`}>
               <div className="text-xl font-bold text-slate-700">{score}</div>
@@ -453,8 +455,8 @@ export default function ObservationForm({
           ))}
         </div>
         <div className="flex justify-between px-4 py-1.5 bg-slate-50 border-t border-slate-100">
-          <span className="text-[10px] text-slate-400">More help needed</span>
-          <span className="text-[10px] text-slate-400">More independent</span>
+          <span className="text-[10px] text-slate-400">{t('scale.more_help')}</span>
+          <span className="text-[10px] text-slate-400">{t('scale.more_independent')}</span>
         </div>
       </div>
 
@@ -471,10 +473,10 @@ export default function ObservationForm({
                 <div>
                   <h3 className="font-semibold text-slate-800 text-base">{category.name}</h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {category.type === 'ADL' ? 'Daily Living Activities' : 'Life Skills'}
+                    {category.type === 'ADL' ? t('obs_form.adl_type_label') : t('obs_form.iadl_type_label')}
                     {' · '}
                     <span className={categoryScored > 0 ? 'text-cyan-primary font-medium' : ''}>
-                      {categoryScored} of {category.questions.length} scored
+                      {t('obs_form.category_scored', { scored: categoryScored, total: category.questions.length })}
                     </span>
                   </p>
                 </div>
@@ -512,13 +514,13 @@ export default function ObservationForm({
               {/* Category notes */}
               <div className="px-5 pb-5 pt-3 border-t border-slate-100 bg-slate-50/40">
                 <label className="block text-sm font-medium text-slate-600 mb-2">
-                  Notes for {category.name} <span className="text-slate-400 font-normal">(optional)</span>
+                  {`${t('obs_form.cat_notes_label')} ${category.name}`} <span className="text-slate-400 font-normal">{t('common.optional_parens')}</span>
                 </label>
                 <textarea
                   value={categoryNotes[category.id] || ''}
                   onChange={(e) => setCategoryNote(category.id, e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-700 text-sm transition-colors placeholder:text-slate-400 resize-none"
-                  placeholder={`Any notes specific to ${category.name}…`}
+                  placeholder={`${t('obs_form.cat_notes_placeholder')} ${category.name}…`}
                   rows={2}
                 />
               </div>
@@ -530,7 +532,7 @@ export default function ObservationForm({
       {/* Guidance if nothing scored yet */}
       {!hasAnyScore && (
         <div className="text-center py-3">
-          <p className="text-sm text-slate-400">Select at least one score above to save your observation.</p>
+          <p className="text-sm text-slate-400">{t('obs_form.no_score_hint')}</p>
         </div>
       )}
 
@@ -545,9 +547,9 @@ export default function ObservationForm({
       <div className="bg-white border border-slate-200 rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-sm">
         <div className="flex-1 text-sm text-slate-500">
           {lastSavedAt ? (
-            <span>Last saved at {formatLastSaved(lastSavedAt)}</span>
+            <span>{t('obs_form.last_saved_at') + ' ' + formatLastSaved(lastSavedAt)}</span>
           ) : (
-            <span>Saves automatically once you've scored at least one item</span>
+            <span>{t('obs_form.auto_save_hint')}</span>
           )}
         </div>
         <div className="flex gap-3 flex-col sm:flex-row">
@@ -556,7 +558,7 @@ export default function ObservationForm({
             onClick={onComplete}
             className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -564,14 +566,14 @@ export default function ObservationForm({
             disabled={isSaving || !canSave}
             className="px-5 py-3 rounded-xl border border-cyan-primary text-cyan-primary font-semibold text-sm hover:bg-cyan-primary/8 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isSaving ? 'Saving…' : 'Save & Continue'}
+            {isSaving ? t('obs_form.saving') : t('obs_form.save_continue')}
           </button>
           <button
             type="submit"
             disabled={isSaving || upsertObservation.isPending || !canSave}
             className="px-5 py-3 rounded-xl bg-cyan-primary text-white font-semibold text-sm hover:bg-cyan-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
           >
-            {isSaving || upsertObservation.isPending ? 'Saving…' : (isEditing ? 'Save Changes' : 'Save Observation')}
+            {isSaving || upsertObservation.isPending ? t('obs_form.saving') : (isEditing ? t('obs_form.save_changes') : t('obs_form.save_observation'))}
           </button>
         </div>
       </div>

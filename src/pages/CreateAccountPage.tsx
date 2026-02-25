@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabaseClient";
 import { STRIPE_PRODUCTS } from "../stripe-config";
 import { usePlans } from "../hooks/usePlans";
 import type { PlanRow } from "../types/plans";
+import { useLocale } from "../i18n/LocaleContext";
 
 type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 
@@ -18,6 +19,7 @@ const RETURN_URLS = {
 
 export default function CreateAccountPage() {
   const navigate = useNavigate();
+  const { t } = useLocale();
   const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
   const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("primary_qtr");
@@ -136,7 +138,7 @@ export default function CreateAccountPage() {
     setInfo(null);
 
     if (!email || !password) {
-      setError("Please enter your email and a password.");
+      setError(t('create_account.email_required'));
       return;
     }
 
@@ -205,14 +207,12 @@ export default function CreateAccountPage() {
       }
 
       localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode }));
-      setInfo(
-        "Check your inbox to confirm your email. After you sign in, we'll finish setting up your subscription and caregiver account."
-      );
+      setInfo(t('create_account.confirm_email_info'));
     } catch (err: any) {
       if (err?.message === "User already registered") {
-        setError("That email is already registered. Try signing in instead.");
+        setError(t('create_account.email_taken'));
       } else {
-        setError(err?.message || "Sign up failed.");
+        setError(err?.message || t('create_account.signup_failed'));
       }
     } finally {
       setBusy(false);
@@ -225,12 +225,12 @@ export default function CreateAccountPage() {
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <header className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">Create your CarerView account</h1>
-          <p className="mt-3 text-slate-gray/75">Choose a plan, then create your caregiver account. You can cancel any time.</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">{t('create_account.title')}</h1>
+          <p className="mt-3 text-slate-gray/75">{t('create_account.subtitle')}</p>
           <p className="mt-2 text-slate-gray/70">
-            Already have an account?{" "}
+            {t('create_account.already_have')}{" "}
             <Link to="/#get-started" className="text-cyan-primary underline">
-              Sign in
+              {t('nav.sign_in')}
             </Link>
           </p>
         </header>
@@ -240,7 +240,7 @@ export default function CreateAccountPage() {
             <div className="W-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-cyan-primary" />
             </div>
-            <h2 className="text-lg font-semibold text-slate-gray">Choose a plan</h2>
+            <h2 className="text-lg font-semibold text-slate-gray">{t('create_account.choose_plan')}</h2>
           </div>
 
           <div className="p-6">
@@ -263,16 +263,16 @@ export default function CreateAccountPage() {
                     <div className="font-semibold text-slate-gray">
                       {product.name}
                       {product.planId === 'primary_qtr' && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-cyan-600 px-2 py-0.5 text-xs font-semibold text-white">Recommended</span>
+                        <span className="ml-2 inline-flex items-center rounded-full bg-cyan-600 px-2 py-0.5 text-xs font-semibold text-white">{t('pricing.recommended')}</span>
                       )}
                     </div>
                     <div className="text-slate-gray/70 mt-1">
-                      {product.planId === 'free' ? 'Always free' : `$${product.price.toFixed(2)} per quarter`}
+                      {product.planId === 'free' ? t('create_account.always_free') : `$${product.price.toFixed(2)} ${t('create_account.per_quarter')}`}
                     </div>
                     <div className="text-xs text-slate-gray/60 mt-2">
-                      {product.planId === 'free' ? '3 observations per year' :
-                       product.planId === 'primary_qtr' ? '30 observations per year' :
-                       'Up to 3 caregivers, 100 observations per year'}
+                      {product.planId === 'free' ? t('create_account.obs_free') :
+                       product.planId === 'primary_qtr' ? t('create_account.obs_primary') :
+                       t('create_account.obs_family')}
                     </div>
                   </button>
                 );
@@ -282,13 +282,13 @@ export default function CreateAccountPage() {
             {selectedPlanKey !== 'free' && (
               <div className="mt-6">
                 <label className="block text-sm font-medium text-slate-gray mb-1">
-                  Have a promo code? <span className="text-slate-gray/50">(optional)</span>
+                  {t('create_account.promo_label')} <span className="text-slate-gray/50">{t('common.optional')}</span>
                 </label>
                 <input
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.trim())}
-                  placeholder="Enter code"
+                  placeholder={t('create_account.promo_placeholder')}
                   className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
                 />
               </div>
@@ -302,17 +302,17 @@ export default function CreateAccountPage() {
               <div className="w-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
                 <UserPlus className="w-5 h-5 text-cyan-primary" />
               </div>
-              <h2 className="text-lg font-semibold text-slate-gray">Create account</h2>
+              <h2 className="text-lg font-semibold text-slate-gray">{t('create_account.section_title')}</h2>
             </div>
 
             <div className="text-sm text-slate-gray/60">
-              Selected plan:{" "}
+              {t('create_account.selected_plan')}{" "}
               <span className="font-medium text-slate-gray">
                 {selectedProduct?.name ?? "—"}
               </span>
               {promoCode && selectedPlanKey !== 'free' && (
                 <span className="ml-3 inline-flex items-center rounded-full border border-slate-gray/20 px-2 py-0.5 text-xs text-slate-gray">
-                  promo: {promoCode}
+                  {t('create_account.promo_prefix')} {promoCode}
                 </span>
               )}
             </div>
@@ -320,37 +320,37 @@ export default function CreateAccountPage() {
 
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">Your name</label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.name_label')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder="How should we address you?"
+                placeholder={t('create_account.name_placeholder')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">Email address</label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.email_label')}</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder="your.email@example.com"
+                placeholder={t('auth.email_placeholder')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">Password</label>
+              <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.password_label')}</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder="Choose a secure password"
+                placeholder={t('create_account.password_placeholder')}
               />
             </div>
 
@@ -367,19 +367,19 @@ export default function CreateAccountPage() {
               aria-busy={busy}
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-6 py-3 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all"
             >
-              {busy ? "Creating…" : "Create my account"}
+              {busy ? t('common.creating') : t('create_account.submit_btn')}
               {!busy && <ArrowRight className="w-5 h-5" />}
             </button>
 
             <p className="text-xs text-slate-gray/60">
-              By continuing you agree to our{" "}
+              {t('create_account.agree_prefix')}{" "}
               <Link to="/privacy-policy" className="text-cyan-primary hover:text-cyan-hover underline">
-                Privacy Policy
+                {t('footer.privacy_policy')}
               </Link>{" "}
-              and{" "}
+              {t('common.and')}{" "}
               <Link to="/data-policy" className="text-cyan-primary hover:text-cyan-hover underline">
-                Data Policy
-              </Link>. You can cancel a paid plan any time.
+                {t('footer.data_policy')}
+              </Link>{t('create_account.cancel_note')}
             </p>
           </form>
         </section>
