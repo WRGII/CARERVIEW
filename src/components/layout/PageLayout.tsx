@@ -13,6 +13,7 @@
  */
 import React from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   title?: string;
@@ -34,6 +35,7 @@ export function PageLayout({
   user,
   children,
 }: Props) {
+  const { t } = useLocale();
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     window.location.assign("/");
@@ -55,7 +57,7 @@ export function PageLayout({
                   onClick={handleSignOut}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-all"
                 >
-                  Sign Out
+                  {t('nav.sign_out')}
                 </button>
               )}
             </div>

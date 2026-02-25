@@ -108,18 +108,21 @@ export default function Header() {
                   <AccountMenu />
                 </div>
 
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
-                  aria-expanded={mobileMenuOpen}
-                  aria-label={t('nav.toggle_menu')}
-                >
-                  {mobileMenuOpen ? (
-                    <X className="h-6 w-6" aria-hidden="true" />
-                  ) : (
-                    <Menu className="h-6 w-6" aria-hidden="true" />
-                  )}
-                </button>
+                <div className="md:hidden flex items-center gap-2">
+                  <LanguageSwitcher />
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
+                    aria-expanded={mobileMenuOpen}
+                    aria-label={t('nav.toggle_menu')}
+                  >
+                    {mobileMenuOpen ? (
+                      <X className="h-6 w-6" aria-hidden="true" />
+                    ) : (
+                      <Menu className="h-6 w-6" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </>
             ) : (
               <>
@@ -152,19 +155,22 @@ export default function Header() {
                   </Link>
                 </div>
 
-                {/* Mobile Menu Button - visible only on mobile */}
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
-                  aria-expanded={mobileMenuOpen}
-                  aria-label={t('nav.toggle_menu')}
-                >
-                  {mobileMenuOpen ? (
-                    <X className="h-6 w-6" aria-hidden="true" />
-                  ) : (
-                    <Menu className="h-6 w-6" aria-hidden="true" />
-                  )}
-                </button>
+                {/* Mobile: language switcher + hamburger always visible */}
+                <div className="md:hidden flex items-center gap-2">
+                  <LanguageSwitcher />
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                    aria-expanded={mobileMenuOpen}
+                    aria-label={t('nav.toggle_menu')}
+                  >
+                    {mobileMenuOpen ? (
+                      <X className="h-6 w-6" aria-hidden="true" />
+                    ) : (
+                      <Menu className="h-6 w-6" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -206,9 +212,6 @@ export default function Header() {
                   >
                     {t('nav.manage_billing')}
                   </Link>
-                  <div className="px-4 py-2">
-                    <LanguageSwitcher />
-                  </div>
                   <button
                     onClick={async () => {
                       closeMobileMenu();
@@ -243,9 +246,6 @@ export default function Header() {
                   >
                     {t('nav.pricing')}
                   </Link>
-                  <div className="px-4 py-2">
-                    <LanguageSwitcher />
-                  </div>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
                     onClick={closeMobileMenu}

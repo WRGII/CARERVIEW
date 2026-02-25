@@ -7,6 +7,7 @@ import { PageLayout } from "../components/layout/PageLayout";
 import { useAuth } from "../hooks/useAuth";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { useLocale } from "../i18n/LocaleContext";
 
 type TranslationRow = {
   key: string;
@@ -35,6 +36,7 @@ function getNamespace(key: string): string {
 
 export default function AdminTranslationsPage() {
   const { user, profile, loading, error } = useAuth();
+  const { t } = useLocale();
   const qc = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,9 +45,9 @@ export default function AdminTranslationsPage() {
   const [pendingEdits, setPendingEdits] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
-  if (loading) return <Loading message="Loading translations editor…" />;
-  if (error || !user) return <ErrorMessage message={error || "Authentication required."} />;
-  if (!profile) return <ErrorMessage message="Profile not found." />;
+  if (loading) return <Loading message={t('admin.loading_editor')} />;
+  if (error || !user) return <ErrorMessage message={error || t('admin.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('admin.profile_required')} />;
 
   const { data: locales = [] } = useQuery<SupportedLocale[]>({
     queryKey: ["supported_locales_admin"],

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { Card, CardContent, CardHeader } from '../ui/Card'
 import { Loading } from '../ui/Loading'
 import { BarChart3, Users, FileText, TrendingUp } from 'lucide-react'
+import { useLocale } from '../../i18n/LocaleContext'
 
 interface AggregateStats {
   totalObservations: number
@@ -19,6 +20,7 @@ type AggregateDataProps = {
 }
 
 export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) => {
+  const { t } = useLocale()
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['aggregate-stats'],
     queryFn: async (): Promise<AggregateStats> => {
@@ -77,9 +79,9 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
     staleTime: 60_000, // 1 min
   })
 
-  if (isLoading) return <Loading message="Loading aggregate data..." />
-  if (error) return <div className="text-red-600">Failed to load aggregate data</div>
-  if (!stats) return <div>No data available</div>
+  if (isLoading) return <Loading message={t('admin.loading_aggregate')} />
+  if (error) return <div className="text-red-600">{t('admin.error_aggregate')}</div>
+  if (!stats) return <div>{t('admin.no_data')}</div>
 
   // Prebuild the Active Caregivers card once; optionally wrap in a Link.
   const caregiversCard = (
@@ -90,7 +92,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
             <Users className="w-6 h-6 text-slate-gray" />
           </div>
           <div>
-            <p className="text-sm text-slate-gray/70">Active Caregivers</p>
+            <p className="text-sm text-slate-gray/70">{t('admin.active_caregivers')}</p>
             <p className="text-2xl font-bold text-slate-gray">{stats.totalCaregivers}</p>
           </div>
         </div>
@@ -110,7 +112,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
                 <FileText className="w-6 h-6 text-cyan-primary" />
               </div>
               <div>
-                <p className="text-sm text-slate-gray/70">Total Observations</p>
+                <p className="text-sm text-slate-gray/70">{t('admin.total_obs')}</p>
                 <p className="text-2xl font-bold text-slate-gray">{stats.totalObservations}</p>
               </div>
             </div>
@@ -138,7 +140,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
                 <BarChart3 className="w-6 h-6 text-slate-gray" />
               </div>
               <div>
-                <p className="text-sm text-slate-gray/70">Avg Category Score</p>
+                <p className="text-sm text-slate-gray/70">{t('admin.avg_score')}</p>
                 <p className="text-2xl font-bold text-slate-gray">
                   {stats.averageScoreByCategory.length > 0
                     ? (
@@ -160,7 +162,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
                 <TrendingUp className="w-6 h-6 text-cyan-primary" />
               </div>
               <div>
-                <p className="text-sm text-slate-gray/70">This Week</p>
+                <p className="text-sm text-slate-gray/70">{t('admin.this_week')}</p>
                 <p className="text-2xl font-bold text-slate-gray">
                   {stats.recentActivity.reduce((sum, day) => sum + day.count, 0)}
                 </p>
@@ -174,7 +176,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
       {stats.averageScoreByCategory.length > 0 && (
         <Card className="bg-warm-white">
           <CardHeader>
-            <h3 className="text-lg font-semibold text-slate-gray">Average Scores by Category</h3>
+            <h3 className="text-lg font-semibold text-slate-gray">{t('admin.avg_scores_by_category')}</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
