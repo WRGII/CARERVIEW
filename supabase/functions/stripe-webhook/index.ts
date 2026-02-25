@@ -45,8 +45,14 @@ const JSON_HEADERS = {
 const resp = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
 
-// Track processed events to prevent duplicate processing
-const processedEvents = new Map<string, number>()
+async function isEventAlreadyProcessed(db: ReturnType<typeof createClient>, eventId: string): Promise<boolean> {
+  const { data } = await db
+    .from('webhook_events')
+    .select('event_id, status')
+    .eq('event_id', eventId)
+    .maybeSingle()
+  return !!data && data.status === 'completed'
+}
 
 // ---------- helpers ----------
 const secToIso = (sec?: number | null) =>
@@ -147,10 +153,8 @@ Deno.serve(async (req) => {
   // Reuse db instance from rate limiting
   const db = dbForRateLimit
 
-  // Idempotency check: skip if we've recently processed this event
-  const now = Date.now()
-  const lastProcessed = processedEvents.get(event.id)
-  if (lastProcessed && (now - lastProcessed) < 60000) {
+  // Idempotency check: skip if already processed (DB-backed, survives cold starts)
+  if (await isEventAlreadyProcessed(db, event.id)) {
     console.log(`[stripe-webhook] Skipping duplicate event ${event.id}`)
     return resp({ received: true, duplicate: true })
   }

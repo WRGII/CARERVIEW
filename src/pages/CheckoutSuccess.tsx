@@ -12,7 +12,6 @@ export default function CheckoutSuccess() {
   const sessionId = params.get("session_id") || "";
   const { user, loading: authLoading } = useAuth();
 
-  // Normalize to the UserPlan shape our hasActivePlan() expects
   const normalizeISO = (v: unknown): string | null =>
     typeof v === "string" ? v : v ? new Date(v as any).toISOString() : null;
 
@@ -24,7 +23,7 @@ export default function CheckoutSuccess() {
   } = useQuery({
     queryKey: ["checkout-success-plan", user?.id],
     enabled: !!user?.id && !authLoading,
-    refetchInterval: 2000, // poll every 2s until webhook writes the row
+    refetchInterval: 2000,
     refetchIntervalInBackground: true,
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null;
@@ -34,6 +33,9 @@ export default function CheckoutSuccess() {
           "user_id, plan_id, status, current_period_start, current_period_end, updated_at"
         )
         .eq("user_id", user.id)
+        .in("status", ["active", "trialing"])
+        .order("current_period_end", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) throw error;
@@ -51,14 +53,12 @@ export default function CheckoutSuccess() {
     },
   });
 
-  // After ~20s of polling, show extra guidance
   const [tookTooLong, setTookTooLong] = React.useState(false);
   React.useEffect(() => {
     const t = setTimeout(() => setTookTooLong(true), 20000);
     return () => clearTimeout(t);
   }, []);
 
-  // As soon as plan is usable, go to the dashboard
   React.useEffect(() => {
     if (plan && hasActivePlan(plan)) {
       navigate("/caregiver", { replace: true });
@@ -66,73 +66,94 @@ export default function CheckoutSuccess() {
   }, [plan, navigate]);
 
   if (authLoading) {
-    return <div className="p-6">Finalizing your subscription…</div>;
-  }
-  if (!user) {
     return (
-      <div className="max-w-lg mx-auto p-6">
-        <h1 className="text-2xl font-semibold text-slate-800 mb-2">Sign in required</h1>
-        <p className="text-slate-600">
-          Please sign in again so we can confirm your subscription status.
-        </p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Finalizing your subscription…</p>
       </div>
     );
   }
 
-  const waiting =
-    isLoading || !plan || !plan.status || !plan.current_period_end || !hasActivePlan(plan);
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
+          <h1 className="text-2xl font-semibold text-slate-800 mb-2">Sign in required</h1>
+          <p className="text-slate-600 mb-6">
+            Please sign in again so we can confirm your subscription status.
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+          >
+            Sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isActive = plan && hasActivePlan(plan);
+  const waiting = isLoading || !isActive;
+
+  const planLabel =
+    plan?.plan_id === "free" ? "Free Observer" :
+    plan?.plan_id === "primary_qtr" ? "Primary Caregiver" :
+    plan?.plan_id === "family_qtr" ? "Family Circle" :
+    null;
 
   return (
-    <div className="max-w-lg mx-auto p-6">
-      <h1 className="text-2xl font-semibold text-slate-800 mb-2">Payment successful</h1>
-      <p className="text-slate-600 mb-4">
-        {waiting
-          ? "We’re confirming your payment and activating your plan. This usually takes a few seconds."
-          : "Your plan is active — redirecting to your dashboard…"}
-      </p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+          {waiting ? (
+            <>
+              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5">
+                <svg className="animate-spin w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-2">Payment received</h1>
+              <p className="text-slate-500 mb-6">
+                We're activating your plan. This usually takes just a few seconds.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">
+                <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-semibold text-slate-800 mb-2">You're all set</h1>
+              <p className="text-slate-500 mb-6">
+                {planLabel ? `Your ${planLabel} plan is now active.` : "Your plan is now active."} Redirecting to your dashboard…
+              </p>
+            </>
+          )}
 
-      <div className="rounded-xl border bg-white p-4">
-        <div className="text-sm text-slate-600 space-y-1">
-          <div>
-            <strong>Status:</strong>{" "}
-            {isError ? "error" : waiting ? "waiting" : "ready"}
-          </div>
-          {sessionId && (
-            <div>
-              <strong>Stripe Session:</strong> {sessionId}
+          {(isError || tookTooLong) && waiting && (
+            <div className="mb-6 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-4 text-left">
+              Taking longer than expected. You can refresh or head to your dashboard — access will appear once activation completes.
             </div>
           )}
-          <div className="pt-2">
-            <div>• plan_id: <code>{plan?.plan_id ?? "—"}</code></div>
-            <div>• status: <code>{plan?.status ?? "—"}</code></div>
-            <div>• current_period_start: <code>{plan?.current_period_start ?? "—"}</code></div>
-            <div>• current_period_end: <code>{plan?.current_period_end ?? "—"}</code></div>
-          </div>
-        </div>
 
-        {(isError || tookTooLong) && (
-          <div className="mt-4 text-sm text-slate-700">
-            Still waiting on the webhook to update your account. You can:
-            <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li>Click “Refresh now” below</li>
-              <li>Return to your dashboard; access will appear when activation completes</li>
-            </ul>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {waiting && (
+              <button
+                onClick={() => refetch()}
+                className="px-5 py-2.5 rounded-lg border border-gray-200 text-slate-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Refresh
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/caregiver", { replace: true })}
+              className="px-5 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors text-sm font-medium"
+            >
+              Go to dashboard
+            </button>
           </div>
-        )}
-
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            className="px-3 py-2 rounded-lg border"
-            onClick={() => refetch()}
-          >
-            Refresh now
-          </button>
-          <button
-            className="px-3 py-2 rounded-lg border bg-slate-900 text-white"
-            onClick={() => navigate("/caregiver", { replace: true })}
-          >
-            Go to dashboard
-          </button>
         </div>
       </div>
     </div>

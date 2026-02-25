@@ -96,9 +96,6 @@ Deno.serve(async (req) => {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
-      flow_data: {
-        type: 'payment_method_update', // users can still navigate to other actions
-      },
     })
 
     return resp({ url: session.url })

@@ -16,6 +16,7 @@ export default function ChoosePlan() {
   const { data: userPlan, isLoading: planLoading, refetch: refetchPlan } = useUserPlan();
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [managingBilling, setManagingBilling] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const activateFreePlanMutation = useActivateFreePlan();
 
   const isManageMode = searchParams.get('manage') === 'true';
@@ -55,7 +56,14 @@ export default function ChoosePlan() {
   };
 
   const handleSelectPlan = async (priceId: string, planId: string) => {
-    if (!user) return;
+    if (!user) {
+      setStatusMessage({ type: 'error', message: 'You must be signed in to select a plan.' });
+      return;
+    }
+    if (checkoutLoading) return;
+
+    setCheckoutLoading(planId);
+    setStatusMessage(null);
 
     // Handle free plan separately
     if (planId === 'free') {
@@ -63,19 +71,12 @@ export default function ChoosePlan() {
         const result = await activateFreePlanMutation.mutateAsync();
 
         if (result.alreadyActive) {
-          setStatusMessage({
-            type: 'success',
-            message: 'You already have an active plan!'
-          });
+          setStatusMessage({ type: 'success', message: 'You already have an active plan!' });
         } else {
           window.plausible('Plan Selected', { props: { plan: 'free' } });
-          setStatusMessage({
-            type: 'success',
-            message: 'Free plan activated successfully!'
-          });
+          setStatusMessage({ type: 'success', message: 'Free plan activated successfully!' });
         }
 
-        // Refetch plan and redirect to dashboard
         await refetchPlan();
         setTimeout(() => navigate('/caregiver'), 1000);
       } catch (error: any) {
@@ -84,13 +85,14 @@ export default function ChoosePlan() {
           type: 'error',
           message: error.message || 'Failed to activate free plan. Please try again.'
         });
+      } finally {
+        setCheckoutLoading(null);
       }
       return;
     }
 
     // Handle paid plans via Stripe
     try {
-      // Use supabase.functions.invoke for proper authentication
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: priceId,
@@ -117,6 +119,7 @@ export default function ChoosePlan() {
         type: 'error',
         message: 'Failed to start checkout process. Please try again.'
       });
+      setCheckoutLoading(null);
     }
   };
 
@@ -230,6 +233,7 @@ export default function ChoosePlan() {
                 onSelectPlan={handleSelectPlan}
                 isPopular={isRecommended}
                 isCurrentPlan={isCurrentPlan}
+                isCheckoutLoading={!!checkoutLoading}
               />
             );
           })}

@@ -7,16 +7,14 @@ interface PricingCardProps {
   onSelectPlan: (priceId: string, planId: string) => Promise<void>;
   isPopular?: boolean;
   isCurrentPlan?: boolean;
+  isCheckoutLoading?: boolean;
 }
 
-export function PricingCard({ product, onSelectPlan, isPopular = false, isCurrentPlan = false }: PricingCardProps) {
+export function PricingCard({ product, onSelectPlan, isPopular = false, isCurrentPlan = false, isCheckoutLoading = false }: PricingCardProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSelectPlan = async () => {
-    if (product.planId === 'free') {
-      window.location.href = '/create-account?plan=free';
-      return;
-    }
+    if (isCheckoutLoading) return;
     setIsLoading(true);
     try {
       await onSelectPlan(product.priceId, product.planId);
@@ -76,7 +74,7 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
 
       <button
         onClick={handleSelectPlan}
-        disabled={isLoading || isCurrentPlan}
+        disabled={isLoading || isCurrentPlan || isCheckoutLoading}
         className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
           isCurrentPlan
             ? 'bg-green-600 text-white cursor-default'
