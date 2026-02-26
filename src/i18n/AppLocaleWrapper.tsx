@@ -2,6 +2,18 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import LocaleProvider from './LocaleProvider'
 
+const LOCALE_STORAGE_KEY = 'careview-locale'
+const VALID_LOCALES = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi'] as const
+type Locale = typeof VALID_LOCALES[number]
+
+function getStoredLocale(): string | null {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
+    if (stored && VALID_LOCALES.includes(stored as Locale)) return stored
+  } catch {}
+  return null
+}
+
 interface Props {
   children: React.ReactNode
 }
@@ -9,7 +21,9 @@ interface Props {
 export default function AppLocaleWrapper({ children }: Props) {
   const { user, profile } = useAuth()
 
-  const [reconciledLocale, setReconciledLocale] = useState<string | null>(null)
+  const [reconciledLocale, setReconciledLocale] = useState<string | null>(
+    () => getStoredLocale()
+  )
   const [reconciledUserId, setReconciledUserId] = useState<string | undefined>(undefined)
 
   useEffect(() => {

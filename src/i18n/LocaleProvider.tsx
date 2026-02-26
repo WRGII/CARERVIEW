@@ -141,5 +141,26 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     [locale, setLocale, t, isLoading, supportedLocales]
   )
 
+  if (isLoading) {
+    return (
+      <LocaleContext.Provider value={value}>
+        <div className="fixed inset-0 flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src="/CareView_logo_1_colored_highres.png"
+              alt="CarerView"
+              className="h-16 w-auto"
+            />
+            <div className="flex gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.3s]" />
+              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
+              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce" />
+            </div>
+          </div>
+        </div>
+      </LocaleContext.Provider>
+    )
+  }
+
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

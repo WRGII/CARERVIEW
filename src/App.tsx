@@ -1,7 +1,7 @@
 // src/App.tsx
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
@@ -39,10 +39,9 @@ import { ActiveTeamProvider } from "./context/ActiveTeam";
 import { ToastProvider } from "./components/ui/ToastProvider";
 import DatabaseStatus from "./components/common/DatabaseStatus";
 import AppLocaleWrapper from "./i18n/AppLocaleWrapper";
+import { queryClient } from "./lib/queryClient";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
-
-const queryClient = new QueryClient();
 
 export default function App() {
   return (
