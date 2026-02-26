@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Globe } from 'lucide-react'
+import { Globe, Loader2 } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import type { Locale } from '../../i18n/types'
 
@@ -8,9 +8,16 @@ interface Props {
 }
 
 export default function LanguageSwitcher({ className = '' }: Props) {
-  const { locale, setLocale, t, supportedLocales } = useLocale()
+  const { locale, setLocale, t, supportedLocales, isLoading } = useLocale()
   const [open, setOpen] = useState(false)
+  const [switching, setSwitching] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isLoading) {
+      setSwitching(false)
+    }
+  }, [isLoading])
 
   useEffect(() => {
     if (!open) return
@@ -34,6 +41,18 @@ export default function LanguageSwitcher({ className = '' }: Props) {
 
   const currentLabel = supportedLocales.find((l) => l.code === locale)?.label ?? locale.toUpperCase()
 
+  function handleSelect(code: Locale) {
+    if (code === locale) {
+      setOpen(false)
+      return
+    }
+    setSwitching(true)
+    setLocale(code)
+    setOpen(false)
+  }
+
+  const showSpinner = switching && isLoading
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <button
@@ -42,9 +61,14 @@ export default function LanguageSwitcher({ className = '' }: Props) {
         aria-label={t('lang.switch_aria')}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-1"
+        disabled={showSpinner}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-1 disabled:opacity-60 disabled:cursor-wait"
       >
-        <Globe className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+        {showSpinner ? (
+          <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" aria-hidden="true" />
+        ) : (
+          <Globe className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+        )}
         <span>{currentLabel}</span>
       </button>
 
@@ -60,10 +84,7 @@ export default function LanguageSwitcher({ className = '' }: Props) {
               role="option"
               aria-selected={locale === loc.code}
               type="button"
-              onClick={() => {
-                setLocale(loc.code as Locale)
-                setOpen(false)
-              }}
+              onClick={() => handleSelect(loc.code as Locale)}
               className={`w-full text-left px-4 py-2 text-sm transition-colors duration-100 ${
                 locale === loc.code
                   ? 'bg-cyan-50 text-cyan-700 font-semibold'

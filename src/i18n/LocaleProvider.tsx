@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
@@ -6,11 +6,16 @@ import type { Locale, SupportedLocale } from './types'
 
 const LOCALE_STORAGE_KEY = 'careview-locale'
 const DEFAULT_LOCALE: Locale = 'en'
+const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi']
+
+function isValidLocale(v: string | null | undefined): v is Locale {
+  return VALID_LOCALES.includes(v as Locale)
+}
 
 function getStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (stored === 'en' || stored === 'es') return stored
+    if (isValidLocale(stored)) return stored
   } catch {}
   return DEFAULT_LOCALE
 }
@@ -23,6 +28,19 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
   )
 }
 
+async function fetchTranslations(locale: Locale): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from('ui_translations')
+    .select('key, value')
+    .eq('locale', locale)
+  if (error) throw error
+  const map: Record<string, string> = {}
+  for (const row of data ?? []) {
+    map[row.key] = row.value
+  }
+  return map
+}
+
 interface Props {
   children: React.ReactNode
   userId?: string
@@ -33,32 +51,23 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   const queryClient = useQueryClient()
 
   const [locale, setLocaleState] = useState<Locale>(() => {
-    if (preferredLocale === 'en' || preferredLocale === 'es') return preferredLocale
+    if (isValidLocale(preferredLocale)) return preferredLocale
     return getStoredLocale()
   })
 
+  const prevMapRef = useRef<Record<string, string> | null>(null)
+
   useEffect(() => {
-    if (preferredLocale === 'en' || preferredLocale === 'es') {
+    if (isValidLocale(preferredLocale) && preferredLocale !== locale) {
       setLocaleState(preferredLocale)
     }
   }, [preferredLocale])
 
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ui_translations')
-        .select('key, value')
-        .eq('locale', locale)
-      if (error) throw error
-      const map: Record<string, string> = {}
-      for (const row of data ?? []) {
-        map[row.key] = row.value
-      }
-      return map
-    },
+    queryFn: () => fetchTranslations(locale),
     staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   })
 
   const { data: supportedLocales = [] } = useQuery<SupportedLocale[]>({
@@ -73,7 +82,27 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
       return (data ?? []) as SupportedLocale[]
     },
     staleTime: 60 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   })
+
+  useEffect(() => {
+    if (translationsMap) {
+      prevMapRef.current = translationsMap
+    }
+  }, [translationsMap])
+
+  useEffect(() => {
+    if (supportedLocales.length === 0) return
+    for (const loc of supportedLocales) {
+      if (loc.code !== locale) {
+        queryClient.prefetchQuery({
+          queryKey: ['ui_translations', loc.code],
+          queryFn: () => fetchTranslations(loc.code as Locale),
+          staleTime: 10 * 60 * 1000,
+        })
+      }
+    }
+  }, [supportedLocales, locale, queryClient])
 
   const setLocale = useCallback(
     async (newLocale: Locale) => {
@@ -83,28 +112,33 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
       } catch {}
 
       if (userId) {
-        await supabase
+        supabase
           .from('profiles')
           .update({ preferred_locale: newLocale })
           .eq('id', userId)
-
-        queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+          })
       }
     },
     [userId, queryClient]
   )
 
+  const activeMap = translationsMap ?? prevMapRef.current
+
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = translationsMap?.[key] ?? key
+      const raw = activeMap?.[key] ?? key
       return interpolate(raw, vars)
     },
-    [translationsMap]
+    [activeMap]
   )
 
+  const isLoading = translationsLoading && prevMapRef.current === null
+
   const value = useMemo(
-    () => ({ locale, setLocale, t, isLoading: translationsLoading, supportedLocales }),
-    [locale, setLocale, t, translationsLoading, supportedLocales]
+    () => ({ locale, setLocale, t, isLoading, supportedLocales }),
+    [locale, setLocale, t, isLoading, supportedLocales]
   )
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
