@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  Sun, Stethoscope, Wrench, BookOpen, type LucideIcon
+  Sun, Stethoscope, Wrench, BookOpen, ChevronRight, type LucideIcon
 } from 'lucide-react'
 import type { CommunityRoom } from '../../lib/community'
 
@@ -21,10 +21,47 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface Props {
   room: CommunityRoom
+  variant?: 'card' | 'nav-item'
+  active?: boolean
+  onClick?: () => void
 }
 
-export default function CommunityRoomCard({ room }: Props) {
+export default function CommunityRoomCard({ room, variant = 'card', active = false, onClick }: Props) {
   const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
+
+  if (variant === 'nav-item') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`w-full group flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-left ${
+          active
+            ? 'bg-cyan-primary/10 border-l-2 border-cyan-primary pl-2.5'
+            : 'hover:bg-warm-white border-l-2 border-transparent pl-2.5'
+        }`}
+      >
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+          style={{ backgroundColor: `${room.color}22`, color: room.color }}
+        >
+          <Icon className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-semibold leading-snug truncate transition-colors ${
+            active ? 'text-cyan-dark' : 'text-slate-700 group-hover:text-slate-800'
+          }`}>
+            {room.name}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {room.post_count === 0 ? 'No posts' : `${room.post_count} post${room.post_count === 1 ? '' : 's'}`}
+          </p>
+        </div>
+        <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
+          active ? 'text-cyan-primary' : 'text-slate-300 group-hover:text-slate-400'
+        }`} />
+      </button>
+    )
+  }
 
   return (
     <Link
