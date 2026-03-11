@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
-  ArrowLeft, Lock, Flag, MessageCircle, Users
+  ArrowLeft, Lock, Flag, MessageCircle, Users, EyeOff
 } from 'lucide-react'
 import { useCommunityPost } from '../hooks/useCommunityPosts'
 import { useCommunityReplies } from '../hooks/useCommunityReplies'
@@ -65,11 +65,12 @@ export default function CommunityPostPage() {
 
   const isHiddenOrRemoved =
     post?.post_status === 'hidden' || post?.post_status === 'removed'
+  const isOwnPost = post?.author_user_id === user?.id
 
   return (
     <>
       {showWelcome && (
-        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} />
+        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} onDismiss={() => setShowWelcome(false)} />
       )}
       {showReport && post && (
         <ReportModal postId={post.id} onClose={() => setShowReport(false)} />
@@ -133,15 +134,27 @@ export default function CommunityPostPage() {
                 </div>
               )}
 
+              {/* Moderation notice for the author */}
+              {isHiddenOrRemoved && isOwnPost && (
+                <div className="flex items-start gap-2 mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                  <EyeOff className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 leading-relaxed">
+                    {post.post_status === 'removed'
+                      ? 'Your post has been removed by a moderator and is no longer visible to other members.'
+                      : 'Your post is currently hidden by a moderator and is not visible to other members.'}
+                  </p>
+                </div>
+              )}
+
               {/* Title */}
               <h1 className="text-xl font-bold text-slate-800 leading-snug mb-4">
-                {isHiddenOrRemoved ? (
+                {isHiddenOrRemoved && !isOwnPost ? (
                   <span className="text-slate-400 italic">[Post removed by moderator]</span>
                 ) : post.title}
               </h1>
 
               {/* Body */}
-              {!isHiddenOrRemoved && (
+              {(!isHiddenOrRemoved || isOwnPost) && (
                 <div className="prose prose-sm max-w-none mb-6">
                   <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-base">
                     {post.body}
@@ -149,7 +162,7 @@ export default function CommunityPostPage() {
                 </div>
               )}
 
-              {isHiddenOrRemoved && (
+              {isHiddenOrRemoved && !isOwnPost && (
                 <p className="text-sm text-slate-400 italic mb-6 bg-slate-50 rounded-xl px-4 py-3">
                   This post has been removed and is no longer visible to the community.
                 </p>

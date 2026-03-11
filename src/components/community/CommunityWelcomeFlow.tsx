@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Heart, Users, ShieldCheck, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, ChevronRight, Sparkles, CircleUser as UserCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Heart, Users, ShieldCheck, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, ChevronRight, Sparkles, CircleUser as UserCircle, X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useCreateCommunityProfile } from '../../hooks/useCommunityProfile'
 import { AVATAR_COLORS, generateAvatarColor } from '../../lib/community'
@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth'
 
 interface Props {
   onComplete: () => void
+  onDismiss?: () => void
 }
 
 type Step = 'welcome' | 'guidelines' | 'profile'
@@ -17,25 +18,25 @@ const CAREGIVER_TYPES = [
   { value: 'both', label: 'Both', description: 'Family & professional' },
 ]
 
-const TOPIC_INTERESTS = [
-  { value: 'dementia', label: 'Dementia & Memory' },
-  { value: 'burnout', label: 'Burnout & Stress' },
-  { value: 'family', label: 'Family Dynamics' },
-  { value: 'tips', label: 'Tips & Tactics' },
-  { value: 'new', label: 'New to Caregiving' },
-  { value: 'general', label: 'General Support' },
-]
 
-export default function CommunityWelcomeFlow({ onComplete }: Props) {
+export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
   const [step, setStep] = useState<Step>('welcome')
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false)
   const [handle, setHandle] = useState('')
   const [handleError, setHandleError] = useState('')
   const [caregiverType, setCaregiverType] = useState('')
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0])
   const { user } = useAuth()
   const createProfile = useCreateCommunityProfile()
+
+  const canDismiss = !!onDismiss && !createProfile.isPending
+
+  useEffect(() => {
+    if (!canDismiss) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onDismiss() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [canDismiss, onDismiss])
 
   const suggestedHandle = (() => {
     const email = user?.email ?? ''
@@ -54,12 +55,6 @@ export default function CommunityWelcomeFlow({ onComplete }: Props) {
     } else if (clean.length > 0 && !/^[a-zA-Z0-9_-]+$/.test(clean)) {
       setHandleError('Only letters, numbers, underscores and hyphens allowed')
     }
-  }
-
-  const toggleTopic = (v: string) => {
-    setSelectedTopics(prev =>
-      prev.includes(v) ? prev.filter(t => t !== v) : [...prev, v]
-    )
   }
 
   const handleFinish = async () => {
@@ -82,7 +77,10 @@ export default function CommunityWelcomeFlow({ onComplete }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={canDismiss ? (e) => { if (e.target === e.currentTarget) onDismiss!() } : undefined}
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-[scale-in_0.2s_ease-out]">
 
         {/* Progress bar */}
@@ -96,6 +94,17 @@ export default function CommunityWelcomeFlow({ onComplete }: Props) {
         {/* ── Step 1: Welcome ── */}
         {step === 'welcome' && (
           <div className="p-8">
+            {canDismiss && (
+              <div className="flex justify-end -mt-2 -mr-2 mb-2">
+                <button
+                  onClick={onDismiss}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-cyan-50 rounded-full flex items-center justify-center">
                 <Heart className="w-8 h-8 text-cyan-600" />
@@ -324,29 +333,6 @@ export default function CommunityWelcomeFlow({ onComplete }: Props) {
                       <p className="text-sm font-medium">{opt.label}</p>
                       <p className="text-xs text-slate-500">{opt.description}</p>
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Topic interests (optional) */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Topics you care about <span className="text-slate-400 font-normal">(optional)</span>
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {TOPIC_INTERESTS.map(topic => (
-                  <button
-                    key={topic.value}
-                    type="button"
-                    onClick={() => toggleTopic(topic.value)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                      selectedTopics.includes(topic.value)
-                        ? 'bg-cyan-primary text-white border-cyan-primary'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300 hover:text-cyan-700'
-                    }`}
-                  >
-                    {topic.label}
                   </button>
                 ))}
               </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MessageCircle, Heart, Users, Clock } from 'lucide-react'
+import { MessageCircle, Heart, Users, Clock, EyeOff } from 'lucide-react'
 import type { CommunityPost } from '../../lib/community'
 import { maskAuthor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
@@ -40,12 +40,26 @@ function timeAgo(dateStr: string): string {
 export default function CommunityPostCard({ post, showRoom = false }: Props) {
   const { user } = useAuth()
   const author = maskAuthor(post, user?.id)
+  const isOwnPost = post.author_user_id === user?.id
+  const isHidden = post.post_status === 'hidden'
+  const isRemoved = post.post_status === 'removed'
+  const isModerated = isHidden || isRemoved
 
   return (
     <Link
       to={`/community/posts/${post.id}`}
-      className="group block bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 p-5"
+      className={`group block bg-white rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 p-5 ${
+        isModerated && isOwnPost
+          ? 'border-amber-200 hover:border-amber-300 hover:shadow-md opacity-75'
+          : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+      }`}
     >
+      {isModerated && isOwnPost && (
+        <div className="flex items-center gap-1.5 mb-3 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5">
+          <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />
+          {isRemoved ? 'This post has been removed by a moderator' : 'This post is hidden and not visible to others'}
+        </div>
+      )}
       {((showRoom && post.room) || post.help_type) && (
         <div className="flex items-center gap-2 flex-wrap mb-2.5">
           {showRoom && post.room && (

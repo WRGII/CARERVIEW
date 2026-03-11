@@ -31,7 +31,7 @@ export default function CommunityLandingPage() {
   return (
     <>
       {showWelcome && (
-        <CommunityWelcomeFlow onComplete={handleWelcomeComplete} />
+        <CommunityWelcomeFlow onComplete={handleWelcomeComplete} onDismiss={() => setShowWelcome(false)} />
       )}
 
       <div className="min-h-screen bg-gray-50">

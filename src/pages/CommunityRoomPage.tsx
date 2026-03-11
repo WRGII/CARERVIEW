@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
@@ -13,41 +13,25 @@ import CommunityLoadingState from '../components/community/CommunityLoadingState
 import CommunityGuidelinesBanner from '../components/community/CommunityGuidelinesBanner'
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import { Button } from '../components/ui/Button'
-import type { CommunityPost } from '../lib/community'
+import type { PostSortMode } from '../lib/community'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
 }
 
-type SortMode = 'activity' | 'newest' | 'most_replies'
-
-const SORT_OPTIONS: { value: SortMode; label: string; icon: LucideIcon }[] = [
+const SORT_OPTIONS: { value: PostSortMode; label: string; icon: LucideIcon }[] = [
   { value: 'activity', label: 'Recent activity', icon: Clock },
   { value: 'newest', label: 'Newest', icon: TrendingUp },
   { value: 'most_replies', label: 'Most replies', icon: MessageCircle },
 ]
 
-function sortPosts(posts: CommunityPost[], mode: SortMode): CommunityPost[] {
-  const copy = [...posts]
-  if (mode === 'activity') {
-    return copy.sort((a, b) => new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime())
-  }
-  if (mode === 'newest') {
-    return copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }
-  if (mode === 'most_replies') {
-    return copy.sort((a, b) => b.reply_count - a.reply_count)
-  }
-  return copy
-}
-
 export default function CommunityRoomPage() {
   const { slug } = useParams<{ slug: string }>()
   const { data: room, isLoading: roomLoading, error: roomError } = useCommunityRoom(slug)
-  const { data: posts, isLoading: postsLoading } = useCommunityPosts(room?.id)
+  const [sort, setSort] = useState<PostSortMode>('activity')
+  const { data: posts, isLoading: postsLoading } = useCommunityPosts(room?.id, sort)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const [showWelcome, setShowWelcome] = useState(false)
-  const [sort, setSort] = useState<SortMode>('activity')
 
   if (roomError) return <Navigate to="/community" replace />
 
@@ -55,15 +39,10 @@ export default function CommunityRoomPage() {
   const hasProfile = !profileLoading && !!profile
   const isBanned = profile?.is_banned ?? false
 
-  const sortedPosts = useMemo(
-    () => (posts ? sortPosts(posts, sort) : []),
-    [posts, sort]
-  )
-
   return (
     <>
       {showWelcome && (
-        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} />
+        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} onDismiss={() => setShowWelcome(false)} />
       )}
 
       <div className="min-h-screen bg-gray-50">
@@ -162,9 +141,9 @@ export default function CommunityRoomPage() {
           {/* Posts */}
           {postsLoading ? (
             <CommunityLoadingState count={4} />
-          ) : sortedPosts.length > 0 ? (
+          ) : (posts ?? []).length > 0 ? (
             <div className="space-y-3">
-              {sortedPosts.map(post => (
+              {(posts ?? []).map(post => (
                 <CommunityPostCard key={post.id} post={post} />
               ))}
             </div>

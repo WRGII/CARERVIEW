@@ -5,13 +5,14 @@ import {
   getPostById,
   createPost,
   updatePost,
+  type PostSortMode,
 } from '../lib/community'
 
-export function useCommunityPosts(roomId: string | undefined) {
+export function useCommunityPosts(roomId: string | undefined, sortBy: PostSortMode = 'activity') {
   return useQuery({
-    queryKey: ['community', 'posts', 'room', roomId],
+    queryKey: ['community', 'posts', 'room', roomId, sortBy],
     enabled: !!roomId,
-    queryFn: () => listPostsForRoom({ roomId: roomId! }),
+    queryFn: () => listPostsForRoom({ roomId: roomId!, sortBy }),
     staleTime: 30_000,
   })
 }

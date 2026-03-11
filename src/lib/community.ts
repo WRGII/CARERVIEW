@@ -237,19 +237,30 @@ const POST_LIST_SELECT = `
   author_profile:community_profiles ( handle, avatar_color )
 `
 
+export type PostSortMode = 'activity' | 'newest' | 'most_replies'
+
 export async function listPostsForRoom(params: {
   roomId: string
   limit?: number
   offset?: number
+  sortBy?: PostSortMode
 }): Promise<CommunityPost[]> {
-  const { roomId, limit = 20, offset = 0 } = params
-  const { data, error } = await supabase
+  const { roomId, limit = 20, offset = 0, sortBy = 'activity' } = params
+  let query = supabase
     .from('community_posts')
     .select(POST_LIST_SELECT)
     .eq('room_id', roomId)
     .eq('post_status', 'active')
-    .order('last_activity_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+
+  if (sortBy === 'activity') {
+    query = query.order('last_activity_at', { ascending: false })
+  } else if (sortBy === 'newest') {
+    query = query.order('created_at', { ascending: false })
+  } else if (sortBy === 'most_replies') {
+    query = query.order('reply_count', { ascending: false }).order('last_activity_at', { ascending: false })
+  }
+
+  const { data, error } = await query.range(offset, offset + limit - 1)
   if (error) throw error
   return (data ?? []) as CommunityPost[]
 }
