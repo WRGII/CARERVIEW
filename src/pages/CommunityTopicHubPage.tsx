@@ -1,61 +1,71 @@
-import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users, Heart, Sparkles, ArrowRight, MessageCircle, ShieldCheck,
-  Lightbulb, Brain, Compass, BookOpen, Sun, Stethoscope, Wrench, TrendingUp,
-  type LucideIcon
+  BookOpen, TrendingUp,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
-import type { CommunityRoom, CommunityPost } from '../lib/community'
-import JoinFreeCTA from '../components/community/JoinFreeCTA'
+import type { CommunityRoom } from '../lib/community'
+import PublicRoomSection from '../components/community/PublicRoomSection'
 
-const ICON_MAP: Record<string, LucideIcon> = {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  Sun, Stethoscope, Wrench, BookOpen, Tool: Wrench,
+const SIGNUP_URL = '/create-account?plan=free&source=community-hub'
+
+function RoomSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-slate-100 flex-shrink-0" />
+          <div>
+            <div className="h-3.5 bg-slate-200 rounded w-32 mb-1.5" />
+            <div className="h-2.5 bg-slate-100 rounded w-48" />
+          </div>
+        </div>
+        <div className="h-3 bg-slate-100 rounded w-12" />
+      </div>
+      {[1, 2, 3].map(i => (
+        <div key={i} className="px-4 py-3.5 border-b border-slate-100 last:border-0">
+          <div className="h-3.5 bg-slate-200 rounded w-2/3 mb-2" />
+          <div className="h-3 bg-slate-100 rounded w-full mb-1" />
+          <div className="h-3 bg-slate-100 rounded w-3/4" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
-const HELP_TYPE_LABELS: Record<string, string> = {
-  emotional_support: 'Emotional Support',
-  practical_tips: 'Practical Tips',
-  similar_experiences: 'Similar Experiences',
-  question: 'Question',
-  resource: 'Resource',
+interface InlineCTAProps {
+  tone: 'peach' | 'mint'
+  headline: string
+  sub: string
 }
 
-const HELP_TYPE_COLORS: Record<string, string> = {
-  emotional_support: 'bg-rose-50 text-rose-600 border-rose-100',
-  practical_tips: 'bg-amber-50 text-amber-600 border-amber-100',
-  similar_experiences: 'bg-cyan-50 text-cyan-600 border-cyan-100',
-  question: 'bg-blue-50 text-blue-600 border-blue-100',
-  resource: 'bg-green-50 text-green-600 border-green-100',
+function InlineCTA({ tone, headline, sub }: InlineCTAProps) {
+  const bg = tone === 'peach'
+    ? 'bg-rose-50 border-rose-100'
+    : 'bg-teal-50 border-teal-100'
+  const btnClass = tone === 'peach'
+    ? 'bg-slate-800 hover:bg-slate-700 text-white'
+    : 'bg-teal-600 hover:bg-teal-700 text-white'
+
+  return (
+    <div className={`rounded-2xl border px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 ${bg}`}>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-slate-800 leading-snug">{headline}</p>
+        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{sub}</p>
+      </div>
+      <Link
+        to={SIGNUP_URL}
+        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex-shrink-0 self-start sm:self-auto ${btnClass}`}
+      >
+        <Sparkles className="w-3.5 h-3.5" />
+        Join free
+      </Link>
+    </div>
+  )
 }
-
-const POST_PREVIEW_CHARS = 180
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-const POST_LIST_SELECT = `
-  id, room_id, is_anonymous, title, body,
-  post_status, help_type, reply_count, reaction_count,
-  last_activity_at, created_at,
-  room:community_rooms ( id, slug, name, color, icon_name )
-`
 
 export default function CommunityTopicHubPage() {
-  const [activeRoom, setActiveRoom] = useState<string | null>(null)
-  const discussionsSectionRef = useRef<HTMLElement>(null)
-
   const { data: rooms, isLoading: roomsLoading } = useQuery<CommunityRoom[]>({
     queryKey: ['public-community', 'rooms'],
     queryFn: async () => {
@@ -70,23 +80,6 @@ export default function CommunityTopicHubPage() {
     staleTime: 120_000,
   })
 
-  const { data: recentPosts, isLoading: postsLoading, isError: postsError } = useQuery<CommunityPost[]>({
-    queryKey: ['public-community', 'posts', activeRoom],
-    queryFn: async () => {
-      let query = supabase
-        .from('community_posts')
-        .select(POST_LIST_SELECT)
-        .eq('post_status', 'active')
-        .order('last_activity_at', { ascending: false })
-        .limit(9)
-      if (activeRoom) query = query.eq('room_id', activeRoom)
-      const { data, error } = await query
-      if (error) throw error
-      return (data ?? []) as CommunityPost[]
-    },
-    staleTime: 60_000,
-  })
-
   const { data: memberCount } = useQuery<number>({
     queryKey: ['public-community', 'member-count'],
     queryFn: async () => {
@@ -99,41 +92,40 @@ export default function CommunityTopicHubPage() {
     staleTime: 120_000,
   })
 
-  const selectedRoom = rooms?.find(r => r.id === activeRoom)
-
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium text-white/90 mb-6">
-              <Users className="w-4 h-4" />
-              {memberCount ? `${memberCount.toLocaleString()} caregivers` : 'Caregiver community'} — free to join
+      {/* Slim hero */}
+      <section className="bg-white border-b border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1 text-xs font-medium text-slate-600 mb-3">
+                <Users className="w-3.5 h-3.5" />
+                {memberCount ? `${memberCount.toLocaleString()} caregivers` : 'Caregiver community'} — free to join
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-2">
+                You shouldn't have to figure this out alone
+              </h1>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                A free peer support community for family and professional caregivers. Share experiences, ask questions, find practical wisdom.
+              </p>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-5">
-              You shouldn't have to figure this out alone
-            </h1>
-            <p className="text-xl text-white/80 leading-relaxed mb-8">
-              A free peer support community for family and professional caregivers.
-              Share experiences, ask questions, and find practical wisdom from people who understand.
-            </p>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               <Link
-                to="/create-account?plan=free&source=community"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 text-base"
+                to={SIGNUP_URL}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4" />
                 Join free
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
                 to="/#get-started"
-                className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm font-medium"
+                className="inline-flex items-center justify-center gap-1 text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
               >
                 Already have an account? Sign in
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           </div>
@@ -142,252 +134,102 @@ export default function CommunityTopicHubPage() {
 
       {/* Trust bar */}
       <section className="bg-white border-b border-slate-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-slate-500">
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-green-500" />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
               Moderated and safe
             </span>
-            <span className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-rose-400" />
+            <span className="flex items-center gap-1.5">
+              <Heart className="w-3.5 h-3.5 text-rose-400" />
               Anonymous posting available
             </span>
-            <span className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-cyan-500" />
+            <span className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-cyan-500" />
               Peer support, not medical advice
             </span>
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               Free for all caregivers
             </span>
           </div>
         </div>
       </section>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-14">
+      {/* Forum feed */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
 
-        {/* Discussion rooms */}
-        <section>
-          <div className="flex items-baseline justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-1">Discussion rooms</h2>
-              <p className="text-slate-500 text-sm">Choose a topic that's relevant to you</p>
-            </div>
+        <div className="flex items-baseline justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">Discussion rooms</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Browse what caregivers are talking about</p>
           </div>
+        </div>
 
-          {roomsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 animate-pulse">
-                  <div className="flex gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-slate-200 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="h-4 bg-slate-200 rounded w-2/3 mb-2" />
-                      <div className="h-3 bg-slate-100 rounded w-full" />
-                    </div>
+        {roomsLoading ? (
+          <>
+            <RoomSkeleton />
+            <RoomSkeleton />
+            <RoomSkeleton />
+          </>
+        ) : rooms && rooms.length > 0 ? (
+          <>
+            {rooms.map((room, index) => (
+              <div key={room.id}>
+                <PublicRoomSection room={room} />
+
+                {index === 1 && (
+                  <div className="mt-4">
+                    <InlineCTA
+                      tone="peach"
+                      headline="Real support from caregivers who get it"
+                      sub="Join free to reply, share what's working, and connect with others navigating the same challenges."
+                    />
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : rooms && rooms.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rooms.map(room => {
-                const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
-                const isSelected = activeRoom === room.id
-                return (
-                  <button
-                    key={room.id}
-                    onClick={() => {
-                      const next = activeRoom === room.id ? null : room.id
-                      setActiveRoom(next)
-                      if (next) {
-                        setTimeout(() => {
-                          discussionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }, 50)
-                      }
-                    }}
-                    className={`group text-left bg-white rounded-2xl border transition-all duration-200 p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                      isSelected
-                        ? 'border-slate-700 shadow-md -translate-y-0.5'
-                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
-                    }`}
-                    aria-pressed={isSelected}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-                        style={{ backgroundColor: `${room.color}22`, color: room.color }}
-                        aria-hidden="true"
-                      >
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`text-sm font-semibold leading-snug mb-1 transition-colors ${
-                          isSelected ? 'text-slate-900' : 'text-slate-800 group-hover:text-cyan-700'
-                        }`}>
-                          {room.name}
-                        </h3>
-                        <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                          {room.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-slate-400 text-xs">
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        {room.post_count === 0 ? 'No posts yet' : `${room.post_count} ${room.post_count === 1 ? 'post' : 'posts'}`}
-                      </div>
-                      <span className={`text-xs font-medium transition-colors ${
-                        isSelected ? 'text-slate-700' : 'text-cyan-600 group-hover:text-cyan-700'
-                      }`}>
-                        {isSelected ? 'Showing posts' : 'Browse →'}
-                      </span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          ) : null}
-        </section>
+                )}
 
-        {/* Discussion preview section */}
-        <section ref={discussionsSectionRef}>
-          <div className="flex items-baseline justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-1">
-                {selectedRoom ? `Discussions in ${selectedRoom.name}` : 'Recent discussions'}
+                {index === 3 && (
+                  <div className="mt-4">
+                    <InlineCTA
+                      tone="mint"
+                      headline="Ask anonymously, find your people"
+                      sub="Post without sharing your name when you need to — your privacy is protected."
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* End of page CTA */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center mt-2">
+              <div className="w-12 h-12 bg-cyan-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Heart className="w-6 h-6 text-cyan-500" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-800 mb-1.5">
+                Ready to connect with other caregivers?
               </h2>
-              <p className="text-slate-500 text-sm">
-                {selectedRoom
-                  ? `Browse what caregivers are discussing in ${selectedRoom.name}`
-                  : 'What caregivers are talking about right now'}
+              <p className="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto mb-4">
+                Join free to reply, post your own questions, and be part of a community that truly understands.
               </p>
-            </div>
-            {activeRoom && (
-              <button
-                onClick={() => setActiveRoom(null)}
-                className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+              <Link
+                to={SIGNUP_URL}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors text-sm"
               >
-                Clear filter
-              </button>
-            )}
+                <Sparkles className="w-4 h-4" />
+                Join Caregiver Community — Free
+              </Link>
+              <p className="text-xs text-slate-400 mt-2">Free for all registered CarerView users</p>
+            </div>
+          </>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <MessageCircle className="w-6 h-6 text-slate-400" />
+            </div>
+            <p className="text-sm font-medium text-slate-600 mb-1">No rooms yet</p>
+            <p className="text-xs text-slate-400">Community rooms are coming soon.</p>
           </div>
-
-          {postsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-slate-200 p-5 animate-pulse">
-                  <div className="h-4 bg-slate-200 rounded w-2/3 mb-3" />
-                  <div className="h-3 bg-slate-100 rounded w-full mb-2" />
-                  <div className="h-3 bg-slate-100 rounded w-4/5" />
-                </div>
-              ))}
-            </div>
-          ) : postsError ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-              <p className="text-slate-500 text-sm">Could not load discussions. Please refresh the page to try again.</p>
-            </div>
-          ) : recentPosts && recentPosts.length > 0 ? (
-            <div className="space-y-3">
-              {recentPosts.map(post => {
-                const helpLabel = post.help_type ? HELP_TYPE_LABELS[post.help_type] : null
-                const helpColor = post.help_type ? HELP_TYPE_COLORS[post.help_type] : null
-                const bodyPreview = post.body.length > POST_PREVIEW_CHARS
-                  ? post.body.slice(0, POST_PREVIEW_CHARS).trimEnd() + '…'
-                  : post.body
-
-                return (
-                  <div
-                    key={post.id}
-                    className="bg-white rounded-2xl border border-slate-200 p-5"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          {post.room && (
-                            <span
-                              className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
-                            >
-                              {post.room.name}
-                            </span>
-                          )}
-                          {helpLabel && helpColor && (
-                            <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border ${helpColor}`}>
-                              {helpLabel}
-                            </span>
-                          )}
-                          {post.is_anonymous && (
-                            <span className="text-xs text-slate-400">Anonymous</span>
-                          )}
-                        </div>
-
-                        <h3 className="text-base font-semibold text-slate-800 leading-snug mb-2">
-                          {post.title}
-                        </h3>
-
-                        <p className="text-sm text-slate-500 leading-relaxed mb-3">
-                          {bodyPreview}
-                        </p>
-
-                        <div className="flex items-center justify-between flex-wrap gap-3">
-                          <div className="flex items-center gap-3 text-xs text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="w-3.5 h-3.5" />
-                              {post.reply_count} {post.reply_count === 1 ? 'reply' : 'replies'}
-                            </span>
-                            <span>{timeAgo(post.last_activity_at)}</span>
-                          </div>
-
-                          <Link
-                            to="/create-account?plan=free&source=community"
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors group"
-                          >
-                            Join to read full discussion
-                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* CTA after posts */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">Want to read the full discussions and reply?</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Create a free account to join the community.</p>
-                </div>
-                <Link
-                  to="/create-account?plan=free&source=community"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors flex-shrink-0"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Join free
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-              <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <MessageCircle className="w-6 h-6 text-slate-400" />
-              </div>
-              <p className="text-sm font-medium text-slate-600 mb-1">No discussions yet in this room</p>
-              <p className="text-xs text-slate-400">
-                Join the community and start the first one.
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* Full-width Join CTA */}
-        <section>
-          <JoinFreeCTA
-            variant="banner"
-            context="Read full discussions, share your experience, post anonymously when you need to. Free for all caregivers."
-          />
-        </section>
+        )}
 
         {/* Why CarerView bridge section */}
         <section className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -458,4 +300,3 @@ export default function CommunityTopicHubPage() {
     </div>
   )
 }
-
