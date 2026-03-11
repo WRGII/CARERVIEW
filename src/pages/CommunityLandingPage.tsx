@@ -165,10 +165,10 @@ export default function CommunityLandingPage() {
           )}
 
           {/* Main split panel: rooms nav + discussions */}
-          <div className="grid grid-cols-[2fr_3fr] gap-4 items-start">
+          <div className="grid grid-cols-[40%_1fr] sm:grid-cols-[2fr_3fr] gap-4 items-start">
 
             {/* Left: Room navigation */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="bg-warm-white rounded-2xl shadow-md overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
                 <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">Rooms</h2>
                 <span className="text-xs text-slate-400">{rooms?.length ?? 0}</span>
@@ -185,8 +185,8 @@ export default function CommunityLandingPage() {
                       : 'hover:bg-warm-white border-l-2 border-transparent pl-2.5'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
-                    <Sparkles className="w-4 h-4 text-slate-500" />
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-cyan-primary/10">
+                    <Sparkles className="w-4 h-4 text-cyan-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold leading-snug truncate transition-colors ${
@@ -229,17 +229,17 @@ export default function CommunityLandingPage() {
             </div>
 
             {/* Right: Discussions panel */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm p-4 min-h-[400px]">
+            <div className="bg-warm-white rounded-2xl shadow-md p-4 min-h-[400px]">
               <RoomDiscussions room={activeRoom} hasProfile={hasProfile} />
             </div>
           </div>
 
           {/* About this community */}
-          <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl border border-slate-200 p-5 sm:p-7">
+          <div className="bg-warm-white rounded-2xl shadow-md p-5 sm:p-7">
             <h2 className="text-base font-bold text-slate-800 mb-4">About this community</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="flex flex-col items-start gap-3">
-                <div className="w-10 h-10 bg-cyan-primary/15 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-primary/8 to-cyan-primary/3 rounded-2xl border border-cyan-primary/15 flex items-center justify-center">
                   <Users className="w-5 h-5 text-cyan-primary" />
                 </div>
                 <div>
@@ -250,7 +250,7 @@ export default function CommunityLandingPage() {
                 </div>
               </div>
               <div className="flex flex-col items-start gap-3">
-                <div className="w-10 h-10 bg-peach-blush/60 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-peach-blush/40 to-peach-blush/10 rounded-2xl border border-peach-blush/40 flex items-center justify-center">
                   <Heart className="w-5 h-5 text-rose-400" />
                 </div>
                 <div>
@@ -261,7 +261,7 @@ export default function CommunityLandingPage() {
                 </div>
               </div>
               <div className="flex flex-col items-start gap-3">
-                <div className="w-10 h-10 bg-mint-green/60 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-mint-green/20 to-mint-green/5 rounded-2xl border border-mint-green/30 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-green-600" />
                 </div>
                 <div>

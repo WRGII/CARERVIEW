@@ -52,13 +52,21 @@ export default function CommunityRoomCard({ room, variant = 'card', active = fal
           }`}>
             {room.name}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {room.post_count === 0 ? 'No posts' : `${room.post_count} post${room.post_count === 1 ? '' : 's'}`}
-          </p>
         </div>
-        <ChevronRight className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
-          active ? 'text-cyan-primary' : 'text-slate-300 group-hover:text-slate-400'
-        }`} />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {room.post_count > 0 && (
+            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full transition-colors ${
+              active
+                ? 'bg-cyan-primary/15 text-cyan-dark'
+                : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+            }`}>
+              {room.post_count}
+            </span>
+          )}
+          <ChevronRight className={`w-3.5 h-3.5 transition-colors ${
+            active ? 'text-cyan-primary' : 'text-slate-300 group-hover:text-slate-400'
+          }`} />
+        </div>
       </button>
     )
   }
