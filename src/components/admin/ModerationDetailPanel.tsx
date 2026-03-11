@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import {
-  X, ExternalLink, User, EyeOff, AlertTriangle, CheckCircle,
-  Trash2, RotateCcw, ShieldOff, Shield, ChevronDown, ChevronUp
-} from 'lucide-react'
+import { X, ExternalLink, User, EyeOff, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Trash2, RotateCcw, ShieldOff, Shield, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   useResolveReport,
   useModeratePost,

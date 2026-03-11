@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  ArrowLeft, Flag, RefreshCw, Users, MessageCircle,
-  CheckCircle, XCircle, AlertTriangle
-} from 'lucide-react'
+import { ArrowLeft, Flag, RefreshCw, Users, MessageCircle, CircleCheck as CheckCircle, Circle as XCircle, TriangleAlert as AlertTriangle } from 'lucide-react'
 import { useModerationQueue } from '../hooks/useCommunityReports'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
