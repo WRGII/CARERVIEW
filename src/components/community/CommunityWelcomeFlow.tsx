@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import {
-  Heart, Users, ShieldCheck, AlertTriangle, CheckCircle2,
-  ChevronRight, Sparkles, UserCircle
-} from 'lucide-react'
+import { Heart, Users, ShieldCheck, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, ChevronRight, Sparkles, CircleUser as UserCircle } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useCreateCommunityProfile } from '../../hooks/useCommunityProfile'
 import { AVATAR_COLORS, generateAvatarColor } from '../../lib/community'

@@ -1,4 +1,4 @@
-import { AlertTriangle, ShieldCheck, X } from 'lucide-react'
+import { TriangleAlert as AlertTriangle, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 
 const STORAGE_KEY = 'cv_community_guidelines_dismissed'
