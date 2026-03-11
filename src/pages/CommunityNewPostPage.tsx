@@ -1,5 +1,5 @@
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, PenLine, EyeOff, Eye, AlertCircle, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, PenLine, EyeOff, Eye, CircleAlert as AlertCircle, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'

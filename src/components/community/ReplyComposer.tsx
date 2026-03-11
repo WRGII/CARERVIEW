@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EyeOff, Eye, SendHorizonal, AlertCircle } from 'lucide-react'
+import { EyeOff, Eye, SendHorizontal as SendHorizonal, CircleAlert as AlertCircle } from 'lucide-react'
 import { useCreateReply } from '../../hooks/useCommunityReplies'
 import type { CommunityProfile } from '../../lib/community'
 import { Button } from '../ui/Button'

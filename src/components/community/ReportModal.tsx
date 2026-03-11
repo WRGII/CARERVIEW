@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flag, X, AlertCircle } from 'lucide-react'
+import { Flag, X, CircleAlert as AlertCircle } from 'lucide-react'
 import { useSubmitReport } from '../../hooks/useCommunityReports'
 import type { ReportReason } from '../../lib/community'
 import { Button } from '../ui/Button'
