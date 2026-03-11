@@ -120,7 +120,7 @@ export default function CommunityTopicHubPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <Link
-                to="/create-account"
+                to="/create-account?plan=free&source=community"
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 text-base"
               >
                 <Sparkles className="w-5 h-5" />
@@ -327,7 +327,7 @@ export default function CommunityTopicHubPage() {
                           </div>
 
                           <Link
-                            to="/create-account"
+                            to="/create-account?plan=free&source=community"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors group"
                           >
                             Join to read full discussion
@@ -347,7 +347,7 @@ export default function CommunityTopicHubPage() {
                   <p className="text-xs text-slate-500 mt-0.5">Create a free account to join the community.</p>
                 </div>
                 <Link
-                  to="/create-account"
+                  to="/create-account?plan=free&source=community"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors flex-shrink-0"
                 >
                   <Sparkles className="w-4 h-4" />
