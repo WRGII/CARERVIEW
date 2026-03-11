@@ -14,6 +14,7 @@ import CommunityReplyList from '../components/community/CommunityReplyList'
 import AnonymousBadge from '../components/community/AnonymousBadge'
 import ReportModal from '../components/community/ReportModal'
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
+import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
 
 const HELP_TYPE_LABELS: Record<string, string> = {
   emotional_support: 'Emotional Support',
@@ -281,6 +282,18 @@ export default function CommunityPostPage() {
               </p>
             </div>
           ) : null}
+
+          {/* Upgrade bridge — shown to signed-in users without a structured care plan context */}
+          {hasProfile && post && !isHiddenOrRemoved && (
+            <UpgradeBridgeCard
+              variant={
+                post.help_type === 'practical_tips' ? 'track_observation'
+                : post.help_type === 'similar_experiences' ? 'see_changes'
+                : post.help_type === 'question' ? 'coordinate_team'
+                : 'general'
+              }
+            />
+          )}
 
         </div>
       </div>

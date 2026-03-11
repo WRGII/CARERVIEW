@@ -27,6 +27,7 @@ import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "./pages/AdminDeleteUser";
 const AdminTranslationsPage = lazy(() => import("./pages/AdminTranslationsPage"));
 const AdminCommunityModerationPage = lazy(() => import("./pages/AdminCommunityModerationPage"));
+const CommunityTopicHubPage = lazy(() => import("./pages/CommunityTopicHubPage"));
 
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
@@ -77,6 +78,7 @@ export default function App() {
                   />
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/community-hub" element={<CommunityTopicHubPage />} />
 
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />
