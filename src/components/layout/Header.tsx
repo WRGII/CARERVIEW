@@ -123,6 +123,17 @@ export default function Header() {
                 </div>
 
                 <div className="md:hidden flex items-center gap-2">
+                  <Link
+                    to="/community"
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                      isCommunityActive
+                        ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                        : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                    Community
+                  </Link>
                   <LanguageSwitcher />
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -164,8 +175,19 @@ export default function Header() {
                   </Link>
                 </div>
 
-                {/* Mobile: language switcher + hamburger always visible */}
+                {/* Mobile: community + language switcher + hamburger always visible */}
                 <div className="md:hidden flex items-center gap-2">
+                  <Link
+                    to="/community-hub"
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                      isCommunityActive
+                        ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                        : 'bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                    Community
+                  </Link>
                   <LanguageSwitcher />
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -205,16 +227,6 @@ export default function Header() {
                   >
                     {t('nav.dashboard')}
                   </Link>
-                  <Link
-                    to="/community"
-                    onClick={closeMobileMenu}
-                    className={`flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium rounded-lg transition-colors min-h-[44px] ${
-                      isCommunityActive ? 'bg-cyan-50 text-cyan-700' : 'text-slate-700 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Users className="h-5 w-5" />
-                    Community
-                  </Link>
                   {canUseTeam && (
                     <Link
                       to="/team"
@@ -250,14 +262,6 @@ export default function Header() {
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.why_carerview')}
-                  </Link>
-                  <Link
-                    to="/community-hub"
-                    onClick={closeMobileMenu}
-                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium rounded-lg transition-colors min-h-[44px] bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
-                  >
-                    <Users className="h-5 w-5" />
-                    Community
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
