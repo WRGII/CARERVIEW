@@ -20,9 +20,6 @@ export function useAuth() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
 
-  // Make admin comparison case-insensitive to avoid false negatives
-  const ADMIN_EMAIL = 'william.griffith@grifii.com'.toLowerCase()
-
   async function upsertProfile(userId: string, email: string | null): Promise<Profile | null> {
     try {
     const { data, error } = await supabase
@@ -114,10 +111,8 @@ export function useAuth() {
       setProfile(prof)
       console.log('[useAuth] load() - Profile set:', prof)
 
-      // Email-based guard avoids race with DB trigger updating role.
-      // Compare in lower-case to prevent casing issues.
-      setIsAdmin((emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
-      console.log('[useAuth] load() - IsAdmin set:', (emailAddr ?? '').toLowerCase() === ADMIN_EMAIL)
+      setIsAdmin(prof.role === 'admin')
+      console.log('[useAuth] load() - IsAdmin set:', prof.role === 'admin')
     } catch (e: any) {
       console.error(e)
       // Force sign out on any error to clear stale session
@@ -165,7 +160,7 @@ export function useAuth() {
     }
   }, [])
 
-  const role: Role = isAdmin ? 'admin' : (profile?.role ?? 'caregiver')
+  const role: Role = profile?.role ?? 'caregiver'
   const userEmail: string | null = profile?.email ?? user?.email ?? null
   const userId: string | null = user?.id ?? null
 

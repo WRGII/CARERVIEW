@@ -510,60 +510,76 @@ export async function listPendingReports(params: {
   return (data ?? []) as ModerationReportRow[]
 }
 
+async function assertCommunityAdmin(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (prof?.role !== 'admin') throw new Error('Action not permitted')
+  return user.id
+}
+
 export async function resolveReport(params: {
   reportId: string
   action: 'reviewed' | 'dismissed'
   mod_note?: string
 }): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const userId = await assertCommunityAdmin()
 
   const { data, error } = await supabase
     .from('community_reports')
     .update({
       report_status: params.action,
-      reviewed_by: user.id,
+      reviewed_by: userId,
       reviewed_at: new Date().toISOString(),
       mod_note: params.mod_note?.trim() ?? null,
     })
     .eq('id', params.reportId)
     .select('id')
   if (error) throw error
-  if (!data || data.length === 0) throw new Error('Unauthorized: report not updated. Admin access required.')
+  if (!data || data.length === 0) throw new Error('Action not permitted')
 }
 
 export async function moderatePost(params: {
   postId: string
   post_status: PostStatus
 }): Promise<void> {
+  await assertCommunityAdmin()
+
   const { data, error } = await supabase
     .from('community_posts')
     .update({ post_status: params.post_status })
     .eq('id', params.postId)
     .select('id')
   if (error) throw error
-  if (!data || data.length === 0) throw new Error('Unauthorized: post not updated. Admin access required.')
+  if (!data || data.length === 0) throw new Error('Action not permitted')
 }
 
 export async function moderateReply(params: {
   replyId: string
   reply_status: ReplyStatus
 }): Promise<void> {
+  await assertCommunityAdmin()
+
   const { data, error } = await supabase
     .from('community_replies')
     .update({ reply_status: params.reply_status })
     .eq('id', params.replyId)
     .select('id')
   if (error) throw error
-  if (!data || data.length === 0) throw new Error('Unauthorized: reply not updated. Admin access required.')
+  if (!data || data.length === 0) throw new Error('Action not permitted')
 }
 
 export async function banCommunityMember(params: {
   userId: string
   reason?: string
 }): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const userId = await assertCommunityAdmin()
 
   const { error } = await supabase
     .from('community_profiles')
@@ -576,12 +592,14 @@ export async function banCommunityMember(params: {
 
   await supabase.from('community_bans').insert({
     user_id: params.userId,
-    banned_by: user.id,
+    banned_by: userId,
     reason: params.reason?.trim() ?? '',
   })
 }
 
 export async function unbanCommunityMember(userId: string): Promise<void> {
+  await assertCommunityAdmin()
+
   const { error } = await supabase
     .from('community_profiles')
     .update({ is_banned: false, ban_reason: null })
