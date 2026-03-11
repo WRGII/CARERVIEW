@@ -210,17 +210,14 @@ export default function CommunityLandingPage() {
           {/* Community info strip */}
           <div className="grid grid-cols-3 gap-3 pb-2">
             <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <Users className="w-4 h-4 text-cyan-primary mx-auto mb-1.5" />
               <p className="text-xs font-semibold text-slate-700">Real caregivers</p>
               <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Family &amp; professional</p>
             </div>
             <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <Heart className="w-4 h-4 text-rose-400 mx-auto mb-1.5" />
               <p className="text-xs font-semibold text-slate-700">Peer support</p>
               <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Not medical advice</p>
             </div>
             <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <Sparkles className="w-4 h-4 text-green-500 mx-auto mb-1.5" />
               <p className="text-xs font-semibold text-slate-700">Post anon</p>
               <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Your handle is hidden</p>
             </div>
