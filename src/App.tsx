@@ -26,6 +26,7 @@ import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "./pages/AdminDeleteUser";
 const AdminTranslationsPage = lazy(() => import("./pages/AdminTranslationsPage"));
+const AdminCommunityModerationPage = lazy(() => import("./pages/AdminCommunityModerationPage"));
 
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
@@ -110,6 +111,14 @@ export default function App() {
                     element={
                       <AdminGuard>
                         <AdminTranslationsPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/community-moderation"
+                    element={
+                      <AdminGuard>
+                        <AdminCommunityModerationPage />
                       </AdminGuard>
                     }
                   />

@@ -1,15 +1,30 @@
 // src/pages/AdminPage.tsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Flag } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { AggregateData } from "../components/admin/AggregateData"; // named import (kept)
 import { useLocale } from "../i18n/LocaleContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase as sb } from "../lib/supabaseClient";
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const { user, profile, loading, error } = useAuth();
   const { t } = useLocale();
+
+  const { data: pendingReportCount } = useQuery<number>({
+    queryKey: ['community', 'pending-report-count'],
+    queryFn: async () => {
+      const { count } = await sb
+        .from('community_reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('report_status', 'pending')
+      return count ?? 0
+    },
+    staleTime: 30_000,
+  });
 
   if (loading) return <div className="p-6">{t('admin.loading')}</div>;
   if (error || !user)
@@ -70,8 +85,8 @@ export default function AdminPage() {
         <AggregateData caregiversLink="/admin/caregivers" />
       </div>
 
-      {/* Accessibility/backup link (remove once AggregateData uses the prop above) */}
-      <div className="mt-4">
+      {/* Quick links */}
+      <div className="mt-4 flex flex-wrap gap-2">
         <Link
           to="/admin/caregivers"
           className="inline-flex items-center gap-2 rounded-lg border border-slate-gray/30 px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
@@ -79,10 +94,21 @@ export default function AdminPage() {
         >
           {t('admin.manage_caregivers')}
         </Link>
-      </div>
 
-      {/* Add any other existing admin widgets/components below */}
-      {/* <OtherAdminWidget /> */}
+        <Link
+          to="/admin/community-moderation"
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-gray/30 px-3 py-2 text-sm text-slate-gray hover:bg-peach-blush/20 transition"
+          aria-label="Community moderation queue"
+        >
+          <Flag className="w-4 h-4" />
+          Community moderation
+          {!!pendingReportCount && pendingReportCount > 0 && (
+            <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
+              {pendingReportCount}
+            </span>
+          )}
+        </Link>
+      </div>
     </div>
   );
 }
