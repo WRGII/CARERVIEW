@@ -35,6 +35,12 @@ import DementiaScalePage from "./pages/DementiaScalePage";
 import AcceptInvite from "./pages/AcceptInvite";
 import TeamSettings from "./pages/TeamSettings";
 
+import CommunityGuard from "./components/common/CommunityGuard";
+const CommunityLandingPage = lazy(() => import("./pages/CommunityLandingPage"));
+const CommunityRoomPage = lazy(() => import("./pages/CommunityRoomPage"));
+const CommunityPostPage = lazy(() => import("./pages/CommunityPostPage"));
+const CommunityNewPostPage = lazy(() => import("./pages/CommunityNewPostPage"));
+
 import { ActiveTeamProvider } from "./context/ActiveTeam";
 import { ToastProvider } from "./components/ui/ToastProvider";
 import DatabaseStatus from "./components/common/DatabaseStatus";
@@ -127,6 +133,40 @@ export default function App() {
                           <TeamSettings />
                         </TeamGuard>
                       </CaregiverGuard>
+                    }
+                  />
+
+                  {/* Community */}
+                  <Route
+                    path="/community"
+                    element={
+                      <CommunityGuard>
+                        <CommunityLandingPage />
+                      </CommunityGuard>
+                    }
+                  />
+                  <Route
+                    path="/community/rooms/:slug"
+                    element={
+                      <CommunityGuard>
+                        <CommunityRoomPage />
+                      </CommunityGuard>
+                    }
+                  />
+                  <Route
+                    path="/community/rooms/:slug/new-post"
+                    element={
+                      <CommunityGuard>
+                        <CommunityNewPostPage />
+                      </CommunityGuard>
+                    }
+                  />
+                  <Route
+                    path="/community/posts/:postId"
+                    element={
+                      <CommunityGuard>
+                        <CommunityPostPage />
+                      </CommunityGuard>
                     }
                   />
 

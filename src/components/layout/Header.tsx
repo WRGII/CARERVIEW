@@ -1,11 +1,11 @@
 // src/components/layout/Header.tsx
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan } from "../../hooks/useUserPlan";
 import AccountMenu from "../caregiver/AccountMenu";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Users } from "lucide-react";
 import { useState } from "react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -46,6 +46,8 @@ export default function Header() {
   const { t } = useLocale();
   const canUseTeam = plan?.plan_id === "family_qtr";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const isCommunityActive = location.pathname.startsWith('/community');
 
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
@@ -93,6 +95,18 @@ export default function Header() {
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
                   >
                     {t('nav.dashboard')}
+                  </Link>
+
+                  <Link
+                    to="/community"
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                      isCommunityActive
+                        ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                        : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400'
+                    }`}
+                  >
+                    <Users className="h-4 w-4" />
+                    Community
                   </Link>
 
                   {canUseTeam && (
@@ -195,6 +209,16 @@ export default function Header() {
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.dashboard')}
+                  </Link>
+                  <Link
+                    to="/community"
+                    onClick={closeMobileMenu}
+                    className={`flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium rounded-lg transition-colors min-h-[44px] ${
+                      isCommunityActive ? 'bg-cyan-50 text-cyan-700' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Users className="h-5 w-5" />
+                    Community
                   </Link>
                   {canUseTeam && (
                     <Link
