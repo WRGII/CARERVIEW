@@ -24,12 +24,18 @@ export default function CreateAccountPage() {
 
   const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("primary_qtr");
 
+  const isCommunitySource = React.useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('source') === 'community';
+  }, []);
+
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const planParam = params.get('plan');
     if (planParam === 'free') setSelectedPlanKey('free');
     else if (planParam === 'primary') setSelectedPlanKey('primary_qtr');
     else if (planParam === 'family') setSelectedPlanKey('family_qtr');
+    else if (params.get('source') === 'community') setSelectedPlanKey('free');
   }, []);
   const [promoCode, setPromoCode] = React.useState<string>("");
 
@@ -247,22 +253,33 @@ export default function CreateAccountPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               {STRIPE_PRODUCTS.map((product) => {
                 const selected = selectedPlanKey === product.planId;
+                const isCommunityHighlighted = isCommunitySource && product.planId === 'free';
+                const isDefaultRecommended = !isCommunitySource && product.planId === 'primary_qtr';
                 return (
                   <button
                     key={product.planId}
                     type="button"
                     onClick={() => setSelectedPlanKey(product.planId as PlanKey)}
                     className={[
-                      "text-left rounded-xl border px-4 py-4 transition-all",
-                      selected
+                      "relative text-left rounded-xl border px-4 py-4 transition-all",
+                      selected && isCommunityHighlighted
+                        ? "border-teal-500 ring-2 ring-teal-400/40 bg-teal-50/60"
+                        : selected
                         ? "border-cyan-primary ring-2 ring-cyan-primary/30 bg-cyan-primary/5"
+                        : isCommunityHighlighted
+                        ? "border-teal-300 bg-teal-50/30 hover:bg-teal-50/60"
                         : "border-slate-gray/20 hover:bg-peach-blush/10",
                     ].join(" ")}
                     aria-pressed={selected}
                   >
+                    {isCommunityHighlighted && (
+                      <span className="absolute -top-2.5 left-3 inline-flex items-center rounded-full bg-teal-600 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+                        {t('pricing.recommended')}
+                      </span>
+                    )}
                     <div className="font-semibold text-slate-gray">
                       {product.name}
-                      {product.planId === 'primary_qtr' && (
+                      {isDefaultRecommended && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-cyan-600 px-2 py-0.5 text-xs font-semibold text-white">{t('pricing.recommended')}</span>
                       )}
                     </div>

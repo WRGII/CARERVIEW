@@ -31,7 +31,7 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
         </p>
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link
-            to="/create-account"
+            to="/create-account?plan=free&source=community"
             className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             <Sparkles className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
           })}
         </ul>
         <Link
-          to="/create-account"
+          to="/create-account?plan=free&source=community"
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 text-white text-sm font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
         >
           <Sparkles className="w-4 h-4" />
@@ -113,7 +113,7 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
         </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
-            to="/create-account"
+            to="/create-account?plan=free&source=community"
             className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 text-base"
           >
             <Sparkles className="w-5 h-5" />

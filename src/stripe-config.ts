@@ -14,8 +14,8 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     id: 'free',
     priceId: '',
     planId: 'free',
-    name: 'Free Observer',
-    description: 'Make a note when you visit. Stay connected—free forever.',
+    name: 'Free Community Member',
+    description: 'Three free observations per year. Join the community and stay connected—free forever.',
     price: 0,
     currency: 'usd',
     mode: 'subscription'

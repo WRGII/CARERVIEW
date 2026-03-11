@@ -98,7 +98,7 @@ export default function CheckoutSuccess() {
   const waiting = isLoading || !isActive;
 
   const planLabel =
-    plan?.plan_id === "free" ? "Free Observer" :
+    plan?.plan_id === "free" ? "Free Community Member" :
     plan?.plan_id === "primary_qtr" ? "Primary Caregiver" :
     plan?.plan_id === "family_qtr" ? "Family Circle" :
     null;
