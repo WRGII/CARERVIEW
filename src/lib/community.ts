@@ -345,13 +345,21 @@ const REPLY_SELECT = `
   author_profile:community_profiles ( handle, avatar_color )
 `
 
-export async function listRepliesForPost(postId: string): Promise<CommunityReply[]> {
+export const REPLIES_PAGE_SIZE = 30
+
+export async function listRepliesForPost(params: {
+  postId: string
+  limit?: number
+  offset?: number
+}): Promise<CommunityReply[]> {
+  const { postId, limit = REPLIES_PAGE_SIZE, offset = 0 } = params
   const { data, error } = await supabase
     .from('community_replies')
     .select(REPLY_SELECT)
     .eq('post_id', postId)
     .eq('reply_status', 'active')
     .order('created_at', { ascending: true })
+    .range(offset, offset + limit - 1)
   if (error) throw error
   return (data ?? []) as CommunityReply[]
 }
@@ -454,6 +462,10 @@ export async function submitReport(params: {
   reason: ReportReason
   details?: string
 }): Promise<void> {
+  if (!params.post_id && !params.reply_id) {
+    throw new Error('A post or reply must be specified to submit a report.')
+  }
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
@@ -506,7 +518,7 @@ export async function resolveReport(params: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('community_reports')
     .update({
       report_status: params.action,
@@ -515,29 +527,35 @@ export async function resolveReport(params: {
       mod_note: params.mod_note?.trim() ?? null,
     })
     .eq('id', params.reportId)
+    .select('id')
   if (error) throw error
+  if (!data || data.length === 0) throw new Error('Unauthorized: report not updated. Admin access required.')
 }
 
 export async function moderatePost(params: {
   postId: string
   post_status: PostStatus
 }): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('community_posts')
     .update({ post_status: params.post_status })
     .eq('id', params.postId)
+    .select('id')
   if (error) throw error
+  if (!data || data.length === 0) throw new Error('Unauthorized: post not updated. Admin access required.')
 }
 
 export async function moderateReply(params: {
   replyId: string
   reply_status: ReplyStatus
 }): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('community_replies')
     .update({ reply_status: params.reply_status })
     .eq('id', params.replyId)
+    .select('id')
   if (error) throw error
+  if (!data || data.length === 0) throw new Error('Unauthorized: reply not updated. Admin access required.')
 }
 
 export async function banCommunityMember(params: {

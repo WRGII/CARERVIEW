@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { EyeOff, Eye, SendHorizontal as SendHorizonal, CircleAlert as AlertCircle } from 'lucide-react'
 import { useCreateReply } from '../../hooks/useCommunityReplies'
 import type { CommunityProfile } from '../../lib/community'
@@ -15,6 +15,7 @@ export default function ReplyComposer({ postId, profile, isBanned = false, onSuc
   const [body, setBody] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const submittingRef = useRef(false)
   const createReply = useCreateReply()
 
   const minLen = 2
@@ -23,8 +24,9 @@ export default function ReplyComposer({ postId, profile, isBanned = false, onSuc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canSubmit || submittingRef.current) return
+    submittingRef.current = true
     setError(null)
-    if (!canSubmit) return
     try {
       await createReply.mutateAsync({
         post_id: postId,
@@ -36,6 +38,8 @@ export default function ReplyComposer({ postId, profile, isBanned = false, onSuc
       onSuccess?.()
     } catch (err: any) {
       setError(err?.message ?? 'Something went wrong. Please try again.')
+    } finally {
+      submittingRef.current = false
     }
   }
 

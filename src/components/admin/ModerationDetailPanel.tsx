@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, ExternalLink, User, EyeOff, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle, Trash2, RotateCcw, ShieldOff, Shield, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   useResolveReport,
@@ -43,6 +43,15 @@ export default function ModerationDetailPanel({ report, onClose }: Props) {
   const [banReason, setBanReason] = useState('')
   const [showBanConfirm, setShowBanConfirm] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!showBanConfirm) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowBanConfirm(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showBanConfirm])
 
   const resolveReport = useResolveReport()
   const moderatePost = useModeratePost()

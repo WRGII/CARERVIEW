@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
-  ArrowLeft, Lock, Flag, MessageCircle, Users, EyeOff
+  ArrowLeft, Lock, Flag, MessageCircle, Users, EyeOff, ChevronDown
 } from 'lucide-react'
 import { useCommunityPost } from '../hooks/useCommunityPosts'
 import { useCommunityReplies } from '../hooks/useCommunityReplies'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
-import { maskAuthor } from '../lib/community'
+import { maskAuthor, REPLIES_PAGE_SIZE } from '../lib/community'
 import { useAuth } from '../hooks/useAuth'
 import ReactionBar from '../components/community/ReactionBar'
 import ReplyComposer from '../components/community/ReplyComposer'
@@ -15,6 +15,7 @@ import AnonymousBadge from '../components/community/AnonymousBadge'
 import ReportModal from '../components/community/ReportModal'
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
+import type { CommunityReply } from '../lib/community'
 
 const HELP_TYPE_LABELS: Record<string, string> = {
   emotional_support: 'Emotional Support',
@@ -47,12 +48,33 @@ function timeAgo(dateStr: string): string {
 export default function CommunityPostPage() {
   const { postId } = useParams<{ postId: string }>()
   const { data: post, isLoading: postLoading, error: postError } = useCommunityPost(postId)
-  const { data: replies, isLoading: repliesLoading } = useCommunityReplies(post?.id)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const { user } = useAuth()
 
   const [showReport, setShowReport] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [replyPage, setReplyPage] = useState(0)
+  const [allReplies, setAllReplies] = useState<CommunityReply[]>([])
+
+  const { data: pageReplies, isLoading: repliesLoading } = useCommunityReplies(post?.id, replyPage)
+
+  useEffect(() => {
+    if (!pageReplies) return
+    if (replyPage === 0) {
+      setAllReplies(pageReplies)
+    } else {
+      setAllReplies(prev => {
+        const existingIds = new Set(prev.map(r => r.id))
+        const newOnes = pageReplies.filter(r => !existingIds.has(r.id))
+        return [...prev, ...newOnes]
+      })
+    }
+  }, [pageReplies, replyPage])
+
+  useEffect(() => {
+    setReplyPage(0)
+    setAllReplies([])
+  }, [post?.id])
 
   if (postError || (!postLoading && !post)) return <Navigate to="/community" replace />
 
@@ -66,6 +88,11 @@ export default function CommunityPostPage() {
   const isHiddenOrRemoved =
     post?.post_status === 'hidden' || post?.post_status === 'removed'
   const isOwnPost = post?.author_user_id === user?.id
+
+  const totalReplies = post?.reply_count ?? 0
+  const hasMoreReplies = allReplies.length < totalReplies && (pageReplies?.length ?? 0) === REPLIES_PAGE_SIZE
+
+  const replyLabel = totalReplies === 1 ? '1 reply' : `${totalReplies} replies`
 
   return (
     <>
@@ -196,9 +223,9 @@ export default function CommunityPostPage() {
                   </div>
 
                   <div className="flex items-center gap-3 text-slate-400 flex-shrink-0">
-                    <span className="flex items-center gap-1 text-sm" title={`${post.reply_count} replies`}>
+                    <span className="flex items-center gap-1 text-sm" title={`${totalReplies} replies`}>
                       <MessageCircle className="w-4 h-4" />
-                      {post.reply_count}
+                      {totalReplies}
                     </span>
                     {post.is_locked && (
                       <span className="flex items-center gap-1 text-sm text-amber-500">
@@ -251,18 +278,29 @@ export default function CommunityPostPage() {
               <div className="flex items-center gap-2 mb-4">
                 <MessageCircle className="w-4 h-4 text-slate-400" aria-hidden="true" />
                 <h2 className="text-base font-semibold text-slate-700" aria-live="polite">
-                  {replies
-                    ? `${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}`
-                    : 'Replies'}
+                  {replyLabel}
                 </h2>
               </div>
 
               <CommunityReplyList
-                replies={replies}
-                isLoading={repliesLoading}
+                replies={allReplies}
+                isLoading={repliesLoading && replyPage === 0}
                 currentUserId={user?.id}
                 hasProfile={hasProfile}
               />
+
+              {hasMoreReplies && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setReplyPage(p => p + 1)}
+                    disabled={repliesLoading}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:opacity-60"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                    {repliesLoading ? 'Loading…' : `Load more replies (${totalReplies - allReplies.length} remaining)`}
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
@@ -296,7 +334,7 @@ export default function CommunityPostPage() {
             </div>
           ) : null}
 
-          {/* Upgrade bridge — shown to signed-in users without a structured care plan context */}
+          {/* Upgrade bridge */}
           {hasProfile && post && !isHiddenOrRemoved && (
             <UpgradeBridgeCard
               variant={
