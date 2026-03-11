@@ -4,6 +4,22 @@ import type { CommunityPost } from '../../lib/community'
 import { maskAuthor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
 
+const HELP_TYPE_LABELS: Record<string, string> = {
+  emotional_support: 'Emotional Support',
+  practical_tips: 'Practical Tips',
+  similar_experiences: 'Similar Experiences',
+  question: 'Question',
+  resource: 'Resource',
+}
+
+const HELP_TYPE_COLORS: Record<string, string> = {
+  emotional_support: 'bg-rose-50 text-rose-600',
+  practical_tips: 'bg-amber-50 text-amber-600',
+  similar_experiences: 'bg-cyan-50 text-cyan-600',
+  question: 'bg-blue-50 text-blue-600',
+  resource: 'bg-green-50 text-green-600',
+}
+
 interface Props {
   post: CommunityPost
   showRoom?: boolean
@@ -30,14 +46,21 @@ export default function CommunityPostCard({ post, showRoom = false }: Props) {
       to={`/community/posts/${post.id}`}
       className="group block bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 p-5"
     >
-      {showRoom && post.room && (
-        <div className="mb-2">
-          <span
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
-          >
-            {post.room.name}
-          </span>
+      {((showRoom && post.room) || post.help_type) && (
+        <div className="flex items-center gap-2 flex-wrap mb-2.5">
+          {showRoom && post.room && (
+            <span
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
+            >
+              {post.room.name}
+            </span>
+          )}
+          {post.help_type && HELP_TYPE_LABELS[post.help_type] && (
+            <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${HELP_TYPE_COLORS[post.help_type] ?? ''}`}>
+              {HELP_TYPE_LABELS[post.help_type]}
+            </span>
+          )}
         </div>
       )}
 

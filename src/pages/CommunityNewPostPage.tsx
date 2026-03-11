@@ -1,10 +1,21 @@
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, PenLine, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, PenLine, EyeOff, Eye, AlertCircle, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import { useCreatePost } from '../hooks/useCommunityPosts'
 import { Button } from '../components/ui/Button'
+import { supabase } from '../lib/supabaseClient'
+
+type HelpType = 'emotional_support' | 'practical_tips' | 'similar_experiences' | 'question' | 'resource'
+
+const HELP_TYPES: { value: HelpType; label: string; description: string; emoji: string }[] = [
+  { value: 'emotional_support', emoji: '💛', label: 'Emotional support', description: 'I need someone to listen or acknowledge how I feel' },
+  { value: 'practical_tips', emoji: '🔧', label: 'Practical tips', description: 'I\'m looking for advice or strategies that work' },
+  { value: 'similar_experiences', emoji: '🤝', label: 'Similar experiences', description: 'Has anyone else been through something like this?' },
+  { value: 'question', emoji: '❓', label: 'Question', description: 'I have a specific question I need help with' },
+  { value: 'resource', emoji: '📚', label: 'Sharing a resource', description: 'I found something helpful and want to share it' },
+]
 
 export default function CommunityNewPostPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -15,19 +26,41 @@ export default function CommunityNewPostPage() {
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [helpType, setHelpType] = useState<HelpType | ''>('')
   const [isAnonymous, setIsAnonymous] = useState(false)
-  const [errors, setErrors] = useState<{ title?: string; body?: string }>({})
+  const [errors, setErrors] = useState<{ title?: string; body?: string; helpType?: string }>({})
 
   if (!profileLoading && !profile) {
     return <Navigate to="/community" replace />
   }
 
+  if (!profileLoading && profile?.is_banned) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl border border-red-100 p-8 max-w-md text-center">
+          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ShieldAlert className="w-6 h-6 text-red-500" />
+          </div>
+          <h1 className="text-lg font-bold text-slate-800 mb-2">Posting restricted</h1>
+          <p className="text-sm text-slate-500 leading-relaxed mb-5">
+            Your account has been restricted from posting in the community.
+            If you believe this is an error, please contact support.
+          </p>
+          <Link to={`/community/rooms/${slug}`}>
+            <Button variant="outline" size="sm">Go back</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   const validate = () => {
-    const e: { title?: string; body?: string } = {}
+    const e: typeof errors = {}
     if (title.trim().length < 5) e.title = 'Title must be at least 5 characters'
     if (title.trim().length > 200) e.title = 'Title must be 200 characters or fewer'
     if (body.trim().length < 10) e.body = 'Post must be at least 10 characters'
-    if (body.trim().length > 5000) e.body = 'Post must be 5000 characters or fewer'
+    if (body.trim().length > 5000) e.body = 'Post must be 5,000 characters or fewer'
+    if (!helpType) e.helpType = 'Please select what kind of support you are looking for'
     return e
   }
 
@@ -47,9 +80,17 @@ export default function CommunityNewPostPage() {
         body: body.trim(),
         is_anonymous: isAnonymous,
       })
+
+      if (helpType) {
+        await supabase
+          .from('community_posts')
+          .update({ help_type: helpType })
+          .eq('id', post.id)
+      }
+
       navigate(`/community/posts/${post.id}`)
-    } catch (err) {
-      // error handled via createPost.error
+    } catch {
+      // error displayed via createPost.error
     }
   }
 
@@ -77,61 +118,119 @@ export default function CommunityNewPostPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="post-title" className="block text-sm font-semibold text-slate-700 mb-1.5">
                 Title <span className="text-red-400">*</span>
               </label>
               <input
+                id="post-title"
                 type="text"
                 value={title}
                 onChange={e => { setTitle(e.target.value); setErrors(prev => ({ ...prev, title: undefined })) }}
                 placeholder="What's your question or topic?"
                 maxLength={200}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-primary focus:border-transparent text-base"
+                className={`w-full px-4 py-3 rounded-xl border bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-base transition-colors ${
+                  errors.title ? 'border-red-300 bg-red-50/30' : 'border-slate-200'
+                }`}
+                aria-describedby={errors.title ? 'title-error' : undefined}
+                aria-invalid={!!errors.title}
               />
-              <div className="flex justify-between items-center mt-1">
+              <div className="flex justify-between items-center mt-1.5">
                 {errors.title
-                  ? <p className="text-sm text-red-600">{errors.title}</p>
+                  ? <p id="title-error" className="text-sm text-red-600">{errors.title}</p>
                   : <span />
                 }
-                <span className="text-xs text-slate-400">{title.length}/200</span>
+                <span className={`text-xs ml-auto ${title.length > 180 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {title.length}/200
+                </span>
               </div>
+            </div>
+
+            {/* Help type */}
+            <div>
+              <fieldset>
+                <legend className="block text-sm font-semibold text-slate-700 mb-2">
+                  What kind of support are you looking for? <span className="text-red-400">*</span>
+                </legend>
+                {errors.helpType && (
+                  <p className="text-sm text-red-600 mb-2">{errors.helpType}</p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {HELP_TYPES.map(ht => (
+                    <label
+                      key={ht.value}
+                      className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                        helpType === ht.value
+                          ? 'border-cyan-300 bg-cyan-50'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="helpType"
+                        value={ht.value}
+                        checked={helpType === ht.value}
+                        onChange={() => { setHelpType(ht.value); setErrors(prev => ({ ...prev, helpType: undefined })) }}
+                        className="sr-only"
+                      />
+                      <span className="text-xl flex-shrink-0 mt-0.5" aria-hidden="true">{ht.emoji}</span>
+                      <div>
+                        <p className={`text-sm font-medium ${helpType === ht.value ? 'text-cyan-700' : 'text-slate-700'}`}>
+                          {ht.label}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{ht.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             {/* Body */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Post <span className="text-red-400">*</span>
+              <label htmlFor="post-body" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Your post <span className="text-red-400">*</span>
               </label>
               <textarea
+                id="post-body"
                 value={body}
                 onChange={e => { setBody(e.target.value); setErrors(prev => ({ ...prev, body: undefined })) }}
-                placeholder="Share your experience, question, or thoughts. Remember: don't include identifying details about the person in your care."
+                placeholder="Share your experience, question, or thoughts. Remember: please don't include identifying details about the person in your care."
                 rows={8}
                 maxLength={5000}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-primary focus:border-transparent text-base resize-none leading-relaxed"
+                className={`w-full px-4 py-3 rounded-xl border bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent text-base resize-none leading-relaxed transition-colors ${
+                  errors.body ? 'border-red-300 bg-red-50/30' : 'border-slate-200'
+                }`}
+                aria-describedby={errors.body ? 'body-error' : undefined}
+                aria-invalid={!!errors.body}
               />
-              <div className="flex justify-between items-center mt-1">
+              <div className="flex justify-between items-center mt-1.5">
                 {errors.body
-                  ? <p className="text-sm text-red-600">{errors.body}</p>
+                  ? <p id="body-error" className="text-sm text-red-600">{errors.body}</p>
                   : <span />
                 }
-                <span className="text-xs text-slate-400">{body.length}/5000</span>
+                <span className={`text-xs ml-auto ${body.length > 4500 ? 'text-amber-500' : 'text-slate-400'}`}>
+                  {body.length}/5000
+                </span>
               </div>
             </div>
 
             {/* Anonymous toggle */}
             <div
-              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${
+              role="checkbox"
+              aria-checked={isAnonymous}
+              tabIndex={0}
+              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors select-none ${
                 isAnonymous
                   ? 'border-slate-300 bg-slate-50'
                   : 'border-slate-200 hover:bg-slate-50'
               }`}
               onClick={() => setIsAnonymous(prev => !prev)}
+              onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') setIsAnonymous(prev => !prev) }}
             >
               <div className="mt-0.5 flex-shrink-0">
                 {isAnonymous
@@ -139,33 +238,39 @@ export default function CommunityNewPostPage() {
                   : <Eye className="w-5 h-5 text-slate-400" />
                 }
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-slate-700">
                   {isAnonymous ? 'Posting anonymously' : 'Post anonymously'}
                 </p>
                 <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
                   {isAnonymous
-                    ? 'Your handle will not be shown. Your identity is still recorded internally for moderation.'
+                    ? 'Your handle will not be shown to other users. Your identity is still recorded internally for moderation.'
                     : 'Your community handle will be shown. Toggle to hide it from other users.'
                   }
                 </p>
               </div>
-              <div className="ml-auto flex-shrink-0">
+              <div className="ml-auto flex-shrink-0 mt-0.5" aria-hidden="true">
                 <div className={`w-10 h-6 rounded-full transition-colors relative ${isAnonymous ? 'bg-slate-600' : 'bg-slate-200'}`}>
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow-sm ${isAnonymous ? 'left-5' : 'left-1'}`} />
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isAnonymous ? 'left-5' : 'left-1'}`} />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Privacy reminder */}
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-700">
-            <strong className="font-semibold">Privacy reminder:</strong> Please do not include the full name, location, or specific medical details of the person you care for.
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4">
+            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-700 leading-relaxed">
+              <strong className="font-semibold">Privacy reminder:</strong> Please do not share the full name, location, or specific medical details of the person you care for.
+            </p>
           </div>
 
           {createPost.error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-              {(createPost.error as any)?.message ?? 'Something went wrong. Please try again.'}
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">
+                {(createPost.error as any)?.message ?? 'Something went wrong. Please try again.'}
+              </p>
             </div>
           )}
 

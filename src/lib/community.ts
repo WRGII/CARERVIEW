@@ -42,6 +42,13 @@ export interface CommunityProfile {
   updated_at: string
 }
 
+export type HelpType =
+  | 'emotional_support'
+  | 'practical_tips'
+  | 'similar_experiences'
+  | 'question'
+  | 'resource'
+
 export interface CommunityPost {
   id: string
   room_id: string
@@ -51,6 +58,7 @@ export interface CommunityPost {
   body: string
   post_status: PostStatus
   is_locked: boolean
+  help_type: HelpType | null
   reply_count: number
   reaction_count: number
   last_activity_at: string
@@ -223,7 +231,7 @@ export async function updateCommunityProfile(params: {
 
 const POST_LIST_SELECT = `
   id, room_id, author_user_id, is_anonymous, title, body,
-  post_status, is_locked, reply_count, reaction_count,
+  post_status, is_locked, help_type, reply_count, reaction_count,
   last_activity_at, created_at, updated_at,
   room:community_rooms ( id, slug, name, color, icon_name ),
   author_profile:community_profiles ( handle, avatar_color )

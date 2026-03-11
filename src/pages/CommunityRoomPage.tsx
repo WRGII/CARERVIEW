@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  ArrowLeft, PenLine, type LucideIcon
+  ArrowLeft, PenLine, Clock, TrendingUp, type LucideIcon
 } from 'lucide-react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useCommunityPosts } from '../hooks/useCommunityPosts'
@@ -13,9 +13,32 @@ import CommunityLoadingState from '../components/community/CommunityLoadingState
 import CommunityGuidelinesBanner from '../components/community/CommunityGuidelinesBanner'
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import { Button } from '../components/ui/Button'
+import type { CommunityPost } from '../lib/community'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
+}
+
+type SortMode = 'activity' | 'newest' | 'most_replies'
+
+const SORT_OPTIONS: { value: SortMode; label: string; icon: LucideIcon }[] = [
+  { value: 'activity', label: 'Recent activity', icon: Clock },
+  { value: 'newest', label: 'Newest', icon: TrendingUp },
+  { value: 'most_replies', label: 'Most replies', icon: MessageCircle },
+]
+
+function sortPosts(posts: CommunityPost[], mode: SortMode): CommunityPost[] {
+  const copy = [...posts]
+  if (mode === 'activity') {
+    return copy.sort((a, b) => new Date(b.last_activity_at).getTime() - new Date(a.last_activity_at).getTime())
+  }
+  if (mode === 'newest') {
+    return copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  }
+  if (mode === 'most_replies') {
+    return copy.sort((a, b) => b.reply_count - a.reply_count)
+  }
+  return copy
 }
 
 export default function CommunityRoomPage() {
@@ -24,11 +47,18 @@ export default function CommunityRoomPage() {
   const { data: posts, isLoading: postsLoading } = useCommunityPosts(room?.id)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const [showWelcome, setShowWelcome] = useState(false)
+  const [sort, setSort] = useState<SortMode>('activity')
 
   if (roomError) return <Navigate to="/community" replace />
 
   const Icon = room ? (ICON_MAP[room.icon_name] ?? MessageCircle) : MessageCircle
   const hasProfile = !profileLoading && !!profile
+  const isBanned = profile?.is_banned ?? false
+
+  const sortedPosts = useMemo(
+    () => (posts ? sortPosts(posts, sort) : []),
+    [posts, sort]
+  )
 
   return (
     <>
@@ -39,7 +69,7 @@ export default function CommunityRoomPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-          {/* Breadcrumb back */}
+          {/* Back link */}
           <Link
             to="/community"
             className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group"
@@ -65,6 +95,7 @@ export default function CommunityRoomPage() {
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${room.color}22`, color: room.color }}
+                  aria-hidden="true"
                 >
                   <Icon className="w-7 h-7" />
                 </div>
@@ -87,30 +118,53 @@ export default function CommunityRoomPage() {
           {/* Guidelines banner */}
           {hasProfile && <CommunityGuidelinesBanner />}
 
-          {/* Action bar */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-700">Discussions</h2>
-            {hasProfile ? (
-              <Link to={`/community/rooms/${slug}/new-post`}>
-                <Button variant="primary" size="sm">
+          {/* Action bar with sort */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div className="flex items-center gap-2">
+              {SORT_OPTIONS.map(option => {
+                const Icon = option.icon
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => setSort(option.value)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                      sort === option.value
+                        ? 'bg-slate-800 text-white font-medium'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                    aria-pressed={sort === option.value}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {!profileLoading && (
+              isBanned ? null :
+              hasProfile ? (
+                <Link to={`/community/rooms/${slug}/new-post`}>
+                  <Button variant="primary" size="sm">
+                    <PenLine className="w-4 h-4 mr-1.5 inline" />
+                    New post
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setShowWelcome(true)}>
                   <PenLine className="w-4 h-4 mr-1.5 inline" />
-                  New post
+                  Join to post
                 </Button>
-              </Link>
-            ) : !profileLoading ? (
-              <Button variant="outline" size="sm" onClick={() => setShowWelcome(true)}>
-                <PenLine className="w-4 h-4 mr-1.5 inline" />
-                Join to post
-              </Button>
-            ) : null}
+              )
+            )}
           </div>
 
           {/* Posts */}
           {postsLoading ? (
             <CommunityLoadingState count={4} />
-          ) : posts && posts.length > 0 ? (
+          ) : sortedPosts.length > 0 ? (
             <div className="space-y-3">
-              {posts.map(post => (
+              {sortedPosts.map(post => (
                 <CommunityPostCard key={post.id} post={post} />
               ))}
             </div>
@@ -123,9 +177,14 @@ export default function CommunityRoomPage() {
                   : "Join the community to be the first to start a conversation here."
               }
               action={
-                hasProfile
-                  ? { label: 'Start first post', onClick: () => {} }
-                  : { label: 'Join Community', onClick: () => setShowWelcome(true) }
+                hasProfile && !isBanned
+                  ? {
+                      label: 'Start the first post',
+                      onClick: () => window.location.assign(`/community/rooms/${slug}/new-post`),
+                    }
+                  : !hasProfile
+                  ? { label: 'Join Community', onClick: () => setShowWelcome(true) }
+                  : undefined
               }
             />
           )}
