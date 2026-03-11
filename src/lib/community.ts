@@ -284,6 +284,7 @@ export async function createPost(params: {
   title: string
   body: string
   is_anonymous?: boolean
+  help_type?: HelpType | null
 }): Promise<CommunityPost> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -296,6 +297,7 @@ export async function createPost(params: {
       title: params.title.trim(),
       body: params.body.trim(),
       is_anonymous: params.is_anonymous ?? false,
+      ...(params.help_type ? { help_type: params.help_type } : {}),
     })
     .select(POST_LIST_SELECT)
     .single()

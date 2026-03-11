@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Flag, X, CircleAlert as AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Flag, X, CircleCheck as CheckCircle } from 'lucide-react'
 import { useSubmitReport } from '../../hooks/useCommunityReports'
 import type { ReportReason } from '../../lib/community'
 import { Button } from '../ui/Button'
@@ -24,6 +24,12 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
   const [details, setDetails] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const submit = useSubmitReport()
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +71,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
         {submitted ? (
           <div className="px-6 py-8 text-center">
             <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-              <AlertCircle className="w-6 h-6 text-green-600" />
+              <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 mb-1">Report submitted</h3>
             <p className="text-sm text-slate-500 leading-relaxed">

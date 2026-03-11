@@ -3,15 +3,25 @@ import { useState } from 'react'
 
 const STORAGE_KEY = 'cv_community_guidelines_dismissed'
 
+function safeStorage(action: 'get' | 'set', value?: string): string | null {
+  try {
+    if (action === 'get') return localStorage.getItem(STORAGE_KEY)
+    if (value !== undefined) localStorage.setItem(STORAGE_KEY, value)
+  } catch {
+    // Private browsing or storage quota exceeded — silently ignore
+  }
+  return null
+}
+
 export default function CommunityGuidelinesBanner() {
   const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(STORAGE_KEY) === '1'
+    () => safeStorage('get') === '1'
   )
 
   if (dismissed) return null
 
   const handleDismiss = () => {
-    localStorage.setItem(STORAGE_KEY, '1')
+    safeStorage('set', '1')
     setDismissed(true)
   }
 

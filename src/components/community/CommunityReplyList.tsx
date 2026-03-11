@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Flag, MessageCircle } from 'lucide-react'
+import { Flag, MessageCircle, Users } from 'lucide-react'
 import { maskAuthor } from '../../lib/community'
 import type { CommunityReply } from '../../lib/community'
 import AnonymousBadge from './AnonymousBadge'
@@ -70,7 +70,10 @@ export default function CommunityReplyList({ replies, isLoading, currentUserId, 
                   style={{ backgroundColor: author.avatarColor }}
                   aria-hidden="true"
                 >
-                  {author.displayHandle.charAt(0).toUpperCase()}
+                  {author.isAnonymous
+                    ? <Users className="w-4 h-4" />
+                    : author.displayHandle.charAt(0).toUpperCase()
+                  }
                 </div>
 
                 <div className="flex-1 min-w-0">

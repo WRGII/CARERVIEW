@@ -236,8 +236,8 @@ export default function CommunityPostPage() {
           {post && (
             <section aria-label="Replies">
               <div className="flex items-center gap-2 mb-4">
-                <MessageCircle className="w-4 h-4 text-slate-400" />
-                <h2 className="text-base font-semibold text-slate-700">
+                <MessageCircle className="w-4 h-4 text-slate-400" aria-hidden="true" />
+                <h2 className="text-base font-semibold text-slate-700" aria-live="polite">
                   {replies
                     ? `${replies.length} ${replies.length === 1 ? 'reply' : 'replies'}`
                     : 'Replies'}
@@ -275,8 +275,8 @@ export default function CommunityPostPage() {
               </div>
             ) : null
           ) : post?.is_locked ? (
-            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3">
-              <Lock className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3" role="status">
+              <Lock className="w-5 h-5 text-amber-500 flex-shrink-0" aria-hidden="true" />
               <p className="text-sm text-amber-700">
                 This post is locked and no longer accepting replies.
               </p>

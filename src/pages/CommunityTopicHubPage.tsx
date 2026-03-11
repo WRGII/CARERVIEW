@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users, Heart, Sparkles, ArrowRight, MessageCircle, ShieldCheck,
-  Lightbulb, Brain, Compass, BookOpen, Sun, Stethoscope, Wrench,
+  Lightbulb, Brain, Compass, BookOpen, Sun, Stethoscope, Wrench, TrendingUp,
   type LucideIcon
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -446,11 +446,3 @@ export default function CommunityTopicHubPage() {
   )
 }
 
-function TrendingUp({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-      <polyline points="17 6 23 6 23 12" />
-    </svg>
-  )
-}

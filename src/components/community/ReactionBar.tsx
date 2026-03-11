@@ -41,12 +41,12 @@ export default function ReactionBar({ postId, hasProfile, onJoinPrompt }: Props)
             onClick={() => handleClick(type)}
             title={hasProfile ? label : 'Join community to react'}
             aria-label={`${label}${count > 0 ? ` · ${count}` : ''}`}
-            aria-pressed={active}
+            aria-pressed={hasProfile ? active : undefined}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
               active
                 ? 'border-cyan-300 bg-cyan-50 text-cyan-700 font-medium'
                 : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-            } ${!hasProfile ? 'cursor-pointer' : ''} ${toggle.isPending ? 'opacity-60' : ''}`}
+            } ${toggle.isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <span>{emoji}</span>
             {count > 0 && (

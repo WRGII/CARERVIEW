@@ -5,9 +5,7 @@ import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import { useCreatePost } from '../hooks/useCommunityPosts'
 import { Button } from '../components/ui/Button'
-import { supabase } from '../lib/supabaseClient'
-
-type HelpType = 'emotional_support' | 'practical_tips' | 'similar_experiences' | 'question' | 'resource'
+import type { HelpType } from '../lib/community'
 
 const HELP_TYPES: { value: HelpType; label: string; description: string; emoji: string }[] = [
   { value: 'emotional_support', emoji: '💛', label: 'Emotional support', description: 'I need someone to listen or acknowledge how I feel' },
@@ -79,15 +77,8 @@ export default function CommunityNewPostPage() {
         title: title.trim(),
         body: body.trim(),
         is_anonymous: isAnonymous,
+        help_type: helpType || null,
       })
-
-      if (helpType) {
-        await supabase
-          .from('community_posts')
-          .update({ help_type: helpType })
-          .eq('id', post.id)
-      }
-
       navigate(`/community/posts/${post.id}`)
     } catch {
       // error displayed via createPost.error
@@ -108,7 +99,7 @@ export default function CommunityNewPostPage() {
 
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <PenLine className="w-5 h-5 text-cyan-600" />
+            <PenLine className="w-5 h-5 text-cyan-600" aria-hidden="true" />
             <h1 className="text-2xl font-bold text-slate-800">New Post</h1>
           </div>
           {room && (
@@ -118,13 +109,14 @@ export default function CommunityNewPostPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate aria-label="New post form">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
 
             {/* Title */}
             <div>
               <label htmlFor="post-title" className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Title <span className="text-red-400">*</span>
+                Title <span className="text-red-400" aria-hidden="true">*</span>
+                <span className="sr-only">(required)</span>
               </label>
               <input
                 id="post-title"
@@ -138,13 +130,14 @@ export default function CommunityNewPostPage() {
                 }`}
                 aria-describedby={errors.title ? 'title-error' : undefined}
                 aria-invalid={!!errors.title}
+                aria-required="true"
               />
               <div className="flex justify-between items-center mt-1.5">
                 {errors.title
-                  ? <p id="title-error" className="text-sm text-red-600">{errors.title}</p>
+                  ? <p id="title-error" role="alert" className="text-sm text-red-600">{errors.title}</p>
                   : <span />
                 }
-                <span className={`text-xs ml-auto ${title.length > 180 ? 'text-amber-500' : 'text-slate-400'}`}>
+                <span className={`text-xs ml-auto ${title.length > 180 ? 'text-amber-500' : 'text-slate-400'}`} aria-live="polite">
                   {title.length}/200
                 </span>
               </div>
@@ -154,10 +147,12 @@ export default function CommunityNewPostPage() {
             <div>
               <fieldset>
                 <legend className="block text-sm font-semibold text-slate-700 mb-2">
-                  What kind of support are you looking for? <span className="text-red-400">*</span>
+                  What kind of support are you looking for?{' '}
+                  <span className="text-red-400" aria-hidden="true">*</span>
+                  <span className="sr-only">(required)</span>
                 </legend>
                 {errors.helpType && (
-                  <p className="text-sm text-red-600 mb-2">{errors.helpType}</p>
+                  <p role="alert" className="text-sm text-red-600 mb-2">{errors.helpType}</p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {HELP_TYPES.map(ht => (
@@ -193,7 +188,8 @@ export default function CommunityNewPostPage() {
             {/* Body */}
             <div>
               <label htmlFor="post-body" className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Your post <span className="text-red-400">*</span>
+                Your post <span className="text-red-400" aria-hidden="true">*</span>
+                <span className="sr-only">(required)</span>
               </label>
               <textarea
                 id="post-body"
@@ -207,67 +203,69 @@ export default function CommunityNewPostPage() {
                 }`}
                 aria-describedby={errors.body ? 'body-error' : undefined}
                 aria-invalid={!!errors.body}
+                aria-required="true"
               />
               <div className="flex justify-between items-center mt-1.5">
                 {errors.body
-                  ? <p id="body-error" className="text-sm text-red-600">{errors.body}</p>
+                  ? <p id="body-error" role="alert" className="text-sm text-red-600">{errors.body}</p>
                   : <span />
                 }
-                <span className={`text-xs ml-auto ${body.length > 4500 ? 'text-amber-500' : 'text-slate-400'}`}>
+                <span className={`text-xs ml-auto ${body.length > 4500 ? 'text-amber-500' : 'text-slate-400'}`} aria-live="polite">
                   {body.length}/5000
                 </span>
               </div>
             </div>
 
-            {/* Anonymous toggle */}
-            <div
-              role="checkbox"
-              aria-checked={isAnonymous}
-              tabIndex={0}
-              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors select-none ${
-                isAnonymous
-                  ? 'border-slate-300 bg-slate-50'
-                  : 'border-slate-200 hover:bg-slate-50'
-              }`}
-              onClick={() => setIsAnonymous(prev => !prev)}
-              onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') setIsAnonymous(prev => !prev) }}
-            >
-              <div className="mt-0.5 flex-shrink-0">
-                {isAnonymous
-                  ? <EyeOff className="w-5 h-5 text-slate-600" />
-                  : <Eye className="w-5 h-5 text-slate-400" />
-                }
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-700">
-                  {isAnonymous ? 'Posting anonymously' : 'Post anonymously'}
-                </p>
-                <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+            {/* Anonymous toggle — proper switch semantics */}
+            <div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isAnonymous}
+                onClick={() => setIsAnonymous(prev => !prev)}
+                className={`w-full flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                  isAnonymous
+                    ? 'border-slate-300 bg-slate-50'
+                    : 'border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="mt-0.5 flex-shrink-0">
                   {isAnonymous
-                    ? 'Your handle will not be shown to other users. Your identity is still recorded internally for moderation.'
-                    : 'Your community handle will be shown. Toggle to hide it from other users.'
+                    ? <EyeOff className="w-5 h-5 text-slate-600" aria-hidden="true" />
+                    : <Eye className="w-5 h-5 text-slate-400" aria-hidden="true" />
                   }
-                </p>
-              </div>
-              <div className="ml-auto flex-shrink-0 mt-0.5" aria-hidden="true">
-                <div className={`w-10 h-6 rounded-full transition-colors relative ${isAnonymous ? 'bg-slate-600' : 'bg-slate-200'}`}>
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isAnonymous ? 'left-5' : 'left-1'}`} />
                 </div>
-              </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-700">
+                    {isAnonymous ? 'Posting anonymously' : 'Post anonymously'}
+                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                    {isAnonymous
+                      ? 'Your handle will not be shown to other users. Your identity is still recorded internally for moderation.'
+                      : 'Your community handle will be shown. Toggle to hide it from other users.'
+                    }
+                  </p>
+                </div>
+                <div className="ml-auto flex-shrink-0 mt-0.5" aria-hidden="true">
+                  <div className={`w-10 h-6 rounded-full transition-colors relative ${isAnonymous ? 'bg-slate-600' : 'bg-slate-200'}`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isAnonymous ? 'left-5' : 'left-1'}`} />
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
           {/* Privacy reminder */}
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4">
-            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4" role="note">
+            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-sm text-amber-700 leading-relaxed">
               <strong className="font-semibold">Privacy reminder:</strong> Please do not share the full name, location, or specific medical details of the person you care for.
             </p>
           </div>
 
           {createPost.error && (
-            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4" role="alert">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-sm text-red-700">
                 {(createPost.error as any)?.message ?? 'Something went wrong. Please try again.'}
               </p>
