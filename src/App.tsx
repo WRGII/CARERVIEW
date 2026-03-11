@@ -27,7 +27,9 @@ import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "./pages/AdminDeleteUser";
 const AdminTranslationsPage = lazy(() => import("./pages/AdminTranslationsPage"));
 const AdminCommunityModerationPage = lazy(() => import("./pages/AdminCommunityModerationPage"));
-const CommunityTopicHubPage = lazy(() => import("./pages/CommunityTopicHubPage"));
+// CommunityPublicHubPage: unauthenticated preview of the community forum at /community-hub
+// CommunityLandingPage:   authenticated members-only hub at /community (requires CommunityGuard)
+const CommunityPublicHubPage = lazy(() => import("./pages/CommunityPublicHubPage"));
 
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
@@ -78,7 +80,7 @@ export default function App() {
                   />
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/community-hub" element={<CommunityTopicHubPage />} />
+                  <Route path="/community-hub" element={<CommunityPublicHubPage />} />
 
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />
