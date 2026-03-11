@@ -177,7 +177,7 @@ export default function CommunityTopicHubPage() {
           <>
             {rooms.map((room, index) => (
               <div key={room.id}>
-                <PublicRoomSection room={room} />
+                <PublicRoomSection room={room} useExamples />
 
                 {index === 1 && (
                   <div className="mt-4">
@@ -189,12 +189,22 @@ export default function CommunityTopicHubPage() {
                   </div>
                 )}
 
-                {index === 3 && (
+                {index === 4 && (
                   <div className="mt-4">
                     <InlineCTA
                       tone="mint"
                       headline="Ask anonymously, find your people"
                       sub="Post without sharing your name when you need to — your privacy is protected."
+                    />
+                  </div>
+                )}
+
+                {index === 7 && (
+                  <div className="mt-4">
+                    <InlineCTA
+                      tone="peach"
+                      headline="You don't have to figure this out alone"
+                      sub="Thousands of caregivers share practical wisdom and emotional support here every day. Join them — free."
                     />
                   </div>
                 )}

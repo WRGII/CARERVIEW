@@ -131,16 +131,63 @@ function PublicPostRow({
   )
 }
 
-interface Props {
-  room: CommunityRoom
+interface ExampleRow {
+  id: string
+  title: string
+  help_type: string | null
+  sort_order: number
 }
 
-export default function PublicRoomSection({ room }: Props) {
+function ExamplePostRow({
+  example,
+  signupUrl,
+}: {
+  example: ExampleRow
+  signupUrl: string
+}) {
+  return (
+    <Link
+      to={signupUrl}
+      className="block border-b border-slate-100 last:border-0"
+    >
+      <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+              {example.help_type && HELP_TYPE_LABELS[example.help_type] && (
+                <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${HELP_TYPE_COLORS[example.help_type] ?? ''}`}>
+                  {HELP_TYPE_LABELS[example.help_type]}
+                </span>
+              )}
+              <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
+                Example
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-slate-700 group-hover:text-cyan-700 transition-colors leading-snug">
+              {example.title}
+            </p>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-cyan-500 transition-colors flex-shrink-0 mt-0.5" />
+        </div>
+        <p className="text-xs text-slate-400 mt-1.5">
+          Join free to read the full discussion and reply
+        </p>
+      </div>
+    </Link>
+  )
+}
+
+interface Props {
+  room: CommunityRoom
+  useExamples?: boolean
+}
+
+export default function PublicRoomSection({ room, useExamples = false }: Props) {
   const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
 
   const signupUrl = `/create-account?plan=free&source=community-hub`
 
-  const { data: posts, isLoading, isError, refetch } = useQuery<CommunityPost[]>({
+  const { data: posts, isLoading: postsLoading } = useQuery<CommunityPost[]>({
     queryKey: ['public-room-posts', room.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -155,7 +202,27 @@ export default function PublicRoomSection({ room }: Props) {
     },
     staleTime: 30_000,
     retry: 2,
+    enabled: !useExamples,
   })
+
+  const { data: examples, isLoading: examplesLoading } = useQuery<ExampleRow[]>({
+    queryKey: ['public-room-examples', room.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('community_public_examples')
+        .select('id, title, help_type, sort_order')
+        .eq('room_id', room.id)
+        .eq('locale', 'en')
+        .order('sort_order', { ascending: true })
+        .limit(3)
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 300_000,
+    enabled: useExamples,
+  })
+
+  const isLoading = useExamples ? examplesLoading : postsLoading
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -173,7 +240,7 @@ export default function PublicRoomSection({ room }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-          {room.post_count > 0 && (
+          {!useExamples && room.post_count > 0 && (
             <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
               {room.post_count} {room.post_count === 1 ? 'post' : 'posts'}
             </span>
@@ -191,16 +258,27 @@ export default function PublicRoomSection({ room }: Props) {
       <div>
         {isLoading ? (
           <PostRowSkeletons />
-        ) : isError ? (
-          <div className="px-4 py-6 text-center">
-            <p className="text-sm text-slate-400">Could not load discussions.</p>
-            <button
-              onClick={() => refetch()}
-              className="mt-2 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
-            >
-              Try again
-            </button>
-          </div>
+        ) : useExamples ? (
+          examples && examples.length > 0 ? (
+            examples.map(ex => (
+              <ExamplePostRow
+                key={ex.id}
+                example={ex}
+                signupUrl={signupUrl}
+              />
+            ))
+          ) : (
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm text-slate-400">Be the first to start a discussion here.</p>
+              <Link
+                to={signupUrl}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+              >
+                Join free to post
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          )
         ) : posts && posts.length > 0 ? (
           posts.map(post => (
             <PublicPostRow
