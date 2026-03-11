@@ -100,9 +100,10 @@ export default function CommunityTopicHubPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1 text-xs font-medium text-slate-600 mb-3">
-                <Users className="w-3.5 h-3.5" />
-                {memberCount ? `${memberCount.toLocaleString()} caregivers` : 'Caregiver community'} — free to join
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Family Caregiver</span>
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Ageing Parents</span>
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Carer Support</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-2">
                 You shouldn't have to figure this out alone
