@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users, Heart, Sparkles, ArrowRight, MessageCircle, ShieldCheck,
@@ -54,6 +54,7 @@ const POST_LIST_SELECT = `
 
 export default function CommunityTopicHubPage() {
   const [activeRoom, setActiveRoom] = useState<string | null>(null)
+  const discussionsSectionRef = useRef<HTMLElement>(null)
 
   const { data: rooms, isLoading: roomsLoading } = useQuery<CommunityRoom[]>({
     queryKey: ['public-community', 'rooms'],
@@ -196,7 +197,15 @@ export default function CommunityTopicHubPage() {
                 return (
                   <button
                     key={room.id}
-                    onClick={() => setActiveRoom(prev => prev === room.id ? null : room.id)}
+                    onClick={() => {
+                      const next = activeRoom === room.id ? null : room.id
+                      setActiveRoom(next)
+                      if (next) {
+                        setTimeout(() => {
+                          discussionsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 50)
+                      }
+                    }}
                     className={`group text-left bg-white rounded-2xl border transition-all duration-200 p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                       isSelected
                         ? 'border-slate-700 shadow-md -translate-y-0.5'
@@ -242,7 +251,7 @@ export default function CommunityTopicHubPage() {
         </section>
 
         {/* Discussion preview section */}
-        <section>
+        <section ref={discussionsSectionRef}>
           <div className="flex items-baseline justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-slate-800 mb-1">
