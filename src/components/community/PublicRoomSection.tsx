@@ -1,4 +1,3 @@
-import { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
@@ -31,7 +30,7 @@ const HELP_TYPE_LABELS: Record<string, string> = {
 }
 
 const POST_SELECT = `
-  id, room_id, is_anonymous, title, body,
+  id, room_id, author_user_id, is_anonymous, title, body,
   post_status, help_type, reply_count, reaction_count,
   last_activity_at, created_at
 `
@@ -60,6 +59,16 @@ function PostRowSkeleton() {
         <div className="h-2.5 bg-slate-100 rounded w-10" />
       </div>
     </div>
+  )
+}
+
+function PostRowSkeletons() {
+  return (
+    <>
+      <PostRowSkeleton />
+      <PostRowSkeleton />
+      <PostRowSkeleton />
+    </>
   )
 }
 
@@ -128,30 +137,11 @@ interface Props {
 
 export default function PublicRoomSection({ room }: Props) {
   const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const [hasIntersected, setHasIntersected] = useState(false)
 
   const signupUrl = `/create-account?plan=free&source=community-hub`
 
-  useEffect(() => {
-    const el = sectionRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHasIntersected(true)
-          observer.disconnect()
-        }
-      },
-      { rootMargin: '200px' }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  const { data: posts, isLoading } = useQuery<CommunityPost[]>({
-    queryKey: ['public-community', 'posts-by-room', room.id],
-    enabled: hasIntersected,
+  const { data: posts, isLoading, isError, refetch } = useQuery<CommunityPost[]>({
+    queryKey: ['public-room-posts', room.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('community_posts')
@@ -163,13 +153,12 @@ export default function PublicRoomSection({ room }: Props) {
       if (error) throw error
       return (data ?? []) as CommunityPost[]
     },
-    staleTime: 60_000,
+    staleTime: 30_000,
+    retry: 2,
   })
 
-  const showSkeleton = !hasIntersected || isLoading
-
   return (
-    <div ref={sectionRef} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div
@@ -200,12 +189,18 @@ export default function PublicRoomSection({ room }: Props) {
       </div>
 
       <div>
-        {showSkeleton ? (
-          <>
-            <PostRowSkeleton />
-            <PostRowSkeleton />
-            <PostRowSkeleton />
-          </>
+        {isLoading ? (
+          <PostRowSkeletons />
+        ) : isError ? (
+          <div className="px-4 py-6 text-center">
+            <p className="text-sm text-slate-400">Could not load discussions.</p>
+            <button
+              onClick={() => refetch()}
+              className="mt-2 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+            >
+              Try again
+            </button>
+          </div>
         ) : posts && posts.length > 0 ? (
           posts.map(post => (
             <PublicPostRow
