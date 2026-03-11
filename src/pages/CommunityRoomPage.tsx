@@ -29,7 +29,7 @@ export default function CommunityRoomPage() {
   const { slug } = useParams<{ slug: string }>()
   const { data: room, isLoading: roomLoading, error: roomError } = useCommunityRoom(slug)
   const [sort, setSort] = useState<PostSortMode>('activity')
-  const { data: posts, isLoading: postsLoading } = useCommunityPosts(room?.id, sort)
+  const { data: posts, isLoading: postsLoading, isError: postsError } = useCommunityPosts(room?.id, sort)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const [showWelcome, setShowWelcome] = useState(false)
 
@@ -141,6 +141,10 @@ export default function CommunityRoomPage() {
           {/* Posts */}
           {postsLoading ? (
             <CommunityLoadingState count={4} />
+          ) : postsError ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 text-sm">Could not load posts. Please refresh the page to try again.</p>
+            </div>
           ) : (posts ?? []).length > 0 ? (
             <div className="space-y-3">
               {(posts ?? []).map(post => (

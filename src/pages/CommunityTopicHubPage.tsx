@@ -70,7 +70,7 @@ export default function CommunityTopicHubPage() {
     staleTime: 120_000,
   })
 
-  const { data: recentPosts, isLoading: postsLoading } = useQuery<CommunityPost[]>({
+  const { data: recentPosts, isLoading: postsLoading, isError: postsError } = useQuery<CommunityPost[]>({
     queryKey: ['public-community', 'posts', activeRoom],
     queryFn: async () => {
       let query = supabase
@@ -282,6 +282,10 @@ export default function CommunityTopicHubPage() {
                   <div className="h-3 bg-slate-100 rounded w-4/5" />
                 </div>
               ))}
+            </div>
+          ) : postsError ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 text-sm">Could not load discussions. Please refresh the page to try again.</p>
             </div>
           ) : recentPosts && recentPosts.length > 0 ? (
             <div className="space-y-3">
