@@ -143,12 +143,6 @@ export default function Header() {
                 {/* Desktop Navigation - hidden on mobile */}
                 <div className="hidden md:flex items-center gap-3">
                   <Link
-                    to="/about"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
-                  >
-                    {t('nav.about')}
-                  </Link>
-                  <Link
                     to="/why"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
@@ -156,20 +150,10 @@ export default function Header() {
                   </Link>
                   <Link
                     to="/community-hub"
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      location.pathname === '/community-hub'
-                        ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
-                        : 'text-slate-600 hover:text-slate-700 hover:bg-slate-50'
-                    }`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100"
                   >
                     <Users className="h-4 w-4" />
                     Community
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
-                  >
-                    {t('nav.pricing')}
                   </Link>
                   <LanguageSwitcher />
                   <Link
@@ -261,13 +245,6 @@ export default function Header() {
               ) : (
                 <>
                   <Link
-                    to="/about"
-                    onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
-                  >
-                    {t('nav.about')}
-                  </Link>
-                  <Link
                     to="/why"
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
@@ -277,17 +254,10 @@ export default function Header() {
                   <Link
                     to="/community-hub"
                     onClick={closeMobileMenu}
-                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium rounded-lg transition-colors min-h-[44px] bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
                   >
                     <Users className="h-5 w-5" />
                     Community
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
-                  >
-                    {t('nav.pricing')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
