@@ -1,23 +1,6 @@
 import { Link } from 'react-router-dom'
-import {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  Sun, Stethoscope, Wrench, BookOpen, ChevronRight, type LucideIcon
-} from 'lucide-react'
+import { MessageCircle, ChevronRight } from 'lucide-react'
 import type { CommunityRoom } from '../../lib/community'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  MessageCircle,
-  Lightbulb,
-  Brain,
-  Heart,
-  Users,
-  Compass,
-  Sun,
-  Stethoscope,
-  Wrench,
-  BookOpen,
-  Tool: Wrench,
-}
 
 interface Props {
   room: CommunityRoom
@@ -27,8 +10,6 @@ interface Props {
 }
 
 export default function CommunityRoomCard({ room, variant = 'card', active = false, onClick }: Props) {
-  const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
-
   if (variant === 'nav-item') {
     return (
       <button
@@ -36,19 +17,18 @@ export default function CommunityRoomCard({ room, variant = 'card', active = fal
         onClick={onClick}
         className={`w-full group flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-left ${
           active
-            ? 'bg-cyan-primary/10 border-l-2 border-cyan-primary pl-2.5'
+            ? 'border-l-2 border-cyan-primary pl-2.5'
             : 'hover:bg-warm-white border-l-2 border-transparent pl-2.5'
         }`}
+        style={active ? { backgroundColor: `${room.color}1A` } : undefined}
       >
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-          style={{ backgroundColor: `${room.color}22`, color: room.color }}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: room.color }}
+        />
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-semibold leading-snug truncate transition-colors ${
-            active ? 'text-cyan-dark' : 'text-slate-700 group-hover:text-slate-800'
+            active ? 'text-slate-800' : 'text-slate-700 group-hover:text-slate-800'
           }`}>
             {room.name}
           </p>
@@ -76,37 +56,30 @@ export default function CommunityRoomCard({ room, variant = 'card', active = fal
       to={`/community/rooms/${room.slug}`}
       className="group block bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden"
     >
-      <div className="p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-            style={{ backgroundColor: `${room.color}22`, color: room.color }}
-          >
-            <Icon className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-slate-800 group-hover:text-cyan-700 transition-colors leading-snug mb-1">
-              {room.name}
-            </h3>
-            <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">
-              {room.description}
-            </p>
-          </div>
-        </div>
+      <div
+        className="px-5 pt-4 pb-3 border-b"
+        style={{ backgroundColor: `${room.color}1A`, borderBottomColor: `${room.color}33` }}
+      >
+        <h3 className="text-base font-semibold leading-snug" style={{ color: room.color }}>
+          {room.name}
+        </h3>
+        <p className="text-sm leading-relaxed line-clamp-2 mt-0.5" style={{ color: `${room.color}CC` }}>
+          {room.description}
+        </p>
+      </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <MessageCircle className="w-4 h-4" />
-            <span className="text-sm">
-              {room.post_count === 0
-                ? 'No posts yet'
-                : `${room.post_count} ${room.post_count === 1 ? 'post' : 'posts'}`}
-            </span>
-          </div>
-          <span className="text-sm font-medium text-cyan-600 group-hover:text-cyan-700 transition-colors">
-            View room →
+      <div className="px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-slate-400">
+          <MessageCircle className="w-4 h-4" />
+          <span className="text-sm">
+            {room.post_count === 0
+              ? 'No posts yet'
+              : `${room.post_count} ${room.post_count === 1 ? 'post' : 'posts'}`}
           </span>
         </div>
+        <span className="text-sm font-medium text-cyan-600 group-hover:text-cyan-700 transition-colors">
+          View room →
+        </span>
       </div>
     </Link>
   )

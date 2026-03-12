@@ -8,7 +8,6 @@ import { useCommunityReplies } from '../hooks/useCommunityReplies'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import { maskAuthor, REPLIES_PAGE_SIZE } from '../lib/community'
 import { useAuth } from '../hooks/useAuth'
-import { useLocale } from '../i18n/LocaleContext'
 import ReactionBar from '../components/community/ReactionBar'
 import ReplyComposer from '../components/community/ReplyComposer'
 import CommunityReplyList from '../components/community/CommunityReplyList'
@@ -18,13 +17,6 @@ import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
 import type { CommunityReply } from '../lib/community'
 
-const HELP_TYPE_COLORS: Record<string, string> = {
-  emotional_support: 'bg-rose-50 text-rose-600 border-rose-100',
-  practical_tips: 'bg-amber-50 text-amber-600 border-amber-100',
-  similar_experiences: 'bg-cyan-50 text-cyan-600 border-cyan-100',
-  question: 'bg-blue-50 text-blue-600 border-blue-100',
-  resource: 'bg-green-50 text-green-600 border-green-100',
-}
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -43,7 +35,6 @@ export default function CommunityPostPage() {
   const { data: post, isLoading: postLoading, error: postError } = useCommunityPost(postId)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const { user } = useAuth()
-  const { t } = useLocale()
 
   const [showReport, setShowReport] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
@@ -78,8 +69,6 @@ export default function CommunityPostPage() {
   const hasProfile = !!profile && !profileLoading
   const isBanned = profile?.is_banned ?? false
   const roomSlug = post?.room?.slug
-  const helpTypeLabel = post?.help_type ? t(`community.help_type.${post.help_type}`) : null
-  const helpTypeColor = post?.help_type ? HELP_TYPE_COLORS[post.help_type] : null
 
   const isHiddenOrRemoved =
     post?.post_status === 'hidden' || post?.post_status === 'removed'
@@ -137,23 +126,16 @@ export default function CommunityPostPage() {
           ) : post ? (
             <article className="bg-white rounded-2xl border border-slate-200 p-6">
 
-              {/* Room tag + help type */}
-              {(post.room || helpTypeLabel) && (
+              {/* Room tag */}
+              {post.room && (
                 <div className="flex items-center gap-2 flex-wrap mb-4">
-                  {post.room && (
-                    <Link
-                      to={`/community/rooms/${post.room.slug}`}
-                      className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
-                      style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
-                    >
-                      {post.room.name}
-                    </Link>
-                  )}
-                  {helpTypeLabel && helpTypeColor && (
-                    <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full border ${helpTypeColor}`}>
-                      {helpTypeLabel}
-                    </span>
-                  )}
+                  <Link
+                    to={`/community/rooms/${post.room.slug}`}
+                    className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
+                    style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
+                  >
+                    {post.room.name}
+                  </Link>
                 </div>
               )}
 

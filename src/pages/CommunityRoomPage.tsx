@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  ArrowLeft, PenLine, Clock, TrendingUp, type LucideIcon
+  MessageCircle, ArrowLeft, PenLine, Clock, TrendingUp, type LucideIcon
 } from 'lucide-react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useCommunityPosts } from '../hooks/useCommunityPosts'
@@ -14,10 +13,6 @@ import CommunityGuidelinesBanner from '../components/community/CommunityGuidelin
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import { Button } from '../components/ui/Button'
 import type { PostSortMode } from '../lib/community'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-}
 
 const SORT_OPTIONS: { value: PostSortMode; label: string; icon: LucideIcon }[] = [
   { value: 'activity', label: 'Recent activity', icon: Clock },
@@ -35,7 +30,6 @@ export default function CommunityRoomPage() {
 
   if (roomError) return <Navigate to="/community" replace />
 
-  const Icon = room ? (ICON_MAP[room.icon_name] ?? MessageCircle) : MessageCircle
   const hasProfile = !profileLoading && !!profile
   const isBanned = profile?.is_banned ?? false
 
@@ -59,37 +53,31 @@ export default function CommunityRoomPage() {
 
           {/* Room header */}
           {roomLoading ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 animate-pulse">
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-slate-200 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="h-5 bg-slate-200 rounded w-1/2 mb-2" />
-                  <div className="h-3 bg-slate-100 rounded w-3/4" />
-                </div>
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+              <div className="p-5 border-b border-slate-100">
+                <div className="h-5 bg-slate-200 rounded w-1/2 mb-2" />
+                <div className="h-3 bg-slate-100 rounded w-3/4" />
+              </div>
+              <div className="px-5 py-3">
+                <div className="h-3 bg-slate-100 rounded w-1/4" />
               </div>
             </div>
           ) : room ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6">
-              <div className="flex items-start gap-4">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${room.color}22`, color: room.color }}
-                  aria-hidden="true"
-                >
-                  <Icon className="w-7 h-7" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-xl font-bold text-slate-800 mb-1">{room.name}</h1>
-                  <p className="text-sm text-slate-500 leading-relaxed">{room.description}</p>
-                  <div className="flex items-center gap-1.5 mt-2 text-slate-400">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="text-sm">
-                      {room.post_count === 0
-                        ? 'No posts yet'
-                        : `${room.post_count} ${room.post_count === 1 ? 'post' : 'posts'}`}
-                    </span>
-                  </div>
-                </div>
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div
+                className="px-5 pt-4 pb-3 border-b"
+                style={{ backgroundColor: `${room.color}1A`, borderBottomColor: `${room.color}33` }}
+              >
+                <h1 className="text-xl font-bold mb-1" style={{ color: room.color }}>{room.name}</h1>
+                <p className="text-sm leading-relaxed" style={{ color: `${room.color}CC` }}>{room.description}</p>
+              </div>
+              <div className="px-5 py-3 flex items-center gap-1.5 text-slate-400">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm">
+                  {room.post_count === 0
+                    ? 'No posts yet'
+                    : `${room.post_count} ${room.post_count === 1 ? 'post' : 'posts'}`}
+                </span>
               </div>
             </div>
           ) : null}

@@ -1,33 +1,10 @@
 import { Link } from 'react-router-dom'
 import {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  Sun, Stethoscope, Wrench, BookOpen, ArrowRight, Clock,
-  type LucideIcon
+  MessageCircle, Heart, Users, ArrowRight, Clock,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabaseClient'
 import type { CommunityRoom, CommunityPost } from '../../lib/community'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
-  Sun, Stethoscope, Wrench, BookOpen, Tool: Wrench,
-}
-
-const HELP_TYPE_COLORS: Record<string, string> = {
-  emotional_support: 'bg-rose-50 text-rose-600',
-  practical_tips: 'bg-amber-50 text-amber-600',
-  similar_experiences: 'bg-cyan-50 text-cyan-600',
-  question: 'bg-blue-50 text-blue-600',
-  resource: 'bg-green-50 text-green-600',
-}
-
-const HELP_TYPE_LABELS: Record<string, string> = {
-  emotional_support: 'Emotional Support',
-  practical_tips: 'Practical Tips',
-  similar_experiences: 'Similar Experiences',
-  question: 'Question',
-  resource: 'Resource',
-}
 
 const POST_SELECT = `
   id, room_id, author_user_id, is_anonymous, title, body,
@@ -89,11 +66,6 @@ function PublicPostRow({
       <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            {post.help_type && HELP_TYPE_LABELS[post.help_type] && (
-              <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mr-2 mb-1 ${HELP_TYPE_COLORS[post.help_type] ?? ''}`}>
-                {HELP_TYPE_LABELS[post.help_type]}
-              </span>
-            )}
             <p className="text-sm font-semibold text-slate-800 group-hover:text-cyan-700 transition-colors leading-snug mb-1">
               {post.title}
             </p>
@@ -154,11 +126,6 @@ function ExamplePostRow({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              {example.help_type && HELP_TYPE_LABELS[example.help_type] && (
-                <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${HELP_TYPE_COLORS[example.help_type] ?? ''}`}>
-                  {HELP_TYPE_LABELS[example.help_type]}
-                </span>
-              )}
               <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
                 Example
               </span>
@@ -183,8 +150,6 @@ interface Props {
 }
 
 export default function PublicRoomSection({ room, useExamples = false }: Props) {
-  const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
-
   const signupUrl = `/create-account?plan=free&source=community-hub`
 
   const { data: posts, isLoading: postsLoading } = useQuery<CommunityPost[]>({
@@ -226,28 +191,24 @@ export default function PublicRoomSection({ room, useExamples = false }: Props) 
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${room.color}22`, color: room.color }}
-          >
-            <Icon className="w-[18px] h-[18px]" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 leading-snug">{room.name}</h2>
-            <p className="text-xs text-slate-400 leading-snug line-clamp-1 max-w-xs">{room.description}</p>
-          </div>
+      <div
+        className="flex items-center justify-between px-4 py-3.5 border-b"
+        style={{ backgroundColor: `${room.color}1A`, borderBottomColor: `${room.color}33` }}
+      >
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-bold leading-snug" style={{ color: room.color }}>{room.name}</h2>
+          <p className="text-xs leading-snug line-clamp-1 max-w-xs mt-0.5" style={{ color: `${room.color}CC` }}>{room.description}</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0 ml-2">
           {!useExamples && room.post_count > 0 && (
-            <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${room.color}22`, color: `${room.color}CC` }}>
               {room.post_count} {room.post_count === 1 ? 'post' : 'posts'}
             </span>
           )}
           <Link
             to={signupUrl}
-            className="flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+            className="flex items-center gap-1 text-xs font-semibold transition-colors"
+            style={{ color: room.color }}
           >
             Join to post
             <ArrowRight className="w-3 h-3" />
