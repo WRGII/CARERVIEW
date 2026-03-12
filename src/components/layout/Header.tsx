@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan } from "../../hooks/useUserPlan";
 import AccountMenu from "../caregiver/AccountMenu";
-import { Menu, X, Users } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -99,14 +99,13 @@ export default function Header() {
 
                   <Link
                     to="/community"
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
                       isCommunityActive
                         ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
                         : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:border-slate-400'
                     }`}
                   >
-                    <Users className="h-4 w-4" />
-                    Community
+                    Community Discussions
                   </Link>
 
                   {canUseTeam && (
@@ -125,14 +124,13 @@ export default function Header() {
                 <div className="md:hidden flex items-center gap-2">
                   <Link
                     to="/community"
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
                       isCommunityActive
                         ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
                         : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
                     }`}
                   >
-                    <Users className="h-4 w-4" />
-                    Community
+                    Community Discussions
                   </Link>
                   <LanguageSwitcher />
                   <button
@@ -161,10 +159,9 @@ export default function Header() {
                   </Link>
                   <Link
                     to="/community-hub"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100"
                   >
-                    <Users className="h-4 w-4" />
-                    Community
+                    Community Discussions
                   </Link>
                   <LanguageSwitcher />
                   <Link
@@ -179,14 +176,13 @@ export default function Header() {
                 <div className="md:hidden flex items-center gap-2">
                   <Link
                     to="/community-hub"
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg min-h-[44px] transition-colors ${
                       isCommunityActive
                         ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
                         : 'bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100'
                     }`}
                   >
-                    <Users className="h-4 w-4" />
-                    Community
+                    Community Discussions
                   </Link>
                   <LanguageSwitcher />
                   <button

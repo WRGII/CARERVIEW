@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Globe, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import type { Locale } from '../../i18n/types'
 
@@ -64,10 +64,8 @@ export default function LanguageSwitcher({ className = '' }: Props) {
         disabled={showSpinner}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-1 disabled:opacity-60 disabled:cursor-wait"
       >
-        {showSpinner ? (
+        {showSpinner && (
           <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" aria-hidden="true" />
-        ) : (
-          <Globe className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
         )}
         <span>{currentLabel}</span>
       </button>
