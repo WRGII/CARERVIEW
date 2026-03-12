@@ -10,19 +10,19 @@ type ScorePickerProps = {
 };
 
 const shades: Record<number, string> = {
-  1: "bg-peach-blush text-slate-800 border-peach-blush",
-  2: "bg-peach-blush/70 text-slate-800 border-peach-blush/70",
+  1: "bg-mint-green text-slate-800 border-mint-green",
+  2: "bg-mint-green/70 text-slate-800 border-mint-green/70",
   3: "bg-cyan-primary/30 text-slate-800 border-cyan-primary/40",
-  4: "bg-mint-green/70 text-slate-800 border-mint-green/70",
-  5: "bg-mint-green text-slate-800 border-mint-green",
+  4: "bg-peach-blush/70 text-slate-800 border-peach-blush/70",
+  5: "bg-peach-blush text-slate-800 border-peach-blush",
 };
 
 const outlines: Record<number, string> = {
-  1: "border-peach-blush/60 text-slate-500 hover:bg-peach-blush/25 hover:border-peach-blush hover:text-slate-700",
-  2: "border-peach-blush/50 text-slate-500 hover:bg-peach-blush/20 hover:border-peach-blush/80 hover:text-slate-700",
+  1: "border-mint-green/70 text-slate-500 hover:bg-mint-green/35 hover:border-mint-green hover:text-slate-700",
+  2: "border-mint-green/50 text-slate-500 hover:bg-mint-green/25 hover:border-mint-green/80 hover:text-slate-700",
   3: "border-cyan-primary/40 text-slate-500 hover:bg-cyan-primary/15 hover:border-cyan-primary/60 hover:text-slate-700",
-  4: "border-mint-green/50 text-slate-500 hover:bg-mint-green/25 hover:border-mint-green/80 hover:text-slate-700",
-  5: "border-mint-green/70 text-slate-500 hover:bg-mint-green/35 hover:border-mint-green hover:text-slate-700",
+  4: "border-peach-blush/50 text-slate-500 hover:bg-peach-blush/20 hover:border-peach-blush/80 hover:text-slate-700",
+  5: "border-peach-blush/60 text-slate-500 hover:bg-peach-blush/25 hover:border-peach-blush hover:text-slate-700",
 };
 
 export default function ScorePicker({

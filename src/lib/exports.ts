@@ -75,9 +75,9 @@ const formTypeLabel = (t: FormType) =>
 
 const colorForScore = (score: number) => {
   // hex (no #) strings for docx
-  // 1–2 = red-ish, 3 = amber/blue-ish, 4–5 = green-ish
-  if (score >= 4) return '059669' // green-600
-  if (score >= 3) return '0ea5e9' // sky-500
+  // 1–2 = green-ish (independent), 3 = blue-ish (middle), 4–5 = red-ish (needs assistance)
+  if (score <= 2) return '059669' // green-600
+  if (score <= 3) return '0ea5e9' // sky-500
   return 'dc2626' // red-600
 }
 
@@ -381,7 +381,7 @@ export const exportToDOCX = async (
             children: [
               new TextRun({
                 text:
-                  '1 = Needs full help | 2 = Needs a lot of help | 3 = Needs some help | 4 = Mostly on their own | 5 = Fully on their own',
+                  '1 = Fully on their own | 2 = Mostly on their own | 3 = Needs some help | 4 = Needs a lot of help | 5 = Needs full help',
                 size: 20,
                 color: '374151',
               }),

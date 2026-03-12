@@ -460,11 +460,11 @@ export default function ObservationForm({
         </div>
         <div className="grid grid-cols-5 divide-x divide-slate-100">
           {[
-            { score: 1, label: t('scale.1'), bg: 'bg-peach-blush' },
-            { score: 2, label: t('scale.2'), bg: 'bg-peach-blush/60' },
+            { score: 1, label: t('scale.1'), bg: 'bg-mint-green' },
+            { score: 2, label: t('scale.2'), bg: 'bg-mint-green/60' },
             { score: 3, label: t('scale.3'), bg: 'bg-cyan-primary/25' },
-            { score: 4, label: t('scale.4'), bg: 'bg-mint-green/60' },
-            { score: 5, label: t('scale.5'), bg: 'bg-mint-green' },
+            { score: 4, label: t('scale.4'), bg: 'bg-peach-blush/60' },
+            { score: 5, label: t('scale.5'), bg: 'bg-peach-blush' },
           ].map(({ score, label, bg }) => (
             <div key={score} className={`${bg} py-3 px-1 text-center`}>
               <div className="text-xl font-bold text-slate-700">{score}</div>

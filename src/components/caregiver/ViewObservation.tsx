@@ -289,9 +289,9 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
                       <div className="flex items-center space-x-2">
                         <span
                           className={`inline-flex items-center justify-center w-12 h-8 rounded-lg text-sm font-semibold ${
-                            response.score >= 4
+                            response.score <= 2
                               ? 'bg-mint-green/60 text-slate-gray'
-                              : response.score >= 3
+                              : response.score <= 3
                               ? 'bg-cyan-primary/20 text-cyan-primary'
                               : 'bg-peach-blush/60 text-slate-gray'
                           }`}

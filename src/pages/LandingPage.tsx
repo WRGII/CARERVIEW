@@ -55,11 +55,11 @@ export default function LandingPage() {
 
             <div className="mb-8">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-peach-blush py-6 px-3 flex flex-col items-center justify-center text-slate-700 col-span-1 sm:rounded-l-xl">
+                <div className="bg-mint-green py-6 px-3 flex flex-col items-center justify-center text-slate-700 col-span-1 sm:rounded-l-xl">
                   <span className="text-3xl font-bold mb-1">1</span>
                   <span className="text-xs font-semibold text-center leading-snug">{t('scale.1')}</span>
                 </div>
-                <div className="bg-peach-blush/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
+                <div className="bg-mint-green/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-1">2</span>
                   <span className="text-xs font-semibold text-center leading-snug">{t('scale.2')}</span>
                 </div>
@@ -67,11 +67,11 @@ export default function LandingPage() {
                   <span className="text-3xl font-bold mb-1">3</span>
                   <span className="text-xs font-semibold text-center leading-snug">{t('scale.3')}</span>
                 </div>
-                <div className="bg-mint-green/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
+                <div className="bg-peach-blush/70 py-6 px-3 flex flex-col items-center justify-center text-slate-700">
                   <span className="text-3xl font-bold mb-1">4</span>
                   <span className="text-xs font-semibold text-center leading-snug">{t('scale.4')}</span>
                 </div>
-                <div className="bg-mint-green py-6 px-3 flex flex-col items-center justify-center text-slate-700 sm:rounded-r-xl">
+                <div className="bg-peach-blush py-6 px-3 flex flex-col items-center justify-center text-slate-700 sm:rounded-r-xl">
                   <span className="text-3xl font-bold mb-1">5</span>
                   <span className="text-xs font-semibold text-center leading-snug">{t('scale.5')}</span>
                 </div>

@@ -58,11 +58,11 @@ export const ScoreLegendDisplay: React.FC<Props> = ({ compact = false, className
 
   const getScoreColor = (score: number) => {
     switch (score) {
-      case 1: return 'bg-peach-blush'
-      case 2: return 'bg-peach-blush/70'
+      case 1: return 'bg-mint-green'
+      case 2: return 'bg-mint-green/70'
       case 3: return 'bg-cyan-primary/40'
-      case 4: return 'bg-mint-green/70'
-      case 5: return 'bg-mint-green'
+      case 4: return 'bg-peach-blush/70'
+      case 5: return 'bg-peach-blush'
       default: return 'bg-slate-gray'
     }
   }
