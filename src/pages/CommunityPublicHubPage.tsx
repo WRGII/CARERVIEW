@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   Users, Heart, ArrowRight, MessageCircle, ShieldCheck,
-  BookOpen, TrendingUp,
+  BookOpen, TrendingUp, Sparkles,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
