@@ -1,11 +1,41 @@
 // src/App.tsx
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
 import HashScroll from "./components/util/HashScroll";
 import { ErrorBoundary } from "./components/util/ErrorBoundary";
+
+function CommunityErrorFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-10 max-w-md text-center shadow-sm">
+        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-2xl" aria-hidden="true">💬</span>
+        </div>
+        <h2 className="text-lg font-bold text-slate-800 mb-2">Something went wrong</h2>
+        <p className="text-sm text-slate-500 leading-relaxed mb-6">
+          We ran into an unexpected problem loading this community page. Please try refreshing, or return to the community hub.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+          >
+            Refresh
+          </button>
+          <Link
+            to="/community"
+            className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-xl transition-colors"
+          >
+            Go to Community
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 import CaregiverGuard from "./components/common/CaregiverGuard";
 import AdminGuard from "./components/common/AdminGuard";
@@ -154,7 +184,9 @@ export default function App() {
                     path="/community"
                     element={
                       <CommunityGuard>
-                        <CommunityLandingPage />
+                        <ErrorBoundary fallback={<CommunityErrorFallback />}>
+                          <CommunityLandingPage />
+                        </ErrorBoundary>
                       </CommunityGuard>
                     }
                   />
@@ -162,7 +194,9 @@ export default function App() {
                     path="/community/rooms/:slug"
                     element={
                       <CommunityGuard>
-                        <CommunityRoomPage />
+                        <ErrorBoundary fallback={<CommunityErrorFallback />}>
+                          <CommunityRoomPage />
+                        </ErrorBoundary>
                       </CommunityGuard>
                     }
                   />
@@ -170,7 +204,9 @@ export default function App() {
                     path="/community/rooms/:slug/new-post"
                     element={
                       <CommunityGuard>
-                        <CommunityNewPostPage />
+                        <ErrorBoundary fallback={<CommunityErrorFallback />}>
+                          <CommunityNewPostPage />
+                        </ErrorBoundary>
                       </CommunityGuard>
                     }
                   />
@@ -178,7 +214,9 @@ export default function App() {
                     path="/community/posts/:postId"
                     element={
                       <CommunityGuard>
-                        <CommunityPostPage />
+                        <ErrorBoundary fallback={<CommunityErrorFallback />}>
+                          <CommunityPostPage />
+                        </ErrorBoundary>
                       </CommunityGuard>
                     }
                   />

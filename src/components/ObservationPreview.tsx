@@ -51,7 +51,7 @@ export default function ObservationPreview({ questionText, selectedScore, accent
 
       <div className="flex items-center gap-1.5 sm:gap-2">
         <div className="w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <ThumbsDown className="w-3 h-3 text-white" />
+          <ThumbsUp className="w-3 h-3 text-white" />
         </div>
 
         <div className="flex gap-1 flex-1 max-w-md">
@@ -81,7 +81,7 @@ export default function ObservationPreview({ questionText, selectedScore, accent
         </div>
 
         <div className="w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center flex-shrink-0">
-          <ThumbsUp className="w-3 h-3 text-white" />
+          <ThumbsDown className="w-3 h-3 text-white" />
         </div>
       </div>
 

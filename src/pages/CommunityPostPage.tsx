@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
 import {
   ArrowLeft, Lock, Flag, MessageCircle, Users, EyeOff, ChevronDown
@@ -55,8 +55,9 @@ export default function CommunityPostPage() {
   const [showWelcome, setShowWelcome] = useState(false)
   const [replyPage, setReplyPage] = useState(0)
   const [allReplies, setAllReplies] = useState<CommunityReply[]>([])
+  const loadingMoreRef = useRef(false)
 
-  const { data: pageReplies, isLoading: repliesLoading } = useCommunityReplies(post?.id, replyPage)
+  const { data: pageReplies, isLoading: repliesLoading, isFetching: repliesFetching } = useCommunityReplies(post?.id, replyPage)
 
   useEffect(() => {
     if (!pageReplies) return
@@ -69,6 +70,7 @@ export default function CommunityPostPage() {
         return [...prev, ...newOnes]
       })
     }
+    loadingMoreRef.current = false
   }, [pageReplies, replyPage])
 
   useEffect(() => {
@@ -292,12 +294,16 @@ export default function CommunityPostPage() {
               {hasMoreReplies && (
                 <div className="mt-4 text-center">
                   <button
-                    onClick={() => setReplyPage(p => p + 1)}
-                    disabled={repliesLoading}
+                    onClick={() => {
+                      if (loadingMoreRef.current || repliesFetching) return
+                      loadingMoreRef.current = true
+                      setReplyPage(p => p + 1)
+                    }}
+                    disabled={repliesFetching}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:opacity-60"
                   >
                     <ChevronDown className="w-4 h-4" />
-                    {repliesLoading ? 'Loading…' : `Load more replies (${totalReplies - allReplies.length} remaining)`}
+                    {repliesFetching ? 'Loading…' : `Load more replies (${totalReplies - allReplies.length} remaining)`}
                   </button>
                 </div>
               )}

@@ -3,15 +3,7 @@ import { Flag, X, CircleCheck as CheckCircle } from 'lucide-react'
 import { useSubmitReport } from '../../hooks/useCommunityReports'
 import type { ReportReason } from '../../lib/community'
 import { Button } from '../ui/Button'
-
-const REASONS: { value: ReportReason; label: string; description: string }[] = [
-  { value: 'harassment', label: 'Harassment or bullying', description: 'Targeted negative behaviour toward another user' },
-  { value: 'unsafe_advice', label: 'Unsafe health advice', description: 'Medical or care advice that could cause harm' },
-  { value: 'privacy_violation', label: 'Privacy violation', description: 'Shares identifying information about a real person' },
-  { value: 'spam', label: 'Spam or self-promotion', description: 'Irrelevant, repetitive, or commercial content' },
-  { value: 'inappropriate_content', label: 'Inappropriate content', description: 'Content that is offensive or doesn\'t belong here' },
-  { value: 'other', label: 'Other', description: 'Something else — please describe below' },
-]
+import { useLocale } from '../../i18n/LocaleContext'
 
 interface Props {
   postId?: string
@@ -20,10 +12,20 @@ interface Props {
 }
 
 export default function ReportModal({ postId, replyId, onClose }: Props) {
+  const { t } = useLocale()
   const [reason, setReason] = useState<ReportReason | ''>('')
   const [details, setDetails] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const submit = useSubmitReport()
+
+  const REASONS: { value: ReportReason; label: string; description: string }[] = [
+    { value: 'harassment', label: t('community.report.reason.harassment'), description: t('community.report.reason.harassment_desc') },
+    { value: 'unsafe_advice', label: t('community.report.reason.unsafe_advice'), description: t('community.report.reason.unsafe_advice_desc') },
+    { value: 'privacy_violation', label: t('community.report.reason.privacy_violation'), description: t('community.report.reason.privacy_violation_desc') },
+    { value: 'spam', label: t('community.report.reason.spam'), description: t('community.report.reason.spam_desc') },
+    { value: 'inappropriate_content', label: t('community.report.reason.inappropriate_content'), description: t('community.report.reason.inappropriate_content_desc') },
+    { value: 'other', label: t('community.report.reason.other'), description: t('community.report.reason.other_desc') },
+  ]
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -56,7 +58,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
           <div className="flex items-center gap-2">
             <Flag className="w-4 h-4 text-red-500" />
             <h2 id="report-modal-title" className="text-base font-semibold text-slate-800">
-              Report {replyId ? 'reply' : 'post'}
+              {replyId ? t('community.report.title_reply') : t('community.report.title_post')}
             </h2>
           </div>
           <button
@@ -73,12 +75,12 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
             <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="text-base font-semibold text-slate-800 mb-1">Report submitted</h3>
+            <h3 className="text-base font-semibold text-slate-800 mb-1">{t('community.report.submitted_title')}</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Thank you. Our moderation team will review this content.
+              {t('community.report.submitted_body')}
             </p>
             <Button variant="outline" size="sm" className="mt-5" onClick={onClose}>
-              Close
+              {t('community.action.close')}
             </Button>
           </div>
         ) : (
@@ -138,7 +140,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
 
             <div className="flex gap-3 pt-1">
               <Button variant="outline" size="md" type="button" className="flex-1" onClick={onClose}>
-                Cancel
+                {t('community.action.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -147,7 +149,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
                 className="flex-1"
                 disabled={!reason || submit.isPending}
               >
-                {submit.isPending ? 'Submitting…' : 'Submit report'}
+                {submit.isPending ? t('community.report.submitting') : t('community.report.submit')}
               </Button>
             </div>
           </form>

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, memo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MessageCircle, Lightbulb, Brain, Heart, Users, Compass,
@@ -52,7 +52,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function PostRow({
+const PostRow = memo(function PostRow({
   post,
   onClickIfGuest,
   isGuest,
@@ -128,7 +128,7 @@ function PostRow({
       {inner}
     </Link>
   )
-}
+})
 
 function PostRowSkeleton() {
   return (

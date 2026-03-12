@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import { MessageCircle, Heart, Users, Clock, EyeOff } from 'lucide-react'
 import type { CommunityPost } from '../../lib/community'
@@ -37,7 +38,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-export default function CommunityPostCard({ post, showRoom = false }: Props) {
+function CommunityPostCard({ post, showRoom = false }: Props) {
   const { user } = useAuth()
   const author = maskAuthor(post, user?.id)
   const isOwnPost = post.author_user_id === user?.id
@@ -117,3 +118,5 @@ export default function CommunityPostCard({ post, showRoom = false }: Props) {
     </Link>
   )
 }
+
+export default memo(CommunityPostCard)

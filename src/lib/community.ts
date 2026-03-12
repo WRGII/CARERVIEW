@@ -290,6 +290,19 @@ export async function getPostById(postId: string): Promise<CommunityPost | null>
   return data as CommunityPost | null
 }
 
+async function enforceRateLimit(userId: string, endpoint: string, maxRequests: number, windowMinutes = 1): Promise<void> {
+  const { data, error } = await supabase.rpc('check_rate_limit', {
+    p_identifier: userId,
+    p_endpoint: endpoint,
+    p_max_requests: maxRequests,
+    p_window_minutes: windowMinutes,
+  })
+  if (error) return
+  if (data && !data.allowed) {
+    throw new Error('Too many requests. Please wait a moment before trying again.')
+  }
+}
+
 export async function createPost(params: {
   room_id: string
   title: string
@@ -299,6 +312,8 @@ export async function createPost(params: {
 }): Promise<CommunityPost> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
+
+  await enforceRateLimit(user.id, 'community_post', 5, 60)
 
   const { data, error } = await supabase
     .from('community_posts')
@@ -371,6 +386,8 @@ export async function createReply(params: {
 }): Promise<CommunityReply> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
+
+  await enforceRateLimit(user.id, 'community_reply', 20, 60)
 
   const { data, error } = await supabase
     .from('community_replies')
@@ -468,6 +485,8 @@ export async function submitReport(params: {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
+
+  await enforceRateLimit(user.id, 'community_report', 5, 60)
 
   const { error } = await supabase
     .from('community_reports')

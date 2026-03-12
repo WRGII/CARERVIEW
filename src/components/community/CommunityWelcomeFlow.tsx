@@ -4,6 +4,7 @@ import { Button } from '../ui/Button'
 import { useCreateCommunityProfile } from '../../hooks/useCommunityProfile'
 import { AVATAR_COLORS, generateAvatarColor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
+import { useLocale } from '../../i18n/LocaleContext'
 
 interface Props {
   onComplete: () => void
@@ -12,14 +13,9 @@ interface Props {
 
 type Step = 'welcome' | 'guidelines' | 'profile'
 
-const CAREGIVER_TYPES = [
-  { value: 'family', label: 'Family caregiver', description: 'Caring for a loved one' },
-  { value: 'professional', label: 'Professional caregiver', description: 'Working in care' },
-  { value: 'both', label: 'Both', description: 'Family & professional' },
-]
-
 
 export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
+  const { t } = useLocale()
   const [step, setStep] = useState<Step>('welcome')
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false)
   const [handle, setHandle] = useState('')
@@ -28,6 +24,12 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0])
   const { user } = useAuth()
   const createProfile = useCreateCommunityProfile()
+
+  const CAREGIVER_TYPES = [
+    { value: 'family', label: t('community.caregiver_type.family'), description: t('community.caregiver_type.family_desc') },
+    { value: 'professional', label: t('community.caregiver_type.professional'), description: t('community.caregiver_type.professional_desc') },
+    { value: 'both', label: t('community.caregiver_type.both'), description: t('community.caregiver_type.both_desc') },
+  ]
 
   const canDismiss = !!onDismiss && !createProfile.isPending
 
@@ -49,11 +51,11 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
     setHandleError('')
     const clean = v.trim()
     if (clean.length > 0 && clean.length < 3) {
-      setHandleError('Handle must be at least 3 characters')
+      setHandleError(t('community.profile.handle_too_short'))
     } else if (clean.length > 30) {
-      setHandleError('Handle must be 30 characters or fewer')
+      setHandleError(t('community.profile.handle_too_long'))
     } else if (clean.length > 0 && !/^[a-zA-Z0-9_-]+$/.test(clean)) {
-      setHandleError('Only letters, numbers, underscores and hyphens allowed')
+      setHandleError(t('community.profile.handle_invalid'))
     }
   }
 
@@ -69,7 +71,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
       onComplete()
     } catch (err: any) {
       if (err?.message?.includes('duplicate') || err?.code === '23505') {
-        setHandleError('That handle is already taken. Please choose another.')
+        setHandleError(t('community.profile.handle_taken'))
       } else {
         setHandleError(err?.message ?? 'Something went wrong. Please try again.')
       }
@@ -111,33 +113,32 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
               </div>
             </div>
             <h2 className="text-2xl font-bold text-slate-800 text-center mb-3">
-              Welcome to Caregiver Community
+              {t('community.welcome.title')}
             </h2>
             <p className="text-slate-600 text-center leading-relaxed mb-6">
-              A safe space for caregivers to share experiences, find practical support,
-              and connect with others who truly understand.
+              {t('community.welcome.subtitle')}
             </p>
 
             <div className="space-y-3 mb-8">
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
                 <Users className="w-5 h-5 text-cyan-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Peer support</p>
-                  <p className="text-sm text-slate-500">Real caregivers sharing real experiences</p>
+                  <p className="text-sm font-semibold text-slate-700">{t('community.welcome.peer_support_title')}</p>
+                  <p className="text-sm text-slate-500">{t('community.welcome.peer_support_desc')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
                 <ShieldCheck className="w-5 h-5 text-cyan-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Moderated and safe</p>
-                  <p className="text-sm text-slate-500">Our team reviews reported content to keep this space respectful</p>
+                  <p className="text-sm font-semibold text-slate-700">{t('community.welcome.moderated_title')}</p>
+                  <p className="text-sm text-slate-500">{t('community.welcome.moderated_desc')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
                 <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Not medical advice</p>
-                  <p className="text-sm text-slate-500">Nothing here replaces professional medical or care guidance</p>
+                  <p className="text-sm font-semibold text-slate-700">{t('community.welcome.not_medical_title')}</p>
+                  <p className="text-sm text-slate-500">{t('community.welcome.not_medical_desc')}</p>
                 </div>
               </div>
             </div>
@@ -148,7 +149,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
               className="w-full"
               onClick={() => setStep('guidelines')}
             >
-              Continue
+              {t('community.welcome.continue')}
               <ChevronRight className="w-5 h-5 ml-1 inline" />
             </Button>
           </div>
@@ -163,38 +164,38 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
               </div>
             </div>
             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-              Community Guidelines
+              {t('community.guidelines.title')}
             </h2>
             <p className="text-slate-500 text-sm text-center mb-6">
-              Please read and accept before joining
+              {t('community.guidelines.subtitle')}
             </p>
 
             <div className="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
               {[
                 {
                   icon: <Heart className="w-4 h-4 text-cyan-600" />,
-                  title: 'Be kind and supportive',
-                  body: 'Treat others with compassion. We are all navigating difficult circumstances.',
+                  title: t('community.guidelines.be_kind_title'),
+                  body: t('community.guidelines.be_kind_body'),
                 },
                 {
                   icon: <ShieldCheck className="w-4 h-4 text-cyan-600" />,
-                  title: 'Protect privacy — yours and your care recipient\'s',
-                  body: 'Do not share identifying details about the person you care for, such as their full name, location, or diagnosis specifics.',
+                  title: t('community.guidelines.protect_privacy_title'),
+                  body: t('community.guidelines.protect_privacy_body'),
                 },
                 {
                   icon: <AlertTriangle className="w-4 h-4 text-amber-500" />,
-                  title: 'No medical or clinical advice',
-                  body: 'Share experiences and coping strategies, but do not advise on specific medications, treatments, or clinical decisions.',
+                  title: t('community.guidelines.no_medical_title'),
+                  body: t('community.guidelines.no_medical_body'),
                 },
                 {
                   icon: <Users className="w-4 h-4 text-cyan-600" />,
-                  title: 'No harassment or discrimination',
-                  body: 'Hateful, offensive, or personally attacking content is not permitted and will be removed.',
+                  title: t('community.guidelines.no_harassment_title'),
+                  body: t('community.guidelines.no_harassment_body'),
                 },
                 {
                   icon: <Sparkles className="w-4 h-4 text-cyan-600" />,
-                  title: 'No spam or self-promotion',
-                  body: 'This is a support space, not an advertising channel. Promotional posts will be removed.',
+                  title: t('community.guidelines.no_spam_title'),
+                  body: t('community.guidelines.no_spam_body'),
                 },
               ].map((rule, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
@@ -215,8 +216,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
                 className="mt-0.5 w-5 h-5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-primary flex-shrink-0"
               />
               <span className="text-sm text-slate-700 leading-relaxed">
-                I have read and agree to follow the community guidelines, and I understand
-                this is peer support — not professional medical advice.
+                {t('community.guidelines.accept_checkbox')}
               </span>
             </label>
 
@@ -227,7 +227,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
                 className="flex-1"
                 onClick={() => setStep('welcome')}
               >
-                Back
+                {t('community.action.back')}
               </Button>
               <Button
                 variant="primary"
@@ -236,7 +236,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
                 disabled={!guidelinesAccepted}
                 onClick={() => setStep('profile')}
               >
-                Accept & Continue
+                {t('community.guidelines.accept_button')}
               </Button>
             </div>
           </div>
@@ -251,10 +251,10 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
               </div>
             </div>
             <h2 className="text-xl font-bold text-slate-800 text-center mb-1">
-              Set up your community profile
+              {t('community.profile.title')}
             </h2>
             <p className="text-slate-500 text-sm text-center mb-6">
-              Your profile helps others recognise you. You can post anonymously any time.
+              {t('community.profile.subtitle')}
             </p>
 
             {/* Handle */}
@@ -281,37 +281,44 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
             {/* Avatar colour */}
             <div className="mb-5">
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Avatar colour
+                {t('community.profile.avatar_color_label')}
               </label>
-              <div className="flex gap-2 flex-wrap">
-                {AVATAR_COLORS.map(color => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setAvatarColor(color)}
-                    className={`w-9 h-9 rounded-full transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-primary ${
-                      avatarColor === color ? 'ring-2 ring-offset-2 ring-cyan-primary scale-110' : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    aria-label={`Select colour ${color}`}
-                  />
-                ))}
+              <div className="flex gap-2 flex-wrap" role="radiogroup" aria-label={t('community.profile.avatar_color_label')}>
+                {AVATAR_COLORS.map((color, idx) => {
+                  const colorNames = ['Teal', 'Green-Teal', 'Green', 'Orange', 'Red', 'Purple', 'Blue', 'Brown']
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      role="radio"
+                      aria-checked={avatarColor === color}
+                      onClick={() => setAvatarColor(color)}
+                      className={`w-9 h-9 rounded-full transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-primary ${
+                        avatarColor === color ? 'ring-2 ring-offset-2 ring-cyan-primary scale-110' : 'hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      aria-label={colorNames[idx] ?? color}
+                    />
+                  )
+                })}
               </div>
               <div className="mt-3 flex items-center gap-3">
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
                   style={{ backgroundColor: avatarColor }}
+                  aria-hidden="true"
                 >
                   {(handle.trim() || suggestedHandle).charAt(0).toUpperCase()}
                 </div>
-                <p className="text-sm text-slate-500">Preview of your avatar</p>
+                <p className="text-sm text-slate-500">{t('community.profile.avatar_preview')}</p>
               </div>
             </div>
 
             {/* Caregiver type (optional) */}
             <div className="mb-5">
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                What kind of caregiver are you? <span className="text-slate-400 font-normal">(optional)</span>
+                {t('community.profile.caregiver_type_label')}{' '}
+                <span className="text-slate-400 font-normal">{t('community.profile.caregiver_type_optional')}</span>
               </label>
               <div className="grid grid-cols-1 gap-2">
                 {CAREGIVER_TYPES.map(opt => (
@@ -352,7 +359,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
                 onClick={() => setStep('guidelines')}
                 disabled={createProfile.isPending}
               >
-                Back
+                {t('community.action.back')}
               </Button>
               <Button
                 variant="primary"
@@ -361,7 +368,7 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
                 onClick={handleFinish}
                 disabled={createProfile.isPending || !!handleError}
               >
-                {createProfile.isPending ? 'Setting up…' : 'Join Community'}
+                {createProfile.isPending ? t('community.profile.joining') : t('community.profile.join_button')}
               </Button>
             </div>
           </div>
