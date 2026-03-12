@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
-  Users, Heart, Sparkles, ArrowRight, MessageCircle, ShieldCheck,
+  Users, Heart, ArrowRight, MessageCircle, ShieldCheck,
   BookOpen, TrendingUp,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -56,10 +56,10 @@ function InlineCTA({ tone, headline, sub }: InlineCTAProps) {
       </div>
       <Link
         to={SIGNUP_URL}
-        className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex-shrink-0 self-start sm:self-auto ${btnClass}`}
+        className={`inline-flex flex-col items-center px-4 py-2 text-sm font-semibold rounded-xl transition-colors flex-shrink-0 self-start sm:self-auto leading-tight ${btnClass}`}
       >
-        <Sparkles className="w-3.5 h-3.5" />
-        Join free
+        <span>Share &amp; Learn</span>
+        <span className="text-xs font-normal opacity-90">always free</span>
       </Link>
     </div>
   )
@@ -115,11 +115,10 @@ export default function CommunityTopicHubPage() {
             <div className="flex flex-col gap-2 flex-shrink-0">
               <Link
                 to={SIGNUP_URL}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="inline-flex flex-col items-center justify-center px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 leading-tight"
               >
-                <Sparkles className="w-4 h-4" />
-                Join free
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span className="text-sm">Share &amp; Learn</span>
+                <span className="text-xs font-normal opacity-90">always free</span>
               </Link>
               <Link
                 to="/#get-started"
