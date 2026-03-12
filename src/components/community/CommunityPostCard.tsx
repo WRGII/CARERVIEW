@@ -4,14 +4,7 @@ import { MessageCircle, Heart, Users, Clock, EyeOff } from 'lucide-react'
 import type { CommunityPost } from '../../lib/community'
 import { maskAuthor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
-
-const HELP_TYPE_LABELS: Record<string, string> = {
-  emotional_support: 'Emotional Support',
-  practical_tips: 'Practical Tips',
-  similar_experiences: 'Similar Experiences',
-  question: 'Question',
-  resource: 'Resource',
-}
+import { useLocale } from '../../i18n/LocaleContext'
 
 const HELP_TYPE_COLORS: Record<string, string> = {
   emotional_support: 'bg-rose-50 text-rose-600',
@@ -40,6 +33,7 @@ function timeAgo(dateStr: string): string {
 
 function CommunityPostCard({ post, showRoom = false }: Props) {
   const { user } = useAuth()
+  const { t } = useLocale()
   const author = maskAuthor(post, user?.id)
   const isOwnPost = post.author_user_id === user?.id
   const isHidden = post.post_status === 'hidden'
@@ -71,9 +65,9 @@ function CommunityPostCard({ post, showRoom = false }: Props) {
               {post.room.name}
             </span>
           )}
-          {post.help_type && HELP_TYPE_LABELS[post.help_type] && (
+          {post.help_type && (
             <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${HELP_TYPE_COLORS[post.help_type] ?? ''}`}>
-              {HELP_TYPE_LABELS[post.help_type]}
+              {t(`community.help_type.${post.help_type}`)}
             </span>
           )}
         </div>

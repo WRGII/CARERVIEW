@@ -6,13 +6,22 @@ import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import { useCreatePost } from '../hooks/useCommunityPosts'
 import { Button } from '../components/ui/Button'
 import type { HelpType } from '../lib/community'
+import { useLocale } from '../i18n/LocaleContext'
 
-const HELP_TYPES: { value: HelpType; label: string; description: string; emoji: string }[] = [
-  { value: 'emotional_support', emoji: '💛', label: 'Emotional support', description: 'I need someone to listen or acknowledge how I feel' },
-  { value: 'practical_tips', emoji: '🔧', label: 'Practical tips', description: 'I\'m looking for advice or strategies that work' },
-  { value: 'similar_experiences', emoji: '🤝', label: 'Similar experiences', description: 'Has anyone else been through something like this?' },
-  { value: 'question', emoji: '❓', label: 'Question', description: 'I have a specific question I need help with' },
-  { value: 'resource', emoji: '📚', label: 'Sharing a resource', description: 'I found something helpful and want to share it' },
+const HELP_TYPE_EMOJIS: Record<HelpType, string> = {
+  emotional_support: '💛',
+  practical_tips: '🔧',
+  similar_experiences: '🤝',
+  question: '❓',
+  resource: '📚',
+}
+
+const HELP_TYPE_VALUES: HelpType[] = [
+  'emotional_support',
+  'practical_tips',
+  'similar_experiences',
+  'question',
+  'resource',
 ]
 
 export default function CommunityNewPostPage() {
@@ -21,6 +30,7 @@ export default function CommunityNewPostPage() {
   const { data: room, isLoading: roomLoading } = useCommunityRoom(slug)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const createPost = useCreatePost()
+  const { t } = useLocale()
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -155,11 +165,11 @@ export default function CommunityNewPostPage() {
                   <p role="alert" className="text-sm text-red-600 mb-2">{errors.helpType}</p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {HELP_TYPES.map(ht => (
+                  {HELP_TYPE_VALUES.map(value => (
                     <label
-                      key={ht.value}
+                      key={value}
                       className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                        helpType === ht.value
+                        helpType === value
                           ? 'border-cyan-300 bg-cyan-50'
                           : 'border-slate-200 hover:bg-slate-50'
                       }`}
@@ -167,17 +177,17 @@ export default function CommunityNewPostPage() {
                       <input
                         type="radio"
                         name="helpType"
-                        value={ht.value}
-                        checked={helpType === ht.value}
-                        onChange={() => { setHelpType(ht.value); setErrors(prev => ({ ...prev, helpType: undefined })) }}
+                        value={value}
+                        checked={helpType === value}
+                        onChange={() => { setHelpType(value); setErrors(prev => ({ ...prev, helpType: undefined })) }}
                         className="sr-only"
                       />
-                      <span className="text-xl flex-shrink-0 mt-0.5" aria-hidden="true">{ht.emoji}</span>
+                      <span className="text-xl flex-shrink-0 mt-0.5" aria-hidden="true">{HELP_TYPE_EMOJIS[value]}</span>
                       <div>
-                        <p className={`text-sm font-medium ${helpType === ht.value ? 'text-cyan-700' : 'text-slate-700'}`}>
-                          {ht.label}
+                        <p className={`text-sm font-medium ${helpType === value ? 'text-cyan-700' : 'text-slate-700'}`}>
+                          {t(`community.help_type.${value}`)}
                         </p>
-                        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{ht.description}</p>
+                        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{t(`community.help_type_desc.${value}`)}</p>
                       </div>
                     </label>
                   ))}

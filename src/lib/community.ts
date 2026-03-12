@@ -188,6 +188,8 @@ export async function createCommunityProfile(params: {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
+  await enforceRateLimit(user.id, 'community_profile_create', 3, 60)
+
   const { data, error } = await supabase
     .from('community_profiles')
     .insert({
@@ -247,10 +249,9 @@ export async function listPostsForRoom(params: {
 }): Promise<CommunityPost[]> {
   const { roomId, limit = 20, offset = 0, sortBy = 'activity' } = params
   let query = supabase
-    .from('community_posts')
+    .from('community_posts_public')
     .select(POST_LIST_SELECT)
     .eq('room_id', roomId)
-    .eq('post_status', 'active')
 
   if (sortBy === 'activity') {
     query = query.order('last_activity_at', { ascending: false })
@@ -271,9 +272,8 @@ export async function listRecentPosts(params: {
 } = {}): Promise<CommunityPost[]> {
   const { limit = 10, offset = 0 } = params
   const { data, error } = await supabase
-    .from('community_posts')
+    .from('community_posts_public')
     .select(POST_LIST_SELECT)
-    .eq('post_status', 'active')
     .order('last_activity_at', { ascending: false })
     .range(offset, offset + limit - 1)
   if (error) throw error
@@ -282,7 +282,7 @@ export async function listRecentPosts(params: {
 
 export async function getPostById(postId: string): Promise<CommunityPost | null> {
   const { data, error } = await supabase
-    .from('community_posts')
+    .from('community_posts_public')
     .select(POST_LIST_SELECT)
     .eq('id', postId)
     .maybeSingle()

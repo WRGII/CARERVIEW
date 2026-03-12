@@ -8,6 +8,7 @@ import { useCommunityReplies } from '../hooks/useCommunityReplies'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import { maskAuthor, REPLIES_PAGE_SIZE } from '../lib/community'
 import { useAuth } from '../hooks/useAuth'
+import { useLocale } from '../i18n/LocaleContext'
 import ReactionBar from '../components/community/ReactionBar'
 import ReplyComposer from '../components/community/ReplyComposer'
 import CommunityReplyList from '../components/community/CommunityReplyList'
@@ -16,14 +17,6 @@ import ReportModal from '../components/community/ReportModal'
 import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
 import type { CommunityReply } from '../lib/community'
-
-const HELP_TYPE_LABELS: Record<string, string> = {
-  emotional_support: 'Emotional Support',
-  practical_tips: 'Practical Tips',
-  similar_experiences: 'Similar Experiences',
-  question: 'Question',
-  resource: 'Resource',
-}
 
 const HELP_TYPE_COLORS: Record<string, string> = {
   emotional_support: 'bg-rose-50 text-rose-600 border-rose-100',
@@ -50,6 +43,7 @@ export default function CommunityPostPage() {
   const { data: post, isLoading: postLoading, error: postError } = useCommunityPost(postId)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const { user } = useAuth()
+  const { t } = useLocale()
 
   const [showReport, setShowReport] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
@@ -84,7 +78,7 @@ export default function CommunityPostPage() {
   const hasProfile = !!profile && !profileLoading
   const isBanned = profile?.is_banned ?? false
   const roomSlug = post?.room?.slug
-  const helpTypeLabel = post?.help_type ? HELP_TYPE_LABELS[post.help_type] : null
+  const helpTypeLabel = post?.help_type ? t(`community.help_type.${post.help_type}`) : null
   const helpTypeColor = post?.help_type ? HELP_TYPE_COLORS[post.help_type] : null
 
   const isHiddenOrRemoved =

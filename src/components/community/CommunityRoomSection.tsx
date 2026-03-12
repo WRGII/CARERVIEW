@@ -9,6 +9,7 @@ import { useCommunityPosts } from '../../hooks/useCommunityPosts'
 import type { CommunityRoom, CommunityPost } from '../../lib/community'
 import { maskAuthor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
+import { useLocale } from '../../i18n/LocaleContext'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   MessageCircle,
@@ -30,14 +31,6 @@ const HELP_TYPE_COLORS: Record<string, string> = {
   similar_experiences: 'bg-cyan-50 text-cyan-600',
   question: 'bg-blue-50 text-blue-600',
   resource: 'bg-green-50 text-green-600',
-}
-
-const HELP_TYPE_LABELS: Record<string, string> = {
-  emotional_support: 'Emotional Support',
-  practical_tips: 'Practical Tips',
-  similar_experiences: 'Similar Experiences',
-  question: 'Question',
-  resource: 'Resource',
 }
 
 function timeAgo(dateStr: string): string {
@@ -62,6 +55,7 @@ const PostRow = memo(function PostRow({
   isGuest: boolean
 }) {
   const { user } = useAuth()
+  const { t } = useLocale()
   const author = maskAuthor(post, user?.id)
 
   const preview = post.body.length > 180 ? post.body.slice(0, 180).trimEnd() + '…' : post.body
@@ -70,9 +64,9 @@ const PostRow = memo(function PostRow({
     <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          {post.help_type && HELP_TYPE_LABELS[post.help_type] && (
+          {post.help_type && (
             <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mr-2 mb-1 ${HELP_TYPE_COLORS[post.help_type] ?? ''}`}>
-              {HELP_TYPE_LABELS[post.help_type]}
+              {t(`community.help_type.${post.help_type}`)}
             </span>
           )}
           <p className="text-sm font-semibold text-slate-800 group-hover:text-cyan-700 transition-colors leading-snug mb-1">
@@ -152,7 +146,7 @@ interface Props {
   onJoinClick: () => void
 }
 
-export default function CommunityRoomSection({ room, isGuest, onJoinClick }: Props) {
+function CommunityRoomSection({ room, isGuest, onJoinClick }: Props) {
   const Icon = ICON_MAP[room.icon_name] ?? MessageCircle
   const sectionRef = useRef<HTMLDivElement>(null)
   const [hasIntersected, setHasIntersected] = useState(false)
@@ -239,3 +233,5 @@ export default function CommunityRoomSection({ room, isGuest, onJoinClick }: Pro
     </div>
   )
 }
+
+export default memo(CommunityRoomSection)

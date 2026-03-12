@@ -1,20 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Heart, Users, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react'
-
-const BENEFITS = [
-  {
-    icon: Users,
-    text: 'Connect with caregivers who truly understand',
-  },
-  {
-    icon: Heart,
-    text: 'Share experiences and get peer support',
-  },
-  {
-    icon: ShieldCheck,
-    text: 'Post anonymously when you need privacy',
-  },
-]
+import { useLocale } from '../../i18n/LocaleContext'
 
 interface Props {
   variant?: 'banner' | 'card' | 'inline'
@@ -23,11 +9,19 @@ interface Props {
 }
 
 export default function JoinFreeCTA({ variant = 'banner', context, className = '' }: Props) {
+  const { t } = useLocale()
+
+  const benefits = [
+    { icon: Users, text: t('community.join.benefit.connect') },
+    { icon: Heart, text: t('community.join.benefit.share') },
+    { icon: ShieldCheck, text: t('community.join.benefit.anonymous') },
+  ]
+
   if (variant === 'inline') {
     return (
       <div className={`flex flex-col sm:flex-row items-center gap-4 ${className}`}>
         <p className="text-slate-600 text-sm">
-          {context ?? 'Join the community to post and connect with other caregivers.'}
+          {context ?? t('community.join.inline.description')}
         </p>
         <div className="flex items-center gap-3 flex-shrink-0">
           <Link
@@ -35,13 +29,13 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
             className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             <Sparkles className="w-4 h-4" />
-            Join free
+            {t('community.join.cta.join_free')}
           </Link>
           <Link
             to="/#get-started"
             className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
           >
-            Sign in
+            {t('community.join.cta.sign_in')}
           </Link>
         </div>
       </div>
@@ -55,13 +49,13 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
           <div className="w-8 h-8 bg-cyan-50 rounded-full flex items-center justify-center">
             <Heart className="w-4 h-4 text-cyan-600" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">Join the Community</h3>
+          <h3 className="text-base font-bold text-slate-800">{t('community.join.card.title')}</h3>
         </div>
         <p className="text-sm text-slate-500 leading-relaxed mb-4">
-          {context ?? 'Free for all caregivers. No subscription required.'}
+          {context ?? t('community.join.card.description')}
         </p>
         <ul className="space-y-2 mb-5">
-          {BENEFITS.map((b, i) => {
+          {benefits.map((b, i) => {
             const Icon = b.icon
             return (
               <li key={i} className="flex items-center gap-2.5">
@@ -76,12 +70,12 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
           className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-600 text-white text-sm font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
         >
           <Sparkles className="w-4 h-4" />
-          Create free account
+          {t('community.join.cta.create_account')}
         </Link>
         <p className="text-center text-xs text-slate-400 mt-2">
-          Already registered?{' '}
+          {t('community.join.cta.already_registered')}{' '}
           <Link to="/#get-started" className="text-cyan-600 hover:underline">
-            Sign in
+            {t('community.join.cta.sign_in')}
           </Link>
         </p>
       </div>
@@ -95,13 +89,13 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
           <Users className="w-7 h-7 text-cyan-600" />
         </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-3">
-          Join the Caregiver Community — free
+          {t('community.join.title')}
         </h2>
         <p className="text-slate-500 leading-relaxed mb-6 text-base">
-          {context ?? 'Read discussions, share your experience, and connect with caregivers who understand what you\'re going through. No subscription needed.'}
+          {context ?? t('community.join.description')}
         </p>
         <div className="flex flex-wrap justify-center gap-3 mb-8 text-sm text-slate-600">
-          {BENEFITS.map((b, i) => {
+          {benefits.map((b, i) => {
             const Icon = b.icon
             return (
               <span key={i} className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5">
@@ -117,18 +111,18 @@ export default function JoinFreeCTA({ variant = 'banner', context, className = '
             className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-600 text-white font-semibold rounded-xl hover:bg-cyan-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 text-base"
           >
             <Sparkles className="w-5 h-5" />
-            Create free account
+            {t('community.join.cta.create_account')}
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             to="/#get-started"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors text-base"
           >
-            Already registered? Sign in
+            {t('community.join.cta.already_registered')} {t('community.join.cta.sign_in')}
           </Link>
         </div>
         <p className="text-xs text-slate-400 mt-4">
-          Community is free. Structured care tracking features are part of paid plans.
+          {t('community.join.footer')}
         </p>
       </div>
     </div>
