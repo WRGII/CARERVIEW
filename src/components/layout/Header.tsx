@@ -134,6 +134,12 @@ export default function Header() {
                   >
                     {t('nav.why_carerview')}
                   </Link>
+                  <Link
+                    to="/community-hub"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
+                  >
+                    Caregiver Forum
+                  </Link>
                   <LanguageSwitcher />
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
@@ -219,6 +225,13 @@ export default function Header() {
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.why_carerview')}
+                  </Link>
+                  <Link
+                    to="/community-hub"
+                    onClick={closeMobileMenu}
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                  >
+                    Free Caregiver Forum
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}

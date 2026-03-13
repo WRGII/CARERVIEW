@@ -80,11 +80,13 @@ import { ToastProvider } from "./components/ui/ToastProvider";
 import DatabaseStatus from "./components/common/DatabaseStatus";
 import AppLocaleWrapper from "./i18n/AppLocaleWrapper";
 import { queryClient } from "./lib/queryClient";
+import { HelmetProvider } from "react-helmet-async";
 
 const ChoosePlan = lazy(() => import("./pages/ChoosePlan"));
 
 export default function App() {
   return (
+    <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <AppLocaleWrapper>
@@ -258,5 +260,6 @@ export default function App() {
         </AppLocaleWrapper>
       </ToastProvider>
     </QueryClientProvider>
+    </HelmetProvider>
   );
 }

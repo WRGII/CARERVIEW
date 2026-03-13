@@ -1,12 +1,18 @@
 import { Link } from "react-router-dom";
 import { Home, ArrowLeft } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
+import PageSEO from "../components/seo/PageSEO";
 
 export default function NotFoundPage() {
   const { t } = useLocale();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20 flex items-center justify-center">
+      <PageSEO
+        title="Page Not Found - CarerView"
+        description="The page you were looking for could not be found."
+        noIndex={true}
+      />
       <div className="max-w-md mx-auto px-4 text-center">
         <div className="text-8xl font-bold text-slate-gray/10 mb-4">404</div>
         <h1 className="text-2xl font-bold text-slate-gray mb-3">

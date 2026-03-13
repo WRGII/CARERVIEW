@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0e7490;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f766e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="card" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.12" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.04" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Subtle pattern overlay circles -->
+  <circle cx="1100" cy="80" r="240" fill="#22d3ee" opacity="0.06" />
+  <circle cx="150" cy="550" r="180" fill="#2dd4bf" opacity="0.07" />
+  <circle cx="600" cy="630" r="300" fill="#164e63" opacity="0.3" />
+
+  <!-- Left accent bar -->
+  <rect x="80" y="175" width="6" height="280" rx="3" fill="#22d3ee" opacity="0.7" />
+
+  <!-- Main content -->
+  <!-- CarerView wordmark -->
+  <text x="110" y="148" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#a5f3fc" letter-spacing="2" opacity="0.9">CARERVIEW</text>
+
+  <!-- Headline -->
+  <text x="110" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="800" fill="#ffffff" letter-spacing="-1">Free Caregiver</text>
+  <text x="110" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="800" fill="#ffffff" letter-spacing="-1">Support Forum</text>
+
+  <!-- Subheadline -->
+  <text x="110" y="375" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400" fill="#a5f3fc" opacity="0.9">For family caregivers navigating dementia, burnout,</text>
+  <text x="110" y="408" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="400" fill="#a5f3fc" opacity="0.9">ageing parents, and more — free to join.</text>
+
+  <!-- Pill badges -->
+  <rect x="110" y="450" width="200" height="38" rx="19" fill="#ffffff" opacity="0.15" />
+  <text x="210" y="474" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#ffffff" text-anchor="middle">Dementia Care</text>
+
+  <rect x="326" y="450" width="200" height="38" rx="19" fill="#ffffff" opacity="0.15" />
+  <text x="426" y="474" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#ffffff" text-anchor="middle">Caregiver Burnout</text>
+
+  <rect x="542" y="450" width="200" height="38" rx="19" fill="#ffffff" opacity="0.15" />
+  <text x="642" y="474" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#ffffff" text-anchor="middle">Anonymous Posting</text>
+
+  <!-- Right side decorative chat bubbles -->
+  <!-- Bubble 1 -->
+  <rect x="860" y="140" width="260" height="80" rx="16" fill="url(#card)" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1" />
+  <text x="875" y="172" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">"My mum refuses to bathe.</text>
+  <text x="875" y="192" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">Has anyone found what works?"</text>
+
+  <!-- Bubble 2 -->
+  <rect x="900" y="250" width="240" height="80" rx="16" fill="url(#card)" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1" />
+  <text x="915" y="282" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">"Siblings not helping —</text>
+  <text x="915" y="302" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">how do you cope?"</text>
+
+  <!-- Bubble 3 -->
+  <rect x="870" y="358" width="260" height="80" rx="16" fill="url(#card)" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1" />
+  <text x="885" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">"Dementia aggression tonight</text>
+  <text x="885" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#e0f2fe">was really bad. Need support."</text>
+
+  <!-- Bottom strip -->
+  <rect x="0" y="580" width="1200" height="50" fill="#000000" opacity="0.2" />
+  <text x="110" y="612" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#ffffff" opacity="0.8">carerview.com/community-hub</text>
+  <text x="1090" y="612" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#22d3ee" text-anchor="end" opacity="0.9">Always free to join</text>
+</svg>

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, Check } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
+import PageSEO from "../components/seo/PageSEO";
 
 function Feature({ children }: { children: React.ReactNode }) {
   return (
@@ -25,6 +26,11 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      <PageSEO
+        title="CarerView Pricing - Free Caregiver Community & Care Tracking Plans"
+        description="Join CarerView free to access our caregiver community forum. Upgrade for structured observation tracking, family care coordination, and healthcare export tools. Plans from £4.99/month."
+        canonical="https://carerview.com/pricing"
+      />
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
         <div className="mx-auto max-w-3xl text-center">

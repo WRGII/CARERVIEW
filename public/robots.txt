@@ -6,14 +6,18 @@ Allow: /about
 Allow: /pricing
 Allow: /privacy-policy
 Allow: /data-policy
+Allow: /community-hub
 
-# Disallow authenticated pages
+# Disallow authenticated and account-gated pages
 Disallow: /caregiver
 Disallow: /admin
 Disallow: /team
 Disallow: /create-account
 Disallow: /choose-plan
 Disallow: /checkout
+Disallow: /community
+Disallow: /join
+Disallow: /reset-password
 
 # Sitemap
 Sitemap: https://carerview.com/sitemap.xml

@@ -6,6 +6,7 @@ import ObservationPreview from "../components/ObservationPreview";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
 import { useLocale } from "../i18n/LocaleContext";
+import PageSEO from "../components/seo/PageSEO";
 
 export default function WhyCarerView() {
   const { t } = useLocale();
@@ -35,6 +36,11 @@ export default function WhyCarerView() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <PageSEO
+        title="Why CarerView - Caregiver Observation Tracking & Family Care Coordination"
+        description="Discover how CarerView helps family caregivers track daily care observations for ageing parents and loved ones. Monitor ADL & IADL changes, coordinate with family, and share reports with doctors."
+        canonical="https://carerview.com/why"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HERO */}
         <div className="pt-8 pb-10 text-center">

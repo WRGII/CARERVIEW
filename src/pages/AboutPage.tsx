@@ -3,12 +3,18 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useLocale } from '../i18n/LocaleContext'
+import PageSEO from '../components/seo/PageSEO'
 
 export default function AboutPage() {
   const { t } = useLocale()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <PageSEO
+        title="About CarerView - Built by Caregivers, for Caregivers"
+        description="CarerView was built by people who've been there - caring for ageing parents without the right tools. Learn about our mission to support family caregivers with simple, structured care tracking."
+        canonical="https://carerview.com/about"
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-6">

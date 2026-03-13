@@ -5,6 +5,7 @@ import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscop
 import { Card, CardContent } from '../components/ui/Card'
 import AuthForm from '../components/common/AuthForm'
 import { useLocale } from '../i18n/LocaleContext'
+import PageSEO from '../components/seo/PageSEO'
 
 export default function LandingPage() {
   const location = useLocation()
@@ -18,8 +19,36 @@ export default function LandingPage() {
     }
   }, [location.hash])
 
+  const orgSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'CarerView',
+    url: 'https://carerview.com',
+    logo: 'https://carerview.com/CareView_logo_1_colored_highres.png',
+    description: 'CarerView helps family caregivers track daily care observations, monitor changes over time, and coordinate with their care team.',
+    sameAs: [],
+  }
+
+  const webSiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'CarerView',
+    url: 'https://carerview.com',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://carerview.com/?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <PageSEO
+        title="CarerView - Family Caregiver Support & Care Observation Tracking"
+        description="CarerView helps family caregivers track daily observations, monitor changes in ageing parents and loved ones, and share structured care notes with their family team and healthcare providers."
+        canonical="https://carerview.com"
+        structuredData={[orgSchema, webSiteSchema]}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="pt-8 pb-10 text-center">
