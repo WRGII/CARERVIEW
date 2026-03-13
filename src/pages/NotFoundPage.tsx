@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home, ArrowLeft } from "lucide-react";
+import { Chrome as Home, ArrowLeft } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
 
