@@ -65,6 +65,33 @@ function InlineCTA({ tone, headline, sub }: InlineCTAProps) {
   )
 }
 
+function TrustBar() {
+  return (
+    <div className="bg-slate-800 rounded-2xl">
+      <div className="px-4 sm:px-6 py-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 text-xs text-slate-300">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+            Moderated and safe
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Heart className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+            Anonymous posting available
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+            Peer support, not medical advice
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+            Free for all caregivers
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CommunityTopicHubPage() {
   const { data: rooms, isLoading: roomsLoading } = useQuery<CommunityRoom[]>({
     queryKey: ['public-community', 'rooms'],
@@ -109,7 +136,7 @@ export default function CommunityTopicHubPage() {
                 You shouldn't have to figure this out alone
               </h1>
               <p className="text-sm text-slate-500 leading-relaxed">
-                A free peer support community for family and professional caregivers. Share experiences, ask questions, find practical wisdom.
+                Share experiences, ask questions, and find practical wisdom.
               </p>
             </div>
             <div className="flex flex-col gap-2 flex-shrink-0">
@@ -128,30 +155,6 @@ export default function CommunityTopicHubPage() {
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust bar */}
-      <section className="bg-white border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-              Moderated and safe
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Heart className="w-3.5 h-3.5 text-rose-400" />
-              Anonymous posting available
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-cyan-500" />
-              Peer support, not medical advice
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              Free for all caregivers
-            </span>
           </div>
         </div>
       </section>
@@ -209,6 +212,9 @@ export default function CommunityTopicHubPage() {
                 )}
               </div>
             ))}
+
+            {/* Trust bar — dark, after discussion rooms */}
+            <TrustBar />
 
             {/* End of page CTA */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center mt-2">
