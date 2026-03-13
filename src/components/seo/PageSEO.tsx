@@ -22,7 +22,7 @@ export default function PageSEO({
   structuredData,
 }: PageSEOProps) {
   const fullTitle = title.includes('CarerView') ? title : `${title} | CarerView`
-  const canonicalUrl = canonical ?? (typeof window !== 'undefined' ? window.location.href : '')
+  const canonicalUrl = canonical ?? ''
 
   const schemas = structuredData
     ? Array.isArray(structuredData)

@@ -51,12 +51,11 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
   
   if (!user) return null
 
-  // Fetch profile
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.warn('Failed to fetch profile:', error)

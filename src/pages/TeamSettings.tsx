@@ -25,13 +25,11 @@ export default function TeamSettings() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Plan gate
-  if (planLoading) return null;
-  if (plan?.plan_id !== "family_qtr") return <Navigate to="/caregiver" replace />;
+  const isPlanAllowed = !planLoading && plan?.plan_id === "family_qtr";
 
-  // Load members + owner flag
+  // Load members + owner flag — must be before any conditional returns
   useEffect(() => {
-    if (!teamId) return;
+    if (!teamId || !isPlanAllowed) return;
     let mounted = true;
     (async () => {
       setError(null);
@@ -48,7 +46,10 @@ export default function TeamSettings() {
     return () => {
       mounted = false;
     };
-  }, [teamId]);
+  }, [teamId, isPlanAllowed]);
+
+  if (planLoading) return null;
+  if (!isPlanAllowed) return <Navigate to="/caregiver" replace />;
 
   async function onInvite() {
     if (!teamId || !email) return;
@@ -57,7 +58,7 @@ export default function TeamSettings() {
     setInviteLink(null);
     try {
       const token = await cvCreateInvite(teamId, email.trim());
-      setInviteLink(`${location.origin}/join?t=${encodeURIComponent(token)}`);
+      setInviteLink(`${window.location.origin}/join?t=${encodeURIComponent(token)}`);
       setEmail("");
     } catch (e: any) {
       setError(e.message ?? t('team.invite_failed'));

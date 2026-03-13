@@ -109,10 +109,7 @@ export function useAuth() {
       }
       
       setProfile(prof)
-      console.log('[useAuth] load() - Profile set:', prof)
-
       setIsAdmin(prof.role === 'admin')
-      console.log('[useAuth] load() - IsAdmin set:', prof.role === 'admin')
     } catch (e: any) {
       console.error(e)
       // Force sign out on any error to clear stale session
@@ -141,16 +138,15 @@ export function useAuth() {
       }
     }, 10000) // 10 second timeout
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('[useAuth] onAuthStateChange - Event:', _event, 'Session:', session)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return
-      
-      // Clear the loading timeout since we got an auth event
+
       clearTimeout(loadingTimeout)
-      
-      await load(session)
-      // first event (including INITIAL_SESSION) will flip loading off
-      setLoading(false)
+
+      ;(async () => {
+        await load(session)
+        setLoading(false)
+      })()
     })
 
     return () => {

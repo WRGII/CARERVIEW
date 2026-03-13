@@ -84,7 +84,7 @@ export default function CheckoutSuccess() {
             {t('checkout.signin_body')}
           </p>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/#get-started")}
             className="px-6 py-2.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
           >
             {t('nav.sign_in')}

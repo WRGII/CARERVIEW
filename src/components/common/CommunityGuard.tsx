@@ -1,3 +1,4 @@
+import React from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -7,8 +8,14 @@ interface Props {
 
 export default function CommunityGuard({ children }: Props) {
   const { user, profile, loading } = useAuth()
+  const [expired, setExpired] = React.useState(false)
 
-  if (loading) {
+  React.useEffect(() => {
+    const t = setTimeout(() => setExpired(true), 8000)
+    return () => clearTimeout(t)
+  }, [])
+
+  if (loading && !expired) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

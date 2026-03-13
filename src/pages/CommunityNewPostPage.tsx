@@ -93,8 +93,8 @@ export default function CommunityNewPostPage() {
       })
       showToast('Your post has been shared with the community.', 'success', 4000)
       navigate(`/community/posts/${post.id}`)
-    } catch {
-      // error displayed via createPost.error
+    } catch (err: any) {
+      showToast(err?.message ?? 'Something went wrong. Please try again.', 'error', 5000)
     }
   }
 

@@ -125,7 +125,14 @@ Deno.serve(async (req) => {
     const uid = String(found.id)
     audit.target_user_id = uid
 
-    // Delete domain data first
+    // Delete domain data first (order matters for FK constraints)
+    await srv.from('community_reports').delete().eq('reporter_user_id', uid)
+    await srv.from('community_reactions').delete().eq('user_id', uid)
+    await srv.from('community_replies').delete().eq('author_user_id', uid)
+    await srv.from('community_posts').delete().eq('author_user_id', uid)
+    await srv.from('community_profiles').delete().eq('user_id', uid)
+    await srv.from('cv_team_invites').delete().eq('created_by', uid)
+    await srv.from('cv_team_members').delete().eq('user_id', uid)
     await srv.from('observations').delete().eq('user_id', uid)
     await srv.from('user_subscriptions').delete().eq('user_id', uid)
     await srv.from('stripe_customers').delete().eq('user_id', uid)

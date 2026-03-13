@@ -7,12 +7,12 @@ Allow: /pricing
 Allow: /privacy-policy
 Allow: /data-policy
 Allow: /caregiver-forum
+Allow: /create-account
 
 # Disallow authenticated and account-gated pages
 Disallow: /caregiver
 Disallow: /admin
 Disallow: /team
-Disallow: /create-account
 Disallow: /choose-plan
 Disallow: /checkout
 Disallow: /community
