@@ -129,7 +129,7 @@ function CommunityRoomSection({ room, isGuest, onJoinClick }: Props) {
           observer.disconnect()
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: '50px' }
     )
     observer.observe(el)
     return () => observer.disconnect()

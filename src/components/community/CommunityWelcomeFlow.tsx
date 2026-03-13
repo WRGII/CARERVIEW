@@ -345,9 +345,19 @@ export default function CommunityWelcomeFlow({ onComplete, onDismiss }: Props) {
               </div>
             </div>
 
-            {createProfile.error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                {(createProfile.error as any)?.message ?? 'Something went wrong. Please try again.'}
+            {createProfile.error && !handleError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-700 mb-2">
+                  {(createProfile.error as any)?.message ?? 'Something went wrong. Please try again.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={createProfile.isPending}
+                  className="text-sm font-medium text-red-700 underline hover:no-underline disabled:opacity-60"
+                >
+                  Try again
+                </button>
               </div>
             )}
 

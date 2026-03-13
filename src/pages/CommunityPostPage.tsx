@@ -126,16 +126,24 @@ export default function CommunityPostPage() {
           ) : post ? (
             <article className="bg-white rounded-2xl border border-slate-200 p-6">
 
-              {/* Room tag */}
-              {post.room && (
+              {/* Room tag + lock badge */}
+              {(post.room || post.is_locked) && (
                 <div className="flex items-center gap-2 flex-wrap mb-4">
-                  <Link
-                    to={`/community/rooms/${post.room.slug}`}
-                    className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
-                    style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
-                  >
-                    {post.room.name}
-                  </Link>
+                  {post.room && (
+                    <Link
+                      to={`/community/rooms/${post.room.slug}`}
+                      className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full transition-opacity hover:opacity-80"
+                      style={{ backgroundColor: `${post.room.color}22`, color: post.room.color }}
+                    >
+                      {post.room.name}
+                    </Link>
+                  )}
+                  {post.is_locked && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+                      <Lock className="w-3 h-3" />
+                      Locked
+                    </span>
+                  )}
                 </div>
               )}
 

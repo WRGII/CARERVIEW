@@ -42,16 +42,22 @@ export default function ModerationDetailPanel({ report, onClose }: Props) {
   const [showFullBody, setShowFullBody] = useState(false)
   const [banReason, setBanReason] = useState('')
   const [showBanConfirm, setShowBanConfirm] = useState(false)
+  const [showHideConfirm, setShowHideConfirm] = useState(false)
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!showBanConfirm) return
+    if (!showBanConfirm && !showHideConfirm && !showRemoveConfirm) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowBanConfirm(false)
+      if (e.key === 'Escape') {
+        setShowBanConfirm(false)
+        setShowHideConfirm(false)
+        setShowRemoveConfirm(false)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showBanConfirm])
+  }, [showBanConfirm, showHideConfirm, showRemoveConfirm])
 
   const resolveReport = useResolveReport()
   const moderatePost = useModeratePost()
@@ -86,22 +92,28 @@ export default function ModerationDetailPanel({ report, onClose }: Props) {
     }
   }
 
-  const handleHide = () =>
+  const handleHide = () => setShowHideConfirm(true)
+
+  const handleHideConfirmed = () =>
     doAction(async () => {
       if (isPost && report.post_id) {
         await moderatePost.mutateAsync({ postId: report.post_id, post_status: 'hidden' })
       } else if (report.reply_id) {
         await moderateReply.mutateAsync({ replyId: report.reply_id, reply_status: 'hidden' })
       }
+      setShowHideConfirm(false)
     })
 
-  const handleRemove = () =>
+  const handleRemove = () => setShowRemoveConfirm(true)
+
+  const handleRemoveConfirmed = () =>
     doAction(async () => {
       if (isPost && report.post_id) {
         await moderatePost.mutateAsync({ postId: report.post_id, post_status: 'removed' })
       } else if (report.reply_id) {
         await moderateReply.mutateAsync({ replyId: report.reply_id, reply_status: 'removed' })
       }
+      setShowRemoveConfirm(false)
     })
 
   const handleRestore = () =>
@@ -299,44 +311,91 @@ export default function ModerationDetailPanel({ report, onClose }: Props) {
         {isActionable && (
           <section className="space-y-3">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Content actions</p>
-            <div className="flex flex-wrap gap-2">
-              {contentStatus !== 'hidden' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleHide}
-                  disabled={isPending}
-                  className="flex items-center gap-1.5"
-                >
-                  <EyeOff className="w-3.5 h-3.5" />
-                  Hide content
-                </Button>
-              )}
-              {(contentStatus === 'hidden' || contentStatus === 'removed') && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRestore}
-                  disabled={isPending}
-                  className="flex items-center gap-1.5"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Restore
-                </Button>
-              )}
-              {contentStatus !== 'removed' && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleRemove}
-                  disabled={isPending}
-                  className="flex items-center gap-1.5 text-red-700"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Remove
-                </Button>
-              )}
-            </div>
+
+            {showHideConfirm ? (
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-700 font-medium">
+                    Hide this {isPost ? 'post' : 'reply'}? It will no longer be visible to other members but can be restored.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowHideConfirm(false)}>Cancel</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleHideConfirmed}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5 text-amber-700 border-amber-200 hover:bg-amber-50"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    Confirm hide
+                  </Button>
+                </div>
+              </div>
+            ) : showRemoveConfirm ? (
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 font-medium">
+                    Permanently remove this {isPost ? 'post' : 'reply'}? It will be marked as removed and hidden from all members.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowRemoveConfirm(false)}>Cancel</Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemoveConfirmed}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5 text-red-700"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Confirm remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {contentStatus !== 'hidden' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleHide}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    Hide content
+                  </Button>
+                )}
+                {(contentStatus === 'hidden' || contentStatus === 'removed') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRestore}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Restore
+                  </Button>
+                )}
+                {contentStatus !== 'removed' && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleRemove}
+                    disabled={isPending}
+                    className="flex items-center gap-1.5 text-red-700"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            )}
           </section>
         )}
 

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
+import { SITE_URL } from '../lib/siteConfig'
 import type { CommunityRoom } from '../lib/community'
 import PublicRoomSection from '../components/community/PublicRoomSection'
 import PageSEO from '../components/seo/PageSEO'
@@ -177,29 +178,18 @@ export default function CommunityTopicHubPage() {
     staleTime: 120_000,
   })
 
-  const { data: memberCount } = useQuery<number>({
-    queryKey: ['public-community', 'member-count'],
+  const { data: communityStats } = useQuery<{ member_count: number; post_count: number }>({
+    queryKey: ['public-community', 'stats'],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('community_profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_banned', false)
-      return count ?? 0
+      const { data, error } = await supabase.rpc('get_community_public_stats')
+      if (error) throw error
+      return data as { member_count: number; post_count: number }
     },
     staleTime: 120_000,
   })
 
-  const { data: postCount } = useQuery<number>({
-    queryKey: ['public-community', 'post-count'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('community_posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_status', 'active')
-      return count ?? 0
-    },
-    staleTime: 120_000,
-  })
+  const memberCount = communityStats?.member_count
+  const postCount = communityStats?.post_count
 
   const faqStructuredData = {
     '@context': 'https://schema.org',
@@ -222,13 +212,13 @@ export default function CommunityTopicHubPage() {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://carerview.com',
+        item: SITE_URL,
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Caregiver Community Forum',
-        item: 'https://carerview.com/caregiver-forum',
+        item: `${SITE_URL}/caregiver-forum`,
       },
     ],
   }
@@ -237,7 +227,7 @@ export default function CommunityTopicHubPage() {
     '@context': 'https://schema.org',
     '@type': 'DiscussionForumPosting',
     name: 'CarerView Caregiver Community Forum',
-    url: 'https://carerview.com/caregiver-forum',
+    url: `${SITE_URL}/caregiver-forum`,
     description: 'A free online forum for family caregivers to share experiences, ask questions, and find support for dementia care, caregiver burnout, caring for ageing parents, and more.',
   }
 
@@ -246,8 +236,8 @@ export default function CommunityTopicHubPage() {
       <PageSEO
         title="Free Caregiver Forum & Support Community - CarerView"
         description="Join CarerView's free caregiver support forum. Discuss dementia care, caregiver burnout, caring for ageing parents, sibling conflict, and more. Anonymous posting available. Free for all family caregivers."
-        canonical="https://carerview.com/caregiver-forum"
-        ogImage="https://carerview.com/og-caregiver-forum.png"
+        canonical={`${SITE_URL}/caregiver-forum`}
+        ogImage={`${SITE_URL}/og-caregiver-forum.png`}
         structuredData={[faqStructuredData, breadcrumbStructuredData, discussionForumSchema]}
       />
 

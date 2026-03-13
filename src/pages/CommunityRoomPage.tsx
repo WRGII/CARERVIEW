@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import {
-  MessageCircle, ArrowLeft, PenLine, Clock, TrendingUp, type LucideIcon
+  MessageCircle, ArrowLeft, PenLine, Clock, TrendingUp, ShieldOff, type LucideIcon
 } from 'lucide-react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useCommunityPosts } from '../hooks/useCommunityPosts'
@@ -22,6 +22,7 @@ const SORT_OPTIONS: { value: PostSortMode; label: string; icon: LucideIcon }[] =
 
 export default function CommunityRoomPage() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const { data: room, isLoading: roomLoading, error: roomError } = useCommunityRoom(slug)
   const [sort, setSort] = useState<PostSortMode>('activity')
   const { data: posts, isLoading: postsLoading, isError: postsError } = useCommunityPosts(room?.id, sort)
@@ -109,7 +110,12 @@ export default function CommunityRoomPage() {
             </div>
 
             {!profileLoading && (
-              isBanned ? null :
+              isBanned ? (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 border border-red-100 text-xs text-red-600 font-medium">
+                  <ShieldOff className="w-3.5 h-3.5 flex-shrink-0" />
+                  Posting restricted
+                </div>
+              ) :
               hasProfile ? (
                 <Link to={`/community/rooms/${slug}/new-post`}>
                   <Button variant="primary" size="sm">
@@ -151,7 +157,7 @@ export default function CommunityRoomPage() {
                 hasProfile && !isBanned
                   ? {
                       label: 'Start the first post',
-                      onClick: () => window.location.assign(`/community/rooms/${slug}/new-post`),
+                      onClick: () => navigate(`/community/rooms/${slug}/new-post`),
                     }
                   : !hasProfile
                   ? { label: 'Join Community', onClick: () => setShowWelcome(true) }

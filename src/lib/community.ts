@@ -297,7 +297,7 @@ async function enforceRateLimit(userId: string, endpoint: string, maxRequests: n
     p_max_requests: maxRequests,
     p_window_minutes: windowMinutes,
   })
-  if (error) return
+  if (error) throw error
   if (data && !data.allowed) {
     throw new Error('Too many requests. Please wait a moment before trying again.')
   }
@@ -336,6 +336,18 @@ export async function updatePost(params: {
   title?: string
   body?: string
 }): Promise<CommunityPost> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: existing, error: fetchError } = await supabase
+    .from('community_posts')
+    .select('author_user_id')
+    .eq('id', params.postId)
+    .maybeSingle()
+  if (fetchError) throw fetchError
+  if (!existing) throw new Error('Post not found')
+  if (existing.author_user_id !== user.id) throw new Error('Action not permitted')
+
   const updates: Record<string, string> = {}
   if (params.title !== undefined) updates.title = params.title.trim()
   if (params.body !== undefined) updates.body = params.body.trim()
@@ -512,7 +524,7 @@ export async function listPendingReports(params: {
   limit?: number
   offset?: number
 } = {}): Promise<ModerationReportRow[]> {
-  const { status = 'pending', limit = 50, offset = 0 } = params
+  const { status = 'pending', limit = 25, offset = 0 } = params
 
   const { data, error } = await supabase
     .from('community_reports')

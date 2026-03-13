@@ -18,11 +18,14 @@ export function useSubmitReport() {
   })
 }
 
-export function useModerationQueue(status: ReportStatus = 'pending') {
+export const MODERATION_PAGE_SIZE = 25
+
+export function useModerationQueue(status: ReportStatus = 'pending', page = 0) {
   return useQuery({
-    queryKey: ['community', 'moderation', 'reports', status],
-    queryFn: () => listPendingReports({ status }),
+    queryKey: ['community', 'moderation', 'reports', status, page],
+    queryFn: () => listPendingReports({ status, limit: MODERATION_PAGE_SIZE, offset: page * MODERATION_PAGE_SIZE }),
     staleTime: 15_000,
+    placeholderData: (prev) => prev,
   })
 }
 

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import {
   getMyProfile,
   getProfileByUserId,
@@ -38,10 +39,17 @@ export function useCommunityProfileByHandle(handle: string | undefined) {
 }
 
 export function useCheckHandleAvailable(handle: string) {
+  const [debouncedHandle, setDebouncedHandle] = useState(handle)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedHandle(handle), 400)
+    return () => clearTimeout(timer)
+  }, [handle])
+
   return useQuery({
-    queryKey: ['community', 'handle-check', handle.toLowerCase()],
-    enabled: handle.length >= 3,
-    queryFn: () => checkHandleAvailable(handle),
+    queryKey: ['community', 'handle-check', debouncedHandle.toLowerCase()],
+    enabled: debouncedHandle.length >= 3 && debouncedHandle === handle,
+    queryFn: () => checkHandleAvailable(debouncedHandle),
     staleTime: 10_000,
   })
 }

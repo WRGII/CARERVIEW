@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Flag, RefreshCw, Users, MessageCircle, CircleCheck as CheckCircle, Circle as XCircle, TriangleAlert as AlertTriangle } from 'lucide-react'
-import { useModerationQueue } from '../hooks/useCommunityReports'
+import { ArrowLeft, Flag, RefreshCw, Users, MessageCircle, CircleCheck as CheckCircle, Circle as XCircle, TriangleAlert as AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react'
+import { useModerationQueue, MODERATION_PAGE_SIZE } from '../hooks/useCommunityReports'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import type { ModerationReportRow, ReportStatus } from '../lib/community'
@@ -27,8 +27,10 @@ interface CommunityStats {
 export default function AdminCommunityModerationPage() {
   const [activeTab, setActiveTab] = useState<QueueTab>('pending')
   const [selectedReport, setSelectedReport] = useState<ModerationReportRow | null>(null)
+  const [page, setPage] = useState(0)
+  const [showDetailMobile, setShowDetailMobile] = useState(false)
 
-  const { data: reports, isLoading, error, refetch, isRefetching } = useModerationQueue(activeTab)
+  const { data: reports, isLoading, error, refetch, isRefetching } = useModerationQueue(activeTab, page)
 
   const { data: stats } = useQuery<CommunityStats>({
     queryKey: ['community', 'admin-stats'],
@@ -51,15 +53,24 @@ export default function AdminCommunityModerationPage() {
     staleTime: 30_000,
   })
 
+  const hasNextPage = (reports?.length ?? 0) === MODERATION_PAGE_SIZE
+
   const handleSelectReport = (report: ModerationReportRow) => {
-    setSelectedReport(prev => prev?.id === report.id ? null : report)
+    const next = selectedReport?.id === report.id ? null : report
+    setSelectedReport(next)
+    if (next) setShowDetailMobile(true)
   }
 
-  const handleClosePanel = () => setSelectedReport(null)
+  const handleClosePanel = () => {
+    setSelectedReport(null)
+    setShowDetailMobile(false)
+  }
 
   const handleTabChange = (tab: QueueTab) => {
     setActiveTab(tab)
     setSelectedReport(null)
+    setShowDetailMobile(false)
+    setPage(0)
   }
 
   return (
@@ -121,11 +132,11 @@ export default function AdminCommunityModerationPage() {
           </div>
         )}
 
-        {/* Main two-column layout */}
-        <div className={`${selectedReport ? 'grid grid-cols-1 lg:grid-cols-2 gap-0' : ''}`}>
+        {/* Main layout — queue always visible on desktop; detail overlays on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
 
-          {/* Queue panel */}
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          {/* Queue panel — hidden on mobile when detail is open */}
+          <div className={`bg-white rounded-2xl border border-slate-200 overflow-hidden ${showDetailMobile ? 'hidden lg:block' : 'block'}`}>
 
             {/* Tabs */}
             <div className="flex border-b border-slate-100">
@@ -190,15 +201,42 @@ export default function AdminCommunityModerationPage() {
                 onSelect={handleSelectReport}
               />
             )}
+
+            {/* Pagination controls */}
+            {!isLoading && !error && (page > 0 || hasNextPage) && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/60">
+                <button
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+                <span className="text-xs text-slate-400">Page {page + 1}</span>
+                <button
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={!hasNextPage}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                >
+                  Next
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Detail panel */}
-          {selectedReport && (
-            <div className="bg-white border border-slate-200 rounded-2xl lg:rounded-l-none lg:border-l-0 overflow-hidden" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+          {/* Detail panel — full-width overlay on mobile, right column on desktop */}
+          {selectedReport ? (
+            <div className={`bg-white border border-slate-200 lg:rounded-r-2xl lg:rounded-l-none lg:border-l-0 overflow-hidden ${showDetailMobile ? 'block rounded-2xl' : 'hidden lg:block'}`} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
               <ModerationDetailPanel
                 report={selectedReport}
                 onClose={handleClosePanel}
               />
+            </div>
+          ) : (
+            <div className="hidden lg:flex items-center justify-center bg-slate-50/50 border border-slate-200 rounded-r-2xl border-l-0">
+              <p className="text-sm text-slate-400">Select a report to review</p>
             </div>
           )}
         </div>

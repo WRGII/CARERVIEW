@@ -7,6 +7,7 @@ import { useCreatePost } from '../hooks/useCommunityPosts'
 import { Button } from '../components/ui/Button'
 import type { HelpType } from '../lib/community'
 import { useLocale } from '../i18n/LocaleContext'
+import { useToast } from '../components/ui/ToastProvider'
 
 const HELP_TYPE_EMOJIS: Record<HelpType, string> = {
   emotional_support: '💛',
@@ -31,6 +32,7 @@ export default function CommunityNewPostPage() {
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const createPost = useCreatePost()
   const { t } = useLocale()
+  const { showToast } = useToast()
 
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -89,6 +91,7 @@ export default function CommunityNewPostPage() {
         is_anonymous: isAnonymous,
         help_type: helpType || null,
       })
+      showToast('Your post has been shared with the community.', 'success', 4000)
       navigate(`/community/posts/${post.id}`)
     } catch {
       // error displayed via createPost.error
