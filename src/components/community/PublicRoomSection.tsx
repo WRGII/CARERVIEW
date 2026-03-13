@@ -150,7 +150,7 @@ interface Props {
 }
 
 export default function PublicRoomSection({ room, useExamples = false }: Props) {
-  const signupUrl = `/create-account?plan=free&source=community-hub`
+  const signupUrl = `/create-account?plan=free&source=caregiver-forum`
 
   const { data: posts, isLoading: postsLoading } = useQuery<CommunityPost[]>({
     queryKey: ['public-room-posts', room.id],

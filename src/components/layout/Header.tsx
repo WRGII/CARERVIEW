@@ -135,7 +135,7 @@ export default function Header() {
                     {t('nav.why_carerview')}
                   </Link>
                   <Link
-                    to="/community-hub"
+                    to="/caregiver-forum"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
                     Caregiver Forum
@@ -227,7 +227,7 @@ export default function Header() {
                     {t('nav.why_carerview')}
                   </Link>
                   <Link
-                    to="/community-hub"
+                    to="/caregiver-forum"
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >

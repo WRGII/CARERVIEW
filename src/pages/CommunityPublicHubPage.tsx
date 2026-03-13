@@ -9,7 +9,7 @@ import type { CommunityRoom } from '../lib/community'
 import PublicRoomSection from '../components/community/PublicRoomSection'
 import PageSEO from '../components/seo/PageSEO'
 
-const SIGNUP_URL = '/create-account?plan=free&source=community-hub'
+const SIGNUP_URL = '/create-account?plan=free&source=caregiver-forum'
 
 const COMMUNITY_FAQ = [
   {
@@ -228,7 +228,7 @@ export default function CommunityTopicHubPage() {
         '@type': 'ListItem',
         position: 2,
         name: 'Caregiver Community Forum',
-        item: 'https://carerview.com/community-hub',
+        item: 'https://carerview.com/caregiver-forum',
       },
     ],
   }
@@ -237,7 +237,7 @@ export default function CommunityTopicHubPage() {
     '@context': 'https://schema.org',
     '@type': 'DiscussionForumPosting',
     name: 'CarerView Caregiver Community Forum',
-    url: 'https://carerview.com/community-hub',
+    url: 'https://carerview.com/caregiver-forum',
     description: 'A free online forum for family caregivers to share experiences, ask questions, and find support for dementia care, caregiver burnout, caring for ageing parents, and more.',
   }
 
@@ -246,8 +246,8 @@ export default function CommunityTopicHubPage() {
       <PageSEO
         title="Free Caregiver Forum & Support Community - CarerView"
         description="Join CarerView's free caregiver support forum. Discuss dementia care, caregiver burnout, caring for ageing parents, sibling conflict, and more. Anonymous posting available. Free for all family caregivers."
-        canonical="https://carerview.com/community-hub"
-        ogImage="https://carerview.com/og-community-hub.png"
+        canonical="https://carerview.com/caregiver-forum"
+        ogImage="https://carerview.com/og-caregiver-forum.png"
         structuredData={[faqStructuredData, breadcrumbStructuredData, discussionForumSchema]}
       />
 

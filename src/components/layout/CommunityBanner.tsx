@@ -3,7 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useLocale } from "../../i18n/LocaleContext";
 
-const COMMUNITY_PATHS = ["/community", "/community-hub"];
+const COMMUNITY_PATHS = ["/community", "/caregiver-forum"];
 
 function isCommunityPath(pathname: string): boolean {
   return COMMUNITY_PATHS.some(
@@ -19,7 +19,7 @@ export default function CommunityBanner() {
   if (isCommunityPath(location.pathname)) return null;
 
   const isAuthed = !!user && !profile?.disabled;
-  const ctaHref = isAuthed ? "/community" : "/community-hub";
+  const ctaHref = isAuthed ? "/community" : "/caregiver-forum";
 
   return (
     <div

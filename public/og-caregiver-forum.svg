@@ -61,6 +61,6 @@
 
   <!-- Bottom strip -->
   <rect x="0" y="580" width="1200" height="50" fill="#000000" opacity="0.2" />
-  <text x="110" y="612" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#ffffff" opacity="0.8">carerview.com/community-hub</text>
+  <text x="110" y="612" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#ffffff" opacity="0.8">carerview.com/caregiver-forum</text>
   <text x="1090" y="612" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#22d3ee" text-anchor="end" opacity="0.9">Always free to join</text>
 </svg>

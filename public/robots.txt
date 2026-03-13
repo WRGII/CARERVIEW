@@ -6,7 +6,7 @@ Allow: /about
 Allow: /pricing
 Allow: /privacy-policy
 Allow: /data-policy
-Allow: /community-hub
+Allow: /caregiver-forum
 
 # Disallow authenticated and account-gated pages
 Disallow: /caregiver

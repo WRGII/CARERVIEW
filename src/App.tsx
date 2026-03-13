@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
@@ -112,7 +112,8 @@ export default function App() {
                   />
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/community-hub" element={<CommunityPublicHubPage />} />
+                  <Route path="/caregiver-forum" element={<CommunityPublicHubPage />} />
+                  <Route path="/community-hub" element={<Navigate to="/caregiver-forum" replace />} />
 
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />
