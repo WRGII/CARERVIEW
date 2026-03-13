@@ -13,10 +13,12 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
+import CommunityBanner from "./CommunityBanner";
 
 export default function MainLayout() {
   return (
     <div className="min-h-dvh bg-white">
+      <CommunityBanner />
       <Header />
       <main className="flex-1">
         <Outlet />
