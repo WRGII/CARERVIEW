@@ -148,18 +148,48 @@ export function useUpsertObservationAndResponses() {
         obsId = data.id
       }
 
-      // Prepare response rows
-      const rows = Object.entries(answers)
+      // Prepare response rows — only questions that have a numeric score
+      const answeredQuestionIds = Object.entries(answers)
         .filter(([, score]) => typeof score === 'number')
-        .map(([question_id, score]) => {
-          const category_id = questionCategoryMap[question_id]
-          return {
-            observation_id: obsId!,
-            question_id,
-            score: score as number,
-            notes: category_id ? (categoryNotes[category_id] ?? null) : null,
+        .map(([question_id]) => question_id)
+
+      const rows = answeredQuestionIds.map((question_id) => {
+        const category_id = questionCategoryMap[question_id]
+        return {
+          observation_id: obsId!,
+          question_id,
+          score: answers[question_id] as number,
+          notes: category_id ? (categoryNotes[category_id] ?? null) : null,
+        }
+      })
+
+      // On edit: delete responses for questions that were removed from this submission
+      // to avoid orphaned rows for questions the user cleared or skipped.
+      if (observationId) {
+        if (answeredQuestionIds.length === 0) {
+          const { error: delAllError } = await supabase
+            .from('responses')
+            .delete()
+            .eq('observation_id', obsId!)
+          if (delAllError) throw delAllError
+        } else {
+          const { data: existing } = await supabase
+            .from('responses')
+            .select('question_id')
+            .eq('observation_id', obsId!)
+          const toDelete = (existing ?? [])
+            .map((r) => r.question_id as string)
+            .filter((qid) => !answeredQuestionIds.includes(qid))
+          if (toDelete.length > 0) {
+            const { error: delError } = await supabase
+              .from('responses')
+              .delete()
+              .eq('observation_id', obsId!)
+              .in('question_id', toDelete)
+            if (delError) throw delError
           }
-        })
+        }
+      }
 
       if (rows.length) {
         const { error } = await supabase

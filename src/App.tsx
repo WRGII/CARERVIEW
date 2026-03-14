@@ -11,9 +11,6 @@ function CommunityErrorFallback() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl border border-slate-200 p-10 max-w-md text-center shadow-sm">
-        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl" aria-hidden="true">💬</span>
-        </div>
         <h2 className="text-lg font-bold text-slate-800 mb-2">Something went wrong</h2>
         <p className="text-sm text-slate-500 leading-relaxed mb-6">
           We ran into an unexpected problem loading this community page. Please try refreshing, or return to the community hub.
@@ -31,6 +28,39 @@ function CommunityErrorFallback() {
           >
             Go to Community
           </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AdminErrorFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 max-w-md text-center shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-800 mb-2">Admin page failed to load</h2>
+        <p className="text-sm text-slate-500 leading-relaxed mb-6">
+          Something went wrong loading this admin page. Try refreshing.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SuspenseFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.3s]" />
+          <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
+          <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce" />
         </div>
       </div>
     </div>
@@ -95,7 +125,7 @@ export default function App() {
             <ErrorBoundary>
             <DatabaseStatus />
             <HashScroll />
-            <Suspense fallback={<div className="p-6">Loading…</div>}>
+            <Suspense fallback={<SuspenseFallback />}>
               <Routes>
                 <Route element={<MainLayout />}>
                   {/* Public */}
@@ -147,7 +177,9 @@ export default function App() {
                     path="/admin/translations"
                     element={
                       <AdminGuard>
-                        <AdminTranslationsPage />
+                        <ErrorBoundary fallback={<AdminErrorFallback />}>
+                          <AdminTranslationsPage />
+                        </ErrorBoundary>
                       </AdminGuard>
                     }
                   />
@@ -155,7 +187,9 @@ export default function App() {
                     path="/admin/community-moderation"
                     element={
                       <AdminGuard>
-                        <AdminCommunityModerationPage />
+                        <ErrorBoundary fallback={<AdminErrorFallback />}>
+                          <AdminCommunityModerationPage />
+                        </ErrorBoundary>
                       </AdminGuard>
                     }
                   />

@@ -479,8 +479,11 @@ export const exportToCSV = async (
   legend: Legend[]
 ) => {
   const escapeCSV = (value: unknown): string => {
-    const s = (value ?? '').toString()
-    return s.includes(',') || s.includes('"') || s.includes('\n')
+    let s = (value ?? '').toString()
+    if (/^[=+\-@|%]/.test(s)) {
+      s = `\t${s}`
+    }
+    return s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\t')
       ? `"${s.replace(/"/g, '""')}"`
       : s
   }

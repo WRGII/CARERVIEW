@@ -7,6 +7,7 @@ import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
+import { SITE_URL } from "../lib/siteConfig";
 
 export default function WhyCarerView() {
   const { t } = useLocale();
@@ -39,7 +40,7 @@ export default function WhyCarerView() {
       <PageSEO
         title="Why CarerView - Caregiver Observation Tracking & Family Care Coordination"
         description="Discover how CarerView helps family caregivers track daily care observations for ageing parents and loved ones. Monitor ADL & IADL changes, coordinate with family, and share reports with doctors."
-        canonical="https://carerview.com/why"
+        canonical={`${SITE_URL}/why`}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HERO */}

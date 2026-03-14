@@ -71,7 +71,7 @@ export function useUserPlan() {
           'user_id, plan_id, status, current_period_start, current_period_end, updated_at, price_id'
         )
         .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
+        .in('status', ['active', 'trialing', 'past_due'])
         .order('current_period_end', { ascending: false })
         .order('updated_at', { ascending: false })
         .limit(1)

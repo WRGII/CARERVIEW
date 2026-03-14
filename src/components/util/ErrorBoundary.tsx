@@ -14,22 +14,41 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: any, info: any) {
-    // You can also POST this to your logging service
-    // eslint-disable-next-line no-console
     console.error("App crashed:", error, info);
   }
 
+  reset = () => {
+    this.setState({ error: null });
+  };
+
   render() {
     if (this.state.error) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
       return (
-        this.props.fallback ?? (
-          <div style={{ padding: 24 }}>
-            <h2 className="text-xl font-semibold mb-2">Something went wrong.</h2>
-            <pre style={{ whiteSpace: "pre-wrap" }}>
-              {String(this.state.error?.message || this.state.error)}
-            </pre>
+        <div className="min-h-[40vh] flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-800 mb-2">Something went wrong</h2>
+            <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+              An unexpected error occurred. You can try again or return to the dashboard.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={this.reset}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Try again
+              </button>
+              <button
+                onClick={() => { window.location.href = '/caregiver'; }}
+                className="px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors"
+              >
+                Go to dashboard
+              </button>
+            </div>
           </div>
-        )
+        </div>
       );
     }
     return this.props.children;

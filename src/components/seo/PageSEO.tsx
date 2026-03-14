@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async'
+import { SITE_URL } from '../../lib/siteConfig'
 
 interface PageSEOProps {
   title: string
@@ -10,7 +11,7 @@ interface PageSEOProps {
   structuredData?: object | object[]
 }
 
-const DEFAULT_OG_IMAGE = 'https://carerview.com/og-image.png'
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
 export default function PageSEO({
   title,

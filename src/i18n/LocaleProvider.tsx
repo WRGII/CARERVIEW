@@ -56,6 +56,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   })
 
   const prevMapRef = useRef<Record<string, string> | null>(null)
+  const enMapRef = useRef<Record<string, string> | null>(null)
 
   useEffect(() => {
     if (isValidLocale(preferredLocale) && preferredLocale !== locale) {
@@ -68,6 +69,14 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     queryFn: () => fetchTranslations(locale),
     staleTime: 10 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
+  })
+
+  const { data: enMap } = useQuery({
+    queryKey: ['ui_translations', 'en'],
+    queryFn: () => fetchTranslations('en'),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    enabled: locale !== 'en',
   })
 
   const { data: supportedLocales = [] } = useQuery<SupportedLocale[]>({
@@ -90,6 +99,12 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
       prevMapRef.current = translationsMap
     }
   }, [translationsMap])
+
+  useEffect(() => {
+    if (enMap) {
+      enMapRef.current = enMap
+    }
+  }, [enMap])
 
   useEffect(() => {
     if (supportedLocales.length === 0) return
@@ -116,8 +131,10 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
           .from('profiles')
           .update({ preferred_locale: newLocale })
           .eq('id', userId)
-          .then(() => {
-            queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+          .then(({ error }) => {
+            if (!error) {
+              queryClient.invalidateQueries({ queryKey: ['profile', userId] })
+            }
           })
       }
     },
@@ -128,7 +145,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = activeMap?.[key] ?? key
+      const raw = activeMap?.[key] ?? enMapRef.current?.[key] ?? key
       return interpolate(raw, vars)
     },
     [activeMap]

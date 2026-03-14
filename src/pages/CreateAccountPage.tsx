@@ -7,6 +7,8 @@ import { STRIPE_PRODUCTS } from "../stripe-config";
 import { usePlans } from "../hooks/usePlans";
 import type { PlanRow } from "../types/plans";
 import { useLocale } from "../i18n/LocaleContext";
+import PageSEO from "../components/seo/PageSEO";
+import { SITE_URL } from "../lib/siteConfig";
 
 type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 
@@ -229,6 +231,11 @@ export default function CreateAccountPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <PageSEO
+        title="Create Account - CarerView"
+        description="Sign up for CarerView to start tracking daily care observations, monitor changes over time, and coordinate with your family care team."
+        canonical={`${SITE_URL}/create-account`}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <header className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">{t('create_account.title')}</h1>

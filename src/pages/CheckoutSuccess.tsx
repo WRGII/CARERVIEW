@@ -25,7 +25,13 @@ export default function CheckoutSuccess() {
   } = useQuery({
     queryKey: ["checkout-success-plan", user?.id],
     enabled: !!user?.id && !authLoading,
-    refetchInterval: 2000,
+    refetchInterval: (query) => {
+      const active = query.state.data && hasActivePlan(query.state.data as UserPlan);
+      if (active) return false;
+      setPollCount((c) => c + 1);
+      if (pollCount >= 10) return false;
+      return 2000;
+    },
     refetchIntervalInBackground: true,
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null;
@@ -55,11 +61,8 @@ export default function CheckoutSuccess() {
     },
   });
 
-  const [tookTooLong, setTookTooLong] = React.useState(false);
-  React.useEffect(() => {
-    const t = setTimeout(() => setTookTooLong(true), 20000);
-    return () => clearTimeout(t);
-  }, []);
+  const [pollCount, setPollCount] = React.useState(0);
+  const tookTooLong = pollCount >= 10;
 
   React.useEffect(() => {
     if (plan && hasActivePlan(plan)) {
@@ -98,9 +101,9 @@ export default function CheckoutSuccess() {
   const waiting = isLoading || !isActive;
 
   const planLabel =
-    plan?.plan_id === "free" ? "Free Community Member" :
-    plan?.plan_id === "primary_qtr" ? "Primary Caregiver" :
-    plan?.plan_id === "family_qtr" ? "Family Circle" :
+    plan?.plan_id === "free" ? t('pricing.plan_free_name') :
+    plan?.plan_id === "primary_qtr" ? t('pricing.plan_primary_name') :
+    plan?.plan_id === "family_qtr" ? t('pricing.plan_family_name') :
     null;
 
   return (

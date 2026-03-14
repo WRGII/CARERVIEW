@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
 import { Database, Mail, ArrowLeft } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
+import PageSEO from "../components/seo/PageSEO";
+import { SITE_URL } from "../lib/siteConfig";
 
 export default function DataPolicyPage() {
   const { t } = useLocale();
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+      <PageSEO
+        title="Data Policy - CarerView"
+        description="Learn how CarerView handles your care observation data, including storage, retention, and your rights under GDPR."
+        canonical={`${SITE_URL}/data-policy`}
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <Link
           to="/"

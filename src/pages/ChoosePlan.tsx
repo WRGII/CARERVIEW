@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
+import { useFormatDate } from '../hooks/useFormatDate';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
 import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
@@ -21,6 +22,7 @@ export default function ChoosePlan() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const activateFreePlanMutation = useActivateFreePlan();
 
+  const { formatDate } = useFormatDate();
   const isManageMode = searchParams.get('manage') === 'true';
   const activeSubscription = hasActivePlan(userPlan);
 
@@ -119,7 +121,7 @@ export default function ChoosePlan() {
       console.error('Error creating checkout session:', error);
       setStatusMessage({
         type: 'error',
-        message: 'Failed to start checkout process. Please try again.'
+        message: t('choose_plan.checkout_failed')
       });
       setCheckoutLoading(null);
     }
@@ -186,11 +188,7 @@ export default function ChoosePlan() {
                   </div>
                   {userPlan.current_period_end && (
                     <div className="text-gray-600">
-                      {t('choose_plan.renews_on')} {new Date(userPlan.current_period_end).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {t('choose_plan.renews_on')} {formatDate(userPlan.current_period_end)}
                     </div>
                   )}
                 </div>

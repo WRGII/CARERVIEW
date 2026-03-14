@@ -6,6 +6,7 @@ import { Card, CardContent } from '../components/ui/Card'
 import AuthForm from '../components/common/AuthForm'
 import { useLocale } from '../i18n/LocaleContext'
 import PageSEO from '../components/seo/PageSEO'
+import { SITE_URL } from '../lib/siteConfig'
 
 export default function LandingPage() {
   const location = useLocation()
@@ -23,8 +24,8 @@ export default function LandingPage() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'CarerView',
-    url: 'https://carerview.com',
-    logo: 'https://carerview.com/CareView_logo_1_colored_highres.png',
+    url: SITE_URL,
+    logo: `${SITE_URL}/CareView_logo_1_colored_highres.png`,
     description: 'CarerView helps family caregivers track daily care observations, monitor changes over time, and coordinate with their care team.',
     sameAs: [],
   }
@@ -33,10 +34,10 @@ export default function LandingPage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'CarerView',
-    url: 'https://carerview.com',
+    url: SITE_URL,
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://carerview.com/?q={search_term_string}',
+      target: `${SITE_URL}/?q={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   }
@@ -46,7 +47,7 @@ export default function LandingPage() {
       <PageSEO
         title="CarerView - Family Caregiver Support & Care Observation Tracking"
         description="CarerView helps family caregivers track daily observations, monitor changes in ageing parents and loved ones, and share structured care notes with their family team and healthcare providers."
-        canonical="https://carerview.com"
+        canonical={SITE_URL}
         structuredData={[orgSchema, webSiteSchema]}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
