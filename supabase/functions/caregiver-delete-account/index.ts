@@ -274,42 +274,8 @@ Deno.serve(async (req) => {
   }
 })
 
-async function sendConfirmationEmail(email: string) {
-  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-  const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'noreply@carerview.app'
-  const deletedAt = new Date().toUTCString()
-
-  if (!RESEND_API_KEY) {
-    console.warn('[caregiver-delete-account] RESEND_API_KEY not set — skipping confirmation email')
-    return
-  }
-
-  const html = `
-    <p>Hi,</p>
-    <p>This email confirms that your CarerView account associated with <strong>${email}</strong> has been permanently deleted on ${deletedAt}.</p>
-    <p>All your observations, team memberships, and subscription data have been removed. Any active paid subscription has been cancelled.</p>
-    <p>If you did not request this deletion, please contact us immediately at support@carerview.app.</p>
-    <p>— The CarerView Team</p>
-  `
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: email,
-      subject: 'Your CarerView account has been deleted',
-      html,
-    }),
-  })
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Resend API error ${res.status}: ${body}`)
-  }
+function sendConfirmationEmail(_email: string) {
+  console.info('[caregiver-delete-account] Deletion confirmation email skipped — in-app confirmation shown to user')
 }
 
 async function insertAudit(
