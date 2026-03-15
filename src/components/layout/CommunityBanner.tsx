@@ -35,7 +35,7 @@ export default function CommunityBanner() {
           <MessageCircle className="w-3 h-3" aria-hidden="true" />
           {t("community_banner.cta")}
         </Link>
-        <p className="text-xs text-cyan-100 text-center">
+        <p className="text-xs text-cyan-100 text-center sm:whitespace-nowrap">
           {t("community_banner.tagline")}
         </p>
       </div>
