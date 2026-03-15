@@ -38,6 +38,8 @@ export interface CommunityProfile {
   ban_reason: string | null
   post_count: number
   reply_count: number
+  guidelines_accepted_at: string | null
+  handle_is_auto_generated: boolean
   created_at: string
   updated_at: string
 }
@@ -208,14 +210,18 @@ export async function updateCommunityProfile(params: {
   handle?: string
   bio?: string
   avatar_color?: string
+  guidelines_accepted_at?: string | null
+  handle_is_auto_generated?: boolean
 }): Promise<CommunityProfile> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const updates: Record<string, string> = {}
+  const updates: Record<string, unknown> = {}
   if (params.handle !== undefined) updates.handle = params.handle.trim()
   if (params.bio !== undefined) updates.bio = params.bio.trim()
   if (params.avatar_color !== undefined) updates.avatar_color = params.avatar_color
+  if (params.guidelines_accepted_at !== undefined) updates.guidelines_accepted_at = params.guidelines_accepted_at
+  if (params.handle_is_auto_generated !== undefined) updates.handle_is_auto_generated = params.handle_is_auto_generated
 
   const { data, error } = await supabase
     .from('community_profiles')

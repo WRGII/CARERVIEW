@@ -1,12 +1,9 @@
-import { useState } from 'react'
-import { Users, Sparkles, Heart, MessageCircle } from 'lucide-react'
+import { Users, MessageCircle, Pencil } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useCommunityRooms } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
-import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
-import CommunityGuidelinesBanner from '../components/community/CommunityGuidelinesBanner'
+import CommunityGuidelinesModal from '../components/community/CommunityGuidelinesModal'
 import CommunityRoomSection from '../components/community/CommunityRoomSection'
-import { Button } from '../components/ui/Button'
-import { Link } from 'react-router-dom'
 
 function RoomSkeleton() {
   return (
@@ -40,45 +37,17 @@ function RoomSkeleton() {
   )
 }
 
-interface CtaBannerProps {
-  gradient: string
-  headline: string
-  sub: string
-  btnLabel: string
-  btnVariant?: 'primary' | 'outline'
-  onJoinClick: () => void
-}
-
-function CtaBanner({ gradient, headline, sub, btnLabel, btnVariant = 'primary', onJoinClick }: CtaBannerProps) {
-  return (
-    <div className={`rounded-2xl px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 ${gradient}`}>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-800 leading-snug">{headline}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{sub}</p>
-      </div>
-      <Button variant={btnVariant} size="sm" onClick={onJoinClick} className="flex-shrink-0 self-start sm:self-auto">
-        <Sparkles className="w-3.5 h-3.5 mr-1.5 inline" />
-        {btnLabel}
-      </Button>
-    </div>
-  )
-}
-
 export default function CommunityLandingPage() {
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const { data: rooms, isLoading: roomsLoading } = useCommunityRooms()
-  const [showWelcome, setShowWelcome] = useState(false)
 
-  const hasProfile = !!profile && !profileLoading
-  const isGuest = !profileLoading && !profile
+  const needsGuidelines = !profileLoading && !!profile && !profile.guidelines_accepted_at
+  const showHandlePrompt = !profileLoading && !!profile && profile.handle_is_auto_generated
 
   return (
     <>
-      {showWelcome && (
-        <CommunityWelcomeFlow
-          onComplete={() => setShowWelcome(false)}
-          onDismiss={() => setShowWelcome(false)}
-        />
+      {needsGuidelines && (
+        <CommunityGuidelinesModal onAccepted={() => {}} />
       )}
 
       <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
@@ -100,38 +69,55 @@ export default function CommunityLandingPage() {
               </div>
             </div>
 
-            {hasProfile ? (
+            {profile && (
               <div className="flex items-center gap-2 flex-shrink-0">
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ backgroundColor: profile.avatar_color }}
-                >
-                  {profile.handle.charAt(0).toUpperCase()}
-                </div>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-800 leading-none">{profile.handle}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{profile.post_count} posts</p>
-                </div>
                 <Link
-                  to="/community/new-post"
+                  to="/community/profile/edit"
+                  className="flex items-center gap-1.5 group"
+                  aria-label="Edit community profile"
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-transparent group-hover:ring-cyan-200 transition-all"
+                    style={{ backgroundColor: profile.avatar_color }}
+                  >
+                    {profile.handle.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-semibold text-slate-800 leading-none">{profile.handle}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{profile.post_count} posts</p>
+                  </div>
+                </Link>
+                <Link
+                  to={rooms && rooms.length > 0 ? `/community/rooms/${rooms[0].slug}/new-post` : '/community'}
                   className="ml-1 flex items-center gap-1.5 bg-cyan-primary hover:bg-cyan-hover text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">New Post</span>
                 </Link>
               </div>
-            ) : isGuest ? (
-              <Button variant="primary" size="sm" onClick={() => setShowWelcome(true)} className="flex-shrink-0">
-                <Sparkles className="w-3.5 h-3.5 mr-1.5 inline" />
-                Join Free
-              </Button>
-            ) : null}
+            )}
           </div>
 
-          {/* Guidelines banner for members */}
-          {hasProfile && <CommunityGuidelinesBanner />}
+          {/* Handle personalisation prompt */}
+          {showHandlePrompt && (
+            <div className="flex items-center justify-between gap-3 bg-cyan-50 border border-cyan-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Pencil className="w-4 h-4 text-cyan-600 flex-shrink-0" />
+                <p className="text-sm text-cyan-800">
+                  <span className="font-semibold">Your handle was auto-generated.</span>{' '}
+                  <span className="hidden sm:inline">Want to give yourself a custom name?</span>
+                </p>
+              </div>
+              <Link
+                to="/community/profile/edit"
+                className="text-xs font-semibold text-cyan-700 hover:text-cyan-900 bg-white border border-cyan-300 hover:border-cyan-400 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors"
+              >
+                Personalise
+              </Link>
+            </div>
+          )}
 
-          {/* Room sections + interspersed CTAs */}
+          {/* Room sections */}
           {roomsLoading ? (
             <>
               <RoomSkeleton />
@@ -139,64 +125,14 @@ export default function CommunityLandingPage() {
               <RoomSkeleton />
             </>
           ) : rooms && rooms.length > 0 ? (
-            <>
-              {rooms.map((room, index) => (
-                <div key={room.id}>
-                  <CommunityRoomSection
-                    room={room}
-                    isGuest={isGuest}
-                    onJoinClick={() => setShowWelcome(true)}
-                  />
-
-                  {/* CTA after 2nd room (index 1) */}
-                  {isGuest && index === 1 && (
-                    <div className="mt-4">
-                      <CtaBanner
-                        gradient="bg-gradient-to-r from-peach-blush/40 via-white to-warm-white border border-peach-blush/50"
-                        headline="Real support from caregivers who get it"
-                        sub="Join free to reply, share what's working, and connect with others navigating the same challenges."
-                        btnLabel="Join Free"
-                        onJoinClick={() => setShowWelcome(true)}
-                      />
-                    </div>
-                  )}
-
-                  {/* CTA after 4th room (index 3) */}
-                  {isGuest && index === 3 && (
-                    <div className="mt-4">
-                      <CtaBanner
-                        gradient="bg-gradient-to-r from-mint-green/30 via-white to-cyan-primary/10 border border-mint-green/40"
-                        headline="Ask a question, share what's working, find your people"
-                        sub="Post anonymously when you need to — your privacy is protected."
-                        btnLabel="Create free account"
-                        btnVariant="outline"
-                        onJoinClick={() => setShowWelcome(true)}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* End-of-page CTA for guests */}
-              {isGuest && (
-                <div className="bg-gradient-to-br from-peach-blush/30 via-white to-mint-green/20 border border-peach-blush/60 rounded-2xl p-6 sm:p-8 text-center">
-                  <div className="w-12 h-12 bg-cyan-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Heart className="w-6 h-6 text-cyan-primary" />
-                  </div>
-                  <h2 className="text-lg font-bold text-slate-800 mb-1.5">
-                    Ready to connect with other caregivers?
-                  </h2>
-                  <p className="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto mb-4">
-                    Join free to reply, post your own questions, and be part of a community that truly understands.
-                  </p>
-                  <Button variant="primary" size="md" onClick={() => setShowWelcome(true)}>
-                    <Sparkles className="w-4 h-4 mr-2 inline" />
-                    Join Caregiver Community — Free
-                  </Button>
-                  <p className="text-xs text-slate-400 mt-2">Free for all registered CarerView users</p>
-                </div>
-              )}
-            </>
+            rooms.map(room => (
+              <CommunityRoomSection
+                key={room.id}
+                room={room}
+                isGuest={false}
+                onJoinClick={() => {}}
+              />
+            ))
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
               <div className="w-12 h-12 bg-cyan-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">

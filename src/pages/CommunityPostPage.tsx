@@ -13,7 +13,6 @@ import ReplyComposer from '../components/community/ReplyComposer'
 import CommunityReplyList from '../components/community/CommunityReplyList'
 import AnonymousBadge from '../components/community/AnonymousBadge'
 import ReportModal from '../components/community/ReportModal'
-import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
 import type { CommunityReply } from '../lib/community'
 
@@ -37,7 +36,6 @@ export default function CommunityPostPage() {
   const { user } = useAuth()
 
   const [showReport, setShowReport] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(false)
   const [replyPage, setReplyPage] = useState(0)
   const [allReplies, setAllReplies] = useState<CommunityReply[]>([])
   const loadingMoreRef = useRef(false)
@@ -81,9 +79,6 @@ export default function CommunityPostPage() {
 
   return (
     <>
-      {showWelcome && (
-        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} onDismiss={() => setShowWelcome(false)} />
-      )}
       {showReport && post && (
         <ReportModal postId={post.id} onClose={() => setShowReport(false)} />
       )}
@@ -235,24 +230,11 @@ export default function CommunityPostPage() {
 
                 {/* Reaction bar */}
                 {!isHiddenOrRemoved && (
-                  <div>
-                    {!hasProfile && !profileLoading && (
-                      <p className="text-xs text-slate-400 mb-2">
-                        <button
-                          onClick={() => setShowWelcome(true)}
-                          className="underline hover:text-slate-600 transition-colors"
-                        >
-                          Join the community
-                        </button>{' '}
-                        to react to this post.
-                      </p>
-                    )}
-                    <ReactionBar
-                      postId={post.id}
-                      hasProfile={hasProfile}
-                      onJoinPrompt={() => setShowWelcome(true)}
-                    />
-                  </div>
+                  <ReactionBar
+                    postId={post.id}
+                    hasProfile={hasProfile}
+                    onJoinPrompt={() => {}}
+                  />
                 )}
               </div>
             </article>
@@ -294,27 +276,13 @@ export default function CommunityPostPage() {
             </section>
           )}
 
-          {/* Reply compose or locked/join prompt */}
-          {post && !post.is_locked && !isHiddenOrRemoved ? (
-            hasProfile ? (
-              <ReplyComposer
-                postId={post.id}
-                profile={profile!}
-                isBanned={isBanned}
-              />
-            ) : !profileLoading ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center">
-                <p className="text-sm text-slate-600 mb-3">
-                  Join the community to reply to this thread.
-                </p>
-                <button
-                  onClick={() => setShowWelcome(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-primary text-white text-sm font-medium rounded-xl hover:bg-cyan-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-                >
-                  Join Community
-                </button>
-              </div>
-            ) : null
+          {/* Reply compose or locked prompt */}
+          {post && !post.is_locked && !isHiddenOrRemoved && hasProfile ? (
+            <ReplyComposer
+              postId={post.id}
+              profile={profile!}
+              isBanned={isBanned}
+            />
           ) : post?.is_locked ? (
             <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3" role="status">
               <Lock className="w-5 h-5 text-amber-500 flex-shrink-0" aria-hidden="true" />

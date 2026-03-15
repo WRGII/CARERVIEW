@@ -9,8 +9,6 @@ import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import CommunityPostCard from '../components/community/CommunityPostCard'
 import CommunityEmptyState from '../components/community/CommunityEmptyState'
 import CommunityLoadingState from '../components/community/CommunityLoadingState'
-import CommunityGuidelinesBanner from '../components/community/CommunityGuidelinesBanner'
-import CommunityWelcomeFlow from '../components/community/CommunityWelcomeFlow'
 import { Button } from '../components/ui/Button'
 import type { PostSortMode } from '../lib/community'
 
@@ -27,7 +25,6 @@ export default function CommunityRoomPage() {
   const [sort, setSort] = useState<PostSortMode>('activity')
   const { data: posts, isLoading: postsLoading, isError: postsError } = useCommunityPosts(room?.id, sort)
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
-  const [showWelcome, setShowWelcome] = useState(false)
 
   if (roomError) return <Navigate to="/community" replace />
 
@@ -36,10 +33,6 @@ export default function CommunityRoomPage() {
 
   return (
     <>
-      {showWelcome && (
-        <CommunityWelcomeFlow onComplete={() => setShowWelcome(false)} onDismiss={() => setShowWelcome(false)} />
-      )}
-
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
@@ -83,9 +76,6 @@ export default function CommunityRoomPage() {
             </div>
           ) : null}
 
-          {/* Guidelines banner */}
-          {hasProfile && <CommunityGuidelinesBanner />}
-
           {/* Action bar with sort */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <div className="flex items-center gap-2">
@@ -115,19 +105,13 @@ export default function CommunityRoomPage() {
                   <ShieldOff className="w-3.5 h-3.5 flex-shrink-0" />
                   Posting restricted
                 </div>
-              ) :
-              hasProfile ? (
+              ) : (
                 <Link to={`/community/rooms/${slug}/new-post`}>
                   <Button variant="primary" size="sm">
                     <PenLine className="w-4 h-4 mr-1.5 inline" />
                     New post
                   </Button>
                 </Link>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => setShowWelcome(true)}>
-                  <PenLine className="w-4 h-4 mr-1.5 inline" />
-                  Join to post
-                </Button>
               )
             )}
           </div>
@@ -148,19 +132,13 @@ export default function CommunityRoomPage() {
           ) : (
             <CommunityEmptyState
               title="No posts in this room yet"
-              description={
-                hasProfile
-                  ? "Be the first to start a conversation. Your experience could help someone today."
-                  : "Join the community to be the first to start a conversation here."
-              }
+              description="Be the first to start a conversation. Your experience could help someone today."
               action={
                 hasProfile && !isBanned
                   ? {
                       label: 'Start the first post',
                       onClick: () => navigate(`/community/rooms/${slug}/new-post`),
                     }
-                  : !hasProfile
-                  ? { label: 'Join Community', onClick: () => setShowWelcome(true) }
                   : undefined
               }
             />

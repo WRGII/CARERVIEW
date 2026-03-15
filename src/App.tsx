@@ -105,6 +105,7 @@ const CommunityLandingPage = lazy(() => import("./pages/CommunityLandingPage"));
 const CommunityRoomPage = lazy(() => import("./pages/CommunityRoomPage"));
 const CommunityPostPage = lazy(() => import("./pages/CommunityPostPage"));
 const CommunityNewPostPage = lazy(() => import("./pages/CommunityNewPostPage"));
+const CommunityProfileEditPage = lazy(() => import("./pages/CommunityProfileEditPage"));
 
 import { ActiveTeamProvider } from "./context/ActiveTeam";
 import { ToastProvider } from "./components/ui/ToastProvider";
@@ -255,6 +256,16 @@ export default function App() {
                       <CommunityGuard>
                         <ErrorBoundary fallback={<CommunityErrorFallback />}>
                           <CommunityPostPage />
+                        </ErrorBoundary>
+                      </CommunityGuard>
+                    }
+                  />
+                  <Route
+                    path="/community/profile/edit"
+                    element={
+                      <CommunityGuard>
+                        <ErrorBoundary fallback={<CommunityErrorFallback />}>
+                          <CommunityProfileEditPage />
                         </ErrorBoundary>
                       </CommunityGuard>
                     }
