@@ -22,5 +22,9 @@ export function useCreateReply() {
       queryClient.invalidateQueries({ queryKey: ['community', 'replies', data.post_id] })
       queryClient.invalidateQueries({ queryKey: ['community', 'posts', data.post_id] })
     },
+    onError: (_err, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['community', 'replies', vars.post_id] })
+      queryClient.invalidateQueries({ queryKey: ['community', 'posts', vars.post_id] })
+    },
   })
 }

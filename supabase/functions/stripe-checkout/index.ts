@@ -151,19 +151,24 @@ Deno.serve(async (req) => {
     }
 
     // 2) Create Checkout Session (force metadata to include user_id + plan_id)
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
-      success_url,
-      cancel_url,
-      client_reference_id: user.id,
-      subscription_data: {
+    // Idempotency key scoped to user+plan so rapid double-clicks reuse the same session
+    const idempotencyKey = `checkout:${user.id}:${planId}`
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: 'subscription',
+        customer: customerId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        allow_promotion_codes: true,
+        success_url,
+        cancel_url,
+        client_reference_id: user.id,
+        subscription_data: {
+          metadata: { user_id: user.id, plan_id: planId },
+        },
         metadata: { user_id: user.id, plan_id: planId },
       },
-      metadata: { user_id: user.id, plan_id: planId },
-    })
+      { idempotencyKey },
+    )
 
     return resp({ url: session.url, id: session.id })
   } catch (err: any) {

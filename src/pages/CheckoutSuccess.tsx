@@ -7,7 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import { hasActivePlan, type UserPlan } from "../hooks/useUserPlan";
 import { useLocale } from "../i18n/LocaleContext";
 
-const MAX_POLLS = 10;
+const MAX_POLLS = 30;
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();

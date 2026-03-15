@@ -14,39 +14,33 @@ export default function ResetPassword() {
   const submittingRef = useRef(false);
 
   useEffect(() => {
-    // PKCE flow: the auth/callback page already exchanged the code for a session.
-    // We just need to confirm an active PASSWORD_RECOVERY session exists.
-    // Legacy implicit flow: Supabase parses the #access_token hash automatically
-    // via detectSessionInUrl, so getSession() covers both paths.
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+    let subscription: { unsubscribe: () => void } | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setTokenValid('valid');
         return;
       }
 
-      // If no session yet, wait briefly for the PASSWORD_RECOVERY event from
-      // the implicit flow hash (detectSessionInUrl processes it asynchronously).
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'PASSWORD_RECOVERY' && session) {
           setTokenValid('valid');
-          subscription.unsubscribe();
+          sub.unsubscribe();
         }
       });
+      subscription = sub;
 
-      // Timeout — if no session arrives within 4 seconds, mark invalid.
-      const timer = setTimeout(() => {
-        subscription.unsubscribe();
+      timer = setTimeout(() => {
+        sub.unsubscribe();
         setTokenValid((prev) => prev === 'checking' ? 'invalid' : prev);
       }, 4000);
+    });
 
-      return () => {
-        clearTimeout(timer);
-        subscription.unsubscribe();
-      };
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (subscription) subscription.unsubscribe();
     };
-
-    checkSession();
   }, []);
 
   const submit = async (e: React.FormEvent) => {
@@ -75,7 +69,7 @@ export default function ResetPassword() {
     } else {
       setMsg(t('reset_pw.success'));
       setTimeout(() => {
-        navigate('/#get-started', { replace: true });
+        navigate('/', { replace: true });
       }, 2000);
     }
   };

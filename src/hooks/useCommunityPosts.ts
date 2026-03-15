@@ -43,6 +43,10 @@ export function useCreatePost() {
       queryClient.invalidateQueries({ queryKey: ['community', 'posts', 'recent'] })
       queryClient.invalidateQueries({ queryKey: ['community', 'rooms'] })
     },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', 'posts', 'recent'] })
+      queryClient.invalidateQueries({ queryKey: ['community', 'rooms'] })
+    },
   })
 }
 
@@ -53,6 +57,9 @@ export function useUpdatePost() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['community', 'posts', data.id] })
       queryClient.invalidateQueries({ queryKey: ['community', 'posts', 'room', data.room_id] })
+    },
+    onError: (_err, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['community', 'posts', vars.postId] })
     },
   })
 }

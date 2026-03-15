@@ -37,9 +37,8 @@ const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey, Stripe-Signature',
+  'Access-Control-Allow-Methods': 'POST',
+  'Access-Control-Allow-Headers': 'Content-Type, Stripe-Signature',
 }
 
 const resp = (body: unknown, status = 200) =>
@@ -228,10 +227,32 @@ Deno.serve(async (req) => {
           else if (interval === 'month') pEndIso = addDaysIso(pStartIso, 30)
         }
 
-        // Resolve app plan id
+        // trial_end: store when the trial period expires
+        const trialEndIso = secToIso(src?.trial_end) ?? null
+
+        // Resolve app plan id — never silently fall back to free; throw instead so Stripe retries
         let mappedPlanId: string | undefined = sub.metadata?.plan_id as string | undefined
         if (!mappedPlanId && priceId) {
-          try { mappedPlanId = await planIdFromPrice(db, priceId) } catch {/* noop */}
+          mappedPlanId = await planIdFromPrice(db, priceId) // throws on DB error → 500 → Stripe retries
+        }
+
+        // Out-of-order guard: only apply this event if it is newer than what we already have
+        const { data: existing } = await db
+          .from('user_subscriptions')
+          .select('updated_at')
+          .eq('user_id', userId)
+          .eq('subscription_id', sub.id)
+          .maybeSingle()
+
+        const eventCreatedIso = new Date(event.created * 1000).toISOString()
+        if (existing?.updated_at && existing.updated_at > eventCreatedIso) {
+          console.log(`[stripe-webhook] Skipping out-of-order event ${event.id} for sub ${sub.id}`)
+          await db.rpc('record_webhook_event', {
+            p_event_id: event.id,
+            p_event_type: event.type,
+            p_status: 'completed'
+          })
+          return resp({ received: true, skipped: 'out_of_order' })
         }
 
         // Upsert subscription row
@@ -242,10 +263,11 @@ Deno.serve(async (req) => {
           plan_id: mappedPlanId ?? undefined,
           status: sub.status,
           cancel_at_period_end: !!sub.cancel_at_period_end,
-          updated_at: new Date().toISOString(),
+          updated_at: eventCreatedIso,
         }
-        if (pStartIso) row.current_period_start = pStartIso
-        if (pEndIso)   row.current_period_end   = pEndIso
+        if (pStartIso)  row.current_period_start = pStartIso
+        if (pEndIso)    row.current_period_end   = pEndIso
+        if (trialEndIso !== null) row.trial_end  = trialEndIso
 
         const { error: upErr } = await db.from('user_subscriptions').upsert(
           row,
@@ -254,7 +276,7 @@ Deno.serve(async (req) => {
         if (upErr) throw upErr
 
         // Determine effective app plan ID to apply to teams
-        // Deleted → force 'free'. Otherwise mapped plan or default to 'free'.
+        // Deleted → force 'free'. Otherwise mapped plan (required — already threw if missing).
         const effectivePlanId =
           event.type === 'customer.subscription.deleted' ? 'free' :
           (mappedPlanId ?? 'free')

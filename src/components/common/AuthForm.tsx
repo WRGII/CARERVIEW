@@ -67,13 +67,9 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
   const handleSignIn = async () => {
     const { data, error: siErr } = await supabase.auth.signInWithPassword({ email, password });
     if (siErr) {
-      throw new Error(
-        siErr.message === "Invalid login credentials"
-          ? t('auth.invalid_credentials')
-          : siErr.message
-      );
+      throw new Error(t('auth.invalid_credentials'));
     }
-    if (!data?.user) throw new Error(t('auth.signin_failed'));
+    if (!data?.user) throw new Error(t('auth.invalid_credentials'));
 
     const prof = await upsertProfile(
       data.user.id,
@@ -119,13 +115,12 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
     setSendingReset(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
       });
-      if (error) throw error;
       setInfo(t('auth.reset_sent'));
-    } catch (e: any) {
-      setError(e?.message || t('auth.reset_failed'));
+    } catch {
+      setInfo(t('auth.reset_sent'));
     } finally {
       setSendingReset(false);
     }
