@@ -12,6 +12,22 @@ export const useActivateFreePlan = () => {
       if (userError) throw new Error(`Authentication error: ${userError.message}`)
       if (!user) throw new Error('You must be signed in to activate free plan')
 
+      const { data: existing, error: checkErr } = await supabase
+        .from('user_subscriptions')
+        .select('user_id, plan_id, status, current_period_end')
+        .eq('user_id', user.id)
+        .eq('subscription_id', `free_${user.id}`)
+        .maybeSingle()
+
+      if (checkErr) throw new Error(`Failed to check existing plan: ${checkErr.message}`)
+
+      if (existing && existing.status === 'active') {
+        const end = existing.current_period_end ? Date.parse(existing.current_period_end as string) : 0
+        if (end > Date.now()) {
+          return { alreadyActive: true, plan: existing }
+        }
+      }
+
       const now = new Date()
       const oneYearFromNow = new Date(now)
       oneYearFromNow.setFullYear(now.getFullYear() + 1)

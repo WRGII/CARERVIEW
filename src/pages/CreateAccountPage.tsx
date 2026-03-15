@@ -95,10 +95,21 @@ export default function CreateAccountPage() {
         const pending = JSON.parse(pendingRaw) as {
           planKey: PlanKey;
           promoCode?: string | null;
+          displayName?: string | null;
         };
 
         const product = STRIPE_PRODUCTS.find(p => p.planId === pending.planKey);
         if (!product) return;
+
+        // Ensure profile exists — the original signUp may not have had a session
+        // so profile upsert in handleSubmit was skipped.
+        await supabase.from("profiles").upsert({
+          id: user.id,
+          email: user.email ?? null,
+          display_name: pending.displayName ?? user.user_metadata?.display_name ?? "",
+          role: "caregiver",
+          disabled: false,
+        }, { onConflict: 'id' });
 
         if (pending.planKey === 'free') {
           const { error: subErr } = await upsertFreeSubscription(user.id);
@@ -206,7 +217,7 @@ export default function CreateAccountPage() {
         return;
       }
 
-      localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode }));
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode, displayName: name || null }));
       setInfo(t('create_account.confirm_email_info'));
     } catch (err: any) {
       if (err?.message === "User already registered") {

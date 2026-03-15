@@ -7,12 +7,18 @@ import { useAuth } from "../hooks/useAuth";
 import { hasActivePlan, type UserPlan } from "../hooks/useUserPlan";
 import { useLocale } from "../i18n/LocaleContext";
 
+const MAX_POLLS = 10;
+
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const sessionId = params.get("session_id") || "";
   const { user, loading: authLoading } = useAuth();
   const { t } = useLocale();
+
+  const [pollCount, setPollCount] = React.useState(0);
+  const pollCountRef = React.useRef(0);
+
+  const tookTooLong = pollCount >= MAX_POLLS;
 
   const normalizeISO = (v: unknown): string | null =>
     typeof v === "string" ? v : v ? new Date(v as any).toISOString() : null;
@@ -28,8 +34,9 @@ export default function CheckoutSuccess() {
     refetchInterval: (query) => {
       const active = query.state.data && hasActivePlan(query.state.data as UserPlan);
       if (active) return false;
-      setPollCount((c) => c + 1);
-      if (pollCount >= 10) return false;
+      if (pollCountRef.current >= MAX_POLLS) return false;
+      pollCountRef.current += 1;
+      setPollCount(pollCountRef.current);
       return 2000;
     },
     refetchIntervalInBackground: true,
@@ -60,9 +67,6 @@ export default function CheckoutSuccess() {
         : null;
     },
   });
-
-  const [pollCount, setPollCount] = React.useState(0);
-  const tookTooLong = pollCount >= 10;
 
   React.useEffect(() => {
     if (plan && hasActivePlan(plan)) {

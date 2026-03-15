@@ -129,65 +129,65 @@ export default function ChoosePlan() {
 
   if (planLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-600">{t('choose_plan.loading')}</p>
+          <p className="text-slate-gray/70">{t('choose_plan.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-700 mb-4">
+          <h1 className="text-4xl font-bold text-slate-gray mb-4">
             {isManageMode ? t('choose_plan.manage_title') : t('choose_plan.title')}
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-slate-gray/70 max-w-3xl mx-auto">
             {t('choose_plan.subtitle')}
           </p>
         </div>
 
         {statusMessage && (
-          <div className={`max-w-md mx-auto mb-8 p-4 rounded-lg flex items-center space-x-3 ${
+          <div className={`max-w-md mx-auto mb-8 p-4 rounded-xl flex items-center space-x-3 ${
             statusMessage.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-mint-green/20 text-slate-gray border border-mint-green'
+              : 'bg-peach-blush/30 text-slate-gray border border-peach-blush'
           }`}>
             {statusMessage.type === 'success' ? (
-              <CheckCircle className="w-5 h-5" />
+              <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0" />
             ) : (
-              <XCircle className="w-5 h-5" />
+              <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
             )}
             <span>{statusMessage.message}</span>
           </div>
         )}
 
         {activeSubscription && userPlan && (
-          <div className="max-w-2xl mx-auto mb-8 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="max-w-2xl mx-auto mb-8 bg-white rounded-2xl border border-slate-gray/20 p-6 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <CreditCard className="w-5 h-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-slate-700">{t('choose_plan.current_sub')}</h3>
+                  <CreditCard className="w-5 h-5 text-teal-600" />
+                  <h3 className="text-lg font-semibold text-slate-gray">{t('choose_plan.current_sub')}</h3>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-600">{t('choose_plan.plan_label')}</span>
-                    <span className="font-medium text-slate-700">
+                    <span className="text-slate-gray/60">{t('choose_plan.plan_label')}</span>
+                    <span className="font-medium text-slate-gray">
                       {userPlan.plan_id === 'free' ? t('pricing.plan_free_name') :
                        userPlan.plan_id === 'primary_qtr' ? t('pricing.plan_primary_name') :
                        userPlan.plan_id === 'family_qtr' ? t('pricing.plan_family_name') :
                        userPlan.plan_id || 'Unknown'}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-green-700">
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="inline-flex items-center gap-1 text-teal-700">
+                      <span className="h-2 w-2 rounded-full bg-teal-500" />
                       {userPlan.status === 'active' ? t('common.active') : userPlan.status}
                     </span>
                   </div>
                   {userPlan.current_period_end && (
-                    <div className="text-gray-600">
+                    <div className="text-slate-gray/60">
                       {t('choose_plan.renews_on')} {formatDate(userPlan.current_period_end)}
                     </div>
                   )}
@@ -196,7 +196,7 @@ export default function ChoosePlan() {
               <button
                 onClick={handleManageBilling}
                 disabled={managingBilling}
-                className="ml-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                className="ml-4 px-4 py-2 bg-slate-gray text-warm-white rounded-xl hover:bg-slate-gray/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
                 {managingBilling ? t('common.opening') : t('billing.manage_btn')}
               </button>
@@ -205,12 +205,12 @@ export default function ChoosePlan() {
         )}
 
         {!activeSubscription && userPlan && (
-          <div className="max-w-2xl mx-auto mb-8 bg-amber-50 rounded-lg border border-amber-200 p-6">
+          <div className="max-w-2xl mx-auto mb-8 bg-peach-blush/20 rounded-2xl border border-peach-blush p-6">
             <div className="flex items-start space-x-3">
-              <XCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-amber-900 mb-1">{t('choose_plan.no_sub_title')}</h3>
-                <p className="text-sm text-amber-800">
+                <h3 className="font-semibold text-slate-gray mb-1">{t('choose_plan.no_sub_title')}</h3>
+                <p className="text-sm text-slate-gray/70">
                   {userPlan.status === 'canceled'
                     ? t('choose_plan.sub_cancelled')
                     : userPlan.status === 'past_due'
@@ -223,7 +223,7 @@ export default function ChoosePlan() {
         )}
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {STRIPE_PRODUCTS.map((product, index) => {
+          {STRIPE_PRODUCTS.map((product) => {
             const isCurrentPlan = userPlan?.plan_id === product.planId;
             const isRecommended = product.planId === 'primary_qtr';
             return (
@@ -240,12 +240,12 @@ export default function ChoosePlan() {
         </div>
 
         <div className="text-center mt-12">
-          <p className="text-gray-600 mb-4">
+          <p className="text-slate-gray/60 mb-4">
             {t('choose_plan.need_help')}
           </p>
           <button
             onClick={() => navigate('/caregiver')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-cyan-primary hover:text-cyan-hover font-medium transition-colors"
           >
             {t('common.back_dashboard')}
           </button>

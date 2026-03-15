@@ -220,25 +220,26 @@ Deno.serve(async (req) => {
     // Delete profile
     await srv.from('profiles').delete().eq('id', userId)
 
-    // 4. Delete auth user
+    // 4. Send confirmation email BEFORE deleting the auth user so the
+    //    Supabase admin mailer can still target the address.
+    let emailSent = false
+    try {
+      if (userEmail) {
+        await sendConfirmationEmail(userEmail)
+        emailSent = true
+      }
+    } catch (emailErr: any) {
+      console.error('Failed to send confirmation email:', emailErr?.message)
+      audit.details.email_error = emailErr?.message || 'Email sending failed'
+    }
+
+    // 5. Delete auth user
     const { error: authDelErr } = await srv.auth.admin.deleteUser(userId)
     if (authDelErr) {
       audit.details = { ...audit.details, step: 'auth.deleteUser', error: authDelErr.message }
       audit.success = false
       await insertAudit(srv, audit)
       throw authDelErr
-    }
-
-    // 5. Send confirmation email
-    let emailSent = false
-    try {
-      if (userEmail) {
-        await sendConfirmationEmail(srv, userEmail, userId)
-        emailSent = true
-      }
-    } catch (emailErr: any) {
-      console.error('Failed to send confirmation email:', emailErr?.message)
-      audit.details.email_error = emailErr?.message || 'Email sending failed'
     }
 
     audit.details = {
@@ -273,23 +274,42 @@ Deno.serve(async (req) => {
   }
 })
 
-async function sendConfirmationEmail(
-  srv: ReturnType<typeof createClient>,
-  email: string,
-  userId: string
-) {
-  const now = new Date().toISOString()
+async function sendConfirmationEmail(email: string) {
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+  const FROM_EMAIL = Deno.env.get('FROM_EMAIL') || 'noreply@carerview.app'
+  const deletedAt = new Date().toUTCString()
 
-  // Use Supabase's built-in email functionality
-  // Since we're deleting the user, we'll use a direct approach
-  // by inserting into the database's email queue if available,
-  // or we can log for now and implement proper email service later
+  if (!RESEND_API_KEY) {
+    console.warn('[caregiver-delete-account] RESEND_API_KEY not set — skipping confirmation email')
+    return
+  }
 
-  console.log(`Account deletion confirmation email would be sent to: ${email}`)
-  console.log(`User ID: ${userId}, Deletion time: ${now}`)
+  const html = `
+    <p>Hi,</p>
+    <p>This email confirms that your CarerView account associated with <strong>${email}</strong> has been permanently deleted on ${deletedAt}.</p>
+    <p>All your observations, team memberships, and subscription data have been removed. Any active paid subscription has been cancelled.</p>
+    <p>If you did not request this deletion, please contact us immediately at support@carerview.app.</p>
+    <p>— The CarerView Team</p>
+  `
 
-  // TODO: Integrate with actual email service (SendGrid, etc.)
-  // For now, this is a placeholder that logs the intent
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Your CarerView account has been deleted',
+      html,
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Resend API error ${res.status}: ${body}`)
+  }
 }
 
 async function insertAudit(
