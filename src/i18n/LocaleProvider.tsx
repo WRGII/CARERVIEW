@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
+import enFallback from './enFallback'
 
 const LOCALE_STORAGE_KEY = 'careview-locale'
 const DEFAULT_LOCALE: Locale = 'en'
@@ -55,8 +56,8 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     return getStoredLocale()
   })
 
-  const prevMapRef = useRef<Record<string, string> | null>(null)
-  const enMapRef = useRef<Record<string, string> | null>(null)
+  const prevMapRef = useRef<Record<string, string> | null>(enFallback)
+  const enMapRef = useRef<Record<string, string> | null>(enFallback)
 
   useEffect(() => {
     if (isValidLocale(preferredLocale) && preferredLocale !== locale) {
@@ -106,19 +107,6 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     }
   }, [enMap])
 
-  useEffect(() => {
-    if (supportedLocales.length === 0) return
-    for (const loc of supportedLocales) {
-      if (loc.code !== locale) {
-        queryClient.prefetchQuery({
-          queryKey: ['ui_translations', loc.code],
-          queryFn: () => fetchTranslations(loc.code as Locale),
-          staleTime: 10 * 60 * 1000,
-        })
-      }
-    }
-  }, [supportedLocales, locale, queryClient])
-
   const setLocale = useCallback(
     async (newLocale: Locale) => {
       setLocaleState(newLocale)
@@ -157,27 +145,6 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     () => ({ locale, setLocale, t, isLoading, supportedLocales }),
     [locale, setLocale, t, isLoading, supportedLocales]
   )
-
-  if (isLoading) {
-    return (
-      <LocaleContext.Provider value={value}>
-        <div className="fixed inset-0 flex items-center justify-center bg-white">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src="/CareView_logo_1_colored_highres.png"
-              alt="CarerView"
-              className="h-16 w-auto"
-            />
-            <div className="flex gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.3s]" />
-              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
-              <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce" />
-            </div>
-          </div>
-        </div>
-      </LocaleContext.Provider>
-    )
-  }
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }

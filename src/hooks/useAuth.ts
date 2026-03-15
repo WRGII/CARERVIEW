@@ -124,6 +124,17 @@ export function useAuth() {
       }
     }, 10000)
 
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return
+      if (!session) {
+        clearTimeout(loadingTimeout)
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        setLoading(false)
+      }
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return
 
