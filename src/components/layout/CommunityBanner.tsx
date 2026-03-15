@@ -27,7 +27,10 @@ export default function CommunityBanner() {
       aria-label={t("community_banner.aria_label")}
       className="bg-cyan-700 border-b border-cyan-800"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-0 sm:h-8 flex items-center justify-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-0 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
+        <p className="hidden sm:block text-xs text-cyan-100 whitespace-nowrap">
+          {t("community_banner.tagline_before")}
+        </p>
         <Link
           to={ctaHref}
           className="flex items-center gap-1.5 shrink-0 px-3 py-1 text-xs font-semibold text-cyan-700 bg-white rounded-full hover:bg-cyan-50 transition-colors leading-none"
@@ -36,7 +39,8 @@ export default function CommunityBanner() {
           {t("community_banner.cta")}
         </Link>
         <p className="text-xs text-cyan-100 text-center sm:whitespace-nowrap">
-          {t("community_banner.tagline")}
+          <span className="sm:hidden">{t("community_banner.tagline")}</span>
+          <span className="hidden sm:inline">{t("community_banner.tagline_after")}</span>
         </p>
       </div>
     </div>
