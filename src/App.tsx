@@ -76,6 +76,7 @@ import WhyCarerView from "./pages/WhyCarerView";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import AboutPage from "./pages/AboutPage";
 import PricingPage from "./pages/PricingPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -142,6 +143,7 @@ export default function App() {
                   />
                   <Route path="/checkout/success" element={<CheckoutSuccess />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
                   <Route path="/caregiver-forum" element={<CommunityPublicHubPage />} />
                   <Route path="/community-hub" element={<Navigate to="/caregiver-forum" replace />} />
 

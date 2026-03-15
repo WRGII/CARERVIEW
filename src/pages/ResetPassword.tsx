@@ -1,4 +1,3 @@
-// src/pages/ResetPassword.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
@@ -14,24 +13,40 @@ export default function ResetPassword() {
   const [err, setErr] = useState<string | null>(null);
   const submittingRef = useRef(false);
 
-  // Verify the recovery token from the URL hash before rendering the form.
-  // Supabase parses the hash automatically (detectSessionInUrl: true), so we
-  // check that a session with type=recovery was actually established.
   useEffect(() => {
-    const hash = window.location.hash ?? '';
-    const params = new URLSearchParams(hash.replace(/^#/, ''));
-    const type = params.get('type');
-    const access_token = params.get('access_token');
+    // PKCE flow: the auth/callback page already exchanged the code for a session.
+    // We just need to confirm an active PASSWORD_RECOVERY session exists.
+    // Legacy implicit flow: Supabase parses the #access_token hash automatically
+    // via detectSessionInUrl, so getSession() covers both paths.
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setTokenValid('valid');
+        return;
+      }
 
-    if (!access_token || type !== 'recovery') {
-      setTokenValid('invalid');
-      return;
-    }
+      // If no session yet, wait briefly for the PASSWORD_RECOVERY event from
+      // the implicit flow hash (detectSessionInUrl processes it asynchronously).
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY' && session) {
+          setTokenValid('valid');
+          subscription.unsubscribe();
+        }
+      });
 
-    // Confirm the session is actually active (catches expired tokens)
-    supabase.auth.getSession().then(({ data }) => {
-      setTokenValid(data.session ? 'valid' : 'invalid');
-    });
+      // Timeout — if no session arrives within 4 seconds, mark invalid.
+      const timer = setTimeout(() => {
+        subscription.unsubscribe();
+        setTokenValid((prev) => prev === 'checking' ? 'invalid' : prev);
+      }, 4000);
+
+      return () => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+      };
+    };
+
+    checkSession();
   }, []);
 
   const submit = async (e: React.FormEvent) => {
