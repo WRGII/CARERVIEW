@@ -13,7 +13,7 @@ export default function AdminGuard({ children }: { children: JSX.Element }) {
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   const isAdmin = profile?.role === "admin" && !profile?.disabled;

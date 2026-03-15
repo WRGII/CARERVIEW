@@ -83,6 +83,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import DataPolicyPage from "./pages/DataPolicyPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminPage from "./pages/AdminPage";
 import ActiveCaregiversPage from "./pages/ActiveCaregiversPage";
 import AdminDeleteUser from "./pages/AdminDeleteUser";
@@ -297,6 +298,9 @@ export default function App() {
                     }
                   />
                 </Route>
+
+                {/* Admin Login — full-screen, no header/footer */}
+                <Route path="/admin/login" element={<AdminLoginPage />} />
 
                 {/* 404 */}
                 <Route path="*" element={<NotFoundPage />} />

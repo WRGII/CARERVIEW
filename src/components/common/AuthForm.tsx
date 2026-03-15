@@ -77,7 +77,11 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
       data.user.email ?? ""
     );
 
-    navigate(prof.role === "admin" ? "/admin" : "/caregiver", { replace: true });
+    if (prof.role === "admin") {
+      await supabase.auth.signOut();
+      throw new Error("Admin accounts must sign in via the admin portal.");
+    }
+    navigate("/caregiver", { replace: true });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
