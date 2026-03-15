@@ -293,7 +293,7 @@ export default function CommunityTopicHubPage() {
             </div>
 
             {/* Part 2 of tagline */}
-            <p className="text-base text-slate-600 font-medium sm:order-3 w-full sm:w-auto sm:flex-1">
+            <p className="text-base text-slate-600 font-medium sm:order-3 sm:flex-1">
               Share experiences, ask questions, find practical wisdom.
             </p>
           </div>
