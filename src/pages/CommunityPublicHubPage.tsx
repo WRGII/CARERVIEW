@@ -268,14 +268,14 @@ export default function CommunityTopicHubPage() {
           </h1>
 
           {/* Tagline with button link in between — stacked on mobile, inline on desktop */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-y-3 sm:gap-y-2 sm:gap-x-3 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:flex-nowrap gap-y-3 sm:gap-y-0 sm:gap-x-3 mb-3">
             {/* Part 1 of tagline */}
-            <p className="text-base text-slate-600 font-medium sm:order-1">
+            <p className="text-base text-slate-600 font-medium sm:order-1 sm:flex-shrink-0 sm:whitespace-nowrap">
               For family &amp; in-home caregivers.
             </p>
 
             {/* Button link — top row on mobile, between text on desktop */}
-            <div className="flex flex-col items-start gap-1.5 sm:order-2">
+            <div className="flex flex-col items-start gap-1.5 sm:order-2 sm:flex-shrink-0">
               <Link
                 to={SIGNUP_URL}
                 className="inline-flex flex-col items-center justify-center px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 leading-tight"
@@ -293,7 +293,7 @@ export default function CommunityTopicHubPage() {
             </div>
 
             {/* Part 2 of tagline */}
-            <p className="text-base text-slate-600 font-medium sm:order-3 sm:flex-1">
+            <p className="text-base text-slate-600 font-medium sm:order-3 sm:flex-shrink-0 sm:whitespace-nowrap">
               Share experiences, ask questions, find practical wisdom.
             </p>
           </div>
