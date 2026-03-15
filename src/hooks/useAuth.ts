@@ -31,16 +31,15 @@ export function useAuth() {
     if (error) throw error
 
     if (!data) {
-      const insert = {
-        id: userId,
-        email,
-        display_name: '',
-        role: 'caregiver' as Role,
-        disabled: false,
-      }
       const { data: created, error: insErr } = await supabase
         .from('profiles')
-        .insert(insert)
+        .upsert({
+          id: userId,
+          email,
+          display_name: '',
+          role: 'caregiver' as Role,
+          disabled: false,
+        }, { onConflict: 'id' })
         .select()
         .single()
       if (insErr) throw insErr

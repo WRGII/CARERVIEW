@@ -12,39 +12,25 @@ export const useActivateFreePlan = () => {
       if (userError) throw new Error(`Authentication error: ${userError.message}`)
       if (!user) throw new Error('You must be signed in to activate free plan')
 
-      // Check if user already has an active subscription
-      const { data: existing } = await supabase
-        .from('user_subscriptions')
-        .select('user_id, plan_id, status')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
-        .maybeSingle()
-
-      if (existing) {
-        return { alreadyActive: true, plan: existing }
-      }
-
-      // Create free plan subscription
       const now = new Date()
       const oneYearFromNow = new Date(now)
       oneYearFromNow.setFullYear(now.getFullYear() + 1)
 
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .insert({
+        .upsert({
           user_id: user.id,
-          subscription_id: `free_${user.id}_${Date.now()}`, // Unique identifier for free subscription
+          subscription_id: `free_${user.id}`,
           plan_id: 'free',
           status: 'active',
           current_period_start: now.toISOString(),
           current_period_end: oneYearFromNow.toISOString(),
           cancel_at_period_end: false,
-        })
+        }, { onConflict: 'user_id,subscription_id' })
         .select()
         .maybeSingle()
 
-      if (error) throw new Error(`Failed to create free subscription: ${error.message}`)
-      if (!data) throw new Error('No data returned from free subscription creation')
+      if (error) throw new Error(`Failed to activate free plan: ${error.message}`)
 
       return { alreadyActive: false, plan: data }
     },

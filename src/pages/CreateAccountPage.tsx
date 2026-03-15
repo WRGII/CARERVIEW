@@ -4,8 +4,6 @@ import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { STRIPE_PRODUCTS } from "../stripe-config";
-import { usePlans } from "../hooks/usePlans";
-import type { PlanRow } from "../types/plans";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
 import { SITE_URL } from "../lib/siteConfig";
@@ -19,10 +17,24 @@ const RETURN_URLS = {
   cancel: `${window.location.origin}/create-account?canceled=1`,
 };
 
+function upsertFreeSubscription(userId: string) {
+  const now = new Date();
+  const oneYearFromNow = new Date(now);
+  oneYearFromNow.setFullYear(now.getFullYear() + 1);
+  return supabase.from('user_subscriptions').upsert({
+    user_id: userId,
+    subscription_id: `free_${userId}`,
+    plan_id: 'free',
+    status: 'active',
+    current_period_start: now.toISOString(),
+    current_period_end: oneYearFromNow.toISOString(),
+    cancel_at_period_end: false,
+  }, { onConflict: 'user_id,subscription_id' });
+}
+
 export default function CreateAccountPage() {
   const navigate = useNavigate();
   const { t } = useLocale();
-  const { data: dbPlans, isLoading: plansLoading } = usePlans();
 
   const [selectedPlanKey, setSelectedPlanKey] = React.useState<PlanKey>("primary_qtr");
 
@@ -89,27 +101,8 @@ export default function CreateAccountPage() {
         if (!product) return;
 
         if (pending.planKey === 'free') {
-          // Create free plan subscription before navigating
-          try {
-            const now = new Date();
-            const oneYearFromNow = new Date(now);
-            oneYearFromNow.setFullYear(now.getFullYear() + 1);
-
-            await supabase
-              .from('user_subscriptions')
-              .insert({
-                user_id: user.id,
-                subscription_id: `free_${user.id}_${Date.now()}`,
-                plan_id: 'free',
-                status: 'active',
-                current_period_start: now.toISOString(),
-                current_period_end: oneYearFromNow.toISOString(),
-                cancel_at_period_end: false,
-              });
-          } catch (freeErr) {
-            console.error('Failed to create free subscription:', freeErr);
-            // Continue anyway - user can activate later
-          }
+          const { error: subErr } = await upsertFreeSubscription(user.id);
+          if (subErr) console.error('Failed to create free subscription:', subErr);
           localStorage.removeItem(PENDING_KEY);
           navigate('/caregiver', { replace: true });
           return;
@@ -150,6 +143,11 @@ export default function CreateAccountPage() {
       return;
     }
 
+    if (password.length < 8) {
+      setError(t('create_account.password_too_short'));
+      return;
+    }
+
     setBusy(true);
     try {
       const selectedProduct = STRIPE_PRODUCTS.find(p => p.planId === selectedPlanKey);
@@ -168,7 +166,9 @@ export default function CreateAccountPage() {
       const session = data.session;
 
       if (session && user?.id) {
-        window.plausible('Signup', { props: { plan: selectedPlanKey } });
+        if (typeof (window as any).plausible === 'function') {
+          (window as any).plausible('Signup', { props: { plan: selectedPlanKey } });
+        }
         const { error: upErr } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? email,
@@ -179,15 +179,7 @@ export default function CreateAccountPage() {
         if (upErr) throw upErr;
 
         if (selectedPlanKey === 'free') {
-          const { error: subErr } = await supabase.from('user_subscriptions').upsert({
-            user_id: user.id,
-            subscription_id: `free_${user.id}`,
-            plan_id: 'free',
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            cancel_at_period_end: false,
-          }, { onConflict: 'user_id,subscription_id' });
+          const { error: subErr } = await upsertFreeSubscription(user.id);
           if (subErr) console.warn('Failed to create free subscription record:', subErr);
           navigate('/caregiver', { replace: true });
           return;
@@ -250,7 +242,7 @@ export default function CreateAccountPage() {
 
         <section className="mb-8 rounded-2xl border border-slate-gray/20 bg-white shadow-sm">
           <div className="px-6 py-5 border-b border-slate-gray/10 flex items-center gap-3">
-            <div className="W-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-cyan-primary" />
             </div>
             <h2 className="text-lg font-semibold text-slate-gray">{t('create_account.choose_plan')}</h2>

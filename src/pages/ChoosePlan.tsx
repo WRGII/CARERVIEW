@@ -72,14 +72,12 @@ export default function ChoosePlan() {
     // Handle free plan separately
     if (planId === 'free') {
       try {
-        const result = await activateFreePlanMutation.mutateAsync();
+        await activateFreePlanMutation.mutateAsync();
 
-        if (result.alreadyActive) {
-          setStatusMessage({ type: 'success', message: t('choose_plan.already_active') });
-        } else {
-          window.plausible('Plan Selected', { props: { plan: 'free' } });
-          setStatusMessage({ type: 'success', message: t('choose_plan.free_activated') });
+        if (typeof (window as any).plausible === 'function') {
+          (window as any).plausible('Plan Selected', { props: { plan: 'free' } });
         }
+        setStatusMessage({ type: 'success', message: t('choose_plan.free_activated') });
 
         await refetchPlan();
         setTimeout(() => navigate('/caregiver'), 1000);
@@ -115,7 +113,9 @@ export default function ChoosePlan() {
         throw new Error('No checkout URL received');
       }
 
-      window.plausible('Plan Selected', { props: { plan: planId } });
+      if (typeof (window as any).plausible === 'function') {
+        (window as any).plausible('Plan Selected', { props: { plan: planId } });
+      }
       window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
