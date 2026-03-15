@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader as Loader2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchChoosePlanAssets } from "../../hooks/usePrefetchStatic";
@@ -27,6 +27,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [sendingReset, setSendingReset] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const switchMode = (signUp: boolean) => {
     setIsSignUp(signUp);
@@ -212,17 +213,28 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
               <label htmlFor="auth-password" className="block text-sm font-semibold text-slate-gray mb-1.5">
                 {t('auth.password_label')}
               </label>
-              <input
-                id="auth-password"
-                type="password"
-                required
-                autoComplete="current-password"
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-slate-gray/25 bg-warm-white text-slate-gray px-4 py-2.5 text-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary"
-                placeholder={t('auth.password_placeholder')}
-              />
+              <div className="relative">
+                <input
+                  id="auth-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-gray/25 bg-warm-white text-slate-gray px-4 py-2.5 pr-11 text-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary"
+                  placeholder={t('auth.password_placeholder')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {error && (
