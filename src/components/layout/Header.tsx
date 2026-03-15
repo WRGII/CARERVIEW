@@ -138,7 +138,7 @@ export default function Header() {
                     to="/caregiver-forum"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
-                    Caregiver Forum
+                    {t('nav.caregiver_forum')}
                   </Link>
                   <LanguageSwitcher />
                   <Link
@@ -231,7 +231,7 @@ export default function Header() {
                     onClick={closeMobileMenu}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
-                    Free Caregiver Forum
+                    {t('nav.caregiver_forum')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
