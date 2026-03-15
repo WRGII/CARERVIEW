@@ -5,11 +5,9 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')!
 const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')!
-const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
-
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
   'Access-Control-Max-Age': '86400',
@@ -75,6 +73,13 @@ Deno.serve(async (req) => {
     }
 
     const uid = existingAuthUser.id
+
+    const { error: pwErr } = await srv.auth.admin.updateUserById(uid, {
+      password: ADMIN_PASSWORD,
+      email_confirm: true,
+    })
+    if (pwErr) throw pwErr
+
     const { data: prof } = await srv
       .from('profiles')
       .select('role')
