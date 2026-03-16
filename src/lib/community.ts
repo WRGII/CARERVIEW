@@ -551,12 +551,13 @@ async function assertCommunityAdmin(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data: prof } = await supabase
+  const { data: prof, error: profError } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
 
+  if (profError) throw new Error(`Failed to verify admin role: ${profError.message}`)
   if (prof?.role !== 'admin') throw new Error('Action not permitted')
   return user.id
 }
@@ -773,16 +774,21 @@ export async function listAuthMembers(params: {
   const { data, error } = await query.range(offset, offset + limit - 1)
   if (error) throw error
 
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    email: row.email ?? null,
-    display_name: row.display_name ?? '',
-    role: row.role ?? 'caregiver',
-    disabled: row.disabled ?? false,
-    created_at: row.created_at,
-    has_community_profile: !!row.community_profiles,
-    community_handle: row.community_profiles?.handle ?? null,
-  }))
+  return (data ?? []).map((row: any) => {
+    const cp = Array.isArray(row.community_profiles)
+      ? row.community_profiles[0]
+      : row.community_profiles
+    return {
+      id: row.id,
+      email: row.email ?? null,
+      display_name: row.display_name ?? '',
+      role: row.role ?? 'caregiver',
+      disabled: row.disabled ?? false,
+      created_at: row.created_at,
+      has_community_profile: !!cp,
+      community_handle: cp?.handle ?? null,
+    }
+  })
 }
 
 export async function listPostsByUser(params: {
