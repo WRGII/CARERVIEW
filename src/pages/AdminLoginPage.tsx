@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader as Loader2, ShieldCheck } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { setAdminToken } from "../hooks/useAdminSession";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
@@ -39,7 +39,6 @@ export default function AdminLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || isLocked) return;
-
     if (!email.trim() || !password) {
       setError("Please enter your email and password.");
       return;
@@ -52,7 +51,7 @@ export default function AdminLoginPage() {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-      const bootstrapRes = await fetch(`${supabaseUrl}/functions/v1/admin-bootstrap`, {
+      const res = await fetch(`${supabaseUrl}/functions/v1/admin-bootstrap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,31 +61,21 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (!bootstrapRes.ok) {
+      if (!res.ok) {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
-        if (newAttempts >= MAX_ATTEMPTS) {
-          setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
-        }
+        if (newAttempts >= MAX_ATTEMPTS) setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
         setError("Invalid credentials.");
         return;
       }
 
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (signInErr) {
-        const newAttempts = attempts + 1;
-        setAttempts(newAttempts);
-        if (newAttempts >= MAX_ATTEMPTS) {
-          setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
-        }
-        setError("Invalid credentials.");
+      const data = await res.json();
+      if (!data?.token) {
+        setError("Authentication failed. Please try again.");
         return;
       }
 
+      setAdminToken(data.token);
       navigate("/admin", { replace: true });
     } catch {
       setError("An unexpected error occurred. Please try again.");

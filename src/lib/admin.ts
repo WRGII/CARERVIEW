@@ -1,23 +1,11 @@
-// src/lib/admin.ts
-import { createClient } from "@supabase/supabase-js";
+import { getAdminToken } from "../hooks/useAdminSession";
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
-
-/**
- * Calls the Supabase Edge Function `admin-delete-user` to delete an Auth user by email.
- * Requires the caller to be signed in (admin) so we can forward their JWT.
- */
 export async function callAdminDeleteUser(email: string) {
   const clean = email.trim().toLowerCase();
   if (!clean) throw new Error("Email is required");
 
-  // Forward the current session's access token
-  const { data: session } = await supabase.auth.getSession();
-  const token = session?.session?.access_token;
-  if (!token) throw new Error("Not signed in");
+  const token = getAdminToken();
+  if (!token) throw new Error("Not authenticated as admin");
 
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-delete-user`,
@@ -31,7 +19,7 @@ export async function callAdminDeleteUser(email: string) {
     }
   );
 
-  const json = await res.json();
-  if (!res.ok) throw new Error(json?.error || "Delete failed");
-  return json as { ok: boolean; deleted: boolean; reason?: string };
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || "Delete failed");
+  return data as { ok: boolean; deleted: boolean; reason?: string };
 }

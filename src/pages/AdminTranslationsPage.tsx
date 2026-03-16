@@ -3,8 +3,6 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { Search, Save, RefreshCw, Globe, ChevronDown, ChevronRight } from "lucide-react";
-import { PageLayout } from "../components/layout/PageLayout";
-import { useAuth } from "../hooks/useAuth";
 import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { useLocale } from "../i18n/LocaleContext";
@@ -35,7 +33,6 @@ function getNamespace(key: string): string {
 }
 
 export default function AdminTranslationsPage() {
-  const { user, profile, loading, error } = useAuth();
   const { t } = useLocale();
   const qc = useQueryClient();
 
@@ -44,10 +41,6 @@ export default function AdminTranslationsPage() {
   const [openNamespaces, setOpenNamespaces] = useState<Set<string>>(new Set(["common"]));
   const [pendingEdits, setPendingEdits] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-
-  if (loading) return <Loading message={t('admin.loading_editor')} />;
-  if (error || !user) return <ErrorMessage message={error || t('admin.auth_required')} />;
-  if (!profile) return <ErrorMessage message={t('admin.profile_required')} />;
 
   const { data: locales = [] } = useQuery<SupportedLocale[]>({
     queryKey: ["supported_locales_admin"],
@@ -175,7 +168,7 @@ export default function AdminTranslationsPage() {
   };
 
   return (
-    <PageLayout title="Translations" user={{ ...user, profile }}>
+    <div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header */}
@@ -363,6 +356,6 @@ export default function AdminTranslationsPage() {
           </div>
         )}
       </div>
-    </PageLayout>
+    </div>
   );
 }

@@ -1,21 +1,12 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
-import { Plus, CheckCircle2, XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
+import { Plus, CircleCheck as CheckCircle2, Circle as XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 import { useFormatDate } from "../hooks/useFormatDate";
-
-// Shared app chrome + states
-import { PageLayout } from "../components/layout/PageLayout";
-import { Loading } from "../components/ui/Loading";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
-import { useAuth } from "../hooks/useAuth";
 
-/** Generate a long random password so admin can "pre-create" a user.
- *  Because email confirmations are enabled in your project, this will NOT
- *  swap the admin session.
- */
 function randomPassword(len = 24) {
   const alphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
@@ -35,23 +26,9 @@ type CaregiverRow = {
 
 export default function ActiveCaregiversPage() {
   const qc = useQueryClient();
-  const navigate = useNavigate();
-  const { user, profile, loading, error } = useAuth();
   const { t } = useLocale();
   const { formatDateTime } = useFormatDate();
 
-  // ---------- Admin guard ----------
-  if (loading) return <Loading message={t('active_cg.loading')} />;
-  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
-  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
-  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
-  if (profile.role !== "admin") {
-    // Non-admins get bounced to their dashboard
-    navigate("/caregiver", { replace: true });
-    return null;
-  }
-
-  // ---------- Data: caregivers ----------
   const caregiversQ = useQuery({
     queryKey: ["admin", "caregivers"],
     queryFn: async (): Promise<CaregiverRow[]> => {
@@ -60,46 +37,33 @@ export default function ActiveCaregiversPage() {
         .select("id, display_name, email, role, disabled, created_at")
         .eq("role", "caregiver")
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       return data ?? [];
     },
     staleTime: 30_000,
   });
 
-  // Where invitation confirmation should land the new user
   const ORIGIN =
     (typeof window !== "undefined" && window.location.origin) ||
     (import.meta.env.PUBLIC_SITE_URL as string) ||
     "";
 
-  // ---------- Add caregiver (pre-create + profile upsert) ----------
   const addM = useMutation({
     mutationFn: async (payload: { email: string; display_name: string }) => {
       const tempPassword = randomPassword();
-
-      // 1) Create auth user (email confirmation ON => no session swap)
       const { data, error } = await supabase.auth.signUp({
         email: payload.email,
         password: tempPassword,
         options: {
           data: { display_name: payload.display_name },
-          // After clicking the confirmation link, land inside your app:
           emailRedirectTo: `${ORIGIN}/create-account?from=invite`,
         },
       });
       if (error) throw error;
-
       const newUser = data.user;
       if (!newUser?.id) {
-        // No user id yet (e.g., provider deferred). Bubble a helpful message.
-        // Note: t() cannot be called here (outside component), this is handled by AddForm
-        throw new Error(
-          "Sign-up email sent. The caregiver will appear after they confirm."
-        );
+        throw new Error("Sign-up email sent. The caregiver will appear after they confirm.");
       }
-
-      // 2) Upsert profile as caregiver (allowed for admin by your RLS)
       const { error: upErr } = await supabase.from("profiles").upsert({
         id: newUser.id,
         email: payload.email,
@@ -108,7 +72,6 @@ export default function ActiveCaregiversPage() {
         disabled: false,
       });
       if (upErr) throw upErr;
-
       return { id: newUser.id };
     },
     onSuccess: () => {
@@ -116,7 +79,6 @@ export default function ActiveCaregiversPage() {
     },
   });
 
-  // ---------- Toggle disabled (soft delete / restore) ----------
   const toggleM = useMutation({
     mutationFn: async (row: CaregiverRow) => {
       const { error } = await supabase
@@ -130,11 +92,9 @@ export default function ActiveCaregiversPage() {
     },
   });
 
-  // ---------- UI ----------
   return (
-    <PageLayout title={t('active_cg.page_title')} user={{ ...user, profile }}>
+    <div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Title row */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-gray">{t('active_cg.title')}</h1>
@@ -166,7 +126,6 @@ export default function ActiveCaregiversPage() {
           </div>
         </div>
 
-        {/* Add form */}
         <div className="bg-white border border-slate-gray/20 rounded-2xl p-6 shadow-sm mb-10">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-full bg-cyan-primary/15 flex items-center justify-center">
@@ -188,7 +147,6 @@ export default function ActiveCaregiversPage() {
           )}
         </div>
 
-        {/* Table */}
         <div className="bg-white border border-slate-gray/20 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-gray/10">
             <h3 className="text-lg font-semibold text-slate-gray">
@@ -254,12 +212,11 @@ export default function ActiveCaregiversPage() {
           )}
         </div>
 
-        {/* Note about hard delete */}
         <p className="mt-6 text-xs text-slate-gray/60">
           {t('active_cg.delete_note')}
         </p>
       </div>
-    </PageLayout>
+    </div>
   );
 }
 

@@ -5,6 +5,8 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')!
 const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')!
+const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET') || 'fallback-dev-secret-change-in-prod'
+
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
@@ -17,13 +19,35 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: CORS_HEADERS })
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  const maxLen = Math.max(a.length, b.length)
+  let diff = a.length !== b.length ? 1 : 0
+  for (let i = 0; i < maxLen; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0)
+  }
+  return diff === 0
+}
+
+async function signAdminToken(email: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  const now = Math.floor(Date.now() / 1000)
+  const payload = btoa(JSON.stringify({ sub: email, role: 'admin', iat: now, exp: now + 8 * 60 * 60 }))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  const signingInput = `${header}.${payload}`
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signingInput))
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  return `${signingInput}.${sigB64}`
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
   try {
     const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
-
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
     const { data: rateLimitCheck } = await srv.rpc('check_rate_limit', {
       p_identifier: clientIp,
@@ -39,64 +63,12 @@ Deno.serve(async (req) => {
     const submittedEmail = (body?.email as string | undefined)?.trim() ?? ''
     const submittedPassword = (body?.password as string | undefined) ?? ''
 
-    const emailMatch = submittedEmail === ADMIN_EMAIL
-    const passwordMatch = submittedPassword === ADMIN_PASSWORD
-
-    if (!emailMatch || !passwordMatch) {
+    if (!timingSafeEqual(submittedEmail, ADMIN_EMAIL) || !timingSafeEqual(submittedPassword, ADMIN_PASSWORD)) {
       return json({ error: 'Invalid credentials' }, 403)
     }
 
-    const { data: existingUsers, error: listErr } = await srv.auth.admin.listUsers()
-    if (listErr) throw listErr
-
-    const existingAuthUser = existingUsers?.users?.find((u) => u.email === ADMIN_EMAIL)
-
-    if (!existingAuthUser) {
-      const { data: created, error: createErr } = await srv.auth.admin.createUser({
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
-        email_confirm: true,
-      })
-      if (createErr) throw createErr
-
-      const uid = created.user!.id
-      const { error: profErr } = await srv.from('profiles').upsert({
-        id: uid,
-        email: ADMIN_EMAIL,
-        display_name: 'Admin',
-        role: 'admin',
-        disabled: false,
-      })
-      if (profErr) throw profErr
-
-      return json({ ok: true, created: true })
-    }
-
-    const uid = existingAuthUser.id
-
-    const { error: pwErr } = await srv.auth.admin.updateUserById(uid, {
-      password: ADMIN_PASSWORD,
-      email_confirm: true,
-    })
-    if (pwErr) throw pwErr
-
-    const { data: prof } = await srv
-      .from('profiles')
-      .select('role')
-      .eq('id', uid)
-      .maybeSingle()
-
-    if (prof?.role !== 'admin') {
-      await srv.from('profiles').upsert({
-        id: uid,
-        email: ADMIN_EMAIL,
-        display_name: 'Admin',
-        role: 'admin',
-        disabled: false,
-      })
-    }
-
-    return json({ ok: true, created: false })
+    const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET)
+    return json({ ok: true, token })
   } catch (err: any) {
     console.error('[admin-bootstrap] error:', err?.message || err)
     return json({ error: 'Internal server error' }, 500)
