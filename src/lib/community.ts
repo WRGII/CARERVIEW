@@ -645,6 +645,213 @@ export async function unbanCommunityMember(userId: string): Promise<void> {
 }
 
 // ============================================================
+// ADMIN — PROACTIVE POST & MEMBER MANAGEMENT
+// ============================================================
+
+export type NotificationType = 'post_flagged' | 'post_removed' | 'reply_removed' | 'account_banned' | 'advisory'
+
+export interface CommunityNotification {
+  id: string
+  user_id: string
+  type: NotificationType
+  subject: string
+  message: string
+  post_id: string | null
+  reply_id: string | null
+  is_read: boolean
+  created_at: string
+}
+
+export async function sendMemberNotification(params: {
+  userId: string
+  type: NotificationType
+  subject: string
+  message: string
+  post_id?: string | null
+  reply_id?: string | null
+}): Promise<void> {
+  await assertCommunityAdmin()
+
+  const { error } = await supabase.from('community_notifications').insert({
+    user_id: params.userId,
+    type: params.type,
+    subject: params.subject,
+    message: params.message,
+    post_id: params.post_id ?? null,
+    reply_id: params.reply_id ?? null,
+  })
+  if (error) throw error
+}
+
+export async function listAllPosts(params: {
+  limit?: number
+  offset?: number
+  roomId?: string | null
+  status?: PostStatus | null
+  searchQuery?: string | null
+} = {}): Promise<CommunityPost[]> {
+  await assertCommunityAdmin()
+
+  const { limit = 25, offset = 0, roomId, status, searchQuery } = params
+
+  let query = supabase
+    .from('community_posts')
+    .select(`
+      id, room_id, author_user_id, is_anonymous, title, body,
+      post_status, is_locked, help_type, reply_count, reaction_count,
+      last_activity_at, created_at, updated_at,
+      room:community_rooms ( id, slug, name, color, icon_name ),
+      author_profile:community_profiles ( handle, avatar_color )
+    `)
+    .order('created_at', { ascending: false })
+
+  if (roomId) query = query.eq('room_id', roomId)
+  if (status) query = query.eq('post_status', status)
+  if (searchQuery) query = query.ilike('title', `%${searchQuery}%`)
+
+  const { data, error } = await query.range(offset, offset + limit - 1)
+  if (error) throw error
+  return (data ?? []) as CommunityPost[]
+}
+
+export async function listAllCommunityMembers(params: {
+  limit?: number
+  offset?: number
+  searchQuery?: string | null
+  showBanned?: boolean | null
+} = {}): Promise<CommunityProfile[]> {
+  await assertCommunityAdmin()
+
+  const { limit = 25, offset = 0, searchQuery, showBanned } = params
+
+  let query = supabase
+    .from('community_profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (searchQuery) query = query.ilike('handle', `%${searchQuery}%`)
+  if (showBanned === true) query = query.eq('is_banned', true)
+  if (showBanned === false) query = query.eq('is_banned', false)
+
+  const { data, error } = await query.range(offset, offset + limit - 1)
+  if (error) throw error
+  return (data ?? []) as CommunityProfile[]
+}
+
+export interface AuthMemberRow {
+  id: string
+  email: string | null
+  display_name: string
+  role: string
+  disabled: boolean
+  created_at: string
+  has_community_profile: boolean
+  community_handle?: string | null
+}
+
+export async function listAuthMembers(params: {
+  limit?: number
+  offset?: number
+  searchQuery?: string | null
+} = {}): Promise<AuthMemberRow[]> {
+  await assertCommunityAdmin()
+
+  const { limit = 25, offset = 0, searchQuery } = params
+
+  let query = supabase
+    .from('profiles')
+    .select(`
+      id, email, display_name, role, disabled, created_at,
+      community_profiles ( handle )
+    `)
+    .order('created_at', { ascending: false })
+
+  if (searchQuery) {
+    query = query.or(`email.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`)
+  }
+
+  const { data, error } = await query.range(offset, offset + limit - 1)
+  if (error) throw error
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    email: row.email ?? null,
+    display_name: row.display_name ?? '',
+    role: row.role ?? 'caregiver',
+    disabled: row.disabled ?? false,
+    created_at: row.created_at,
+    has_community_profile: !!row.community_profiles,
+    community_handle: row.community_profiles?.handle ?? null,
+  }))
+}
+
+export async function listPostsByUser(params: {
+  userId: string
+  limit?: number
+  offset?: number
+}): Promise<CommunityPost[]> {
+  await assertCommunityAdmin()
+
+  const { userId, limit = 20, offset = 0 } = params
+
+  const { data, error } = await supabase
+    .from('community_posts')
+    .select(`
+      id, room_id, author_user_id, is_anonymous, title, body,
+      post_status, is_locked, help_type, reply_count, reaction_count,
+      last_activity_at, created_at, updated_at,
+      room:community_rooms ( id, slug, name, color, icon_name ),
+      author_profile:community_profiles ( handle, avatar_color )
+    `)
+    .eq('author_user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (error) throw error
+  return (data ?? []) as CommunityPost[]
+}
+
+export async function deletePostPermanently(params: {
+  postId: string
+}): Promise<void> {
+  await assertCommunityAdmin()
+
+  const { error } = await supabase
+    .from('community_posts')
+    .delete()
+    .eq('id', params.postId)
+  if (error) throw error
+}
+
+export async function getMyNotifications(params: {
+  limit?: number
+} = {}): Promise<CommunityNotification[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .from('community_notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(params.limit ?? 20)
+
+  if (error) throw error
+  return (data ?? []) as CommunityNotification[]
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  await supabase
+    .from('community_notifications')
+    .update({ is_read: true })
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+}
+
+// ============================================================
 // HELPERS
 // ============================================================
 
