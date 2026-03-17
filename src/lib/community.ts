@@ -1,4 +1,29 @@
 import { supabase } from './supabaseClient'
+import { getAdminToken } from '../hooks/useAdminSession'
+
+async function callAdminData(action: string, payload: Record<string, unknown> = {}): Promise<unknown> {
+  const token = getAdminToken()
+  if (!token) throw new Error('Not authenticated as admin')
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-data`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action, payload }),
+    }
+  )
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error || 'Admin operation failed')
+  return data
+}
+
+function assertAdminTokenPresent(): void {
+  const token = getAdminToken()
+  if (!token) throw new Error('Not authenticated as admin')
+}
 
 // ============================================================
 // TYPES
@@ -547,19 +572,8 @@ export async function listPendingReports(params: {
   return (data ?? []) as ModerationReportRow[]
 }
 
-async function assertCommunityAdmin(): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
-
-  const { data: prof, error: profError } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (profError) throw new Error(`Failed to verify admin role: ${profError.message}`)
-  if (prof?.role !== 'admin') throw new Error('Action not permitted')
-  return user.id
+function assertCommunityAdmin(): void {
+  assertAdminTokenPresent()
 }
 
 export async function resolveReport(params: {
@@ -567,82 +581,32 @@ export async function resolveReport(params: {
   action: 'reviewed' | 'dismissed'
   mod_note?: string
 }): Promise<void> {
-  const userId = await assertCommunityAdmin()
-
-  const { data, error } = await supabase
-    .from('community_reports')
-    .update({
-      report_status: params.action,
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString(),
-      mod_note: params.mod_note?.trim() ?? null,
-    })
-    .eq('id', params.reportId)
-    .select('id')
-  if (error) throw error
-  if (!data || data.length === 0) throw new Error('Action not permitted')
+  await callAdminData('resolve_report', { reportId: params.reportId, action: params.action, mod_note: params.mod_note })
 }
 
 export async function moderatePost(params: {
   postId: string
   post_status: PostStatus
 }): Promise<void> {
-  await assertCommunityAdmin()
-
-  const { data, error } = await supabase
-    .from('community_posts')
-    .update({ post_status: params.post_status })
-    .eq('id', params.postId)
-    .select('id')
-  if (error) throw error
-  if (!data || data.length === 0) throw new Error('Action not permitted')
+  await callAdminData('moderate_post', { postId: params.postId, post_status: params.post_status })
 }
 
 export async function moderateReply(params: {
   replyId: string
   reply_status: ReplyStatus
 }): Promise<void> {
-  await assertCommunityAdmin()
-
-  const { data, error } = await supabase
-    .from('community_replies')
-    .update({ reply_status: params.reply_status })
-    .eq('id', params.replyId)
-    .select('id')
-  if (error) throw error
-  if (!data || data.length === 0) throw new Error('Action not permitted')
+  await callAdminData('moderate_reply', { replyId: params.replyId, reply_status: params.reply_status })
 }
 
 export async function banCommunityMember(params: {
   userId: string
   reason?: string
 }): Promise<void> {
-  const userId = await assertCommunityAdmin()
-
-  const { error } = await supabase
-    .from('community_profiles')
-    .update({
-      is_banned: true,
-      ban_reason: params.reason?.trim() ?? null,
-    })
-    .eq('user_id', params.userId)
-  if (error) throw error
-
-  await supabase.from('community_bans').insert({
-    user_id: params.userId,
-    banned_by: userId,
-    reason: params.reason?.trim() ?? '',
-  })
+  await callAdminData('ban_member', { userId: params.userId, reason: params.reason })
 }
 
 export async function unbanCommunityMember(userId: string): Promise<void> {
-  await assertCommunityAdmin()
-
-  const { error } = await supabase
-    .from('community_profiles')
-    .update({ is_banned: false, ban_reason: null })
-    .eq('user_id', userId)
-  if (error) throw error
+  await callAdminData('unban_member', { userId })
 }
 
 // ============================================================
@@ -671,17 +635,14 @@ export async function sendMemberNotification(params: {
   post_id?: string | null
   reply_id?: string | null
 }): Promise<void> {
-  await assertCommunityAdmin()
-
-  const { error } = await supabase.from('community_notifications').insert({
-    user_id: params.userId,
+  await callAdminData('send_notification', {
+    userId: params.userId,
     type: params.type,
     subject: params.subject,
     message: params.message,
     post_id: params.post_id ?? null,
     reply_id: params.reply_id ?? null,
   })
-  if (error) throw error
 }
 
 export async function listAllPosts(params: {
@@ -691,7 +652,7 @@ export async function listAllPosts(params: {
   status?: PostStatus | null
   searchQuery?: string | null
 } = {}): Promise<CommunityPost[]> {
-  await assertCommunityAdmin()
+  assertCommunityAdmin()
 
   const { limit = 25, offset = 0, roomId, status, searchQuery } = params
 
@@ -721,7 +682,7 @@ export async function listAllCommunityMembers(params: {
   searchQuery?: string | null
   showBanned?: boolean | null
 } = {}): Promise<CommunityProfile[]> {
-  await assertCommunityAdmin()
+  assertCommunityAdmin()
 
   const { limit = 25, offset = 0, searchQuery, showBanned } = params
 
@@ -755,7 +716,7 @@ export async function listAuthMembers(params: {
   offset?: number
   searchQuery?: string | null
 } = {}): Promise<AuthMemberRow[]> {
-  await assertCommunityAdmin()
+  assertCommunityAdmin()
 
   const { limit = 25, offset = 0, searchQuery } = params
 
@@ -796,7 +757,7 @@ export async function listPostsByUser(params: {
   limit?: number
   offset?: number
 }): Promise<CommunityPost[]> {
-  await assertCommunityAdmin()
+  assertCommunityAdmin()
 
   const { userId, limit = 20, offset = 0 } = params
 
@@ -820,13 +781,7 @@ export async function listPostsByUser(params: {
 export async function deletePostPermanently(params: {
   postId: string
 }): Promise<void> {
-  await assertCommunityAdmin()
-
-  const { error } = await supabase
-    .from('community_posts')
-    .delete()
-    .eq('id', params.postId)
-  if (error) throw error
+  await callAdminData('delete_post', { postId: params.postId })
 }
 
 export async function getMyNotifications(params: {

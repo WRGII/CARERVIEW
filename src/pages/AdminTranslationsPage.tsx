@@ -2,9 +2,8 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
+import { getAdminToken } from "../hooks/useAdminSession";
 import { Search, Save, RefreshCw, Globe, ChevronDown, ChevronRight } from "lucide-react";
-import { Loading } from "../components/ui/Loading";
-import { ErrorMessage } from "../components/ui/ErrorMessage";
 import { useLocale } from "../i18n/LocaleContext";
 
 type TranslationRow = {
@@ -77,10 +76,21 @@ export default function AdminTranslationsPage() {
         locale: activeLocale,
         value,
       }));
-      const { error } = await supabase
-        .from("ui_translations")
-        .upsert(rows, { onConflict: "key,locale" });
-      if (error) throw error;
+      const token = getAdminToken();
+      if (!token) throw new Error("Not authenticated as admin");
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-data`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ action: "upsert_translations", payload: { rows } }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Save failed");
     },
     onSuccess: () => {
       setPendingEdits({});

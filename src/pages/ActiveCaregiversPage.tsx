@@ -1,19 +1,31 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../lib/supabaseClient";
 import { Plus, CircleCheck as CheckCircle2, Circle as XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 import { useFormatDate } from "../hooks/useFormatDate";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
+import { getAdminToken } from "../hooks/useAdminSession";
 
-function randomPassword(len = 24) {
-  const alphabet =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
-  return Array.from({ length: len }, () =>
-    alphabet[Math.floor(Math.random() * alphabet.length)]
-  ).join("");
+async function callAdminData(action: string, payload: Record<string, unknown> = {}) {
+  const token = getAdminToken();
+  if (!token) throw new Error("Not authenticated as admin");
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-data`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action, payload }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || "Admin operation failed");
+  return data;
 }
+
 
 type CaregiverRow = {
   id: string;
@@ -32,47 +44,15 @@ export default function ActiveCaregiversPage() {
   const caregiversQ = useQuery({
     queryKey: ["admin", "caregivers"],
     queryFn: async (): Promise<CaregiverRow[]> => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, display_name, email, role, disabled, created_at")
-        .eq("role", "caregiver")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
+      const result = await callAdminData("list_caregivers");
+      return (result as { data: CaregiverRow[] }).data ?? [];
     },
     staleTime: 30_000,
   });
 
-  const ORIGIN =
-    (typeof window !== "undefined" && window.location.origin) ||
-    (import.meta.env.PUBLIC_SITE_URL as string) ||
-    "";
-
   const addM = useMutation({
     mutationFn: async (payload: { email: string; display_name: string }) => {
-      const tempPassword = randomPassword();
-      const { data, error } = await supabase.auth.signUp({
-        email: payload.email,
-        password: tempPassword,
-        options: {
-          data: { display_name: payload.display_name },
-          emailRedirectTo: `${ORIGIN}/create-account?from=invite`,
-        },
-      });
-      if (error) throw error;
-      const newUser = data.user;
-      if (!newUser?.id) {
-        throw new Error("Sign-up email sent. The caregiver will appear after they confirm.");
-      }
-      const { error: upErr } = await supabase.from("profiles").upsert({
-        id: newUser.id,
-        email: payload.email,
-        display_name: payload.display_name,
-        role: "caregiver",
-        disabled: false,
-      });
-      if (upErr) throw upErr;
-      return { id: newUser.id };
+      return callAdminData("add_caregiver", { email: payload.email, display_name: payload.display_name });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "caregivers"] });
@@ -81,11 +61,7 @@ export default function ActiveCaregiversPage() {
 
   const toggleM = useMutation({
     mutationFn: async (row: CaregiverRow) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ disabled: !row.disabled })
-        .eq("id", row.id);
-      if (error) throw error;
+      await callAdminData("toggle_caregiver", { id: row.id, disabled: !row.disabled });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "caregivers"] });
