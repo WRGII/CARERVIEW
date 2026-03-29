@@ -9,34 +9,26 @@ import type {
   TeamMemberRole,
 } from "../types/memory-book";
 
-export function useMemoryBook(teamId: string | null) {
+export function useMemoryBook(teamId: string | null, isOwner: boolean) {
   return useQuery({
     queryKey: ["memory-book", teamId],
     queryFn: async () => {
       if (!teamId) return null;
-      const { data, error } = await supabase
-        .rpc("mb_get_or_create", { p_team_id: teamId });
-      if (error) throw error;
-      const bookId = data as string;
-      const { data: book, error: bookError } = await supabase
-        .from("memory_books")
-        .select("*")
-        .eq("id", bookId)
-        .maybeSingle();
-      if (bookError) throw bookError;
-      return book as MemoryBook | null;
-    },
-    enabled: !!teamId,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
-}
 
-export function useMemoryBookReadOnly(teamId: string | null) {
-  return useQuery({
-    queryKey: ["memory-book-ro", teamId],
-    queryFn: async () => {
-      if (!teamId) return null;
+      if (isOwner) {
+        const { data, error } = await supabase
+          .rpc("mb_get_or_create", { p_team_id: teamId });
+        if (error) throw error;
+        const bookId = data as string;
+        const { data: book, error: bookError } = await supabase
+          .from("memory_books")
+          .select("*")
+          .eq("id", bookId)
+          .maybeSingle();
+        if (bookError) throw bookError;
+        return book as MemoryBook | null;
+      }
+
       const { data, error } = await supabase
         .from("memory_books")
         .select("*")
@@ -47,6 +39,7 @@ export function useMemoryBookReadOnly(teamId: string | null) {
     },
     enabled: !!teamId,
     staleTime: 5 * 60 * 1000,
+    retry: false,
   });
 }
 
@@ -130,13 +123,15 @@ export function useUpsertMemoryBookIdentity() {
         .from("memory_book_identity")
         .select("id")
         .eq("memory_book_id", params.memoryBookId)
+        .eq("team_id", params.teamId)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
           .from("memory_book_identity")
           .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
-          .eq("id", existing.id);
+          .eq("id", existing.id)
+          .eq("team_id", params.teamId);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -194,7 +189,8 @@ export function useUpsertMemoryBookContact() {
             updated_at: new Date().toISOString(),
             updated_by: user.id,
           })
-          .eq("id", params.contact.id);
+          .eq("id", params.contact.id)
+          .eq("team_id", params.teamId);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -218,11 +214,12 @@ export function useUpsertMemoryBookContact() {
 export function useDeleteMemoryBookContact() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { id: string; memoryBookId: string }) => {
+    mutationFn: async (params: { id: string; memoryBookId: string; teamId: string }) => {
       const { error } = await supabase
         .from("memory_book_contacts")
         .delete()
-        .eq("id", params.id);
+        .eq("id", params.id)
+        .eq("team_id", params.teamId);
       if (error) throw error;
     },
     onSuccess: (_data, params) => {
@@ -264,13 +261,15 @@ export function useUpsertMemoryBookMedical() {
         .from("memory_book_medical")
         .select("id")
         .eq("memory_book_id", params.memoryBookId)
+        .eq("team_id", params.teamId)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
           .from("memory_book_medical")
           .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
-          .eq("id", existing.id);
+          .eq("id", existing.id)
+          .eq("team_id", params.teamId);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -324,13 +323,15 @@ export function useUpsertMemoryBookPreferences() {
         .from("memory_book_preferences")
         .select("id")
         .eq("memory_book_id", params.memoryBookId)
+        .eq("team_id", params.teamId)
         .maybeSingle();
 
       if (existing) {
         const { error } = await supabase
           .from("memory_book_preferences")
           .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
-          .eq("id", existing.id);
+          .eq("id", existing.id)
+          .eq("team_id", params.teamId);
         if (error) throw error;
       } else {
         const { error } = await supabase

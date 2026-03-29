@@ -93,7 +93,7 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Remove ${name} from contacts?`)) return;
     try {
-      await deleteContact.mutateAsync({ id, memoryBookId });
+      await deleteContact.mutateAsync({ id, memoryBookId, teamId });
       showToast("Contact removed", "success");
     } catch (e: any) {
       showToast(e.message ?? "Failed to remove", "error");

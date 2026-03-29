@@ -33,12 +33,14 @@ export default function MemorySchedulePage() {
   const { teamId } = useActiveTeam();
   const { user } = useAuth();
 
-  const { data: book, isLoading: bookLoading, error: bookError } = useMemoryBook(teamId);
   const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId);
   const { data: patient, isLoading: patientLoading } = useTeamPatient(teamId);
 
-  const bookId = book?.id ?? null;
   const isOwner = teamRole === "owner";
+
+  const { data: book, isLoading: bookLoading, error: bookError } = useMemoryBook(teamId, isOwner);
+
+  const bookId = book?.id ?? null;
 
   const { data: identity } = useMemoryBookIdentity(bookId);
   const { data: contacts = [] } = useMemoryBookContacts(bookId);
@@ -54,6 +56,19 @@ export default function MemorySchedulePage() {
   const patientName = patient?.full_name ?? "Care Recipient";
 
   if (!user) return null;
+
+  if (!teamId) {
+    return (
+      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <h3 className="text-base font-semibold text-slate-700 mb-2">No active team selected</h3>
+          <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+            Set up or select a team from your dashboard before accessing Memory &amp; Schedule.
+          </p>
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (isLoading) {
     return (
