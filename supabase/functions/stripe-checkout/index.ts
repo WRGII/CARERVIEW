@@ -139,15 +139,24 @@ Deno.serve(async (req) => {
 
     let customerId = existing?.customer_id as string | undefined
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email ?? undefined,
-        metadata: { user_id: user.id },
-      })
-      customerId = customer.id
+      let newCustomer: Stripe.Customer
+      try {
+        newCustomer = await stripe.customers.create({
+          email: user.email ?? undefined,
+          metadata: { user_id: user.id },
+        })
+      } catch (stripeErr: any) {
+        console.error('[stripe-checkout] Stripe customer creation failed:', stripeErr?.message || stripeErr)
+        return resp({ error: 'Failed to create Stripe customer. Please try again.' }, 500)
+      }
+      customerId = newCustomer.id
+
       const { error: upErr } = await db
         .from('stripe_customers')
         .upsert({ user_id: user.id, customer_id: customerId }, { onConflict: 'user_id' })
-      if (upErr) throw upErr
+      if (upErr) {
+        console.error('[stripe-checkout] stripe_customers upsert failed (non-fatal):', upErr.message)
+      }
     }
 
     // 2) Create Checkout Session (force metadata to include user_id + plan_id)

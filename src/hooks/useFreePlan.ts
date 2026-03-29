@@ -1,6 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 
+async function ensureStripeCustomer(): Promise<void> {
+  const { error } = await supabase.functions.invoke('stripe-ensure-customer', { body: {} })
+  if (error) {
+    console.warn('[useFreePlan] stripe-ensure-customer non-fatal error:', error.message)
+  }
+}
+
 export const useActivateFreePlan = () => {
   return useMutation({
     mutationFn: async () => {
@@ -47,6 +54,8 @@ export const useActivateFreePlan = () => {
         .maybeSingle()
 
       if (error) throw new Error(`Failed to activate free plan: ${error.message}`)
+
+      ensureStripeCustomer()
 
       return { alreadyActive: false, plan: data }
     },
