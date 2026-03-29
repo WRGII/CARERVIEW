@@ -1,6 +1,7 @@
 import { User, Users, Stethoscope, Heart, BookOpen, Crown, Shield } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";
 import type { TeamMemberRole } from "../../types/memory-book";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   patientName: string;
@@ -29,6 +30,7 @@ export default function OverviewTab({
   contactCount,
   onNavigate,
 }: Props) {
+  const { t } = useLocale();
   const completedSections = [hasIdentity, hasContacts, hasMedical, hasPreferences].filter(Boolean).length;
   const totalSections = 4;
 
@@ -51,10 +53,10 @@ export default function OverviewTab({
                     {identityPreferredName && identityPreferredName !== patientName && (
                       <span className="text-sm text-slate-500">({patientName})</span>
                     )}
-                    <RoleBadge role={teamRole} />
+                    <RoleBadge role={teamRole} ownerLabel={t("memory_book.role_owner")} memberLabel={t("memory_book.role_member")} />
                   </div>
                   {age && (
-                    <p className="text-sm text-slate-500 mt-1">Age {age}</p>
+                    <p className="text-sm text-slate-500 mt-1">{t("memory_book.overview_age", { age })}</p>
                   )}
                   {identityAboutMe && (
                     <p className="text-sm text-slate-600 mt-3 leading-relaxed line-clamp-3">
@@ -63,8 +65,8 @@ export default function OverviewTab({
                   )}
                   {!identityAboutMe && (
                     <p className="text-sm text-slate-400 mt-3 italic">
-                      No personal summary added yet.
-                      {teamRole === "owner" && " Add one in the Memory Book tab."}
+                      {t("memory_book.overview_no_summary")}
+                      {teamRole === "owner" && t("memory_book.overview_no_summary_owner_hint")}
                     </p>
                   )}
                 </div>
@@ -75,27 +77,33 @@ export default function OverviewTab({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <SectionCard
               icon={<User className="w-5 h-5" />}
-              label="Identity"
+              label={t("memory_book.section_identity")}
               complete={hasIdentity}
+              notStartedLabel={t("memory_book.overview_not_started")}
               onClick={() => onNavigate("memory-book")}
             />
             <SectionCard
               icon={<Users className="w-5 h-5" />}
-              label="Contacts"
+              label={t("memory_book.section_contacts")}
               complete={hasContacts}
               count={contactCount}
+              notStartedLabel={t("memory_book.overview_not_started")}
+              recordsOneLabel={t("memory_book.overview_records_one")}
+              recordsManyLabel={t("memory_book.overview_records_many")}
               onClick={() => onNavigate("memory-book")}
             />
             <SectionCard
               icon={<Stethoscope className="w-5 h-5" />}
-              label="Medical"
+              label={t("memory_book.section_medical")}
               complete={hasMedical}
+              notStartedLabel={t("memory_book.overview_not_started")}
               onClick={() => onNavigate("memory-book")}
             />
             <SectionCard
               icon={<Heart className="w-5 h-5" />}
-              label="Preferences"
+              label={t("memory_book.section_preferences")}
               complete={hasPreferences}
+              notStartedLabel={t("memory_book.overview_not_started")}
               onClick={() => onNavigate("memory-book")}
             />
           </div>
@@ -105,8 +113,8 @@ export default function OverviewTab({
           <Card>
             <CardContent className="pt-5 pb-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-700">Memory Book Progress</h3>
-                <span className="text-xs text-slate-500">{completedSections}/{totalSections} sections</span>
+                <h3 className="text-sm font-semibold text-slate-700">{t("memory_book.overview_progress_title")}</h3>
+                <span className="text-xs text-slate-500">{t("memory_book.overview_sections_count", { completed: completedSections, total: totalSections })}</span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2">
                 <div
@@ -116,10 +124,10 @@ export default function OverviewTab({
               </div>
               <div className="mt-4 space-y-2">
                 {[
-                  { label: "Identity", done: hasIdentity },
-                  { label: "Contacts", done: hasContacts },
-                  { label: "Medical", done: hasMedical },
-                  { label: "Preferences", done: hasPreferences },
+                  { label: t("memory_book.section_identity"), done: hasIdentity },
+                  { label: t("memory_book.section_contacts"), done: hasContacts },
+                  { label: t("memory_book.section_medical"), done: hasMedical },
+                  { label: t("memory_book.section_preferences"), done: hasPreferences },
                 ].map(({ label, done }) => (
                   <div key={label} className="flex items-center gap-2.5">
                     <div
@@ -148,9 +156,9 @@ export default function OverviewTab({
               <div className="flex items-start gap-3">
                 <BookOpen className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-1">Coming in Phase 2</h3>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-1">{t("memory_book.overview_coming_title")}</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Daily Living, Activities, Meals, Behavior &amp; Safety, Journal, and Change Log will be available after Phase 2.
+                    {t("memory_book.overview_coming_desc")}
                   </p>
                 </div>
               </div>
@@ -159,9 +167,11 @@ export default function OverviewTab({
 
           {teamRole === "owner" && completedSections < totalSections && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-xs font-medium text-amber-800 mb-1">Memory Book Incomplete</p>
+              <p className="text-xs font-medium text-amber-800 mb-1">{t("memory_book.overview_incomplete_title")}</p>
               <p className="text-xs text-amber-700 leading-relaxed">
-                {totalSections - completedSections} section{totalSections - completedSections !== 1 ? "s" : ""} still need to be filled in to give caregivers a complete picture.
+                {totalSections - completedSections === 1
+                  ? t("memory_book.overview_incomplete_desc_one")
+                  : t("memory_book.overview_incomplete_desc_many", { count: totalSections - completedSections })}
               </p>
             </div>
           )}
@@ -171,20 +181,20 @@ export default function OverviewTab({
   );
 }
 
-function RoleBadge({ role }: { role: TeamMemberRole | null }) {
+function RoleBadge({ role, ownerLabel, memberLabel }: { role: TeamMemberRole | null; ownerLabel: string; memberLabel: string }) {
   if (!role) return null;
   if (role === "owner") {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-medium text-amber-700">
         <Crown className="w-3 h-3" />
-        Owner
+        {ownerLabel}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
       <Shield className="w-3 h-3" />
-      Member
+      {memberLabel}
     </span>
   );
 }
@@ -194,12 +204,18 @@ function SectionCard({
   label,
   complete,
   count,
+  notStartedLabel,
+  recordsOneLabel,
+  recordsManyLabel,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   complete: boolean;
   count?: number;
+  notStartedLabel: string;
+  recordsOneLabel?: string;
+  recordsManyLabel?: string;
   onClick: () => void;
 }) {
   return (
@@ -218,10 +234,14 @@ function SectionCard({
       <div>
         <p className="text-xs font-medium text-slate-700 group-hover:text-cyan-700">{label}</p>
         {typeof count === "number" && count > 0 && (
-          <p className="text-xs text-slate-400">{count} record{count !== 1 ? "s" : ""}</p>
+          <p className="text-xs text-slate-400">
+            {count === 1
+              ? (recordsOneLabel ?? `1 record`)
+              : (recordsManyLabel ? recordsManyLabel.replace("{count}", String(count)) : `${count} records`)}
+          </p>
         )}
         {!complete && (
-          <p className="text-xs text-slate-400">Not started</p>
+          <p className="text-xs text-slate-400">{notStartedLabel}</p>
         )}
       </div>
     </button>

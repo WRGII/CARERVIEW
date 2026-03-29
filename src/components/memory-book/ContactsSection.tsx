@@ -12,6 +12,7 @@ import {
 import type { MemoryBookContact } from "../../types/memory-book";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
@@ -42,6 +43,7 @@ const EMPTY_CONTACT = {
 };
 
 export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props) {
+  const { t } = useLocale();
   const { data: contacts = [], isLoading } = useMemoryBookContacts(memoryBookId);
   const upsert = useUpsertMemoryBookContact();
   const deleteContact = useDeleteMemoryBookContact();
@@ -72,7 +74,7 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
 
   const handleSave = async () => {
     if (!form.full_name.trim()) {
-      showToast("Contact name is required", "error");
+      showToast(t("memory_book.toast_contact_required"), "error");
       return;
     }
     try {
@@ -81,22 +83,22 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
         teamId,
         contact: editingId ? { ...form, id: editingId } : { ...form, sort_order: contacts.length },
       });
-      showToast(editingId ? "Contact updated" : "Contact added", "success");
+      showToast(editingId ? t("memory_book.toast_contact_updated") : t("memory_book.toast_contact_added"), "success");
       setShowForm(false);
       setEditingId(null);
       setForm(EMPTY_CONTACT);
     } catch (e: any) {
-      showToast(e.message ?? "Failed to save contact", "error");
+      showToast(e.message ?? t("memory_book.toast_contact_failed"), "error");
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Remove ${name} from contacts?`)) return;
+    if (!confirm(t("memory_book.confirm_remove_contact", { name }))) return;
     try {
       await deleteContact.mutateAsync({ id, memoryBookId, teamId });
-      showToast("Contact removed", "success");
+      showToast(t("memory_book.toast_contact_removed"), "success");
     } catch (e: any) {
-      showToast(e.message ?? "Failed to remove", "error");
+      showToast(e.message ?? t("memory_book.toast_contact_remove_failed"), "error");
     }
   };
 
@@ -116,15 +118,17 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
 
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-slate-800">Care Network &amp; Contacts</h3>
+          <h3 className="text-base font-semibold text-slate-800">{t("memory_book.contacts_title")}</h3>
           <p className="text-sm text-slate-500 mt-0.5">
-            {contacts.length} contact{contacts.length !== 1 ? "s" : ""} on file
+            {contacts.length === 1
+              ? t("memory_book.contacts_count_one")
+              : t("memory_book.contacts_count_many", { count: contacts.length })}
           </p>
         </div>
         {isOwner && !showForm && (
           <Button variant="primary" size="sm" onClick={startAdd}>
             <Plus className="w-4 h-4 mr-1 inline" />
-            Add Contact
+            {t("memory_book.contacts_add_btn")}
           </Button>
         )}
       </div>
@@ -133,41 +137,41 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
         <Card>
           <CardHeader>
             <h4 className="text-sm font-semibold text-slate-700">
-              {editingId ? "Edit Contact" : "New Contact"}
+              {editingId ? t("memory_book.contacts_edit_heading") : t("memory_book.contacts_new_heading")}
             </h4>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Full Name *"
+                  label={t("memory_book.field_full_name")}
                   value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  placeholder="Contact's full name"
+                  placeholder={t("memory_book.field_full_name_placeholder")}
                 />
                 <Input
-                  label="Relationship"
+                  label={t("memory_book.field_relationship")}
                   value={form.relationship}
                   onChange={e => setForm(f => ({ ...f, relationship: e.target.value }))}
-                  placeholder="e.g. Daughter, Family Doctor"
+                  placeholder={t("memory_book.field_relationship_placeholder")}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">Role</label>
+                  <label className="block text-sm font-medium text-slate-700">{t("memory_book.field_role")}</label>
                   <select
                     className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-base shadow-sm focus:border-cyan-600 focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white text-slate-800"
                     value={form.role_tag}
                     onChange={e => setForm(f => ({ ...f, role_tag: e.target.value }))}
                   >
-                    <option value="">Select role...</option>
+                    <option value="">{t("memory_book.field_role_select")}</option>
                     {ROLE_TAGS.map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
                 </div>
                 <Input
-                  label="Phone"
+                  label={t("memory_book.field_phone")}
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   placeholder="+1 (555) 000-0000"
@@ -175,25 +179,25 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
                 />
               </div>
               <Input
-                label="Email"
+                label={t("memory_book.field_email")}
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="email@example.com"
                 type="email"
               />
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Notes</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t("memory_book.field_notes")}</label>
                 <textarea
                   className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-base placeholder-slate-400 shadow-sm focus:border-cyan-600 focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white text-slate-800 min-h-[72px]"
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="Additional notes about this contact..."
+                  placeholder={t("memory_book.field_notes_placeholder")}
                 />
               </div>
               <div className="flex items-center gap-3 pt-1">
                 <Button variant="primary" size="md" onClick={handleSave} disabled={upsert.isPending}>
                   <Save className="w-4 h-4 mr-2 inline" />
-                  {upsert.isPending ? "Saving..." : "Save Contact"}
+                  {upsert.isPending ? t("memory_book.saving") : t("memory_book.contact_save_btn")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -205,7 +209,7 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
                   }}
                 >
                   <X className="w-4 h-4 mr-1 inline" />
-                  Cancel
+                  {t("memory_book.cancel")}
                 </Button>
               </div>
             </div>
@@ -215,13 +219,13 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
 
       {contacts.length === 0 && !showForm ? (
         <SectionEmptyState
-          title="No contacts added yet"
-          description="Add family members, doctors, emergency contacts, and other key support people to help caregivers reach the right person quickly."
+          title={t("memory_book.contacts_empty_title")}
+          description={t("memory_book.contacts_empty_desc")}
           isOwner={isOwner}
           ownerAction={
             <Button variant="primary" size="md" onClick={startAdd}>
               <Users className="w-4 h-4 mr-2 inline" />
-              Add First Contact
+              {t("memory_book.contacts_add_first_btn")}
             </Button>
           }
         />
@@ -232,6 +236,7 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
               key={contact.id}
               contact={contact}
               isOwner={isOwner}
+              fallbackLabel={t("memory_book.contact_fallback_label")}
               onEdit={() => startEdit(contact)}
               onDelete={() => handleDelete(contact.id, contact.full_name)}
             />
@@ -245,11 +250,13 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
 function ContactCard({
   contact,
   isOwner,
+  fallbackLabel,
   onEdit,
   onDelete,
 }: {
   contact: MemoryBookContact;
   isOwner: boolean;
+  fallbackLabel: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -258,7 +265,7 @@ function ContactCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-slate-800">{contact.full_name}</p>
-          <p className="text-xs text-slate-500">{contact.relationship || contact.role_tag || "Contact"}</p>
+          <p className="text-xs text-slate-500">{contact.relationship || contact.role_tag || fallbackLabel}</p>
         </div>
         <div className="flex items-center gap-1">
           {contact.role_tag && (

@@ -9,6 +9,7 @@ import {
 } from "../../hooks/useMemoryBook";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
@@ -30,6 +31,7 @@ const EMPTY_FORM = {
 };
 
 export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Props) {
+  const { t } = useLocale();
   const { data: prefs, isLoading } = useMemoryBookPreferences(memoryBookId);
   const upsert = useUpsertMemoryBookPreferences();
   const { showToast } = useToast();
@@ -60,10 +62,10 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
   const handleSave = async () => {
     try {
       await upsert.mutateAsync({ memoryBookId, teamId, values: form });
-      showToast("Preferences saved", "success");
+      showToast(t("memory_book.toast_prefs_saved"), "success");
       setEditing(false);
     } catch (e: any) {
-      showToast(e.message ?? "Failed to save", "error");
+      showToast(e.message ?? t("common.error_generic"), "error");
     }
   };
 
@@ -83,8 +85,8 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
   if (!hasData && !isOwner) {
     return (
       <SectionEmptyState
-        title="Preferences not yet completed"
-        description="The team owner needs to fill in the preferences section before it appears here."
+        title={t("memory_book.prefs_empty_member_title")}
+        description={t("memory_book.prefs_empty_member_desc")}
         isOwner={false}
       />
     );
@@ -93,13 +95,13 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
   if (!hasData && isOwner && !editing) {
     return (
       <SectionEmptyState
-        title="Add likes, dislikes &amp; comforts"
-        description="Recording what brings comfort, joy, and what to avoid helps every caregiver provide a more personal experience."
+        title={t("memory_book.prefs_empty_owner_title")}
+        description={t("memory_book.prefs_empty_owner_desc")}
         isOwner={true}
         ownerAction={
           <Button variant="primary" size="md" onClick={() => setEditing(true)}>
             <Heart className="w-4 h-4 mr-2 inline" />
-            Add Preferences
+            {t("memory_book.prefs_add_btn")}
           </Button>
         }
       />
@@ -114,14 +116,14 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-800">Likes, Dislikes &amp; Comforts</h3>
+              <h3 className="text-base font-semibold text-slate-800">{t("memory_book.prefs_title")}</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                What brings joy, comfort, and what to avoid
+                {t("memory_book.prefs_subtitle")}
               </p>
             </div>
             {isOwner && !editing && (
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                Edit
+                {t("memory_book.edit")}
               </Button>
             )}
           </div>
@@ -131,82 +133,82 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextareaField
-                  label="What they enjoy / makes them happy"
+                  label={t("memory_book.field_likes")}
                   value={form.likes}
                   onChange={v => setForm(f => ({ ...f, likes: v }))}
-                  placeholder="Activities, topics, experiences they love..."
+                  placeholder={t("memory_book.field_likes_placeholder")}
                 />
                 <TextareaField
-                  label="What they dislike"
+                  label={t("memory_book.field_dislikes")}
                   value={form.dislikes}
                   onChange={v => setForm(f => ({ ...f, dislikes: v }))}
-                  placeholder="Things that cause discomfort or frustration..."
+                  placeholder={t("memory_book.field_dislikes_placeholder")}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextareaField
-                  label="Foods they enjoy"
+                  label={t("memory_book.field_foods_liked")}
                   value={form.foods_liked}
                   onChange={v => setForm(f => ({ ...f, foods_liked: v }))}
-                  placeholder="Favourite foods, meals, snacks..."
+                  placeholder={t("memory_book.field_foods_liked_placeholder")}
                   rows={3}
                 />
                 <TextareaField
-                  label="Foods they dislike or avoid"
+                  label={t("memory_book.field_foods_disliked")}
                   value={form.foods_disliked}
                   onChange={v => setForm(f => ({ ...f, foods_disliked: v }))}
-                  placeholder="Food dislikes, texture aversions..."
+                  placeholder={t("memory_book.field_foods_disliked_placeholder")}
                   rows={3}
                 />
               </div>
               <TextareaField
-                label="Music preferences"
+                label={t("memory_book.field_music")}
                 value={form.music_preferences}
                 onChange={v => setForm(f => ({ ...f, music_preferences: v }))}
-                placeholder="Favourite genres, artists, songs, or instruments..."
+                placeholder={t("memory_book.field_music_placeholder")}
               />
               <TextareaField
-                label="Good conversation topics"
+                label={t("memory_book.field_conversation")}
                 value={form.conversation_topics}
                 onChange={v => setForm(f => ({ ...f, conversation_topics: v }))}
-                placeholder="Topics they enjoy talking about — family, history, sport, hobbies..."
+                placeholder={t("memory_book.field_conversation_placeholder")}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextareaField
-                  label="What comforts them when upset"
+                  label={t("memory_book.field_comforts")}
                   value={form.comforts}
                   onChange={v => setForm(f => ({ ...f, comforts: v }))}
-                  placeholder="Music, a specific person, a routine, touch, words..."
+                  placeholder={t("memory_book.field_comforts_placeholder")}
                   rows={3}
                 />
                 <TextareaField
-                  label="Fears / distress triggers"
+                  label={t("memory_book.field_fears")}
                   value={form.fears}
                   onChange={v => setForm(f => ({ ...f, fears: v }))}
-                  placeholder="What causes fear, agitation, or distress..."
+                  placeholder={t("memory_book.field_fears_placeholder")}
                   rows={3}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextareaField
-                  label="Sensory preferences"
+                  label={t("memory_book.field_sensory")}
                   value={form.sensory_preferences}
                   onChange={v => setForm(f => ({ ...f, sensory_preferences: v }))}
-                  placeholder="Lighting, noise level, temperature, touch preferences..."
+                  placeholder={t("memory_book.field_sensory_placeholder")}
                   rows={3}
                 />
                 <TextareaField
-                  label="Things to avoid"
+                  label={t("memory_book.field_avoid")}
                   value={form.things_to_avoid}
                   onChange={v => setForm(f => ({ ...f, things_to_avoid: v }))}
-                  placeholder="Topics, situations, people, or environments to avoid..."
+                  placeholder={t("memory_book.field_avoid_placeholder")}
                   rows={3}
                 />
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <Button variant="primary" size="md" onClick={handleSave} disabled={upsert.isPending}>
                   <Save className="w-4 h-4 mr-2 inline" />
-                  {upsert.isPending ? "Saving..." : "Save Changes"}
+                  {upsert.isPending ? t("memory_book.saving") : t("memory_book.save_changes")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -229,22 +231,22 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
                     }
                   }}
                 >
-                  Cancel
+                  {t("memory_book.cancel")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-              <ReadBlock label="Enjoys / Makes Happy" value={prefs?.likes} />
-              <ReadBlock label="Dislikes" value={prefs?.dislikes} />
-              <ReadBlock label="Foods Enjoyed" value={prefs?.foods_liked} />
-              <ReadBlock label="Foods to Avoid" value={prefs?.foods_disliked} />
-              <ReadBlock label="Music Preferences" value={prefs?.music_preferences} />
-              <ReadBlock label="Good Conversation Topics" value={prefs?.conversation_topics} />
-              <ReadBlock label="Comforts When Upset" value={prefs?.comforts} />
-              <ReadBlock label="Fears / Distress Triggers" value={prefs?.fears} />
-              <ReadBlock label="Sensory Preferences" value={prefs?.sensory_preferences} />
-              <ReadBlock label="Things to Avoid" value={prefs?.things_to_avoid} />
+              <ReadBlock label={t("memory_book.label_enjoys")} value={prefs?.likes} />
+              <ReadBlock label={t("memory_book.label_dislikes")} value={prefs?.dislikes} />
+              <ReadBlock label={t("memory_book.label_foods_liked")} value={prefs?.foods_liked} />
+              <ReadBlock label={t("memory_book.label_foods_disliked")} value={prefs?.foods_disliked} />
+              <ReadBlock label={t("memory_book.label_music")} value={prefs?.music_preferences} />
+              <ReadBlock label={t("memory_book.label_conversation")} value={prefs?.conversation_topics} />
+              <ReadBlock label={t("memory_book.label_comforts")} value={prefs?.comforts} />
+              <ReadBlock label={t("memory_book.label_fears")} value={prefs?.fears} />
+              <ReadBlock label={t("memory_book.label_sensory")} value={prefs?.sensory_preferences} />
+              <ReadBlock label={t("memory_book.label_avoid")} value={prefs?.things_to_avoid} />
             </div>
           )}
         </CardContent>

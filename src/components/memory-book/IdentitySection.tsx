@@ -10,6 +10,7 @@ import {
 } from "../../hooks/useMemoryBook";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
@@ -30,6 +31,7 @@ const EMPTY_FORM = {
 };
 
 export default function IdentitySection({ memoryBookId, teamId, isOwner, patientName }: Props) {
+  const { t } = useLocale();
   const { data: identity, isLoading } = useMemoryBookIdentity(memoryBookId);
   const upsert = useUpsertMemoryBookIdentity();
   const { showToast } = useToast();
@@ -58,10 +60,10 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
   const handleSave = async () => {
     try {
       await upsert.mutateAsync({ memoryBookId, teamId, values: form });
-      showToast("Identity saved", "success");
+      showToast(t("memory_book.toast_identity_saved"), "success");
       setEditing(false);
     } catch (e: any) {
-      showToast(e.message ?? "Failed to save", "error");
+      showToast(e.message ?? t("common.error_generic"), "error");
     }
   };
 
@@ -81,8 +83,8 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
   if (!hasData && !isOwner) {
     return (
       <SectionEmptyState
-        title="Identity not yet completed"
-        description="The team owner needs to fill in the identity section before it appears here."
+        title={t("memory_book.identity_empty_member_title")}
+        description={t("memory_book.identity_empty_member_desc")}
         isOwner={false}
       />
     );
@@ -91,13 +93,13 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
   if (!hasData && isOwner && !editing) {
     return (
       <SectionEmptyState
-        title="Add identity information"
-        description="Record preferred name, birthplace, cultural background, and a brief personal summary to help caregivers connect meaningfully."
+        title={t("memory_book.identity_empty_owner_title")}
+        description={t("memory_book.identity_empty_owner_desc")}
         isOwner={true}
         ownerAction={
           <Button variant="primary" size="md" onClick={() => setEditing(true)}>
             <User className="w-4 h-4 mr-2 inline" />
-            Add Identity Details
+            {t("memory_book.identity_add_btn")}
           </Button>
         }
       />
@@ -112,14 +114,14 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-800">Identity &amp; Profile</h3>
+              <h3 className="text-base font-semibold text-slate-800">{t("memory_book.identity_title")}</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                Personal details for {patientName}
+                {t("memory_book.identity_subtitle", { patientName })}
               </p>
             </div>
             {isOwner && !editing && (
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                Edit
+                {t("memory_book.edit")}
               </Button>
             )}
           </div>
@@ -129,55 +131,55 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Preferred Name / Nickname"
+                  label={t("memory_book.field_preferred_name")}
                   value={form.preferred_name}
                   onChange={e => setForm(f => ({ ...f, preferred_name: e.target.value }))}
-                  placeholder="What name do they prefer?"
+                  placeholder={t("memory_book.field_preferred_name_placeholder")}
                 />
                 <Input
-                  label="How they like to be addressed"
+                  label={t("memory_book.field_address_pref")}
                   value={form.address_preference}
                   onChange={e => setForm(f => ({ ...f, address_preference: e.target.value }))}
-                  placeholder="e.g. Mrs. Smith, Gran, first name only"
+                  placeholder={t("memory_book.field_address_pref_placeholder")}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Birthplace"
+                  label={t("memory_book.field_birthplace")}
                   value={form.birthplace}
                   onChange={e => setForm(f => ({ ...f, birthplace: e.target.value }))}
-                  placeholder="Town, city, or region"
+                  placeholder={t("memory_book.field_birthplace_placeholder")}
                 />
                 <Input
-                  label="Relationship Status"
+                  label={t("memory_book.field_relationship_status")}
                   value={form.relationship_status}
                   onChange={e => setForm(f => ({ ...f, relationship_status: e.target.value }))}
-                  placeholder="e.g. Widowed, Married"
+                  placeholder={t("memory_book.field_relationship_status_placeholder")}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input
-                  label="Cultural Background"
+                  label={t("memory_book.field_cultural_bg")}
                   value={form.cultural_preferences}
                   onChange={e => setForm(f => ({ ...f, cultural_preferences: e.target.value }))}
-                  placeholder="Cultural identity, traditions, practices"
+                  placeholder={t("memory_book.field_cultural_bg_placeholder")}
                 />
                 <Input
-                  label="Language / Communication Preferences"
+                  label={t("memory_book.field_language_prefs")}
                   value={form.language_preferences}
                   onChange={e => setForm(f => ({ ...f, language_preferences: e.target.value }))}
-                  placeholder="Primary language, communication style"
+                  placeholder={t("memory_book.field_language_prefs_placeholder")}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  About Me — Personal Summary
+                  {t("memory_book.field_about_me")}
                 </label>
                 <textarea
                   className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-base placeholder-slate-400 shadow-sm focus:border-cyan-600 focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white text-slate-800 min-h-[120px] leading-relaxed"
                   value={form.about_me}
                   onChange={e => setForm(f => ({ ...f, about_me: e.target.value }))}
-                  placeholder="What would this person want others to know about them? Describe their personality, passions, and what makes them who they are..."
+                  placeholder={t("memory_book.field_about_me_placeholder")}
                 />
               </div>
               <div className="flex items-center gap-3 pt-2">
@@ -188,7 +190,7 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
                   disabled={upsert.isPending}
                 >
                   <Save className="w-4 h-4 mr-2 inline" />
-                  {upsert.isPending ? "Saving..." : "Save Changes"}
+                  {upsert.isPending ? t("memory_book.saving") : t("memory_book.save_changes")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -209,23 +211,23 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
                     }
                   }}
                 >
-                  Cancel
+                  {t("memory_book.cancel")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <FieldRow label="Preferred Name" value={identity?.preferred_name} />
-                <FieldRow label="How to Address" value={identity?.address_preference} />
-                <FieldRow label="Birthplace" value={identity?.birthplace} />
-                <FieldRow label="Relationship Status" value={identity?.relationship_status} />
-                <FieldRow label="Cultural Background" value={identity?.cultural_preferences} />
-                <FieldRow label="Language Preferences" value={identity?.language_preferences} />
+                <FieldRow label={t("memory_book.label_preferred_name")} value={identity?.preferred_name} />
+                <FieldRow label={t("memory_book.label_address")} value={identity?.address_preference} />
+                <FieldRow label={t("memory_book.label_birthplace")} value={identity?.birthplace} />
+                <FieldRow label={t("memory_book.label_relationship_status")} value={identity?.relationship_status} />
+                <FieldRow label={t("memory_book.label_cultural_bg")} value={identity?.cultural_preferences} />
+                <FieldRow label={t("memory_book.label_language_prefs")} value={identity?.language_preferences} />
               </div>
               {identity?.about_me && (
                 <div className="pt-4 border-t border-slate-100">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">About Me</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t("memory_book.label_about_me")}</p>
                   <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{identity.about_me}</p>
                 </div>
               )}

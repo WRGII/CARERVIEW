@@ -23,6 +23,13 @@ export const formatDateTime = (date: string | Date, locale = 'en-US'): string =>
 }
 
 export function localeToIntl(locale: string): string {
-  if (locale === 'es') return 'es-MX'
-  return 'en-US'
+  const map: Record<string, string> = {
+    es: 'es-MX',
+    it: 'it-IT',
+    fr: 'fr-FR',
+    de: 'de-DE',
+    sv: 'sv-SE',
+    fi: 'fi-FI',
+  }
+  return map[locale] ?? 'en-US'
 }

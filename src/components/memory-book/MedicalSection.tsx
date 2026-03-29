@@ -9,6 +9,7 @@ import {
 } from "../../hooks/useMemoryBook";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
@@ -26,6 +27,7 @@ const EMPTY_FORM = {
 };
 
 export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props) {
+  const { t } = useLocale();
   const { data: medical, isLoading } = useMemoryBookMedical(memoryBookId);
   const upsert = useUpsertMemoryBookMedical();
   const { showToast } = useToast();
@@ -52,10 +54,10 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
   const handleSave = async () => {
     try {
       await upsert.mutateAsync({ memoryBookId, teamId, values: form });
-      showToast("Medical information saved", "success");
+      showToast(t("memory_book.toast_medical_saved"), "success");
       setEditing(false);
     } catch (e: any) {
-      showToast(e.message ?? "Failed to save", "error");
+      showToast(e.message ?? t("common.error_generic"), "error");
     }
   };
 
@@ -75,8 +77,8 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
   if (!hasData && !isOwner) {
     return (
       <SectionEmptyState
-        title="Medical information not yet completed"
-        description="The team owner needs to fill in the medical section before it appears here."
+        title={t("memory_book.medical_empty_member_title")}
+        description={t("memory_book.medical_empty_member_desc")}
         isOwner={false}
       />
     );
@@ -85,13 +87,13 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
   if (!hasData && isOwner && !editing) {
     return (
       <SectionEmptyState
-        title="Add medical context"
-        description="Record conditions, allergies, hearing, vision, and medication notes to help caregivers provide safe and informed care."
+        title={t("memory_book.medical_empty_owner_title")}
+        description={t("memory_book.medical_empty_owner_desc")}
         isOwner={true}
         ownerAction={
           <Button variant="primary" size="md" onClick={() => setEditing(true)}>
             <Stethoscope className="w-4 h-4 mr-2 inline" />
-            Add Medical Information
+            {t("memory_book.medical_add_btn")}
           </Button>
         }
       />
@@ -106,14 +108,14 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-800">Medical Context</h3>
+              <h3 className="text-base font-semibold text-slate-800">{t("memory_book.medical_title")}</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                Caregiver-oriented health information — not a clinical record
+                {t("memory_book.medical_subtitle")}
               </p>
             </div>
             {isOwner && !editing && (
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                Edit
+                {t("memory_book.edit")}
               </Button>
             )}
           </div>
@@ -122,49 +124,49 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
           {editing && isOwner ? (
             <div className="space-y-5">
               <TextareaField
-                label="Primary Conditions / Diagnosis"
+                label={t("memory_book.field_conditions")}
                 value={form.conditions}
                 onChange={v => setForm(f => ({ ...f, conditions: v }))}
-                placeholder="List key conditions relevant to day-to-day care..."
+                placeholder={t("memory_book.field_conditions_placeholder")}
               />
               <TextareaField
-                label="Allergies"
+                label={t("memory_book.field_allergies")}
                 value={form.allergies}
                 onChange={v => setForm(f => ({ ...f, allergies: v }))}
-                placeholder="Food allergies, medication allergies, environmental allergies..."
+                placeholder={t("memory_book.field_allergies_placeholder")}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextareaField
-                  label="Hearing Notes"
+                  label={t("memory_book.field_hearing")}
                   value={form.hearing_notes}
                   onChange={v => setForm(f => ({ ...f, hearing_notes: v }))}
-                  placeholder="Hearing aids, preferences, tips..."
+                  placeholder={t("memory_book.field_hearing_placeholder")}
                   rows={3}
                 />
                 <TextareaField
-                  label="Vision Notes"
+                  label={t("memory_book.field_vision")}
                   value={form.vision_notes}
                   onChange={v => setForm(f => ({ ...f, vision_notes: v }))}
-                  placeholder="Glasses, impairments, preferences..."
+                  placeholder={t("memory_book.field_vision_placeholder")}
                   rows={3}
                 />
               </div>
               <TextareaField
-                label="Medication Notes"
+                label={t("memory_book.field_medications")}
                 value={form.medication_notes}
                 onChange={v => setForm(f => ({ ...f, medication_notes: v }))}
-                placeholder="Current medications, dosages, timing, administration notes..."
+                placeholder={t("memory_book.field_medications_placeholder")}
               />
               <TextareaField
-                label="Other Medical Considerations"
+                label={t("memory_book.field_other_medical")}
                 value={form.other_medical_notes}
                 onChange={v => setForm(f => ({ ...f, other_medical_notes: v }))}
-                placeholder="Any other health information caregivers should know..."
+                placeholder={t("memory_book.field_other_medical_placeholder")}
               />
               <div className="flex items-center gap-3 pt-2">
                 <Button variant="primary" size="md" onClick={handleSave} disabled={upsert.isPending}>
                   <Save className="w-4 h-4 mr-2 inline" />
-                  {upsert.isPending ? "Saving..." : "Save Changes"}
+                  {upsert.isPending ? t("memory_book.saving") : t("memory_book.save_changes")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -183,20 +185,20 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
                     }
                   }}
                 >
-                  Cancel
+                  {t("memory_book.cancel")}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-5">
-              <ReadFieldBlock label="Primary Conditions / Diagnosis" value={medical?.conditions} />
-              <ReadFieldBlock label="Allergies" value={medical?.allergies} />
+              <ReadFieldBlock label={t("memory_book.field_conditions")} value={medical?.conditions} />
+              <ReadFieldBlock label={t("memory_book.field_allergies")} value={medical?.allergies} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <ReadFieldBlock label="Hearing Notes" value={medical?.hearing_notes} />
-                <ReadFieldBlock label="Vision Notes" value={medical?.vision_notes} />
+                <ReadFieldBlock label={t("memory_book.field_hearing")} value={medical?.hearing_notes} />
+                <ReadFieldBlock label={t("memory_book.field_vision")} value={medical?.vision_notes} />
               </div>
-              <ReadFieldBlock label="Medication Notes" value={medical?.medication_notes} />
-              <ReadFieldBlock label="Other Medical Considerations" value={medical?.other_medical_notes} />
+              <ReadFieldBlock label={t("memory_book.field_medications")} value={medical?.medication_notes} />
+              <ReadFieldBlock label={t("memory_book.field_other_medical")} value={medical?.other_medical_notes} />
             </div>
           )}
         </CardContent>

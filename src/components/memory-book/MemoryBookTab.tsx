@@ -5,6 +5,7 @@ import ContactsSection from "./ContactsSection";
 import MedicalSection from "./MedicalSection";
 import PreferencesSection from "./PreferencesSection";
 import type { MemoryBookSection } from "../../types/memory-book";
+import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
@@ -17,13 +18,6 @@ type Props = {
   hasPreferences: boolean;
 };
 
-const SECTIONS: { key: MemoryBookSection; label: string; Icon: React.ElementType }[] = [
-  { key: "identity", label: "Identity", Icon: User },
-  { key: "contacts", label: "Contacts", Icon: Users },
-  { key: "medical", label: "Medical", Icon: Stethoscope },
-  { key: "preferences", label: "Likes &amp; Dislikes", Icon: Heart },
-];
-
 export default function MemoryBookTab({
   memoryBookId,
   teamId,
@@ -34,7 +28,15 @@ export default function MemoryBookTab({
   hasMedical,
   hasPreferences,
 }: Props) {
+  const { t } = useLocale();
   const [activeSection, setActiveSection] = useState<MemoryBookSection>("identity");
+
+  const SECTIONS: { key: MemoryBookSection; label: string; Icon: React.ElementType }[] = [
+    { key: "identity", label: t("memory_book.section_identity"), Icon: User },
+    { key: "contacts", label: t("memory_book.section_contacts"), Icon: Users },
+    { key: "medical", label: t("memory_book.section_medical"), Icon: Stethoscope },
+    { key: "preferences", label: t("memory_book.section_preferences"), Icon: Heart },
+  ];
 
   const completionMap: Record<MemoryBookSection, boolean> = {
     identity: hasIdentity,
@@ -61,7 +63,7 @@ export default function MemoryBookTab({
               ].join(" ")}
             >
               <Icon className="w-4 h-4" />
-              <span dangerouslySetInnerHTML={{ __html: label }} />
+              <span>{label}</span>
               {isDone && (
                 <span
                   className={[

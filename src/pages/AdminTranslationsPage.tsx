@@ -23,7 +23,8 @@ const NAMESPACES = [
   "view_obs", "new_obs", "obs_edit", "tutorial", "welcome", "account_menu",
   "team", "accept_invite", "create_account", "reset_pw", "not_found",
   "admin", "policy", "family_setup", "inactive", "billing", "delete_acct",
-  "subscription", "plan_pill", "dementia", "active_cg", "lang",
+  "subscription", "plan_pill", "dementia", "active_cg", "lang", "memory_book",
+  "community_banner",
 ];
 
 function getNamespace(key: string): string {

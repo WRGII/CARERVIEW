@@ -31,7 +31,7 @@ export default function AppLocaleWrapper({ children }: Props) {
     if (profileLocale && profileLocale !== reconciledLocale) {
       setReconciledLocale(profileLocale)
     }
-  }, [profile?.id ?? null])
+  }, [profile?.id, (profile as any)?.preferred_locale])
 
   useEffect(() => {
     const nextId = user?.id ?? undefined
