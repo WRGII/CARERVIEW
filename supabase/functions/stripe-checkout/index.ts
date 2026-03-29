@@ -137,8 +137,17 @@ Deno.serve(async (req) => {
       .maybeSingle()
     if (mapErr) throw mapErr
 
-    let customerId = existing?.customer_id as string | undefined
-    if (!customerId) {
+    const rawCustomerId = existing?.customer_id as string | undefined
+    const isValidCustomerId = (id: string | undefined): id is string =>
+      typeof id === 'string' && /^cus_[A-Za-z0-9_]+$/.test(id)
+
+    let customerId: string
+    if (isValidCustomerId(rawCustomerId)) {
+      customerId = rawCustomerId
+    } else {
+      if (rawCustomerId) {
+        console.warn('[stripe-checkout] Invalid customer_id format detected for user:', user.id, '– creating fresh customer')
+      }
       let newCustomer: Stripe.Customer
       try {
         newCustomer = await stripe.customers.create({
@@ -153,7 +162,10 @@ Deno.serve(async (req) => {
 
       const { error: upErr } = await db
         .from('stripe_customers')
-        .upsert({ user_id: user.id, customer_id: customerId }, { onConflict: 'user_id' })
+        .upsert(
+          { user_id: user.id, customer_id: customerId },
+          { onConflict: 'user_id', ignoreDuplicates: false }
+        )
       if (upErr) {
         console.error('[stripe-checkout] stripe_customers upsert failed (non-fatal):', upErr.message)
       }

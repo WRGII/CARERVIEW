@@ -55,7 +55,7 @@ export const useActivateFreePlan = () => {
 
       if (error) throw new Error(`Failed to activate free plan: ${error.message}`)
 
-      ensureStripeCustomer()
+      await ensureStripeCustomer()
 
       return { alreadyActive: false, plan: data }
     },
