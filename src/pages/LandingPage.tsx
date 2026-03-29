@@ -214,9 +214,9 @@ export default function LandingPage() {
         <div className="py-20">
           <div className="bg-gradient-to-br from-cyan-primary/6 via-mint-green/10 to-peach-blush/20 rounded-3xl px-6 sm:px-12 py-16">
             <div className="text-center mb-14">
-              <div className="inline-flex items-center gap-2 bg-cyan-primary/10 border border-cyan-primary/20 rounded-full px-4 py-1.5 mb-5">
-                <BookOpen className="w-4 h-4 text-cyan-primary" />
-                <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 bg-cyan-primary border border-cyan-primary rounded-full px-5 py-2 mb-5 shadow-md">
+                <BookOpen className="w-4 h-4 text-warm-white" />
+                <p className="text-sm font-bold text-warm-white uppercase tracking-widest">
                   {t('landing.mb_eyebrow')}
                 </p>
               </div>
@@ -295,8 +295,7 @@ export default function LandingPage() {
         {/* Sample Report Section */}
         <div id="sample-report" className="py-20">
           <div className="text-center">
-            <h3 className="text-4xl font-bold text-slate-gray mb-6">{t('landing.sample_title')}</h3>
-            <p className="text-2xl text-slate-gray/80 mb-8">{t('landing.sample_subtitle')}</p>
+            <h3 className="text-4xl font-bold text-slate-gray mb-8">{t('landing.sample_title')}</h3>
 
             <div className="mt-8">
               <Link
