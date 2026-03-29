@@ -23,9 +23,14 @@ export default function AuthCallbackPage() {
         }
         if (type === 'recovery') {
           navigate('/reset-password', { replace: true });
-        } else {
-          navigate(next, { replace: true });
+          return;
         }
+        const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
+        if (hasPendingCheckout) {
+          navigate('/create-account', { replace: true });
+          return;
+        }
+        navigate(next, { replace: true });
       });
     } else {
       navigate('/', { replace: true });

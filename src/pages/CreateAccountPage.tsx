@@ -43,6 +43,11 @@ export default function CreateAccountPage() {
     return params.get('source') === 'community';
   }, []);
 
+  const isIncompletePath = React.useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('incomplete') === '1';
+  }, []);
+
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const planParam = params.get('plan');
@@ -91,18 +96,22 @@ export default function CreateAccountPage() {
       const user = userData.user;
       if (!user) return;
 
+      let pending: { planKey: PlanKey; promoCode?: string | null; displayName?: string | null } | null = null;
       try {
-        const pending = JSON.parse(pendingRaw) as {
-          planKey: PlanKey;
-          promoCode?: string | null;
-          displayName?: string | null;
-        };
+        pending = JSON.parse(pendingRaw);
+      } catch {
+        localStorage.removeItem(PENDING_KEY);
+        return;
+      }
+      if (!pending) return;
 
-        const product = STRIPE_PRODUCTS.find(p => p.planId === pending.planKey);
-        if (!product) return;
+      const product = STRIPE_PRODUCTS.find(p => p.planId === pending!.planKey);
+      if (!product) {
+        localStorage.removeItem(PENDING_KEY);
+        return;
+      }
 
-        // Ensure profile exists — the original signUp may not have had a session
-        // so profile upsert in handleSubmit was skipped.
+      try {
         await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? null,
@@ -113,14 +122,15 @@ export default function CreateAccountPage() {
 
         if (pending.planKey === 'free') {
           const { error: subErr } = await upsertFreeSubscription(user.id);
-          if (subErr) console.error('Failed to create free subscription:', subErr);
+          if (subErr) throw subErr;
           localStorage.removeItem(PENDING_KEY);
           navigate('/caregiver', { replace: true });
           return;
         }
 
         if (!product.priceId) {
-          console.warn("Plan missing priceId. Cannot start checkout.");
+          localStorage.removeItem(PENDING_KEY);
+          setError(t('create_account.plan_missing_price'));
           return;
         }
 
@@ -138,8 +148,10 @@ export default function CreateAccountPage() {
         if (!url) throw new Error("No checkout URL returned");
         localStorage.removeItem(PENDING_KEY);
         window.location.assign(url);
-      } catch (e) {
+      } catch (e: any) {
+        localStorage.removeItem(PENDING_KEY);
         console.warn("Failed to resume pending checkout:", e);
+        setError(e?.message || t('create_account.signup_failed'));
       }
     })();
   }, []);
@@ -240,6 +252,11 @@ export default function CreateAccountPage() {
         canonical={`${SITE_URL}/create-account`}
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {isIncompletePath && (
+          <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm">
+            {t('create_account.incomplete_setup_notice')}
+          </div>
+        )}
         <header className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-gray">{t('create_account.title')}</h1>
           <p className="mt-3 text-slate-gray/75">{t('create_account.subtitle')}</p>
