@@ -100,6 +100,7 @@ import DementiaScalePage from "./pages/DementiaScalePage";
 
 import AcceptInvite from "./pages/AcceptInvite";
 import TeamSettings from "./pages/TeamSettings";
+const MemorySchedulePage = lazy(() => import("./pages/MemorySchedulePage"));
 
 import CommunityGuard from "./components/common/CommunityGuard";
 const CommunityLandingPage = lazy(() => import("./pages/CommunityLandingPage"));
@@ -215,6 +216,18 @@ export default function App() {
                       <CaregiverGuard>
                         <TeamGuard>
                           <TeamSettings />
+                        </TeamGuard>
+                      </CaregiverGuard>
+                    }
+                  />
+
+                  {/* Memory & Schedule */}
+                  <Route
+                    path="/caregiver/memory-schedule"
+                    element={
+                      <CaregiverGuard>
+                        <TeamGuard>
+                          <MemorySchedulePage />
                         </TeamGuard>
                       </CaregiverGuard>
                     }

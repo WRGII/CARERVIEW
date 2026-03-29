@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan } from "../../hooks/useUserPlan";
+import { useActiveTeam } from "../../context/ActiveTeam";
 import AccountMenu from "../caregiver/AccountMenu";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -43,8 +44,10 @@ export default function Header() {
   const { data: logoSrc, isLoading: logoLoading } = useBrandingLogo();
   const { user, profile, loading: authLoading } = useAuth();
   const { data: plan } = useUserPlan();
+  const { teamId } = useActiveTeam();
   const { t } = useLocale();
   const canUseTeam = plan?.plan_id === "family_qtr";
+  const hasActiveTeam = !!teamId;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthed = !!user && !profile?.disabled;
@@ -101,6 +104,15 @@ export default function Header() {
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
                     >
                       {t('nav.family_circle')}
+                    </Link>
+                  )}
+
+                  {hasActiveTeam && profile?.role === "caregiver" && (
+                    <Link
+                      to="/caregiver/memory-schedule"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                    >
+                      Memory &amp; Schedule
                     </Link>
                   )}
 
@@ -197,6 +209,15 @@ export default function Header() {
                       className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                     >
                       {t('nav.family_circle')}
+                    </Link>
+                  )}
+                  {hasActiveTeam && profile?.role === "caregiver" && (
+                    <Link
+                      to="/caregiver/memory-schedule"
+                      onClick={closeMobileMenu}
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    >
+                      Memory &amp; Schedule
                     </Link>
                   )}
                   <Link

@@ -1,0 +1,352 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "../lib/supabaseClient";
+import type {
+  MemoryBook,
+  MemoryBookIdentity,
+  MemoryBookContact,
+  MemoryBookMedical,
+  MemoryBookPreferences,
+  TeamMemberRole,
+} from "../types/memory-book";
+
+export function useMemoryBook(teamId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book", teamId],
+    queryFn: async () => {
+      if (!teamId) return null;
+      const { data, error } = await supabase
+        .rpc("mb_get_or_create", { p_team_id: teamId });
+      if (error) throw error;
+      const bookId = data as string;
+      const { data: book, error: bookError } = await supabase
+        .from("memory_books")
+        .select("*")
+        .eq("id", bookId)
+        .maybeSingle();
+      if (bookError) throw bookError;
+      return book as MemoryBook | null;
+    },
+    enabled: !!teamId,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useMemoryBookReadOnly(teamId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-ro", teamId],
+    queryFn: async () => {
+      if (!teamId) return null;
+      const { data, error } = await supabase
+        .from("memory_books")
+        .select("*")
+        .eq("team_id", teamId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MemoryBook | null;
+    },
+    enabled: !!teamId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTeamRole(teamId: string | null) {
+  return useQuery({
+    queryKey: ["team-role", teamId],
+    queryFn: async () => {
+      if (!teamId) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("cv_team_members")
+        .select("role, state")
+        .eq("team_id", teamId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data || data.state !== "active") return null;
+      return data.role as TeamMemberRole;
+    },
+    enabled: !!teamId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTeamPatient(teamId: string | null) {
+  return useQuery({
+    queryKey: ["team-patient", teamId],
+    queryFn: async () => {
+      if (!teamId) return null;
+      const { data, error } = await supabase
+        .from("cv_team_patient")
+        .select("*")
+        .eq("team_id", teamId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as {
+        team_id: string;
+        full_name: string;
+        date_of_birth: string | null;
+        gender: string;
+        notes: string | null;
+        created_at: string;
+      } | null;
+    },
+    enabled: !!teamId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useMemoryBookIdentity(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-identity", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return null;
+      const { data, error } = await supabase
+        .from("memory_book_identity")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MemoryBookIdentity | null;
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookIdentity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      values: Partial<Omit<MemoryBookIdentity, "id" | "memory_book_id" | "team_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: existing } = await supabase
+        .from("memory_book_identity")
+        .select("id")
+        .eq("memory_book_id", params.memoryBookId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("memory_book_identity")
+          .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_identity")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.values,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-identity", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookContacts(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-contacts", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return [];
+      const { data, error } = await supabase
+        .from("memory_book_contacts")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as MemoryBookContact[];
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      contact: Partial<MemoryBookContact> & { id?: string };
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (params.contact.id) {
+        const { error } = await supabase
+          .from("memory_book_contacts")
+          .update({
+            ...params.contact,
+            updated_at: new Date().toISOString(),
+            updated_by: user.id,
+          })
+          .eq("id", params.contact.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_contacts")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.contact,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-contacts", params.memoryBookId] });
+    },
+  });
+}
+
+export function useDeleteMemoryBookContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; memoryBookId: string }) => {
+      const { error } = await supabase
+        .from("memory_book_contacts")
+        .delete()
+        .eq("id", params.id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-contacts", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookMedical(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-medical", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return null;
+      const { data, error } = await supabase
+        .from("memory_book_medical")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MemoryBookMedical | null;
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookMedical() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      values: Partial<Omit<MemoryBookMedical, "id" | "memory_book_id" | "team_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: existing } = await supabase
+        .from("memory_book_medical")
+        .select("id")
+        .eq("memory_book_id", params.memoryBookId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("memory_book_medical")
+          .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_medical")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.values,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-medical", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookPreferences(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-preferences", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return null;
+      const { data, error } = await supabase
+        .from("memory_book_preferences")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MemoryBookPreferences | null;
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      values: Partial<Omit<MemoryBookPreferences, "id" | "memory_book_id" | "team_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: existing } = await supabase
+        .from("memory_book_preferences")
+        .select("id")
+        .eq("memory_book_id", params.memoryBookId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("memory_book_preferences")
+          .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_preferences")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.values,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-preferences", params.memoryBookId] });
+    },
+  });
+}
