@@ -1,7 +1,7 @@
 // src/pages/WhyCarerView.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock } from "lucide-react";
+import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, ChevronDown } from "lucide-react";
 import ObservationPreview from "../components/ObservationPreview";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
@@ -35,51 +35,37 @@ export default function WhyCarerView() {
     },
   ];
 
+  const faqs = [
+    {
+      q: 'What is an Activities of Daily Living (ADL) assessment?',
+      a: 'An Activities of Daily Living (ADL) assessment measures how well a person can perform basic self-care tasks such as bathing, dressing, eating, and moving around. CarerView uses a simple 1-5 scale so family caregivers can track these changes consistently over time and share meaningful reports with healthcare providers.',
+    },
+    {
+      q: 'How does CarerView help family caregivers track changes in a loved one?',
+      a: "CarerView provides structured observation forms covering ADL and IADL activities. You record a quick 1-5 score and optional notes for each check-in. Over time, these build into a clear picture of what's changing — so you can spot trends, adjust care plans, and arrive at doctor appointments with specific, documented observations rather than vague impressions.",
+    },
+    {
+      q: 'Can multiple family members use CarerView together?',
+      a: 'Yes. The Family Circle plan allows you to invite siblings, spouses, or professional in-home carers to a shared care view. Everyone sees the same observations and can add their own. This eliminates the "he said, she said" friction that commonly causes stress in families sharing caregiving responsibilities.',
+    },
+    {
+      q: 'Can I share CarerView observation reports with doctors or care professionals?',
+      a: "Yes. CarerView can export your observation history as a DOCX or CSV file that you can bring to GP appointments, specialist consultations, or care reviews. Having a written record of changes over weeks and months is far more useful to healthcare providers than trying to recall how things were three months ago.",
+    },
+    {
+      q: 'How is CarerView different from a general care notes app?',
+      a: "CarerView uses a structured framework based on the Activities of Daily Living (ADL) and Instrumental ADL (IADL) scales used by healthcare professionals. This means your observations use the same language doctors and care assessors use — making communication clearer and your notes more clinically meaningful. It's not just a journal; it's a shared language for care.",
+    },
+  ];
+
   const faqStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'What is an Activities of Daily Living (ADL) assessment?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'An Activities of Daily Living (ADL) assessment measures how well a person can perform basic self-care tasks such as bathing, dressing, eating, and moving around. CarerView uses a simple 1-5 scale so family caregivers can track these changes consistently over time and share meaningful reports with healthcare providers.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'How does CarerView help family caregivers track changes in a loved one?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "CarerView provides structured observation forms covering ADL and IADL activities. You record a quick 1-5 score and optional notes for each check-in. Over time, these build into a clear picture of what's changing — so you can spot trends, adjust care plans, and arrive at doctor appointments with specific, documented observations rather than vague impressions.",
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Can multiple family members use CarerView together?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes. The Family Circle plan allows you to invite siblings, spouses, or professional in-home carers to a shared care view. Everyone sees the same observations and can add their own. This eliminates the "he said, she said" friction that commonly causes stress in families sharing caregiving responsibilities.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Can I share CarerView observation reports with doctors or care professionals?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "Yes. CarerView can export your observation history as a DOCX or CSV file that you can bring to GP appointments, specialist consultations, or care reviews. Having a written record of changes over weeks and months is far more useful to healthcare providers than trying to recall how things were three months ago.",
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'How is CarerView different from a general care notes app?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "CarerView uses a structured framework based on the Activities of Daily Living (ADL) and Instrumental ADL (IADL) scales used by healthcare professionals. This means your observations use the same language doctors and care assessors use — making communication clearer and your notes more clinically meaningful. It's not just a journal; it's a shared language for care.",
-        },
-      },
-    ],
+    mainEntity: faqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
   };
 
   const breadcrumbStructuredData = {
@@ -270,6 +256,29 @@ export default function WhyCarerView() {
             </Card>
           </div>
         </div>
+
+        {/* FAQ */}
+        <section className="pb-20">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <h3 className="text-4xl font-bold text-slate-gray mb-4">Frequently Asked Questions</h3>
+              <p className="text-lg text-slate-gray/70">Common questions about CarerView and care tracking.</p>
+            </div>
+            <div className="space-y-3">
+              {faqs.map((f, i) => (
+                <details key={i} className="group rounded-2xl border border-slate-gray/15 bg-white shadow-sm open:shadow-md transition-shadow">
+                  <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left font-semibold text-slate-gray hover:text-cyan-primary transition-colors list-none">
+                    <span>{f.q}</span>
+                    <ChevronDown className="h-5 w-5 shrink-0 text-slate-gray/50 transition-transform duration-200 group-open:rotate-180" />
+                  </summary>
+                  <div className="px-6 pb-6 pt-1 text-slate-gray/80 leading-relaxed">
+                    {f.a}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* GET STARTED FORM */}
         <section className="pb-24">
