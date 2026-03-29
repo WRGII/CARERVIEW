@@ -120,6 +120,14 @@ export function Footer() {
                   {t('footer.pricing_link')}
                 </Link>
               </div>
+              <div>
+                <a
+                  href="/sitemap.xml"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  Sitemap
+                </a>
+              </div>
             </div>
           </div>
         </div>

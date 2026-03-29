@@ -53,6 +53,26 @@ const COMMUNITY_FAQ = [
     q: 'What is the difference between CarerView\'s free community and paid plans?',
     a: 'The community forum is always free — join once and access all discussion rooms, post and reply, and choose to post anonymously. Paid CarerView plans add structured observation tracking tools, the CarerView ADL/IADL scale for monitoring changes in your loved one over time, family team coordination, and healthcare-ready export reports.',
   },
+  {
+    q: 'What do I do when my parent refuses to accept help at home?',
+    a: 'A parent refusing help is one of the most common and emotionally exhausting situations family caregivers face. It often comes from fear of losing independence, not wanting to be a burden, or not fully recognising their own decline. Strategies that can help include framing help as something you are doing together rather than something being done to them, starting very small with one task, enlisting a trusted doctor to have the conversation, and giving them as much choice and control as possible. Our community forum has caregivers sharing specific experiences and what has worked for them.',
+  },
+  {
+    q: 'How do I document care for a doctor or care assessment?',
+    a: 'Documenting care for a doctor or social worker assessment means keeping specific, dated records of what your loved one can and cannot do — not just how things feel overall. Note changes in daily activities like bathing, dressing, and meal preparation, along with any incidents, falls, or concerning behaviours. CarerView\'s structured observation tools are designed exactly for this, giving you a dated log in the same ADL/IADL framework that healthcare professionals use. This makes assessments faster and more accurate.',
+  },
+  {
+    q: 'What are the signs that an elderly parent needs more care?',
+    a: 'Signs that a parent may need more care include unexplained weight loss or a poorly stocked fridge, missed medications or confusion about dosages, a decline in personal hygiene or housekeeping that was previously managed well, increasing falls or near-falls, confusion about familiar tasks or routes, withdrawal from social activities they previously enjoyed, and unexplained bruises or injuries. If you are noticing several of these, it may be time to seek a formal care needs assessment from a GP or local authority social worker.',
+  },
+  {
+    q: 'How do I coordinate care with siblings who live far away?',
+    a: 'Coordinating care across distance and different family dynamics is one of the hardest parts of being a caregiver. Key things that help include having a regular call or check-in with a shared agenda, assigning specific responsibilities based on capacity (one sibling handles finances, another handles scheduling), keeping a shared care log that everyone can access so no one has to be the sole information carrier, and being direct about what you need — most distant family members want to help but don\'t know how. CarerView\'s Family Circle plan is built for this exact situation.',
+  },
+  {
+    q: 'Is it normal to feel grief while your parent is still alive?',
+    a: "Yes. What you're feeling is called anticipatory grief or ambiguous loss, and it's extremely common among family caregivers — particularly those caring for someone with dementia. You may grieve the relationship you had, the future you expected, or the person they were before illness changed them. This grief is real, valid, and does not mean you love them any less. Many caregivers in our community have shared their experiences with this, and connecting with others who understand can help enormously.",
+  },
 ]
 
 function RoomSkeleton() {

@@ -1,6 +1,8 @@
 import { Helmet } from 'react-helmet-async'
 import { SITE_URL } from '../../lib/siteConfig'
 
+const SUPPORTED_LOCALES = ['en', 'sv', 'fi', 'de', 'fr', 'es', 'nl']
+
 interface PageSEOProps {
   title: string
   description: string
@@ -9,9 +11,10 @@ interface PageSEOProps {
   ogType?: 'website' | 'article'
   noIndex?: boolean
   structuredData?: object | object[]
+  keywords?: string
 }
 
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.svg`
 
 export default function PageSEO({
   title,
@@ -21,6 +24,7 @@ export default function PageSEO({
   ogType = 'website',
   noIndex = false,
   structuredData,
+  keywords,
 }: PageSEOProps) {
   const fullTitle = title.includes('CarerView') ? title : `${title} | CarerView`
   const canonicalUrl = canonical ?? ''
@@ -35,12 +39,26 @@ export default function PageSEO({
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
       {noIndex ? (
         <meta name="robots" content="noindex, nofollow" />
       ) : (
         <meta name="robots" content="index, follow" />
       )}
       {canonical && <link rel="canonical" href={canonical} />}
+
+      {canonical &&
+        SUPPORTED_LOCALES.map(locale => (
+          <link
+            key={locale}
+            rel="alternate"
+            hrefLang={locale}
+            href={`${canonicalUrl}?lang=${locale}`}
+          />
+        ))}
+      {canonical && (
+        <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
+      )}
 
       <meta property="og:type" content={ogType} />
       <meta property="og:title" content={fullTitle} />

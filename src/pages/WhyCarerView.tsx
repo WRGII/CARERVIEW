@@ -35,12 +35,70 @@ export default function WhyCarerView() {
     },
   ];
 
+  const faqStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is an Activities of Daily Living (ADL) assessment?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'An Activities of Daily Living (ADL) assessment measures how well a person can perform basic self-care tasks such as bathing, dressing, eating, and moving around. CarerView uses a simple 1-5 scale so family caregivers can track these changes consistently over time and share meaningful reports with healthcare providers.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How does CarerView help family caregivers track changes in a loved one?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: "CarerView provides structured observation forms covering ADL and IADL activities. You record a quick 1-5 score and optional notes for each check-in. Over time, these build into a clear picture of what's changing — so you can spot trends, adjust care plans, and arrive at doctor appointments with specific, documented observations rather than vague impressions.",
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can multiple family members use CarerView together?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. The Family Circle plan allows you to invite siblings, spouses, or professional in-home carers to a shared care view. Everyone sees the same observations and can add their own. This eliminates the "he said, she said" friction that commonly causes stress in families sharing caregiving responsibilities.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I share CarerView observation reports with doctors or care professionals?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: "Yes. CarerView can export your observation history as a DOCX or CSV file that you can bring to GP appointments, specialist consultations, or care reviews. Having a written record of changes over weeks and months is far more useful to healthcare providers than trying to recall how things were three months ago.",
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How is CarerView different from a general care notes app?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: "CarerView uses a structured framework based on the Activities of Daily Living (ADL) and Instrumental ADL (IADL) scales used by healthcare professionals. This means your observations use the same language doctors and care assessors use — making communication clearer and your notes more clinically meaningful. It's not just a journal; it's a shared language for care.",
+        },
+      },
+    ],
+  };
+
+  const breadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Why CarerView', item: `${SITE_URL}/why` },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <PageSEO
         title="Why CarerView - Caregiver Observation Tracking & Family Care Coordination"
-        description="Discover how CarerView helps family caregivers track daily care observations for ageing parents and loved ones. Monitor ADL & IADL changes, coordinate with family, and share reports with doctors."
+        description="Discover how CarerView helps family caregivers track daily care observations for ageing parents and loved ones. Monitor changes in daily activities, coordinate with family, and share reports with doctors."
         canonical={`${SITE_URL}/why`}
+        keywords="why use caregiver tracking app, family care coordination, observation tools for carers, dementia care tracking, carer app for families, care log for elderly parents"
+        structuredData={[faqStructuredData, breadcrumbStructuredData]}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HERO */}
@@ -125,6 +183,12 @@ export default function WhyCarerView() {
               aria-label={t('why.cta_signin')}
             >
               {t('why.cta_signin')}
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-gray/70 hover:text-slate-gray transition-colors"
+            >
+              View plans &amp; pricing <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f0fdfc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f2f1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2DBDBA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a9e9b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+
+  <!-- Decorative circles -->
+  <circle cx="1050" cy="120" r="180" fill="#2DBDBA" opacity="0.07" />
+  <circle cx="150" cy="520" r="220" fill="#2DBDBA" opacity="0.05" />
+  <circle cx="950" cy="500" r="100" fill="#f9a8d4" opacity="0.12" />
+
+  <!-- Top accent bar -->
+  <rect x="80" y="80" width="120" height="6" rx="3" fill="url(#accent)" />
+
+  <!-- Logo area -->
+  <rect x="80" y="116" width="56" height="56" rx="14" fill="#2DBDBA" opacity="0.15" />
+  <text x="108" y="154" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#2DBDBA" text-anchor="middle">CV</text>
+
+  <!-- Brand name -->
+  <text x="154" y="148" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#334155" letter-spacing="-0.5">CarerView</text>
+  <text x="154" y="168" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#64748b" letter-spacing="0.5">carerview.com</text>
+
+  <!-- Main headline -->
+  <text x="80" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="58" font-weight="800" fill="#1e293b" letter-spacing="-1.5">Care tracking for</text>
+  <text x="80" y="350" font-family="system-ui, -apple-system, sans-serif" font-size="58" font-weight="800" fill="#1e293b" letter-spacing="-1.5">family caregivers</text>
+
+  <!-- Subheadline -->
+  <text x="80" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#475569" font-weight="400">Track daily changes. Coordinate with family.</text>
+  <text x="80" y="447" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#475569" font-weight="400">Share reports with doctors.</text>
+
+  <!-- Tag pills -->
+  <rect x="80" y="490" width="200" height="44" rx="22" fill="#2DBDBA" opacity="0.15" />
+  <text x="180" y="518" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#0f766e" font-weight="600" text-anchor="middle">Free community</text>
+
+  <rect x="294" y="490" width="220" height="44" rx="22" fill="#2DBDBA" opacity="0.15" />
+  <text x="404" y="518" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#0f766e" font-weight="600" text-anchor="middle">Observation tools</text>
+
+  <rect x="528" y="490" width="210" height="44" rx="22" fill="#2DBDBA" opacity="0.15" />
+  <text x="633" y="518" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#0f766e" font-weight="600" text-anchor="middle">Family circle</text>
+
+  <!-- Right side visual -->
+  <rect x="820" y="200" width="300" height="200" rx="20" fill="white" opacity="0.8" />
+  <rect x="840" y="220" width="100" height="12" rx="6" fill="#cbd5e1" />
+  <rect x="840" y="244" width="240" height="8" rx="4" fill="#e2e8f0" />
+  <rect x="840" y="260" width="180" height="8" rx="4" fill="#e2e8f0" />
+
+  <!-- Scale dots -->
+  <circle cx="840" cy="300" r="10" fill="#2DBDBA" />
+  <circle cx="870" cy="300" r="10" fill="#2DBDBA" opacity="0.7" />
+  <circle cx="900" cy="300" r="10" fill="#2DBDBA" opacity="0.4" />
+  <circle cx="930" cy="300" r="10" fill="#e2e8f0" />
+  <circle cx="960" cy="300" r="10" fill="#e2e8f0" />
+
+  <rect x="840" y="330" width="160" height="8" rx="4" fill="#e2e8f0" />
+  <rect x="840" y="350" width="200" height="8" rx="4" fill="#e2e8f0" />
+
+  <rect x="840" y="380" width="90" height="28" rx="8" fill="#2DBDBA" />
+  <text x="885" y="399" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="white" font-weight="600" text-anchor="middle">Save note</text>
+</svg>

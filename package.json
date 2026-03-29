@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node prerender.mjs",
+    "build:vite": "vite build",
     "preview": "vite preview",
     "deploy:functions": "supabase functions deploy stripe-checkout --no-verify-jwt",
     "typecheck": "tsc --noEmit",
@@ -26,6 +27,7 @@
     "stripe": "^17.7.0"
   },
   "devDependencies": {
+    "@prerenderer/renderer-jsdom": "^1.1.9",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -39,6 +41,7 @@
     "tailwindcss": "^3.4.9",
     "typescript": "^5.5.4",
     "vite": "^5.4.0",
+    "vite-plugin-prerender": "^1.0.8",
     "vitest": "^4.0.14"
   }
 }

@@ -26,9 +26,15 @@
   </url>
   <url>
     <loc>https://carerview.com/about</loc>
-    <lastmod>2026-03-13</lastmod>
+    <lastmod>2026-03-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://carerview.com/create-account</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://carerview.com/privacy-policy</loc>

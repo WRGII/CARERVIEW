@@ -25,12 +25,71 @@ export default function PricingPage() {
     { q: t('pricing.faq5_q'), a: t('pricing.faq5_a') },
   ];
 
+  const faqStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'CarerView Family Caregiver Tracking',
+    description: 'Structured observation tracking, family care coordination, and healthcare export tools for family caregivers.',
+    url: `${SITE_URL}/pricing`,
+    brand: { '@type': 'Brand', name: 'CarerView' },
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Community Member',
+        price: '0',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/create-account`,
+        description: 'Free access to caregiver community forum, anonymous posting, all discussion rooms.',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Primary Caregiver',
+        price: '4.99',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/create-account?plan=primary`,
+        description: 'Structured observation tracking, ADL/IADL scale, observation history, DOCX and CSV export.',
+      },
+      {
+        '@type': 'Offer',
+        name: 'Family Circle',
+        price: '8.99',
+        priceCurrency: 'GBP',
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/create-account?plan=family`,
+        description: 'Everything in Primary Caregiver plus invite family members and in-home carers to a shared care view.',
+      },
+    ],
+  };
+
+  const breadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Pricing', item: `${SITE_URL}/pricing` },
+    ],
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <PageSEO
         title="CarerView Pricing - Free Caregiver Community & Care Tracking Plans"
         description="Join CarerView free to access our caregiver community forum. Upgrade for structured observation tracking, family care coordination, and healthcare export tools. Plans from £4.99/month."
         canonical={`${SITE_URL}/pricing`}
+        keywords="caregiver app pricing, family caregiver subscription, care tracking plans, caregiver tools cost, free caregiver community"
+        structuredData={[faqStructuredData, productStructuredData, breadcrumbStructuredData]}
       />
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:pt-16 sm:pb-10">
