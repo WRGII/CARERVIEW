@@ -37,6 +37,10 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    setEditing(false);
+  }, [memoryBookId]);
+
+  useEffect(() => {
     if (identity) {
       setForm({
         preferred_name: identity.preferred_name ?? "",

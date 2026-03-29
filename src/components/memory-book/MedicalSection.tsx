@@ -33,6 +33,10 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    setEditing(false);
+  }, [memoryBookId]);
+
+  useEffect(() => {
     if (medical) {
       setForm({
         conditions: medical.conditions ?? "",

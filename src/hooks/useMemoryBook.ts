@@ -9,9 +9,9 @@ import type {
   TeamMemberRole,
 } from "../types/memory-book";
 
-export function useMemoryBook(teamId: string | null, isOwner: boolean) {
+export function useMemoryBook(teamId: string | null, isOwner: boolean, roleResolved: boolean) {
   return useQuery({
-    queryKey: ["memory-book", teamId],
+    queryKey: ["memory-book", teamId, isOwner],
     queryFn: async () => {
       if (!teamId) return null;
 
@@ -37,7 +37,7 @@ export function useMemoryBook(teamId: string | null, isOwner: boolean) {
       if (error) throw error;
       return data as MemoryBook | null;
     },
-    enabled: !!teamId,
+    enabled: !!teamId && roleResolved,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

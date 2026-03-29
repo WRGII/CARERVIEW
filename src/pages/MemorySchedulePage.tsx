@@ -36,9 +36,10 @@ export default function MemorySchedulePage() {
   const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId);
   const { data: patient, isLoading: patientLoading } = useTeamPatient(teamId);
 
+  const roleResolved = !roleLoading;
   const isOwner = teamRole === "owner";
 
-  const { data: book, isLoading: bookLoading, error: bookError } = useMemoryBook(teamId, isOwner);
+  const { data: book, isLoading: bookLoading, error: bookError } = useMemoryBook(teamId, isOwner, roleResolved);
 
   const bookId = book?.id ?? null;
 

@@ -37,6 +37,10 @@ export default function PreferencesSection({ memoryBookId, teamId, isOwner }: Pr
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
+    setEditing(false);
+  }, [memoryBookId]);
+
+  useEffect(() => {
     if (prefs) {
       setForm({
         likes: prefs.likes ?? "",
