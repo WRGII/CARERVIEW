@@ -1,7 +1,7 @@
 // src/pages/LandingPage.tsx
 import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, HeartHandshake, ScanSearch } from 'lucide-react'
+import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, HeartHandshake, ScanSearch, User, Users, Heart, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import AuthForm from '../components/common/AuthForm'
 import { useLocale } from '../i18n/LocaleContext'
@@ -206,6 +206,88 @@ export default function LandingPage() {
               </div>
               <h4 className="text-lg font-semibold text-slate-gray mb-2">{t('landing.feat6_title')}</h4>
               <p className="text-slate-gray/75 leading-relaxed">{t('landing.feat6_body')}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Memory Book Feature Section */}
+        <div className="py-20">
+          <div className="bg-gradient-to-br from-cyan-primary/6 via-mint-green/10 to-peach-blush/20 rounded-3xl px-6 sm:px-12 py-16">
+            <div className="text-center mb-14">
+              <div className="inline-flex items-center gap-2 bg-cyan-primary/10 border border-cyan-primary/20 rounded-full px-4 py-1.5 mb-5">
+                <BookOpen className="w-4 h-4 text-cyan-primary" />
+                <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest">
+                  {t('landing.mb_eyebrow')}
+                </p>
+              </div>
+              <h3 className="text-4xl font-bold text-slate-gray mb-5 leading-tight max-w-3xl mx-auto">
+                {t('landing.mb_title')}
+              </h3>
+              <p className="text-xl text-slate-gray/70 max-w-2xl mx-auto leading-relaxed">
+                {t('landing.mb_body')}
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2 mb-10">
+              <div className="bg-warm-white rounded-2xl p-7 border border-slate-gray/10 shadow-sm hover:shadow-md transition-shadow duration-300 group">
+                <div className="flex items-start gap-5">
+                  <div className="w-12 h-12 bg-cyan-primary/15 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-primary/25 transition-colors duration-300">
+                    <User className="w-6 h-6 text-cyan-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-gray mb-2">{t('landing.mb_identity_title')}</h4>
+                    <p className="text-slate-gray/70 leading-relaxed">{t('landing.mb_identity_body')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-warm-white rounded-2xl p-7 border border-slate-gray/10 shadow-sm hover:shadow-md transition-shadow duration-300 group">
+                <div className="flex items-start gap-5">
+                  <div className="w-12 h-12 bg-mint-green/50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-mint-green/70 transition-colors duration-300">
+                    <Users className="w-6 h-6 text-slate-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-gray mb-2">{t('landing.mb_contacts_title')}</h4>
+                    <p className="text-slate-gray/70 leading-relaxed">{t('landing.mb_contacts_body')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-warm-white rounded-2xl p-7 border border-slate-gray/10 shadow-sm hover:shadow-md transition-shadow duration-300 group">
+                <div className="flex items-start gap-5">
+                  <div className="w-12 h-12 bg-peach-blush/60 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-peach-blush/80 transition-colors duration-300">
+                    <Stethoscope className="w-6 h-6 text-slate-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-gray mb-2">{t('landing.mb_medical_title')}</h4>
+                    <p className="text-slate-gray/70 leading-relaxed">{t('landing.mb_medical_body')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-warm-white rounded-2xl p-7 border border-slate-gray/10 shadow-sm hover:shadow-md transition-shadow duration-300 group">
+                <div className="flex items-start gap-5">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-primary/15 to-mint-green/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:from-cyan-primary/25 group-hover:to-mint-green/45 transition-all duration-300">
+                    <Heart className="w-6 h-6 text-cyan-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-gray mb-2">{t('landing.mb_prefs_title')}</h4>
+                    <p className="text-slate-gray/70 leading-relaxed">{t('landing.mb_prefs_body')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-5">
+              <p className="text-sm text-slate-gray/60 text-center max-w-lg leading-relaxed">
+                {t('landing.mb_access_note')}
+              </p>
+              <Link
+                to="/create-account"
+                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+              >
+                {t('landing.mb_cta')} <ArrowRight className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </div>
