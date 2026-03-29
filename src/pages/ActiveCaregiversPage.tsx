@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, CircleCheck as CheckCircle2, Circle as XCircle, RefreshCw, LayoutDashboard } from "lucide-react";
+import { Plus, CircleCheck as CheckCircle2, Circle as XCircle, RefreshCw, ArrowLeft } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 import { useFormatDate } from "../hooks/useFormatDate";
 import { ErrorMessage } from "../components/ui/ErrorMessage";
@@ -71,6 +71,16 @@ export default function ActiveCaregiversPage() {
   return (
     <div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mb-6">
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            {t('admin.return_to_dashboard')}
+          </Link>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-gray">{t('active_cg.title')}</h1>
@@ -80,15 +90,6 @@ export default function ActiveCaregiversPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/admin"
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-gray/30 px-4 py-2 text-sm font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all"
-              aria-label="Back to Admin Dashboard"
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              {t('admin.title')}
-            </Link>
-
             <button
               type="button"
               onClick={() => caregiversQ.refetch()}

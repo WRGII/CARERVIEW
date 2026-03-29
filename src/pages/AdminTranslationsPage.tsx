@@ -1,9 +1,10 @@
 // src/pages/AdminTranslationsPage.tsx
 import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { getAdminToken } from "../hooks/useAdminSession";
-import { Search, Save, RefreshCw, Globe, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, Save, RefreshCw, Globe, ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 
 type TranslationRow = {
@@ -181,6 +182,16 @@ export default function AdminTranslationsPage() {
   return (
     <div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div className="mb-6">
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            {t('admin.return_to_dashboard')}
+          </Link>
+        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">

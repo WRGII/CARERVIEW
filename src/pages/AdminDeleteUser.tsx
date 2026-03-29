@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { callAdminDeleteUser } from "../lib/admin";
 import { useLocale } from "../i18n/LocaleContext";
 
@@ -24,6 +26,15 @@ export default function AdminDeleteUser() {
 
   return (
     <div className="max-w-xl mx-auto p-6">
+      <div className="mb-6">
+        <Link
+          to="/admin"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          {t("admin.return_to_dashboard")}
+        </Link>
+      </div>
       <h1 className="text-2xl font-bold mb-4">{t("admin.delete_user_title")}</h1>
       <form onSubmit={onSubmit} className="flex gap-2 mb-4">
         <label htmlFor="delete-user-email" className="sr-only">

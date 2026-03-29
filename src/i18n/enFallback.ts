@@ -112,6 +112,7 @@ const enFallback: Record<string, string> = {
   "lang.switch_aria": "Switch language",
   "lang.current": "Language",
   "admin.title": "Admin Dashboard",
+  "admin.return_to_dashboard": "Return to Admin Dashboard",
   "admin.delete_user_title": "Admin: Delete User by Email",
   "admin.result_placeholder": "Result will appear here",
   "community_banner.aria_label": "Community",

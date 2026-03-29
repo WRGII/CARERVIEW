@@ -5,6 +5,7 @@ import {
   ShieldOff, TriangleAlert as AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon,
   CircleCheck as CheckCircle, Circle as XCircle,
 } from 'lucide-react'
+import { useLocale } from '../i18n/LocaleContext'
 import { useModerationQueue, MODERATION_PAGE_SIZE } from '../hooks/useCommunityReports'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
@@ -41,6 +42,7 @@ const MAIN_TABS: { value: MainTab; label: string; icon: React.ElementType; descr
 ]
 
 export default function AdminCommunityModerationPage() {
+  const { t } = useLocale()
   const [mainTab, setMainTab] = useState<MainTab>('reports')
   const [activeQueueTab, setActiveQueueTab] = useState<QueueTab>('pending')
   const [selectedReport, setSelectedReport] = useState<ModerationReportRow | null>(null)
@@ -110,7 +112,7 @@ export default function AdminCommunityModerationPage() {
             className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group mb-4"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Admin dashboard
+            {t('admin.return_to_dashboard')}
           </Link>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
