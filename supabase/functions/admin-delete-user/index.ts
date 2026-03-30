@@ -3,7 +3,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET') || 'fallback-dev-secret-change-in-prod'
+const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')
+if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
 const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
 
 const CORS_HEADERS = {
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-    const payload = await verifyAdminToken(token, ADMIN_SECRET)
+    const payload = await verifyAdminToken(token, ADMIN_SECRET!)
     if (!payload) return json({ error: 'Admins only' }, 403)
     audit.actor_email = payload.sub
 

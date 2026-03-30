@@ -1,12 +1,14 @@
 // src/pages/CreateAccountPage.tsx
 import React from "react";
-import { CreditCard, UserPlus, ArrowRight } from "lucide-react";
+import { CreditCard, UserPlus, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { STRIPE_PRODUCTS } from "../stripe-config";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
 import { SITE_URL } from "../lib/siteConfig";
+import { validatePassword } from "../lib/passwordValidation";
+import PasswordStrengthBar from "../components/ui/PasswordStrengthBar";
 
 type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 
@@ -61,6 +63,9 @@ export default function CreateAccountPage() {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -166,8 +171,14 @@ export default function CreateAccountPage() {
       return;
     }
 
-    if (password.length < 8) {
+    const pwValidation = validatePassword(password);
+    if (!pwValidation.valid) {
       setError(t('create_account.password_too_short'));
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError(t('create_account.passwords_mismatch'));
       return;
     }
 
@@ -232,10 +243,15 @@ export default function CreateAccountPage() {
       localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode, displayName: name || null }));
       setInfo(t('create_account.confirm_email_info'));
     } catch (err: any) {
-      if (err?.message === "User already registered") {
-        setError(t('create_account.email_taken'));
+      const msg: string = err?.message ?? '';
+      if (
+        msg === 'User already registered' ||
+        msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('email address is already')
+      ) {
+        setInfo(t('create_account.confirm_email_info'));
       } else {
-        setError(err?.message || t('create_account.signup_failed'));
+        setError(msg || t('create_account.signup_failed'));
       }
     } finally {
       setBusy(false);
@@ -390,15 +406,54 @@ export default function CreateAccountPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.password_label')}</label>
-              <input
-                type="password"
-                required
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder={t('create_account.password_placeholder')}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
+                  placeholder={t('create_account.password_placeholder')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <PasswordStrengthBar password={password} tFn={t} />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.confirm_password_label')}</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
+                  placeholder={t('create_account.confirm_password_placeholder')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="mt-1 text-xs text-red-500">{t('create_account.passwords_mismatch')}</p>
+              )}
             </div>
 
             {error && (

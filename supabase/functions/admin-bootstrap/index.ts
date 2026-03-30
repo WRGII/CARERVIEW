@@ -5,11 +5,14 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')!
 const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')!
-const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET') || 'fallback-dev-secret-change-in-prod'
+const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')
+if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
+
+const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
   'Access-Control-Max-Age': '86400',
@@ -67,7 +70,7 @@ Deno.serve(async (req) => {
       return json({ error: 'Invalid credentials' }, 403)
     }
 
-    const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET)
+    const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET!)
     return json({ ok: true, token })
   } catch (err: any) {
     console.error('[admin-bootstrap] error:', err?.message || err)

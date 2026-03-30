@@ -350,6 +350,15 @@ const enFallback: Record<string, string> = {
   "pricing.plan_primary_name": "Primary Caregiver",
   "pricing.plan_family_name": "Family Circle",
   "caregiver.payment_success": "Payment successful! Your subscription is now active.",
+  "auth.password_strength_weak": "Weak",
+  "auth.password_strength_fair": "Fair",
+  "auth.password_strength_strong": "Strong",
+  "auth.password_rule_min_length": "Min 8 chars",
+  "auth.password_rule_needs_number": "Add a number",
+  "auth.password_rule_needs_uppercase": "Add uppercase",
+  "create_account.confirm_password_label": "Confirm Password",
+  "create_account.confirm_password_placeholder": "Re-enter your password",
+  "create_account.passwords_mismatch": "Passwords do not match.",
 }
 
 export default enFallback

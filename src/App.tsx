@@ -53,6 +53,25 @@ function AdminErrorFallback() {
   )
 }
 
+function CaregiverErrorFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 max-w-md text-center shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-800 mb-2">Something went wrong</h2>
+        <p className="text-sm text-slate-500 leading-relaxed mb-6">
+          We ran into an unexpected problem. Please refresh the page to continue.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-xl transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function SuspenseFallback() {
   return (
     <div className="min-h-[40vh] flex items-center justify-center">
@@ -204,7 +223,9 @@ export default function App() {
                     path="/caregiver"
                     element={
                       <CaregiverGuard>
-                        <CaregiverPage />
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <CaregiverPage />
+                        </ErrorBoundary>
                       </CaregiverGuard>
                     }
                   />
@@ -290,7 +311,9 @@ export default function App() {
                     path="/caregiver/observations/new"
                     element={
                       <CaregiverGuard>
-                        <NewObservationPage />
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <NewObservationPage />
+                        </ErrorBoundary>
                       </CaregiverGuard>
                     }
                   />
@@ -298,7 +321,9 @@ export default function App() {
                     path="/caregiver/observations/:id"
                     element={
                       <CaregiverGuard>
-                        <ObservationEditPage />
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <ObservationEditPage />
+                        </ErrorBoundary>
                       </CaregiverGuard>
                     }
                   />
@@ -306,7 +331,9 @@ export default function App() {
                     path="/caregiver/dementia-scale"
                     element={
                       <CaregiverGuard>
-                        <DementiaScalePage />
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <DementiaScalePage />
+                        </ErrorBoundary>
                       </CaregiverGuard>
                     }
                   />

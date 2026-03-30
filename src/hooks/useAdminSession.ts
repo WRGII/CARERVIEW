@@ -3,9 +3,28 @@ import { useNavigate } from 'react-router-dom'
 
 const STORAGE_KEY = 'admin_token'
 
+function isTokenValid(token: string): boolean {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+    if (payload.role !== 'admin') return false
+    if (!payload.exp) return false
+    return payload.exp > Math.floor(Date.now() / 1000)
+  } catch {
+    return false
+  }
+}
+
 export function getAdminToken(): string | null {
   try {
-    return sessionStorage.getItem(STORAGE_KEY)
+    const token = sessionStorage.getItem(STORAGE_KEY)
+    if (!token) return null
+    if (!isTokenValid(token)) {
+      sessionStorage.removeItem(STORAGE_KEY)
+      return null
+    }
+    return token
   } catch {
     return null
   }

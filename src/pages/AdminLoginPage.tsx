@@ -5,6 +5,33 @@ import { setAdminToken } from "../hooks/useAdminSession";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
+const LOCKOUT_KEY = 'admin_lockout';
+
+function readLockoutState(): { attempts: number; lockedUntil: number | null } {
+  try {
+    const raw = sessionStorage.getItem(LOCKOUT_KEY);
+    if (!raw) return { attempts: 0, lockedUntil: null };
+    const parsed = JSON.parse(raw);
+    return {
+      attempts: parsed.attempts ?? 0,
+      lockedUntil: parsed.lockedUntil ?? null,
+    };
+  } catch {
+    return { attempts: 0, lockedUntil: null };
+  }
+}
+
+function writeLockoutState(attempts: number, lockedUntil: number | null): void {
+  try {
+    sessionStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts, lockedUntil }));
+  } catch { }
+}
+
+function clearLockoutState(): void {
+  try {
+    sessionStorage.removeItem(LOCKOUT_KEY);
+  } catch { }
+}
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
@@ -13,8 +40,10 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [attempts, setAttempts] = useState(0);
-  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+
+  const initialState = readLockoutState();
+  const [attempts, setAttempts] = useState(initialState.attempts);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(initialState.lockedUntil);
   const [countdown, setCountdown] = useState(0);
 
   React.useEffect(() => {
@@ -25,6 +54,7 @@ export default function AdminLoginPage() {
         setLockedUntil(null);
         setAttempts(0);
         setCountdown(0);
+        clearLockoutState();
       } else {
         setCountdown(remaining);
       }
@@ -63,8 +93,10 @@ export default function AdminLoginPage() {
 
       if (!res.ok) {
         const newAttempts = attempts + 1;
+        const newLockedUntil = newAttempts >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_SECONDS * 1000 : null;
         setAttempts(newAttempts);
-        if (newAttempts >= MAX_ATTEMPTS) setLockedUntil(Date.now() + LOCKOUT_SECONDS * 1000);
+        if (newLockedUntil) setLockedUntil(newLockedUntil);
+        writeLockoutState(newAttempts, newLockedUntil);
         setError("Invalid credentials.");
         return;
       }
@@ -75,6 +107,7 @@ export default function AdminLoginPage() {
         return;
       }
 
+      clearLockoutState();
       setAdminToken(data.token);
       navigate("/admin", { replace: true });
     } catch {
