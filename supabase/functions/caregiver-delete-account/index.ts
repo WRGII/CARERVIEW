@@ -19,7 +19,6 @@ import Stripe from 'npm:stripe@17.7.0'
  * - Cancels active Stripe subscriptions
  * - Deletes all user data (observations, responses, subscriptions, teams, etc.)
  * - Deletes the auth user
- * - Sends confirmation email
  * - Inserts audit row in public.admin_events
  */
 
@@ -220,20 +219,7 @@ Deno.serve(async (req) => {
     // Delete profile
     await srv.from('profiles').delete().eq('id', userId)
 
-    // 4. Send confirmation email BEFORE deleting the auth user so the
-    //    Supabase admin mailer can still target the address.
-    let emailSent = false
-    try {
-      if (userEmail) {
-        await sendConfirmationEmail(userEmail)
-        emailSent = true
-      }
-    } catch (emailErr: any) {
-      console.error('Failed to send confirmation email:', emailErr?.message)
-      audit.details.email_error = emailErr?.message || 'Email sending failed'
-    }
-
-    // 5. Delete auth user
+    // 4. Delete auth user
     const { error: authDelErr } = await srv.auth.admin.deleteUser(userId)
     if (authDelErr) {
       audit.details = { ...audit.details, step: 'auth.deleteUser', error: authDelErr.message }
@@ -245,7 +231,6 @@ Deno.serve(async (req) => {
     audit.details = {
       ...audit.details,
       step: 'complete',
-      email_sent: emailSent
     }
     audit.success = true
     await insertAudit(srv, audit)
@@ -254,7 +239,6 @@ Deno.serve(async (req) => {
       ok: true,
       deleted: true,
       email: userEmail,
-      emailSent
     })
   } catch (err: any) {
     console.error('[caregiver-delete-account] error:', err?.message || err)
@@ -273,45 +257,6 @@ Deno.serve(async (req) => {
     return json({ error: err?.message || 'Account deletion failed' }, 500)
   }
 })
-
-async function sendConfirmationEmail(email: string): Promise<void> {
-  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-  const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://carerview.com'
-
-  if (!RESEND_API_KEY) {
-    console.info('[caregiver-delete-account] RESEND_API_KEY not set — skipping deletion confirmation email')
-    return
-  }
-
-  const body = {
-    from: 'CarerView <no-reply@carerview.com>',
-    to: [email],
-    subject: 'Your CarerView account has been deleted',
-    html: `
-      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1e293b">
-        <h2 style="margin-top:0">Account Deleted</h2>
-        <p>Your CarerView account and all associated data have been permanently deleted as requested.</p>
-        <p>This includes your observations, team memberships, and subscription records. If you had an active paid subscription it has been cancelled immediately with no further charges.</p>
-        <p>If you did not request this deletion, please contact us immediately at <a href="mailto:support@carerview.com">support@carerview.com</a>.</p>
-        <p style="color:#64748b;font-size:13px;margin-top:32px">CarerView &mdash; <a href="${siteUrl}" style="color:#0891b2">${siteUrl}</a></p>
-      </div>
-    `,
-  }
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Resend API error ${res.status}: ${text}`)
-  }
-}
 
 async function insertAudit(
   srv: ReturnType<typeof createClient>,
