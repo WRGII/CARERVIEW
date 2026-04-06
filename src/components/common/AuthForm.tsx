@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchChoosePlanAssets } from "../../hooks/usePrefetchStatic";
 import { useLocale } from '../../i18n/LocaleContext';
+import { SITE_URL } from '../../lib/siteConfig';
 
 interface AuthFormProps {
   initialMode?: "signin" | "signup";
@@ -120,7 +121,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
     setError(null);
     try {
       await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+        redirectTo: `${SITE_URL}/auth/callback?type=recovery`,
       });
       setInfo(t('auth.reset_sent'));
     } catch {
