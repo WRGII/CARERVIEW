@@ -11,32 +11,45 @@ export default function AuthCallbackPage() {
     processed.current = true;
 
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
     const type = params.get('type');
     const next = params.get('next') ?? '/';
+    const hasCode = !!params.get('code');
 
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          const errorType = type === 'recovery' ? 'recovery' : 'generic';
-          navigate(`/auth/error?reason=link_expired&type=${errorType}`, { replace: true });
-          return;
-        }
-        if (type === 'recovery') {
-          navigate('/reset-password', { replace: true });
-          return;
-        }
+    if (!hasCode) {
+      const errorType = type === 'recovery' ? 'recovery' : 'generic';
+      navigate(`/auth/error?reason=no_code&type=${errorType}`, { replace: true });
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      const errorType = type === 'recovery' ? 'recovery' : 'generic';
+      navigate(`/auth/error?reason=link_expired&type=${errorType}`, { replace: true });
+    }, 10000);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && type === 'recovery')) {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+        navigate('/reset-password', { replace: true });
+        return;
+      }
+
+      if (event === 'SIGNED_IN') {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
         const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
         if (hasPendingCheckout) {
           navigate('/create-account', { replace: true });
           return;
         }
         navigate(next, { replace: true });
-      });
-    } else {
-      const errorType = type === 'recovery' ? 'recovery' : 'generic';
-      navigate(`/auth/error?reason=no_code&type=${errorType}`, { replace: true });
-    }
+      }
+    });
+
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
