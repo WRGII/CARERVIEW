@@ -359,6 +359,19 @@ const enFallback: Record<string, string> = {
   "create_account.confirm_password_label": "Confirm Password",
   "create_account.confirm_password_placeholder": "Re-enter your password",
   "create_account.passwords_mismatch": "Passwords do not match.",
+  "auth_error.recovery_title": "Your password reset link has expired",
+  "auth_error.recovery_body": "Password reset links are single-use and expire after a short time. Enter your email below and we'll send you a fresh one.",
+  "auth_error.resend_prompt": "Send a new reset link",
+  "auth_error.email_label": "Your email address",
+  "auth_error.resend_btn": "Send New Reset Link",
+  "auth_error.resend_sending": "Sending\u2026",
+  "auth_error.resend_failed": "Something went wrong. Please try again.",
+  "auth_error.resend_success_title": "Check your inbox",
+  "auth_error.resend_success_body": "A new password reset link is on its way. It may take a minute to arrive \u2014 check your spam folder if you don\u2019t see it.",
+  "auth_error.generic_title": "This link is no longer valid",
+  "auth_error.generic_body": "The link you followed has expired or has already been used.",
+  "auth_error.generic_help": "Return to the home page and sign in, or request a new link from the sign-in page.",
+  "auth_error.back_home": "Back to home",
 }
 
 export default enFallback

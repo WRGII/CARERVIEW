@@ -18,7 +18,8 @@ export default function AuthCallbackPage() {
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (error) {
-          navigate('/?error=auth_callback_failed', { replace: true });
+          const errorType = type === 'recovery' ? 'recovery' : 'generic';
+          navigate(`/auth/error?reason=link_expired&type=${errorType}`, { replace: true });
           return;
         }
         if (type === 'recovery') {
@@ -33,7 +34,8 @@ export default function AuthCallbackPage() {
         navigate(next, { replace: true });
       });
     } else {
-      navigate('/', { replace: true });
+      const errorType = type === 'recovery' ? 'recovery' : 'generic';
+      navigate(`/auth/error?reason=no_code&type=${errorType}`, { replace: true });
     }
   }, [navigate]);
 
