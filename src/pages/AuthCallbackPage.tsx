@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useLocale } from '../i18n/LocaleContext';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const processed = useRef(false);
+  const { t } = useLocale();
 
   useEffect(() => {
     if (processed.current) return;
@@ -60,7 +62,7 @@ export default function AuthCallbackPage() {
           <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
           <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce" />
         </div>
-        <p className="text-sm text-slate-gray/60">Verifying your link...</p>
+        <p className="text-sm text-slate-gray/60">{t('auth_callback.verifying')}</p>
       </div>
     </div>
   );

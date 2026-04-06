@@ -372,6 +372,21 @@ const enFallback: Record<string, string> = {
   "auth_error.generic_body": "The link you followed has expired or has already been used.",
   "auth_error.generic_help": "Return to the home page and sign in, or request a new link from the sign-in page.",
   "auth_error.back_home": "Back to home",
+  "team_guard.upgrade_title": "Family Circle is a Team Feature",
+  "team_guard.upgrade_body_primary": "Your Primary Caregiver plan is great for solo caregivers. Upgrade to the Family Circle plan to invite family members and share the care journey together.",
+  "team_guard.upgrade_body_default": "The Family Circle plan lets you build a shared care team, invite family members, and keep everyone on the same page.",
+  "team_guard.upgrade_cta": "Upgrade to Family Circle",
+  "team.invite_expires_on": "This link expires on {date}. After that, you will need to generate a new invite.",
+  "accept_invite.error_title": "Unable to Join",
+  "accept_invite.error_expired_title": "Invite Link Expired",
+  "accept_invite.error_expired_body": "This invite link has expired. Please ask the team owner to send you a new one.",
+  "accept_invite.error_consumed_title": "Invite Already Used",
+  "accept_invite.error_consumed_body": "This invite link has already been used. If you meant to join a different team, please ask for a new link.",
+  "community.loading": "Loading community\u2026",
+  "auth_callback.verifying": "Verifying your link\u2026",
+  "common.go_home": "Go to Home",
+  "common.sending": "Sending\u2026",
+  "checkout.contact_support_prefix": "If you need help, contact us at",
 }
 
 export default enFallback

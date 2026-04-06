@@ -1,7 +1,7 @@
 // src/pages/CheckoutSuccess.tsx
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { hasActivePlan, type UserPlan } from "../hooks/useUserPlan";
@@ -14,6 +14,7 @@ export default function CheckoutSuccess() {
   const [params] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { t } = useLocale();
+  const queryClient = useQueryClient();
 
   const [pollCount, setPollCount] = React.useState(0);
   const pollCountRef = React.useRef(0);
@@ -70,9 +71,10 @@ export default function CheckoutSuccess() {
 
   React.useEffect(() => {
     if (plan && hasActivePlan(plan)) {
+      queryClient.invalidateQueries({ queryKey: ['public.user_subscriptions'] });
       navigate("/caregiver", { replace: true });
     }
-  }, [plan, navigate]);
+  }, [plan, navigate, queryClient]);
 
   if (authLoading) {
     return (
@@ -142,8 +144,17 @@ export default function CheckoutSuccess() {
           )}
 
           {(isError || tookTooLong) && waiting && (
-            <div className="mb-6 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-4 text-left">
-              {t('checkout.taking_long')}
+            <div className="mb-6 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg p-4 text-left space-y-2">
+              <p>{t('checkout.taking_long')}</p>
+              <p>
+                {t('checkout.contact_support_prefix')}{' '}
+                <a
+                  href="mailto:support@carerview.com"
+                  className="underline hover:text-amber-800"
+                >
+                  support@carerview.com
+                </a>
+              </p>
             </div>
           )}
 

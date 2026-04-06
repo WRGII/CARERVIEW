@@ -5,6 +5,7 @@ import { useActiveTeam } from "../context/ActiveTeam";
 import { useUserPlan } from "../hooks/useUserPlan";
 import { cvAmIOwner, cvCreateInvite, cvListMembers } from "../lib/cv";
 import { useLocale } from "../i18n/LocaleContext";
+import { useFormatDate } from "../hooks/useFormatDate";
 
 type Member = {
   user_id: string;
@@ -18,10 +19,12 @@ export default function TeamSettings() {
   const { teamId, loading } = useActiveTeam();
   const { t } = useLocale();
 
+  const { formatDate } = useFormatDate();
   const [members, setMembers] = useState<Member[]>([]);
   const [owner, setOwner] = useState(false);
   const [email, setEmail] = useState("");
   const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteExpiry, setInviteExpiry] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -56,9 +59,12 @@ export default function TeamSettings() {
     setBusy(true);
     setError(null);
     setInviteLink(null);
+    setInviteExpiry(null);
     try {
       const token = await cvCreateInvite(teamId, email.trim());
       setInviteLink(`${window.location.origin}/join?t=${encodeURIComponent(token)}`);
+      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      setInviteExpiry(expiryDate);
       setEmail("");
     } catch (e: any) {
       setError(e.message ?? t('team.invite_failed'));
@@ -108,8 +114,13 @@ export default function TeamSettings() {
             </button>
           </div>
           {inviteLink && (
-            <div className="text-sm mt-2">
-              {t('team.invite_link_label')} <code className="break-all">{inviteLink}</code>
+            <div className="text-sm mt-2 space-y-1">
+              <div>{t('team.invite_link_label')} <code className="break-all">{inviteLink}</code></div>
+              {inviteExpiry && (
+                <div className="text-amber-700 bg-amber-50 border border-amber-100 rounded px-2 py-1 text-xs">
+                  {t('team.invite_expires_on', { date: formatDate(inviteExpiry) })}
+                </div>
+              )}
               <div className="text-slate-500">{t('team.invite_copy_note')}</div>
             </div>
           )}
