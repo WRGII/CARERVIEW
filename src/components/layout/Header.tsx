@@ -147,6 +147,12 @@ export default function Header() {
                     {t('nav.why_carerview')}
                   </Link>
                   <Link
+                    to="/memory-book"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
+                  >
+                    {t('nav.memory_book')}
+                  </Link>
+                  <Link
                     to="/caregiver-forum"
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
                   >
@@ -246,6 +252,13 @@ export default function Header() {
                     className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.why_carerview')}
+                  </Link>
+                  <Link
+                    to="/memory-book"
+                    onClick={closeMobileMenu}
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                  >
+                    {t('nav.memory_book')}
                   </Link>
                   <Link
                     to="/caregiver-forum"

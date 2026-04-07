@@ -92,6 +92,7 @@ import TeamGuard from "./components/common/TeamGuard";
 
 import LandingPage from "./pages/LandingPage";
 import WhyCarerView from "./pages/WhyCarerView";
+import MemoryBookPage from "./pages/MemoryBookPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import ResetPassword from "./pages/ResetPassword";
@@ -155,6 +156,7 @@ export default function App() {
                   {/* Public */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/why" element={<WhyCarerView />} />
+                  <Route path="/memory-book" element={<MemoryBookPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/pricing" element={<PricingPage />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

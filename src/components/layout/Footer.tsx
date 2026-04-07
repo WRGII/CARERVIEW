@@ -114,6 +114,14 @@ export function Footer() {
               </div>
               <div>
                 <Link
+                  to="/memory-book"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.memory_book')}
+                </Link>
+              </div>
+              <div>
+                <Link
                   to="/pricing"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
