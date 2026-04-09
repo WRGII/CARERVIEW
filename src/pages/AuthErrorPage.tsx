@@ -12,6 +12,8 @@ export default function AuthErrorPage() {
   const { t } = useLocale();
   const type = searchParams.get('type');
   const isRecovery = type === 'recovery';
+  const isConfirmation = type === 'confirmation';
+  const showResendForm = isRecovery || isConfirmation;
 
   const [email, setEmail] = useState('');
   const [resendState, setResendState] = useState<ResendState>('idle');
@@ -24,9 +26,21 @@ export default function AuthErrorPage() {
     setResendState('sending');
     setResendError(null);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${SITE_URL}/auth/callback?type=recovery`,
-    });
+    let error: { message: string } | null = null;
+
+    if (isRecovery) {
+      const result = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${SITE_URL}/auth/callback?type=recovery`,
+      });
+      error = result.error;
+    } else {
+      const result = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim(),
+        options: { emailRedirectTo: `${SITE_URL}/auth/callback` },
+      });
+      error = result.error;
+    }
 
     if (error) {
       setResendError(t('auth_error.resend_failed'));
@@ -35,6 +49,22 @@ export default function AuthErrorPage() {
       setResendState('sent');
     }
   };
+
+  const title = isRecovery
+    ? t('auth_error.recovery_title')
+    : isConfirmation
+    ? t('auth_error.confirmation_title')
+    : t('auth_error.generic_title');
+
+  const body = isRecovery
+    ? t('auth_error.recovery_body')
+    : isConfirmation
+    ? t('auth_error.confirmation_body')
+    : t('auth_error.generic_body');
+
+  const resendPrompt = isConfirmation
+    ? t('auth_error.confirmation_resend_prompt')
+    : t('auth_error.resend_prompt');
 
   return (
     <div className="min-h-screen bg-warm-white flex items-center justify-center px-4 py-16">
@@ -46,19 +76,19 @@ export default function AuthErrorPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-slate-800 leading-tight">
-                {isRecovery ? t('auth_error.recovery_title') : t('auth_error.generic_title')}
+                {title}
               </h1>
               <p className="mt-1 text-sm text-slate-600 leading-relaxed">
-                {isRecovery ? t('auth_error.recovery_body') : t('auth_error.generic_body')}
+                {body}
               </p>
             </div>
           </div>
 
           <div className="px-8 py-7">
-            {isRecovery && resendState !== 'sent' && (
+            {showResendForm && resendState !== 'sent' && (
               <>
                 <p className="text-sm font-medium text-slate-700 mb-4">
-                  {t('auth_error.resend_prompt')}
+                  {resendPrompt}
                 </p>
                 <form onSubmit={handleResend} className="space-y-4">
                   <div>
@@ -97,7 +127,7 @@ export default function AuthErrorPage() {
               </>
             )}
 
-            {isRecovery && resendState === 'sent' && (
+            {showResendForm && resendState === 'sent' && (
               <div className="flex items-start gap-3 bg-teal-50 border border-teal-100 rounded-xl p-4">
                 <CheckCircle className="h-5 w-5 text-teal-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -111,7 +141,7 @@ export default function AuthErrorPage() {
               </div>
             )}
 
-            {!isRecovery && (
+            {!showResendForm && (
               <p className="text-sm text-slate-500 leading-relaxed">
                 {t('auth_error.generic_help')}
               </p>
@@ -125,7 +155,7 @@ export default function AuthErrorPage() {
                 <ArrowLeft className="h-3.5 w-3.5" />
                 {t('auth_error.back_home')}
               </Link>
-              {isRecovery && resendState === 'sent' && (
+              {showResendForm && resendState === 'sent' && (
                 <Link
                   to="/"
                   className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"

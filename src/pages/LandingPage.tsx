@@ -1,6 +1,6 @@
 // src/pages/LandingPage.tsx
 import React, { useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, HeartHandshake, ScanSearch, User, Users, Heart, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
 import AuthForm from '../components/common/AuthForm'
@@ -10,15 +10,24 @@ import { SITE_URL } from '../lib/siteConfig'
 
 export default function LandingPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { t } = useLocale()
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const errorCode = params.get('error_code')
+    const errorDesc = params.get('error_description') ?? ''
+    if (errorCode) {
+      const type = errorDesc.toLowerCase().includes('recovery') ? 'recovery' : 'confirmation'
+      navigate(`/auth/error?reason=${errorCode}&type=${type}`, { replace: true })
+      return
+    }
     if (location.hash === '#get-started') {
       setTimeout(() => {
         document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 50)
     }
-  }, [location.hash])
+  }, [location.search, location.hash, navigate])
 
   const orgSchema = {
     '@context': 'https://schema.org',

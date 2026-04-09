@@ -14,7 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storage: window.localStorage,
     storageKey: 'careview-auth',
-    flowType: 'pkce',
+    flowType: 'implicit',
   },
   db: {
     schema: 'public',
