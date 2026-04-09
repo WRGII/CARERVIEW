@@ -70,6 +70,7 @@ export default function CreateAccountPage() {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [info, setInfo] = React.useState<string | null>(null);
+  const [pendingPlanName, setPendingPlanName] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     (async () => {
@@ -116,6 +117,8 @@ export default function CreateAccountPage() {
         return;
       }
 
+      setPendingPlanName(product.name);
+
       try {
         await supabase.from("profiles").upsert({
           id: user.id,
@@ -152,11 +155,17 @@ export default function CreateAccountPage() {
         const url = (data as any)?.url;
         if (!url) throw new Error("No checkout URL returned");
         localStorage.removeItem(PENDING_KEY);
+        setPendingPlanName(null);
         window.location.assign(url);
       } catch (e: any) {
-        localStorage.removeItem(PENDING_KEY);
+        const msg: string = e?.message ?? '';
+        const isPermanent = msg.includes('Invalid plan') || msg.includes('plan_missing_price') || msg.includes('Missing price');
+        if (isPermanent) {
+          localStorage.removeItem(PENDING_KEY);
+          setPendingPlanName(null);
+        }
         console.warn("Failed to resume pending checkout:", e);
-        setError(e?.message || t('create_account.signup_failed'));
+        setError(msg || t('create_account.signup_failed'));
       }
     })();
   }, []);
@@ -268,6 +277,18 @@ export default function CreateAccountPage() {
         canonical={`${SITE_URL}/create-account`}
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {pendingPlanName && (
+          <div className="mb-6 rounded-xl bg-blue-50 border border-blue-200 p-4 flex items-start gap-3">
+            <svg className="animate-spin w-5 h-5 text-blue-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <div>
+              <p className="text-blue-800 text-sm font-medium">Resuming your {pendingPlanName} checkout&hellip;</p>
+              <p className="text-blue-700 text-xs mt-0.5">You will be redirected to the payment page in a moment.</p>
+            </div>
+          </div>
+        )}
         {isIncompletePath && (
           <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-amber-800 text-sm">
             {t('create_account.incomplete_setup_notice')}

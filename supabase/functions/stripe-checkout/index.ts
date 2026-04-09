@@ -129,6 +129,29 @@ Deno.serve(async (req) => {
       return resp({ error: `Price ID ${priceId} does not match plan ${planId}` }, 400)
     }
 
+    // 0) Ensure a profile row exists for this user — required for user_subscriptions FK
+    const { data: profileRow } = await db
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (!profileRow) {
+      const { error: profileCreateErr } = await db.from('profiles').upsert(
+        {
+          id: user.id,
+          email: user.email ?? null,
+          display_name: user.user_metadata?.display_name ?? '',
+          role: 'caregiver',
+          disabled: false,
+        },
+        { onConflict: 'id' }
+      )
+      if (profileCreateErr) {
+        console.warn('[stripe-checkout] profile auto-create failed (non-fatal):', profileCreateErr.message)
+      }
+    }
+
     // 1) Ensure Stripe customer mapping for this user
     const { data: existing, error: mapErr } = await db
       .from('stripe_customers')

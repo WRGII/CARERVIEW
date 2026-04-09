@@ -73,6 +73,16 @@ async function lookupUserIdFromCustomer(db: ReturnType<typeof createClient>, cus
   return data?.user_id as string | undefined
 }
 
+async function ensureProfileExists(db: ReturnType<typeof createClient>, userId: string, email?: string) {
+  const { data } = await db.from('profiles').select('id').eq('id', userId).maybeSingle()
+  if (data) return
+  const { error } = await db.from('profiles').upsert(
+    { id: userId, email: email ?? null, display_name: '', role: 'caregiver', disabled: false },
+    { onConflict: 'id' }
+  )
+  if (error) console.warn('[stripe-webhook] profile auto-create failed (non-fatal):', error.message)
+}
+
 async function planIdFromPrice(db: ReturnType<typeof createClient>, priceId: string) {
   const { data, error } = await db
     .from('subscription_plans') // public table with app plan ids in `id`
@@ -166,16 +176,58 @@ Deno.serve(async (req) => {
         const userId = (session.metadata?.user_id as string | undefined) || undefined
 
         if (customerId && userId) {
-          const { error } = await db.from('stripe_customers').upsert(
+          // Ensure profile row exists before writing anything that FKs to it
+          await ensureProfileExists(db, userId)
+
+          const { error: scErr } = await db.from('stripe_customers').upsert(
             { user_id: userId, customer_id: customerId, updated_at: new Date().toISOString() },
             { onConflict: 'user_id' },
           )
-          if (error) {
-            console.warn(`[stripe-webhook] upsert stripe_customers failed: ${error.message}`, {
-              userId,
-              customerId,
-              errorCode: error.code
+          if (scErr) {
+            console.warn(`[stripe-webhook] upsert stripe_customers failed: ${scErr.message}`, {
+              userId, customerId, errorCode: scErr.code
             })
+          }
+
+          // Eagerly write subscription row so CheckoutSuccess polling resolves without
+          // waiting for a separate customer.subscription.created event delivery.
+          const subscriptionId = session.subscription as string | null
+          const planId = (session.metadata?.plan_id as string | undefined) || undefined
+
+          if (subscriptionId && planId) {
+            try {
+              const stripeSub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ['items.data'] })
+              const item: any = stripeSub?.items?.data?.[0]
+              const priceId: string | null = item?.price?.id ?? null
+              const pStartIso = secToIso(stripeSub.current_period_start)
+              const pEndIso = secToIso(stripeSub.current_period_end)
+              const trialEndIso = secToIso(stripeSub.trial_end)
+              const eventCreatedIso = new Date(event.created * 1000).toISOString()
+
+              const row: Record<string, any> = {
+                user_id: userId,
+                subscription_id: subscriptionId,
+                price_id: priceId ?? undefined,
+                plan_id: planId,
+                status: stripeSub.status,
+                cancel_at_period_end: !!stripeSub.cancel_at_period_end,
+                updated_at: eventCreatedIso,
+              }
+              if (pStartIso) row.current_period_start = pStartIso
+              if (pEndIso)   row.current_period_end   = pEndIso
+              if (trialEndIso !== null) row.trial_end = trialEndIso
+
+              const { error: subErr } = await db.from('user_subscriptions').upsert(
+                row, { onConflict: 'user_id,subscription_id' }
+              )
+              if (subErr) {
+                console.warn(`[stripe-webhook] eager subscription upsert failed: ${subErr.message}`)
+              } else {
+                await enforceSeats(db, userId, planId)
+              }
+            } catch (eagerErr: any) {
+              console.warn('[stripe-webhook] eager subscription write failed (non-fatal):', eagerErr?.message)
+            }
           }
         }
 
@@ -254,6 +306,9 @@ Deno.serve(async (req) => {
           })
           return resp({ received: true, skipped: 'out_of_order' })
         }
+
+        // Ensure profile row exists before writing user_subscriptions (FK constraint)
+        await ensureProfileExists(db, userId)
 
         // Upsert subscription row
         const row: Record<string, any> = {
