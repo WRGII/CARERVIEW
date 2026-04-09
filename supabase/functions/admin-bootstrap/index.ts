@@ -1,14 +1,19 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')!
-const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')!
-const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')?.trim()
+const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
+const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')?.trim()
+const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')?.trim()
+const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')?.trim()
+
+if (!SUPABASE_URL) throw new Error('SUPABASE_URL environment variable is required')
+if (!SERVICE_ROLE) throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required')
+if (!ADMIN_EMAIL) throw new Error('ADMIN_EMAIL environment variable is required')
+if (!ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD environment variable is required')
 if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
 
-const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
+const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL')?.trim() || '*'
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -64,13 +69,13 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const submittedEmail = (body?.email as string | undefined)?.trim() ?? ''
-    const submittedPassword = (body?.password as string | undefined) ?? ''
+    const submittedPassword = (body?.password as string | undefined)?.trim() ?? ''
 
     if (!timingSafeEqual(submittedEmail, ADMIN_EMAIL) || !timingSafeEqual(submittedPassword, ADMIN_PASSWORD)) {
       return json({ error: 'Invalid credentials' }, 403)
     }
 
-    const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET!)
+    const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET)
     return json({ ok: true, token })
   } catch (err: any) {
     console.error('[admin-bootstrap] error:', err?.message || err)
