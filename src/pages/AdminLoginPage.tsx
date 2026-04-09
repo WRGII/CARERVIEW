@@ -101,7 +101,13 @@ export default function AdminLoginPage() {
         return;
       }
 
-      const data = await res.json();
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        setError("Authentication failed. Please try again.");
+        return;
+      }
       if (!data?.token) {
         setError("Authentication failed. Please try again.");
         return;

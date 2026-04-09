@@ -1,18 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')?.trim()
-const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
-const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')?.trim()
-const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')?.trim()
-const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')?.trim()
-
-if (!SUPABASE_URL) throw new Error('SUPABASE_URL environment variable is required')
-if (!SERVICE_ROLE) throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required')
-if (!ADMIN_EMAIL) throw new Error('ADMIN_EMAIL environment variable is required')
-if (!ADMIN_PASSWORD) throw new Error('ADMIN_PASSWORD environment variable is required')
-if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
-
 const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL')?.trim() || '*'
 
 const CORS_HEADERS = {
@@ -55,6 +43,17 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
   try {
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')?.trim()
+    const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
+    const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL')?.trim()
+    const ADMIN_PASSWORD = Deno.env.get('ADMIN_PASSWORD')?.trim()
+    const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')?.trim()
+
+    if (!SUPABASE_URL || !SERVICE_ROLE || !ADMIN_EMAIL || !ADMIN_PASSWORD || !ADMIN_SECRET) {
+      console.error('[admin-bootstrap] one or more required environment variables are missing')
+      return json({ error: 'Server configuration error' }, 500)
+    }
+
     const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
     const { data: rateLimitCheck } = await srv.rpc('check_rate_limit', {
