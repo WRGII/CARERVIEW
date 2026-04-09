@@ -97,7 +97,13 @@ export default function AdminLoginPage() {
         setAttempts(newAttempts);
         if (newLockedUntil) setLockedUntil(newLockedUntil);
         writeLockoutState(newAttempts, newLockedUntil);
-        setError("Invalid credentials.");
+        if (res.status === 429) {
+          setError("Too many attempts. Please wait before trying again.");
+        } else if (res.status === 500) {
+          setError("Server error. Please try again later.");
+        } else {
+          setError("Invalid credentials.");
+        }
         return;
       }
 
@@ -116,8 +122,9 @@ export default function AdminLoginPage() {
       clearLockoutState();
       setAdminToken(data.token);
       navigate("/admin", { replace: true });
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (err) {
+      console.error('[admin-login] fetch error:', err);
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }

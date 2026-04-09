@@ -1,12 +1,10 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
-const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL')?.trim() || '*'
-
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
   'Access-Control-Max-Age': '86400',
 } as const
@@ -68,7 +66,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const submittedEmail = (body?.email as string | undefined)?.trim() ?? ''
-    const submittedPassword = (body?.password as string | undefined)?.trim() ?? ''
+    const submittedPassword = (body?.password as string | undefined) ?? ''
 
     if (!timingSafeEqual(submittedEmail, ADMIN_EMAIL) || !timingSafeEqual(submittedPassword, ADMIN_PASSWORD)) {
       return json({ error: 'Invalid credentials' }, 403)
