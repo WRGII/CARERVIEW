@@ -12,7 +12,6 @@ export function useSiteSettings() {
     staleTime: 60 * 60 * 1000, // 1 hour
     queryFn: async (): Promise<SiteSettings | null> => {
       const { data, error } = await supabase
-        .schema('app')
         .from('site_settings')
         .select('logo_url')
         .order('updated_at', { ascending: false })

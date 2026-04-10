@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { useActiveTeam } from "../context/ActiveTeam";
+import { useAuth } from "../hooks/useAuth";
 import { useUserPlan } from "../hooks/useUserPlan";
 import {
   cvAmIOwner,
@@ -92,6 +93,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 export default function TeamSettings() {
   const { data: plan, isLoading: planLoading } = useUserPlan();
   const { teamId, loading: teamLoading } = useActiveTeam();
+  const { loading: authLoading } = useAuth();
   const { t } = useLocale();
   const { formatDate } = useFormatDate();
 
@@ -137,7 +139,7 @@ export default function TeamSettings() {
     loadData();
   }, [loadData]);
 
-  if (planLoading || teamLoading) return null;
+  if (authLoading || planLoading || teamLoading) return null;
   if (!isPlanAllowed) return <Navigate to="/caregiver" replace />;
 
   if (!teamId) {

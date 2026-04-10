@@ -15,9 +15,7 @@ export async function prefetchChoosePlanAssets(qc?: QueryClient): Promise<void> 
     qc.prefetchQuery({
       queryKey: ['site_logo'],
       queryFn: async () => {
-        // Note: site_settings remains in app schema as per requirements
         const { data, error } = await supabase
-          .schema('app')
           .from('site_settings')
           .select('logo_url')
           .order('updated_at', { ascending: false })

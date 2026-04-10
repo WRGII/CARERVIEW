@@ -44,7 +44,7 @@ export function useMemoryBook(teamId: string | null, isOwner: boolean, roleResol
 }
 
 export function useTeamRole(teamId: string | null, userId?: string | null) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ["team-role", teamId, userId],
     queryFn: async () => {
       if (!teamId || !userId) return null;
@@ -62,6 +62,12 @@ export function useTeamRole(teamId: string | null, userId?: string | null) {
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });
+
+  const pendingEnable = !!teamId && !userId;
+  return {
+    ...query,
+    isLoading: query.isLoading || pendingEnable,
+  };
 }
 
 export function useTeamPatient(teamId: string | null) {

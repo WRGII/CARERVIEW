@@ -5,7 +5,6 @@ async function fetchLogoUrl(): Promise<string | null> {
   // 1) Try site_settings table (matches existing Footer usage)
   try {
     const { data, error } = await supabase
-      .schema('app')
       .from('site_settings')
       .select('logo_url')
       .order('updated_at', { ascending: false })

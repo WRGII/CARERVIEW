@@ -30,8 +30,8 @@ const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
 
 export default function MemorySchedulePage() {
   const [activeTab, setActiveTab] = useState<MemoryBookTab>("overview");
-  const { teamId } = useActiveTeam();
-  const { user } = useAuth();
+  const { teamId, loading: teamLoading } = useActiveTeam();
+  const { user, loading: authLoading } = useAuth();
 
   const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId, user?.id);
   const { data: patient, isLoading: patientLoading } = useTeamPatient(teamId);
@@ -59,8 +59,20 @@ export default function MemorySchedulePage() {
   const hasMedical = !!medical;
   const hasPreferences = !!preferences;
 
+  const isReady = !authLoading && !teamLoading;
   const isLoading = bookLoading || roleLoading || patientLoading;
   const patientName = patient?.full_name ?? "Care Recipient";
+
+  if (!isReady) {
+    return (
+      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-10 bg-slate-100 rounded-xl w-1/2" />
+          <div className="h-64 bg-slate-100 rounded-xl" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (!user) return null;
 
