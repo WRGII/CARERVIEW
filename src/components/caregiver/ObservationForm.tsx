@@ -111,7 +111,7 @@ export default function ObservationForm({
   const handleDateChange = (value: string) => {
     setDateOfObservation(value)
     if (value && !validateDate(value))
-      setDateError(t('obs_form.date_error'))
+      setDateError(t('obs_form.date_invalid'))
     else setDateError('')
   }
 
@@ -205,13 +205,13 @@ export default function ObservationForm({
       return
     }
     if (!validateDate(dateOfObservation)) {
-      setDateError(t('obs_form.date_error'))
+      setDateError(t('obs_form.date_invalid'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('error')
       return
     }
     if (!hasAnyScore) {
-      if (!isAutoSave) setSaveError(t('obs_form.score_required'))
+      if (!isAutoSave) setSaveError(t('obs_form.err_no_score'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('idle')
       return
@@ -225,7 +225,7 @@ export default function ObservationForm({
     const caregiver_email = (profile?.email || user?.email || '').trim()
 
     if (!emailRegex.test(caregiver_email)) {
-      setSaveError(t('obs_form.email_invalid'))
+      setSaveError(t('obs_form.err_email'))
       setIsSaving(false)
       if (isAutoSave) setAutoSaveStatus('error')
       return
@@ -346,7 +346,7 @@ export default function ObservationForm({
       <div className="bg-cyan-primary/8 border border-cyan-primary/20 rounded-xl px-5 py-4">
         <p className="text-slate-700 text-sm leading-relaxed">
           <span className="font-semibold text-slate-800">{t('obs_form.guidance_bold')}</span>{' '}
-          {t('obs_form.guidance_body')}
+          {t('obs_form.guidance')}
         </p>
       </div>
 
@@ -356,7 +356,7 @@ export default function ObservationForm({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 className="text-base font-semibold text-slate-800">
-                {isEditing ? t('obs_form.edit_title') : t('obs_form.new_title')}
+                {isEditing ? t('obs_form.title_edit') : t('obs_form.title_new')}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">{displayFormType}</p>
             </div>
@@ -456,7 +456,7 @@ export default function ObservationForm({
       {/* Score reference — compact inline strip */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('obs_form.score_ref_label')}</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('obs_form.score_ref_header')}</p>
         </div>
         <div className="grid grid-cols-5 divide-x divide-slate-100">
           {[
@@ -567,7 +567,7 @@ export default function ObservationForm({
           {lastSavedAt ? (
             <span>{t('obs_form.last_saved_at') + ' ' + formatLastSaved(lastSavedAt)}</span>
           ) : (
-            <span>{t('obs_form.auto_save_hint')}</span>
+            <span>{t('obs_form.autosave_hint')}</span>
           )}
         </div>
         <div className="flex gap-3 flex-col sm:flex-row">
@@ -591,7 +591,7 @@ export default function ObservationForm({
             disabled={isSaving || upsertObservation.isPending || !canSave}
             className="px-5 py-3 rounded-xl bg-cyan-primary text-white font-semibold text-sm hover:bg-cyan-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
           >
-            {isSaving || upsertObservation.isPending ? t('obs_form.saving') : (isEditing ? t('obs_form.save_changes') : t('obs_form.save_observation'))}
+            {isSaving || upsertObservation.isPending ? t('obs_form.saving') : (isEditing ? t('obs_form.save_changes') : t('obs_form.save_obs'))}
           </button>
         </div>
       </div>

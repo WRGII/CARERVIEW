@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, AlertTriangle } from 'lucide-react';
+import { Trash2, TriangleAlert as AlertTriangle } from 'lucide-react';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { deleteOwnAccount } from '../../lib/caregiver';
 import { supabase } from '../../lib/supabaseClient';
@@ -106,7 +106,7 @@ export default function DeleteAccount() {
               className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span>{t('delete_acct.btn')}</span>
+              <span>{t('delete_acct.confirm_btn')}</span>
             </button>
           </div>
         </div>
@@ -114,8 +114,8 @@ export default function DeleteAccount() {
 
       <ConfirmDialog
         isOpen={showConfirm}
-        title={t('delete_acct.confirm_title')}
-        message={t('delete_acct.confirm_body')}
+        title={t('delete_acct.dialog_title')}
+        message={t('delete_acct.dialog_msg')}
         confirmLabel={t('delete_acct.confirm_yes')}
         cancelLabel={t('common.cancel')}
         onConfirm={handleConfirmDelete}

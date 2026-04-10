@@ -51,12 +51,12 @@ export default function ResetPassword() {
     setMsg(null);
 
     if (password !== confirmPassword) {
-      setErr(t('reset_pw.mismatch'));
+      setErr(t('reset_pw.err_mismatch'));
       return;
     }
 
     if (password.length < 8) {
-      setErr(t('reset_pw.too_short'));
+      setErr(t('reset_pw.err_too_short'));
       return;
     }
 
@@ -91,7 +91,7 @@ export default function ResetPassword() {
       {tokenValid === 'valid' && (
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
-            <span className="text-sm text-slate-gray">{t('reset_pw.new_password')}</span>
+            <span className="text-sm text-slate-gray">{t('reset_pw.new_pw_label')}</span>
             <input
               type="password"
               className="mt-1 w-full rounded-lg border-slate-gray/30 px-3 py-2"
@@ -99,11 +99,11 @@ export default function ResetPassword() {
               onChange={(e) => setPassword(e.target.value)}
               minLength={8}
               required
-              placeholder={t('reset_pw.new_password_placeholder')}
+              placeholder={t('reset_pw.new_pw_ph')}
             />
           </label>
           <label className="block">
-            <span className="text-sm text-slate-gray">{t('reset_pw.confirm_password')}</span>
+            <span className="text-sm text-slate-gray">{t('reset_pw.confirm_label')}</span>
             <input
               type="password"
               className="mt-1 w-full rounded-lg border-slate-gray/30 px-3 py-2"
@@ -111,7 +111,7 @@ export default function ResetPassword() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               minLength={8}
               required
-              placeholder={t('reset_pw.confirm_placeholder')}
+              placeholder={t('reset_pw.confirm_ph')}
             />
           </label>
           {err && <div className="text-sm text-red-600">{err}</div>}
@@ -121,7 +121,7 @@ export default function ResetPassword() {
             disabled={submittingRef.current}
             className="w-full rounded-lg bg-cyan-primary text-white px-4 py-3 disabled:opacity-60 font-semibold hover:bg-cyan-hover transition-colors"
           >
-            {t('reset_pw.submit')}
+            {t('reset_pw.submit_btn')}
           </button>
         </form>
       )}

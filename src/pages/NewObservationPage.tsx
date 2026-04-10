@@ -48,7 +48,7 @@ export default function NewObservationPage() {
     try {
       setBusy(true); setErr(null);
 
-      if (!teamId) throw new Error(t('new_obs.no_circle'));
+      if (!teamId) throw new Error(t('new_obs.no_team'));
       if (frozen) throw new Error(t('new_obs.seat_frozen'));
       if (remaining !== null && remaining <= 0) throw new Error(t('new_obs.quota_reached'));
 
@@ -161,7 +161,7 @@ export default function NewObservationPage() {
           <h1 className="text-3xl font-bold text-slate-gray">{t('new_obs.create_title')}</h1>
           <p className="text-slate-gray/70">{t('new_obs.choose_type')}</p>
           {/* Status line */}
-          {!teamId && <p className="mt-2 text-sm text-amber-700">{t('new_obs.no_circle')}</p>}
+          {!teamId && <p className="mt-2 text-sm text-amber-700">{t('new_obs.no_team')}</p>}
           {teamId && remaining !== null && (
             <p className="mt-2 text-sm text-slate-600">{t('new_obs.remaining_prefix')} {remaining}</p>
           )}

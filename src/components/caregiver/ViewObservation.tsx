@@ -130,7 +130,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         <div className="flex items-center space-x-4">
           <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
             <ArrowLeft className="w-4 h-4" />
-            <span>{t('view_obs.back')}</span>
+            <span>{t('view_obs.back_list')}</span>
           </Button>
           <h2 className="text-xl font-semibold text-slate-700">{t('view_obs.title')}</h2>
         </div>
@@ -183,7 +183,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
       {/* Header card with observation details */}
       <Card className="bg-warm-white">
         <CardHeader>
-          <h3 className="text-lg font-semibold text-slate-gray">{t('view_obs.details')}</h3>
+          <h3 className="text-lg font-semibold text-slate-gray">{t('view_obs.details_title')}</h3>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
