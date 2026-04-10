@@ -1,6 +1,6 @@
 // src/pages/CreateAccountPage.tsx
 import React from "react";
-import { CreditCard, UserPlus, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { CreditCard, UserPlus, ArrowRight, Eye, EyeOff, CircleCheck as CheckCircle } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { STRIPE_PRODUCTS } from "../stripe-config";
@@ -9,6 +9,7 @@ import PageSEO from "../components/seo/PageSEO";
 import { SITE_URL } from "../lib/siteConfig";
 import { validatePassword } from "../lib/passwordValidation";
 import PasswordStrengthBar from "../components/ui/PasswordStrengthBar";
+import type { User } from "@supabase/supabase-js";
 
 type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 
@@ -71,6 +72,31 @@ export default function CreateAccountPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [info, setInfo] = React.useState<string | null>(null);
   const [pendingPlanName, setPendingPlanName] = React.useState<string | null>(null);
+
+  const [authedUser, setAuthedUser] = React.useState<User | null>(null);
+  const [authedUserLoading, setAuthedUserLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setAuthedUser(data.user ?? null);
+      if (data.user) {
+        setName(data.user.user_metadata?.display_name ?? "");
+        setEmail(data.user.email ?? "");
+      }
+      setAuthedUserLoading(false);
+    });
+
+    const { data: authSub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      const u = session?.user ?? null;
+      setAuthedUser(u);
+      if (u) {
+        setName((prev) => prev || u.user_metadata?.display_name || "");
+        setEmail((prev) => prev || u.email || "");
+      }
+      setAuthedUserLoading(false);
+    });
+    return () => authSub.subscription.unsubscribe();
+  }, []);
 
   React.useEffect(() => {
     (async () => {
@@ -170,10 +196,63 @@ export default function CreateAccountPage() {
     })();
   }, []);
 
+  const handleAuthedCheckout = async () => {
+    if (!authedUser) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const selectedProduct = STRIPE_PRODUCTS.find(p => p.planId === selectedPlanKey);
+      if (!selectedProduct) throw new Error("Invalid plan selected");
+
+      await supabase.from("profiles").upsert({
+        id: authedUser.id,
+        email: authedUser.email ?? null,
+        display_name: authedUser.user_metadata?.display_name ?? "",
+        role: "caregiver",
+        disabled: false,
+      }, { onConflict: 'id' });
+
+      if (selectedPlanKey === 'free') {
+        const { error: subErr } = await upsertFreeSubscription(authedUser.id);
+        if (subErr) console.warn('Failed to create free subscription record:', subErr);
+        navigate('/caregiver', { replace: true });
+        return;
+      }
+
+      if (!selectedProduct.priceId) {
+        throw new Error("Selected plan is missing a Stripe price. Please contact support.");
+      }
+
+      const { data: ck, error: fnErr } = await supabase.functions.invoke("stripe-checkout", {
+        body: {
+          price_id: selectedProduct.priceId,
+          plan_id: selectedPlanKey,
+          promotionCode: promoCode || null,
+          success_url: RETURN_URLS.success,
+          cancel_url: RETURN_URLS.cancel,
+        },
+      });
+      if (fnErr) throw fnErr;
+
+      const url = (ck as any)?.url;
+      if (!url) throw new Error("Failed to start checkout");
+      window.location.assign(url);
+    } catch (err: any) {
+      setError(err?.message || t('create_account.signup_failed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    if (authedUser) {
+      await handleAuthedCheckout();
+      return;
+    }
 
     if (!email || !password) {
       setError(t('create_account.email_required'));
@@ -399,112 +478,171 @@ export default function CreateAccountPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.name_label')}</label>
-              <input
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder={t('create_account.name_placeholder')}
-              />
+          {authedUserLoading ? (
+            <div className="p-6 flex items-center gap-3 text-slate-gray/50">
+              <svg className="animate-spin w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm">Loading account details&hellip;</span>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.email_label')}</label>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
-                placeholder={t('auth.email_placeholder')}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.password_label')}</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
-                  placeholder={t('create_account.password_placeholder')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          ) : authedUser ? (
+            <div className="p-6 space-y-5">
+              <div className="flex items-start gap-3 rounded-xl bg-cyan-primary/5 border border-cyan-primary/20 p-4">
+                <CheckCircle className="w-5 h-5 text-cyan-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-gray">
+                    Signed in as{" "}
+                    <span className="font-semibold">
+                      {authedUser.user_metadata?.display_name
+                        ? `${authedUser.user_metadata.display_name} (${authedUser.email})`
+                        : authedUser.email}
+                    </span>
+                  </p>
+                  <p className="text-xs text-slate-gray/60 mt-1">
+                    Your account is ready. Choose a plan above and continue to complete your setup.
+                  </p>
+                </div>
               </div>
-              <PasswordStrengthBar password={password} tFn={t} />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.confirm_password_label')}</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  required
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
-                  placeholder={t('create_account.confirm_password_placeholder')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  tabIndex={-1}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-500">{t('create_account.passwords_mismatch')}</p>
+              {selectedPlanKey !== 'free' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-gray mb-1">
+                    {t('create_account.promo_label')} <span className="text-slate-gray/50">{t('common.optional')}</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.trim())}
+                    placeholder={t('create_account.promo_placeholder')}
+                    className="w-full max-w-sm rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
+                  />
+                </div>
               )}
+
+              {error && (
+                <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-slate-gray">{error}</div>
+              )}
+
+              <button
+                type="button"
+                disabled={busy}
+                aria-busy={busy}
+                onClick={handleAuthedCheckout}
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-6 py-3 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all"
+              >
+                {busy ? "Processing\u2026" : selectedPlanKey === 'free' ? "Get Started Free" : "Continue to Checkout"}
+                {!busy && <ArrowRight className="w-5 h-5" />}
+              </button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.name_label')}</label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
+                  placeholder={t('create_account.name_placeholder')}
+                />
+              </div>
 
-            {error && (
-              <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-slate-gray">{error}</div>
-            )}
-            {info && (
-              <div className="rounded-lg bg-mint-green/30 border border-mint-green p-3 text-slate-gray">{info}</div>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.email_label')}</label>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-cyan-primary px-4 py-2 text-base bg-warm-white text-slate-gray"
+                  placeholder={t('auth.email_placeholder')}
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={busy}
-              aria-busy={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-6 py-3 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all"
-            >
-              {busy ? t('common.creating') : t('create_account.submit_btn')}
-              {!busy && <ArrowRight className="w-5 h-5" />}
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-slate-gray mb-1">{t('auth.password_label')}</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
+                    placeholder={t('create_account.password_placeholder')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <PasswordStrengthBar password={password} tFn={t} />
+              </div>
 
-            <p className="text-xs text-slate-gray/60">
-              {t('create_account.agree_prefix')}{" "}
-              <Link to="/privacy-policy" className="text-cyan-primary hover:text-cyan-hover underline">
-                {t('footer.privacy_policy')}
-              </Link>{" "}
-              {t('common.and')}{" "}
-              <Link to="/data-policy" className="text-cyan-primary hover:text-cyan-hover underline">
-                {t('footer.data_policy')}
-              </Link>{t('create_account.cancel_note')}
-            </p>
-          </form>
+              <div>
+                <label className="block text-sm font-medium text-slate-gray mb-1">{t('create_account.confirm_password_label')}</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full rounded-lg border border-slate-gray/30 shadow-sm focus:border-cyan-primary focus:ring-1 focus:ring-cyan-primary px-4 py-2 pr-11 text-base bg-warm-white text-slate-gray"
+                    placeholder={t('create_account.confirm_password_placeholder')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-gray/50 hover:text-slate-gray transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="mt-1 text-xs text-red-500">{t('create_account.passwords_mismatch')}</p>
+                )}
+              </div>
+
+              {error && (
+                <div className="rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-slate-gray">{error}</div>
+              )}
+              {info && (
+                <div className="rounded-lg bg-mint-green/30 border border-mint-green p-3 text-slate-gray">{info}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={busy}
+                aria-busy={busy}
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-6 py-3 text-base font-semibold text-warm-white shadow-lg hover:bg-cyan-hover disabled:opacity-60 transition-all"
+              >
+                {busy ? t('common.creating') : t('create_account.submit_btn')}
+                {!busy && <ArrowRight className="w-5 h-5" />}
+              </button>
+
+              <p className="text-xs text-slate-gray/60">
+                {t('create_account.agree_prefix')}{" "}
+                <Link to="/privacy-policy" className="text-cyan-primary hover:text-cyan-hover underline">
+                  {t('footer.privacy_policy')}
+                </Link>{" "}
+                {t('common.and')}{" "}
+                <Link to="/data-policy" className="text-cyan-primary hover:text-cyan-hover underline">
+                  {t('footer.data_policy')}
+                </Link>{t('create_account.cancel_note')}
+              </p>
+            </form>
+          )}
         </section>
       </div>
     </div>
