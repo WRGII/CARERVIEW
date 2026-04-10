@@ -39,7 +39,7 @@ export function useMemoryBook(teamId: string | null, isOwner: boolean, roleResol
     },
     enabled: !!teamId && roleResolved,
     staleTime: 5 * 60 * 1000,
-    retry: false,
+    retry: isOwner ? 2 : false,
   });
 }
 

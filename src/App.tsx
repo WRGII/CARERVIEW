@@ -89,6 +89,7 @@ function SuspenseFallback() {
 import CaregiverGuard from "./components/common/CaregiverGuard";
 import AdminGuard from "./components/common/AdminGuard";
 import TeamGuard from "./components/common/TeamGuard";
+import PaidPlanGuard from "./components/common/PaidPlanGuard";
 
 import LandingPage from "./pages/LandingPage";
 import WhyCarerView from "./pages/WhyCarerView";
@@ -251,9 +252,9 @@ export default function App() {
                     path="/caregiver/memory-schedule"
                     element={
                       <CaregiverGuard>
-                        <TeamGuard>
+                        <PaidPlanGuard>
                           <MemorySchedulePage />
-                        </TeamGuard>
+                        </PaidPlanGuard>
                       </CaregiverGuard>
                     }
                   />

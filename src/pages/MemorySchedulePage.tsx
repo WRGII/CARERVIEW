@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, BookMarked, History } from "lucide-react";
+import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, BookMarked, History, RefreshCw, CircleAlert as AlertCircle } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
@@ -39,7 +39,13 @@ export default function MemorySchedulePage() {
   const roleResolved = !roleLoading;
   const isOwner = teamRole === "owner";
 
-  const { data: book, isLoading: bookLoading, error: bookError } = useMemoryBook(teamId, isOwner, roleResolved);
+  const {
+    data: book,
+    isLoading: bookLoading,
+    error: bookError,
+    isFetching: bookFetching,
+    refetch: refetchBook,
+  } = useMemoryBook(teamId, isOwner, roleResolved);
 
   const bookId = book?.id ?? null;
 
@@ -82,12 +88,47 @@ export default function MemorySchedulePage() {
     );
   }
 
-  if (bookError || (!book && teamRole && teamRole !== "owner")) {
+  if (isOwner && bookError) {
     return (
       <PageLayout title="Memory &amp; Schedule" hideSignOut>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
-            <BookOpen className="w-6 h-6 text-red-400" />
+          <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+            <AlertCircle className="w-6 h-6 text-amber-500" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-700 mb-2">
+            Could not initialize Memory Book
+          </h3>
+          <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-5">
+            Something went wrong while setting up your Memory Book. This sometimes happens on first load.
+          </p>
+          <button
+            onClick={() => refetchBook()}
+            disabled={bookFetching}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {bookFetching ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Initializing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+              </>
+            )}
+          </button>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (!isOwner && !book && teamRole) {
+    return (
+      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+            <BookOpen className="w-6 h-6 text-slate-400" />
           </div>
           <h3 className="text-base font-semibold text-slate-700 mb-2">Memory Book not yet set up</h3>
           <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
@@ -169,7 +210,7 @@ export default function MemorySchedulePage() {
           )}
 
           {activeTab === "memory-book" && !bookId && isOwner && (
-            <InitMemoryBook patientName={patientName} />
+            <InitMemoryBook patientName={patientName} onRetry={refetchBook} isRetrying={bookFetching} />
           )}
 
           {activeTab === "daily-living" && (
@@ -220,7 +261,15 @@ export default function MemorySchedulePage() {
   );
 }
 
-function InitMemoryBook({ patientName }: { patientName: string }) {
+function InitMemoryBook({
+  patientName,
+  onRetry,
+  isRetrying,
+}: {
+  patientName: string;
+  onRetry: () => void;
+  isRetrying: boolean;
+}) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-14 h-14 rounded-full bg-cyan-50 flex items-center justify-center mb-4">
@@ -229,9 +278,26 @@ function InitMemoryBook({ patientName }: { patientName: string }) {
       <h3 className="text-base font-semibold text-slate-700 mb-2">
         Memory Book for {patientName}
       </h3>
-      <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
-        The Memory Book is being initialized. If this message persists, try refreshing the page.
+      <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-5">
+        The Memory Book is being initialized. If this message persists, use the button below.
       </p>
+      <button
+        onClick={onRetry}
+        disabled={isRetrying}
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isRetrying ? (
+          <>
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            Initializing...
+          </>
+        ) : (
+          <>
+            <RefreshCw className="w-4 h-4" />
+            Retry Initialization
+          </>
+        )}
+      </button>
     </div>
   );
 }
