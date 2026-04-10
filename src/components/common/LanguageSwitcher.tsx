@@ -47,8 +47,10 @@ export default function LanguageSwitcher({ className = '' }: Props) {
       return
     }
     setSwitching(true)
-    setLocale(code)
     setOpen(false)
+    Promise.resolve(setLocale(code)).catch(() => {
+      setSwitching(false)
+    })
   }
 
   const showSpinner = switching && isLoading

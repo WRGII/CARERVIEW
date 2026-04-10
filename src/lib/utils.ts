@@ -1,11 +1,19 @@
 import { type ClassValue, clsx } from "clsx"
+import type { Locale } from '../i18n/types'
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
 }
 
+function toValidDate(date: string | Date): Date | null {
+  const d = date instanceof Date ? date : new Date(date)
+  return isNaN(d.getTime()) ? null : d
+}
+
 export const formatDate = (date: string | Date, locale = 'en-US'): string => {
-  return new Date(date).toLocaleDateString(locale, {
+  const d = toValidDate(date)
+  if (!d) return ''
+  return d.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -13,7 +21,9 @@ export const formatDate = (date: string | Date, locale = 'en-US'): string => {
 }
 
 export const formatDateTime = (date: string | Date, locale = 'en-US'): string => {
-  return new Date(date).toLocaleString(locale, {
+  const d = toValidDate(date)
+  if (!d) return ''
+  return d.toLocaleString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -22,8 +32,9 @@ export const formatDateTime = (date: string | Date, locale = 'en-US'): string =>
   })
 }
 
-export function localeToIntl(locale: string): string {
+export function localeToIntl(locale: Locale | string): string {
   const map: Record<string, string> = {
+    en: 'en-US',
     es: 'es-MX',
     it: 'it-IT',
     fr: 'fr-FR',

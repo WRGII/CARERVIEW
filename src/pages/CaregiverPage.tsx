@@ -6,6 +6,7 @@ import { Plus, BookOpen } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
+import { localeToIntl } from '../lib/utils';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
@@ -34,7 +35,8 @@ export default function CaregiverPage() {
   const planActive = hasActivePlan(plan);
   const { showToast } = useToast();
   const deleteObservationMutation = useDeleteObservation();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const intlLocale = localeToIntl(locale);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
@@ -160,9 +162,9 @@ export default function CaregiverPage() {
       );
 
       if (format === 'docx') {
-        await exportToDOCX(obs as any, categories as any, legend as any);
+        await exportToDOCX(obs as any, categories as any, legend as any, t, intlLocale);
       } else {
-        await exportToCSV(obs as any, categories as any, legend as any);
+        await exportToCSV(obs as any, categories as any, legend as any, t, intlLocale);
       }
     } catch (e: any) {
       console.error('Export failed:', e);

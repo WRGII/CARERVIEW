@@ -20,17 +20,17 @@ type Props = {
   isOwner: boolean;
 };
 
-const ROLE_TAGS = [
-  "Family",
-  "Friend",
-  "Neighbour",
-  "Primary Caregiver",
-  "Backup Caregiver",
-  "Doctor",
-  "Emergency Contact",
-  "Home Care",
-  "Spiritual / Faith",
-  "Other",
+const ROLE_TAG_KEYS: { value: string; i18nKey: string }[] = [
+  { value: "Family",           i18nKey: "memory_book.role_tag_family" },
+  { value: "Friend",           i18nKey: "memory_book.role_tag_friend" },
+  { value: "Neighbour",        i18nKey: "memory_book.role_tag_neighbour" },
+  { value: "Primary Caregiver",i18nKey: "memory_book.role_tag_primary_caregiver" },
+  { value: "Backup Caregiver", i18nKey: "memory_book.role_tag_backup_caregiver" },
+  { value: "Doctor",           i18nKey: "memory_book.role_tag_doctor" },
+  { value: "Emergency Contact",i18nKey: "memory_book.role_tag_emergency_contact" },
+  { value: "Home Care",        i18nKey: "memory_book.role_tag_home_care" },
+  { value: "Spiritual / Faith",i18nKey: "memory_book.role_tag_spiritual" },
+  { value: "Other",            i18nKey: "memory_book.role_tag_other" },
 ];
 
 const EMPTY_CONTACT = {
@@ -44,6 +44,9 @@ const EMPTY_CONTACT = {
 
 export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props) {
   const { t } = useLocale();
+
+  const roleTagMap = Object.fromEntries(ROLE_TAG_KEYS.map(r => [r.value, r.i18nKey]));
+  const getRoleLabel = (value: string) => t(roleTagMap[value] ?? value);
   const { data: contacts = [], isLoading } = useMemoryBookContacts(memoryBookId);
   const upsert = useUpsertMemoryBookContact();
   const deleteContact = useDeleteMemoryBookContact();
@@ -165,8 +168,8 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
                     onChange={e => setForm(f => ({ ...f, role_tag: e.target.value }))}
                   >
                     <option value="">{t("memory_book.field_role_select")}</option>
-                    {ROLE_TAGS.map(r => (
-                      <option key={r} value={r}>{r}</option>
+                    {ROLE_TAG_KEYS.map(r => (
+                      <option key={r.value} value={r.value}>{t(r.i18nKey)}</option>
                     ))}
                   </select>
                 </div>
@@ -239,6 +242,7 @@ export default function ContactsSection({ memoryBookId, teamId, isOwner }: Props
               fallbackLabel={t("memory_book.contact_fallback_label")}
               onEdit={() => startEdit(contact)}
               onDelete={() => handleDelete(contact.id, contact.full_name)}
+              getRoleLabel={getRoleLabel}
             />
           ))}
         </div>
@@ -253,24 +257,27 @@ function ContactCard({
   fallbackLabel,
   onEdit,
   onDelete,
+  getRoleLabel,
 }: {
   contact: MemoryBookContact;
   isOwner: boolean;
   fallbackLabel: string;
   onEdit: () => void;
   onDelete: () => void;
+  getRoleLabel: (value: string) => string;
 }) {
+  const roleLabel = contact.role_tag ? getRoleLabel(contact.role_tag) : '';
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-slate-800">{contact.full_name}</p>
-          <p className="text-xs text-slate-500">{contact.relationship || contact.role_tag || fallbackLabel}</p>
+          <p className="text-xs text-slate-500">{contact.relationship || roleLabel || fallbackLabel}</p>
         </div>
         <div className="flex items-center gap-1">
           {contact.role_tag && (
             <span className="px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium">
-              {contact.role_tag}
+              {roleLabel}
             </span>
           )}
           {isOwner && (

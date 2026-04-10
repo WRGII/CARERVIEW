@@ -133,7 +133,7 @@ export function Footer() {
                   href="/sitemap.xml"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
-                  Sitemap
+                  {t('footer.sitemap')}
                 </a>
               </div>
             </div>

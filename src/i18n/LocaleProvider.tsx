@@ -4,8 +4,8 @@ import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
 import enFallback from './enFallback'
+import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 
-const LOCALE_STORAGE_KEY = 'careview-locale'
 const DEFAULT_LOCALE: Locale = 'en'
 const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi']
 
@@ -63,7 +63,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     if (isValidLocale(preferredLocale) && preferredLocale !== locale) {
       setLocaleState(preferredLocale)
     }
-  }, [preferredLocale])
+  }, [preferredLocale, locale])
 
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
@@ -124,6 +124,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
               queryClient.invalidateQueries({ queryKey: ['profile', userId] })
             }
           })
+          .catch(() => {})
       }
     },
     [userId, queryClient]
