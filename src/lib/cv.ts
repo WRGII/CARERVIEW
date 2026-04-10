@@ -1,7 +1,26 @@
 // src/lib/cv.ts
-import { supabase } from "./supabaseClient"; // if your client is elsewhere, fix this path
+import { supabase } from "./supabaseClient";
 
 export type CvGender = "female" | "male" | "nonbinary" | "unknown";
+
+export type CvMember = {
+  user_id: string;
+  role: "owner" | "member";
+  state: "active" | "frozen";
+  joined_at: string;
+  display_name: string;
+  email: string;
+};
+
+export type CvInvite = {
+  id: string;
+  email: string;
+  created_at: string;
+  expires_at: string;
+  consumed_at: string | null;
+};
+
+export type CreateInviteResult = { token: string; expires_at: string };
 
 export async function cvGetActiveTeam() {
   const { data, error } = await supabase.rpc("cv_get_active_team");
@@ -16,7 +35,7 @@ export async function cvSetActiveTeam(teamId: string) {
 
 export async function cvCreateTeamWithPatient(p: {
   name: string;
-  plan_id: string; // 'family_qtr'
+  plan_id: string;
   patient_name: string;
   dob?: string | null;
   gender?: CvGender;
@@ -31,16 +50,32 @@ export async function cvCreateTeamWithPatient(p: {
     p_notes: p.notes ?? null,
   });
   if (error) throw error;
-  return data as string; // team_id
+  return data as string;
 }
 
-export async function cvListMembers(teamId: string) {
-  const { data, error } = await supabase.rpc("cv_list_members", { p_team: teamId });
+export async function cvListMembersWithProfile(teamId: string): Promise<CvMember[]> {
+  const { data, error } = await supabase.rpc("cv_list_members_with_profile", { p_team: teamId });
   if (error) throw error;
-  return data as { user_id: string; role: "owner" | "member"; state: "active" | "frozen"; joined_at: string }[];
+  return (data ?? []) as CvMember[];
 }
 
-export type CreateInviteResult = { token: string; expires_at: string };
+export async function cvListInvites(teamId: string): Promise<CvInvite[]> {
+  const { data, error } = await supabase.rpc("cv_list_invites", { p_team: teamId });
+  if (error) throw error;
+  return (data ?? []) as CvInvite[];
+}
+
+export async function cvRemoveMember(teamId: string, userId: string): Promise<void> {
+  const { error } = await supabase.rpc("cv_remove_member", { p_team: teamId, p_user: userId });
+  if (error) throw error;
+}
+
+export async function cvGetTeamPatient(teamId: string): Promise<{ full_name: string; gender: string; notes: string | null } | null> {
+  const { data, error } = await supabase.rpc("cv_get_team_patient", { p_team: teamId });
+  if (error) throw error;
+  const rows = data as { full_name: string; gender: string; notes: string | null }[] | null;
+  return rows && rows.length > 0 ? rows[0] : null;
+}
 
 export async function cvCreateInvite(teamId: string, email: string): Promise<CreateInviteResult> {
   const { data, error } = await supabase.rpc("cv_create_invite", { p_team: teamId, p_email: email });
@@ -51,7 +86,7 @@ export async function cvCreateInvite(teamId: string, email: string): Promise<Cre
 export async function cvAcceptInvite(token: string) {
   const { data, error } = await supabase.rpc("cv_accept_invite", { p_token: token });
   if (error) throw error;
-  return data as string; // team_id
+  return data as string;
 }
 
 export async function cvGetRemaining(teamId: string) {
