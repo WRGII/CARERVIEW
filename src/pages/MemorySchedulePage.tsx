@@ -33,7 +33,7 @@ export default function MemorySchedulePage() {
   const { teamId } = useActiveTeam();
   const { user } = useAuth();
 
-  const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId);
+  const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId, user?.id);
   const { data: patient, isLoading: patientLoading } = useTeamPatient(teamId);
 
   const roleResolved = !roleLoading;

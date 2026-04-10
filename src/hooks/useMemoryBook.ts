@@ -43,25 +43,24 @@ export function useMemoryBook(teamId: string | null, isOwner: boolean, roleResol
   });
 }
 
-export function useTeamRole(teamId: string | null) {
+export function useTeamRole(teamId: string | null, userId?: string | null) {
   return useQuery({
-    queryKey: ["team-role", teamId],
+    queryKey: ["team-role", teamId, userId],
     queryFn: async () => {
-      if (!teamId) return null;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!teamId || !userId) return null;
       const { data, error } = await supabase
         .from("cv_team_members")
         .select("role, state")
         .eq("team_id", teamId)
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
       if (error) throw error;
       if (!data || data.state !== "active") return null;
       return data.role as TeamMemberRole;
     },
-    enabled: !!teamId,
+    enabled: !!teamId && !!userId,
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 }
 
