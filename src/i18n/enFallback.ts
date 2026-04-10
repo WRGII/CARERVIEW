@@ -500,6 +500,17 @@ const enFallback: Record<string, string> = {
   "mb_page.faq7_a": "Yes. The current Memory Book covers the four core sections: Identity, Contacts, Medical, and Preferences. Future updates will add Daily Living routines, Meals, Activities, a Behaviour & Safety section, a personal Journal, and a Change Log. Existing entries are preserved across all updates.",
   "mb_page.cta_title": "Start building your loved one's Memory Book today",
   "mb_page.cta_body": "Create a free account and explore CarerView — or upgrade to the Family Circle plan to unlock the Memory Book and share it with your care team.",
+  "family_setup.subtitle": "Your Family Circle plan includes up to 3 caregivers. Set up your shared team below.",
+  "family_setup.patient_label": "Who are you caring for?",
+  "family_setup.patient_placeholder": "e.g. Mum, Dad, Margaret",
+  "family_setup.patient_required": "Please enter the name of the person you are caring for.",
+  "family_setup.invite_label": "Caregiver",
+  "family_setup.caregiver_name_placeholder": "Full name",
+  "family_setup.create_failed": "Failed to create Family Circle. Please try again.",
+  "family_setup.invite_links_title": "Invite links",
+  "family_setup.invite_links_note": "Share these links with your co-caregivers. Each link is single-use.",
+  "common.optional_parens": "(optional)",
+  "team.invite_placeholder": "Email address",
 }
 
 export default enFallback

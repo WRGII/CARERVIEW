@@ -8,11 +8,11 @@ import { useAuth } from './useAuth'
  * Back-compat name: useObservations
  * ========================= */
 export function useObservations() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   return useQuery({
     queryKey: ['observations', user?.id],
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!profile,
     queryFn: async () => {
       if (!user?.id) return []
 
