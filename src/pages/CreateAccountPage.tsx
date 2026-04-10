@@ -241,9 +241,15 @@ export default function CreateAccountPage() {
       });
 
       if (fnErr) {
-        const msg = fnErr?.message ?? '';
-        if (msg.includes('Failed to send a request') || msg.includes('FunctionsHttpError') || msg.includes('FunctionsRelayError')) {
-          throw new Error("Unable to connect to checkout. Please try again in a moment.");
+        console.error('[stripe-checkout] edge function error:', fnErr);
+        if (fnErr.name === 'FunctionsHttpError' && fnErr.context) {
+          try {
+            const body = await fnErr.context.json();
+            const msg = body?.error ?? fnErr.message;
+            throw new Error(msg);
+          } catch (jsonErr: any) {
+            if (jsonErr?.message && jsonErr.message !== fnErr.message) throw jsonErr;
+          }
         }
         throw fnErr;
       }
@@ -334,7 +340,19 @@ export default function CreateAccountPage() {
             cancel_url: RETURN_URLS.cancel,
           },
         });
-        if (fnErr) throw fnErr;
+        if (fnErr) {
+          console.error('[stripe-checkout] edge function error:', fnErr);
+          if (fnErr.name === 'FunctionsHttpError' && fnErr.context) {
+            try {
+              const body = await fnErr.context.json();
+              const msg = body?.error ?? fnErr.message;
+              throw new Error(msg);
+            } catch (jsonErr: any) {
+              if (jsonErr?.message && jsonErr.message !== fnErr.message) throw jsonErr;
+            }
+          }
+          throw fnErr;
+        }
 
         const url = (ck as any)?.url;
         if (!url) throw new Error("Failed to start checkout");
