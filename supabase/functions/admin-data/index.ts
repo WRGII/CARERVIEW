@@ -6,18 +6,30 @@ const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ADMIN_SECRET = Deno.env.get('ADMIN_SECRET')
 if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET environment variable is required')
 
-const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-  'Access-Control-Max-Age': '86400',
-} as const
+function getAllowedOrigin(req: Request): string {
+  const incoming = req.headers.get('origin') || ''
+  if (incoming === PUBLIC_SITE_URL) return incoming
+  const host = incoming.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const bare = siteHost.replace(/^www\./, '')
+  if (host === bare || host === `www.${bare}`) return incoming
+  return PUBLIC_SITE_URL || '*'
+}
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: CORS_HEADERS })
+function corsHeaders(req: Request): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getAllowedOrigin(req),
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Access-Control-Max-Age': '86400',
+  }
+}
+
+function json(body: unknown, status = 200, req: Request) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(req) })
 }
 
 async function verifyAdminToken(token: string, secret: string): Promise<{ sub: string; role: string } | null> {
@@ -40,8 +52,8 @@ async function verifyAdminToken(token: string, secret: string): Promise<{ sub: s
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req)
 
   const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
 
@@ -55,24 +67,24 @@ Deno.serve(async (req) => {
   if (rateLimitCheck && !rateLimitCheck.allowed) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
       status: 429,
-      headers: { ...CORS_HEADERS, 'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)) },
+      headers: { ...corsHeaders(req), 'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)) },
     })
   }
 
   const authHeader = req.headers.get('Authorization') ?? ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
   const adminPayload = await verifyAdminToken(token, ADMIN_SECRET!)
-  if (!adminPayload) return json({ error: 'Admins only' }, 403)
+  if (!adminPayload) return json({ error: 'Admins only' }, 403, req)
 
   let body: { action?: string; payload?: Record<string, unknown> }
   try {
     body = await req.json()
   } catch {
-    return json({ error: 'Invalid JSON body' }, 400)
+    return json({ error: 'Invalid JSON body' }, 400, req)
   }
 
   const { action, payload = {} } = body
-  if (!action) return json({ error: 'Missing action' }, 400)
+  if (!action) return json({ error: 'Missing action' }, 400, req)
 
   try {
     switch (action) {
@@ -86,20 +98,20 @@ Deno.serve(async (req) => {
           .eq('role', 'caregiver')
           .order('created_at', { ascending: false })
         if (error) throw error
-        return json({ ok: true, data: data ?? [] })
+        return json({ ok: true, data: data ?? [] }, 200, req)
       }
 
       case 'toggle_caregiver': {
         const { id, disabled } = payload as { id: string; disabled: boolean }
-        if (!id) return json({ error: 'Missing id' }, 400)
+        if (!id) return json({ error: 'Missing id' }, 400, req)
         const { error } = await srv.from('profiles').update({ disabled }).eq('id', id)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'add_caregiver': {
         const { email, display_name } = payload as { email: string; display_name: string }
-        if (!email) return json({ error: 'Missing email' }, 400)
+        if (!email) return json({ error: 'Missing email' }, 400, req)
         const tempPassword = Array.from(
           crypto.getRandomValues(new Uint8Array(18)),
           b => '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*'[b % 70]
@@ -121,24 +133,24 @@ Deno.serve(async (req) => {
         })
         if (upErr) throw upErr
         await srv.auth.admin.generateLink({ type: 'magiclink', email })
-        return json({ ok: true, id: uid })
+        return json({ ok: true, id: uid }, 200, req)
       }
 
       // ── Translations ─────────────────────────────────────────────────────────
 
       case 'upsert_translations': {
         const { rows } = payload as { rows: { key: string; locale: string; value: string }[] }
-        if (!Array.isArray(rows) || rows.length === 0) return json({ error: 'No rows provided' }, 400)
+        if (!Array.isArray(rows) || rows.length === 0) return json({ error: 'No rows provided' }, 400, req)
         const { error } = await srv.from('ui_translations').upsert(rows, { onConflict: 'key,locale' })
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       // ── Community moderation ─────────────────────────────────────────────────
 
       case 'resolve_report': {
         const { reportId, action: reportAction, mod_note } = payload as { reportId: string; action: string; mod_note?: string }
-        if (!reportId) return json({ error: 'Missing reportId' }, 400)
+        if (!reportId) return json({ error: 'Missing reportId' }, 400, req)
         const { error } = await srv
           .from('community_reports')
           .update({
@@ -149,28 +161,28 @@ Deno.serve(async (req) => {
           })
           .eq('id', reportId)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'moderate_post': {
         const { postId, post_status } = payload as { postId: string; post_status: string }
-        if (!postId) return json({ error: 'Missing postId' }, 400)
+        if (!postId) return json({ error: 'Missing postId' }, 400, req)
         const { error } = await srv.from('community_posts').update({ post_status }).eq('id', postId)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'moderate_reply': {
         const { replyId, reply_status } = payload as { replyId: string; reply_status: string }
-        if (!replyId) return json({ error: 'Missing replyId' }, 400)
+        if (!replyId) return json({ error: 'Missing replyId' }, 400, req)
         const { error } = await srv.from('community_replies').update({ reply_status }).eq('id', replyId)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'ban_member': {
         const { userId: targetId, reason } = payload as { userId: string; reason?: string }
-        if (!targetId) return json({ error: 'Missing userId' }, 400)
+        if (!targetId) return json({ error: 'Missing userId' }, 400, req)
         const { error: pErr } = await srv
           .from('community_profiles')
           .update({ is_banned: true, ban_reason: reason?.trim() ?? null })
@@ -181,18 +193,18 @@ Deno.serve(async (req) => {
           banned_by: null,
           reason: reason?.trim() ?? '',
         })
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'unban_member': {
         const { userId: targetId } = payload as { userId: string }
-        if (!targetId) return json({ error: 'Missing userId' }, 400)
+        if (!targetId) return json({ error: 'Missing userId' }, 400, req)
         const { error } = await srv
           .from('community_profiles')
           .update({ is_banned: false, ban_reason: null })
           .eq('user_id', targetId)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'send_notification': {
@@ -200,7 +212,7 @@ Deno.serve(async (req) => {
           userId: string; type: string; subject: string; message: string
           post_id?: string | null; reply_id?: string | null
         }
-        if (!targetId || !type || !subject || !message) return json({ error: 'Missing required fields' }, 400)
+        if (!targetId || !type || !subject || !message) return json({ error: 'Missing required fields' }, 400, req)
         const { error } = await srv.from('community_notifications').insert({
           user_id: targetId,
           type,
@@ -210,22 +222,22 @@ Deno.serve(async (req) => {
           reply_id: reply_id ?? null,
         })
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       case 'delete_post': {
         const { postId } = payload as { postId: string }
-        if (!postId) return json({ error: 'Missing postId' }, 400)
+        if (!postId) return json({ error: 'Missing postId' }, 400, req)
         const { error } = await srv.from('community_posts').delete().eq('id', postId)
         if (error) throw error
-        return json({ ok: true })
+        return json({ ok: true }, 200, req)
       }
 
       default:
-        return json({ error: `Unknown action: ${action}` }, 400)
+        return json({ error: `Unknown action: ${action}` }, 400, req)
     }
   } catch (err: any) {
     console.error(`[admin-data] action=${action} error:`, err?.message || err)
-    return json({ error: err?.message || 'Operation failed' }, 500)
+    return json({ error: err?.message || 'Operation failed' }, 500, req)
   }
 })

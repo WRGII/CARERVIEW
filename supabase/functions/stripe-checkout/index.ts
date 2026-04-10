@@ -22,19 +22,29 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
-const ALLOWED_ORIGIN = PUBLIC_SITE_URL || '*'
-
-const JSON_HEADERS: Record<string, string> = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-  'Access-Control-Max-Age': '86400',
-  Vary: 'Origin',
+function getAllowedOrigin(req: Request): string {
+  const incoming = req.headers.get('origin') || ''
+  if (incoming === PUBLIC_SITE_URL) return incoming
+  const host = incoming.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const bare = siteHost.replace(/^www\./, '')
+  if (host === bare || host === `www.${bare}`) return incoming
+  return PUBLIC_SITE_URL || '*'
 }
 
-function resp(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
+function corsHeaders(req: Request): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getAllowedOrigin(req),
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  }
+}
+
+function resp(body: unknown, status = 200, req: Request) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(req) })
 }
 
 function ensureSessionIdToken(url: string): string {
@@ -53,8 +63,8 @@ function ensureSessionIdToken(url: string): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
-  if (req.method !== 'POST') return resp({ error: 'Method not allowed' }, 405)
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
+  if (req.method !== 'POST') return resp({ error: 'Method not allowed' }, 405, req)
 
   // Rate limiting check (20 requests per minute for checkout)
   const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
@@ -75,7 +85,7 @@ Deno.serve(async (req) => {
       {
         status: 429,
         headers: {
-          ...JSON_HEADERS,
+          ...corsHeaders(req),
           'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)),
           'X-RateLimit-Limit': String(rateLimitCheck.limit),
           'X-RateLimit-Remaining': String(rateLimitCheck.remaining),
@@ -93,7 +103,7 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await authClient.auth.getUser()
     if (userErr) throw userErr
     const user = userData.user
-    if (!user) return resp({ error: 'Not authenticated' }, 401)
+    if (!user) return resp({ error: 'Not authenticated' }, 401, req)
 
     // Privileged DB client (for customer mapping)
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -113,8 +123,8 @@ Deno.serve(async (req) => {
     const success_url = ensureSessionIdToken(rawSuccess)
     const cancel_url = rawCancel
 
-    if (!priceId) return resp({ error: 'Missing price_id' }, 400)
-    if (!planId) return resp({ error: 'Missing plan_id' }, 400)
+    if (!priceId) return resp({ error: 'Missing price_id' }, 400, req)
+    if (!planId) return resp({ error: 'Missing plan_id' }, 400, req)
 
     // Validate plan_id exists and matches price_id
     const { data: planData, error: planErr } = await db
@@ -124,9 +134,9 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (planErr) throw planErr
-    if (!planData) return resp({ error: `Invalid plan_id: ${planId}` }, 400)
+    if (!planData) return resp({ error: `Invalid plan_id: ${planId}` }, 400, req)
     if (planData.stripe_price_id !== priceId) {
-      return resp({ error: `Price ID ${priceId} does not match plan ${planId}` }, 400)
+      return resp({ error: `Price ID ${priceId} does not match plan ${planId}` }, 400, req)
     }
 
     // 0) Ensure a profile row exists for this user — required for user_subscriptions FK
@@ -179,7 +189,7 @@ Deno.serve(async (req) => {
         })
       } catch (stripeErr: any) {
         console.error('[stripe-checkout] Stripe customer creation failed:', stripeErr?.message || stripeErr)
-        return resp({ error: 'Failed to create Stripe customer. Please try again.' }, 500)
+        return resp({ error: 'Failed to create Stripe customer. Please try again.' }, 500, req)
       }
       customerId = newCustomer.id
 
@@ -214,9 +224,9 @@ Deno.serve(async (req) => {
       { idempotencyKey },
     )
 
-    return resp({ url: session.url, id: session.id })
+    return resp({ url: session.url, id: session.id }, 200, req)
   } catch (err: any) {
     console.error('[stripe-checkout] error:', err?.message || err)
-    return resp({ error: err?.message || 'Failed to create checkout session' }, 500)
+    return resp({ error: err?.message || 'Failed to create checkout session' }, 500, req)
   }
 })

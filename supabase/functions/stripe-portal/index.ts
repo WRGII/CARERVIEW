@@ -23,24 +23,34 @@ const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const PUBLIC_SITE  = Deno.env.get('PUBLIC_SITE_URL') || ''
 
-const ALLOWED_ORIGIN = PUBLIC_SITE || '*'
-
-const JSON_HEADERS: Record<string, string> = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-  'Access-Control-Max-Age': '86400',
-  Vary: 'Origin',
+function getAllowedOrigin(req: Request): string {
+  const incoming = req.headers.get('origin') || ''
+  if (incoming === PUBLIC_SITE) return incoming
+  const host = incoming.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const siteHost = PUBLIC_SITE.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const bare = siteHost.replace(/^www\./, '')
+  if (host === bare || host === `www.${bare}`) return incoming
+  return PUBLIC_SITE || '*'
 }
 
-function resp(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS })
+function corsHeaders(req: Request): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getAllowedOrigin(req),
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  }
+}
+
+function resp(body: unknown, status = 200, req: Request) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(req) })
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS })
-  if (req.method !== 'POST')    return resp({ error: 'Method not allowed' }, 405)
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
+  if (req.method !== 'POST')    return resp({ error: 'Method not allowed' }, 405, req)
 
   // Rate limiting check (20 requests per minute for portal)
   const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
@@ -61,7 +71,7 @@ Deno.serve(async (req) => {
       {
         status: 429,
         headers: {
-          ...JSON_HEADERS,
+          ...corsHeaders(req),
           'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)),
           'X-RateLimit-Limit': String(rateLimitCheck.limit),
           'X-RateLimit-Remaining': String(rateLimitCheck.remaining),
@@ -78,7 +88,7 @@ Deno.serve(async (req) => {
     })
     const { data: { user }, error: userErr } = await auth.auth.getUser()
     if (userErr) throw userErr
-    if (!user) return resp({ error: 'Not authenticated' }, 401)
+    if (!user) return resp({ error: 'Not authenticated' }, 401, req)
 
     // Privileged DB client to read mapping
     const db = createClient(SUPABASE_URL, SERVICE_KEY)
@@ -89,7 +99,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
     if (mapErr) throw mapErr
     const customerId = map?.customer_id
-    if (!customerId) return resp({ error: 'Stripe customer not found' }, 404)
+    if (!customerId) return resp({ error: 'Stripe customer not found' }, 404, req)
 
     const returnUrl = `${PUBLIC_SITE || new URL(req.url).origin}/caregiver`
 
@@ -98,9 +108,9 @@ Deno.serve(async (req) => {
       return_url: returnUrl,
     })
 
-    return resp({ url: session.url })
+    return resp({ url: session.url }, 200, req)
   } catch (e: any) {
     console.error('[stripe-portal] error:', e?.message || e)
-    return resp({ error: 'Failed to create portal session' }, 500)
+    return resp({ error: 'Failed to create portal session' }, 500, req)
   }
 })

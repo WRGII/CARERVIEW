@@ -26,7 +26,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!
-const ALLOWED_ORIGIN = Deno.env.get('PUBLIC_SITE_URL') || '*'
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: '2024-06-20',
@@ -34,17 +34,29 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
   appInfo: { name: 'CarerView', version: '1.0.0' },
 })
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-  'Access-Control-Max-Age': '86400',
-} as const
+function getAllowedOrigin(req: Request): string {
+  const incoming = req.headers.get('origin') || ''
+  if (incoming === PUBLIC_SITE_URL) return incoming
+  const host = incoming.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const bare = siteHost.replace(/^www\./, '')
+  if (host === bare || host === `www.${bare}`) return incoming
+  return PUBLIC_SITE_URL || '*'
+}
+
+function corsHeaders(req: Request): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getAllowedOrigin(req),
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Access-Control-Max-Age': '86400',
+  }
+}
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req)
 
   // Rate limiting check (5 requests per minute for account deletion)
   const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
@@ -65,7 +77,7 @@ Deno.serve(async (req) => {
       {
         status: 429,
         headers: {
-          ...CORS_HEADERS,
+          ...corsHeaders(req),
           'Retry-After': String(Math.ceil((new Date(rateLimitCheck.reset_at).getTime() - Date.now()) / 1000)),
           'X-RateLimit-Limit': String(rateLimitCheck.limit),
           'X-RateLimit-Remaining': String(rateLimitCheck.remaining),
@@ -98,7 +110,7 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: userErr } = await authed.auth.getUser()
     if (userErr) throw userErr
-    if (!user) return json({ error: 'Not authenticated' }, 401)
+    if (!user) return json({ error: 'Not authenticated' }, 401, req)
 
     const userId = user.id
     const userEmail = user.email ?? null
@@ -143,7 +155,7 @@ Deno.serve(async (req) => {
             message: 'You must remove all team members before deleting your account',
             teamName: team.name,
             activeMemberCount: activeMembers.length
-          }, 403)
+          }, 403, req)
         }
       }
     }
@@ -239,7 +251,7 @@ Deno.serve(async (req) => {
       ok: true,
       deleted: true,
       email: userEmail,
-    })
+    }, 200, req)
   } catch (err: any) {
     console.error('[caregiver-delete-account] error:', err?.message || err)
 
@@ -254,7 +266,7 @@ Deno.serve(async (req) => {
       // ignore audit failure
     }
 
-    return json({ error: err?.message || 'Account deletion failed' }, 500)
+    return json({ error: err?.message || 'Account deletion failed' }, 500, req)
   }
 })
 
@@ -281,6 +293,6 @@ async function insertAudit(
   await srv.from('admin_events').insert(row)
 }
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: CORS_HEADERS })
+function json(body: unknown, status = 200, req: Request) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(req) })
 }
