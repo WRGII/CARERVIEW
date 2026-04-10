@@ -56,7 +56,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     return getStoredLocale()
   })
 
-  const prevMapRef = useRef<Record<string, string> | null>(enFallback)
+  const prevMapRef = useRef<Record<string, string> | null>(null)
   const enMapRef = useRef<Record<string, string> | null>(enFallback)
 
   useEffect(() => {
@@ -68,14 +68,14 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
     queryFn: () => fetchTranslations(locale),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
     gcTime: 60 * 60 * 1000,
   })
 
   const { data: enMap } = useQuery({
     queryKey: ['ui_translations', 'en'],
     queryFn: () => fetchTranslations('en'),
-    staleTime: 10 * 60 * 1000,
+    staleTime: 0,
     gcTime: 60 * 60 * 1000,
     enabled: locale !== 'en',
   })
