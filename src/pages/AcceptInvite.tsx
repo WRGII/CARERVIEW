@@ -4,11 +4,12 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useLocale } from "../i18n/LocaleContext";
 
-type ErrorKind = "expired" | "consumed" | "invalid" | "generic";
+type ErrorKind = "expired" | "consumed" | "already_member" | "invalid" | "generic";
 
 function classifyError(message: string): ErrorKind {
   const lower = message.toLowerCase();
   if (lower.includes("expir")) return "expired";
+  if (lower.includes("already a member")) return "already_member";
   if (lower.includes("already") || lower.includes("consumed") || lower.includes("used")) return "consumed";
   if (lower.includes("invalid") || lower.includes("not found")) return "invalid";
   return "generic";
@@ -25,7 +26,7 @@ export default function AcceptInvite() {
   useEffect(() => {
     (async () => {
       const urlToken = params.get("t");
-      const storedToken = sessionStorage.getItem("cv_join_token");
+      const storedToken = localStorage.getItem("cv_join_token");
       const token = urlToken || storedToken || "";
 
       if (!token) {
@@ -37,7 +38,7 @@ export default function AcceptInvite() {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess?.session) {
         if (urlToken) {
-          sessionStorage.setItem("cv_join_token", urlToken);
+          localStorage.setItem("cv_join_token", urlToken);
         }
         navigate({ pathname: "/", search: "?join=1", hash: "#get-started" }, { replace: true });
         return;
@@ -52,13 +53,17 @@ export default function AcceptInvite() {
         const { error: setErr } = await supabase.rpc("cv_set_active_team", { p_team: teamId });
         if (setErr) throw setErr;
 
-        sessionStorage.removeItem("cv_join_token");
+        localStorage.removeItem("cv_join_token");
         setStatus("ok");
         navigate("/caregiver", { replace: true });
       } catch (e: any) {
-        sessionStorage.removeItem("cv_join_token");
+        localStorage.removeItem("cv_join_token");
         const rawMsg: string = e?.message || "";
         const kind = classifyError(rawMsg);
+        if (kind === "already_member") {
+          navigate("/caregiver", { replace: true });
+          return;
+        }
         setErrorKind(kind);
         setStatus("error");
         setMsg(rawMsg || t('accept_invite.failed'));

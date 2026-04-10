@@ -82,6 +82,14 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
       await supabase.auth.signOut();
       throw new Error("Admin accounts must sign in via the admin portal.");
     }
+
+    const joinToken = localStorage.getItem("cv_join_token");
+    if (joinToken) {
+      localStorage.removeItem("cv_join_token");
+      navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+      return;
+    }
+
     navigate("/caregiver", { replace: true });
   };
 

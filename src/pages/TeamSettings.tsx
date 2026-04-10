@@ -61,10 +61,9 @@ export default function TeamSettings() {
     setInviteLink(null);
     setInviteExpiry(null);
     try {
-      const token = await cvCreateInvite(teamId, email.trim());
-      setInviteLink(`${window.location.origin}/join?t=${encodeURIComponent(token)}`);
-      const expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      setInviteExpiry(expiryDate);
+      const result = await cvCreateInvite(teamId, email.trim());
+      setInviteLink(`${window.location.origin}/join?t=${encodeURIComponent(result.token)}`);
+      setInviteExpiry(result.expires_at);
       setEmail("");
     } catch (e: any) {
       setError(e.message ?? t('team.invite_failed'));

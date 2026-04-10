@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useActiveTeam } from "../../context/ActiveTeam";
 import { cvCreateInvite, cvCreateTeamWithPatient } from "../../lib/cv";
-import { useUserPlan } from "../../hooks/useUserPlan";
+import { hasActivePlan, useUserPlan } from "../../hooks/useUserPlan";
 import { useLocale } from '../../i18n/LocaleContext';
 
 type Invite = { name: string; email: string };
@@ -10,14 +9,14 @@ type Invite = { name: string; email: string };
 export default function FamilyCircleSetup() {
   const { teamId, refresh: refreshTeam } = useActiveTeam();
   const { t } = useLocale();
-  const { data: plan } = useUserPlan(); // must return plan_id like 'family_qtr'
+  const { data: plan } = useUserPlan();
   const [patient, setPatient] = useState("");
   const [invites, setInvites] = useState<Invite[]>([{ name: "", email: "" }, { name: "", email: "" }]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [links, setLinks] = useState<string[]>([]);
 
-  const eligible = plan?.plan_id === "family_qtr" && !teamId;
+  const eligible = plan?.plan_id === "family_qtr" && hasActivePlan(plan) && !teamId;
 
   if (!eligible) return null;
 
@@ -41,8 +40,8 @@ export default function FamilyCircleSetup() {
       for (const row of invites) {
         const email = row.email.trim();
         if (!email) continue;
-        const token = await cvCreateInvite(newTeamId, email);
-        linksOut.push(`${location.origin}/join?t=${encodeURIComponent(token)}`);
+        const result = await cvCreateInvite(newTeamId, email);
+        linksOut.push(`${location.origin}/join?t=${encodeURIComponent(result.token)}`);
       }
       setLinks(linksOut);
     } catch (e: any) {

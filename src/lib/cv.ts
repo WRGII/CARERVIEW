@@ -40,10 +40,12 @@ export async function cvListMembers(teamId: string) {
   return data as { user_id: string; role: "owner" | "member"; state: "active" | "frozen"; joined_at: string }[];
 }
 
-export async function cvCreateInvite(teamId: string, email: string) {
+export type CreateInviteResult = { token: string; expires_at: string };
+
+export async function cvCreateInvite(teamId: string, email: string): Promise<CreateInviteResult> {
   const { data, error } = await supabase.rpc("cv_create_invite", { p_team: teamId, p_email: email });
   if (error) throw error;
-  return data as string; // plaintext token
+  return data as CreateInviteResult;
 }
 
 export async function cvAcceptInvite(token: string) {

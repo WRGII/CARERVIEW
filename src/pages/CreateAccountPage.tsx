@@ -158,7 +158,13 @@ export default function CreateAccountPage() {
           const { error: subErr } = await upsertFreeSubscription(user.id);
           if (subErr) throw subErr;
           localStorage.removeItem(PENDING_KEY);
-          navigate('/caregiver', { replace: true });
+          const joinToken = localStorage.getItem("cv_join_token");
+          if (joinToken) {
+            localStorage.removeItem("cv_join_token");
+            navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+          } else {
+            navigate('/caregiver', { replace: true });
+          }
           return;
         }
 
@@ -222,7 +228,13 @@ export default function CreateAccountPage() {
       if (selectedPlanKey === 'free') {
         const { error: subErr } = await upsertFreeSubscription(authedUser.id);
         if (subErr) console.warn('Failed to create free subscription record:', subErr);
-        navigate('/caregiver', { replace: true });
+        const joinToken = localStorage.getItem("cv_join_token");
+        if (joinToken) {
+          localStorage.removeItem("cv_join_token");
+          navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+        } else {
+          navigate('/caregiver', { replace: true });
+        }
         return;
       }
 
@@ -323,7 +335,13 @@ export default function CreateAccountPage() {
         if (selectedPlanKey === 'free') {
           const { error: subErr } = await upsertFreeSubscription(user.id);
           if (subErr) console.warn('Failed to create free subscription record:', subErr);
-          navigate('/caregiver', { replace: true });
+          const joinToken = localStorage.getItem("cv_join_token");
+          if (joinToken) {
+            localStorage.removeItem("cv_join_token");
+            navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+          } else {
+            navigate('/caregiver', { replace: true });
+          }
           return;
         }
 
