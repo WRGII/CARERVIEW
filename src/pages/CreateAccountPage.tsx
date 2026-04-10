@@ -204,6 +204,13 @@ export default function CreateAccountPage() {
       const selectedProduct = STRIPE_PRODUCTS.find(p => p.planId === selectedPlanKey);
       if (!selectedProduct) throw new Error("Invalid plan selected");
 
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr || !sessionData?.session) {
+        setError("Your session has expired. Please sign in again.");
+        setBusy(false);
+        return;
+      }
+
       await supabase.from("profiles").upsert({
         id: authedUser.id,
         email: authedUser.email ?? null,
@@ -232,7 +239,14 @@ export default function CreateAccountPage() {
           cancel_url: RETURN_URLS.cancel,
         },
       });
-      if (fnErr) throw fnErr;
+
+      if (fnErr) {
+        const msg = fnErr?.message ?? '';
+        if (msg.includes('Failed to send a request') || msg.includes('FunctionsHttpError') || msg.includes('FunctionsRelayError')) {
+          throw new Error("Unable to connect to checkout. Please try again in a moment.");
+        }
+        throw fnErr;
+      }
 
       const url = (ck as any)?.url;
       if (!url) throw new Error("Failed to start checkout");
