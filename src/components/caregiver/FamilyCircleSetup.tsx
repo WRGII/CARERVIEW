@@ -3,12 +3,13 @@ import { useActiveTeam } from "../../context/ActiveTeam";
 import { cvCreateInvite, cvCreateTeamWithPatient } from "../../lib/cv";
 import { hasActivePlan, useUserPlan } from "../../hooks/useUserPlan";
 import { useLocale } from '../../i18n/LocaleContext';
+import { Loading } from '../ui/Loading';
 
 type Invite = { name: string; email: string };
 
 export default function FamilyCircleSetup() {
   const { teamId, refresh: refreshTeam } = useActiveTeam();
-  const { t } = useLocale();
+  const { t, isLoading: translationsLoading } = useLocale();
   const { data: plan } = useUserPlan();
   const [patient, setPatient] = useState("");
   const [invites, setInvites] = useState<Invite[]>([{ name: "", email: "" }, { name: "", email: "" }]);
@@ -19,6 +20,7 @@ export default function FamilyCircleSetup() {
   const eligible = plan?.plan_id === "family_qtr" && hasActivePlan(plan) && !teamId;
 
   if (!eligible) return null;
+  if (translationsLoading) return <Loading />;
 
   async function onCreate() {
     setBusy(true);

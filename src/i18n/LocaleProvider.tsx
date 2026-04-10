@@ -68,14 +68,14 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
     queryFn: () => fetchTranslations(locale),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   })
 
   const { data: enMap } = useQuery({
     queryKey: ['ui_translations', 'en'],
     queryFn: () => fetchTranslations('en'),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     enabled: locale !== 'en',
   })
@@ -133,7 +133,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = activeMap?.[key] ?? enMapRef.current?.[key] ?? key
+      const raw = activeMap?.[key] ?? enMapRef.current?.[key] ?? enFallback[key] ?? key
       return interpolate(raw, vars)
     },
     [activeMap]

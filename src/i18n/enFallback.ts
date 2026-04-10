@@ -513,6 +513,10 @@ const enFallback: Record<string, string> = {
   "family_setup.invite_links_note": "Share these links with your co-caregivers. Each link is single-use.",
   "common.optional_parens": "(optional)",
   "team.invite_placeholder": "Email address",
+  "auth.invalid_credentials": "Incorrect email or password. Please check your credentials or try resetting your password.",
+  "auth.password_too_short": "Password must be at least 8 characters.",
+  "auth.email_first": "Please enter your email address first.",
+  "auth.signup_body": "Choose your plan and set up your caregiver account — it only takes a minute.",
 }
 
 export default enFallback
