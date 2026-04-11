@@ -1,4 +1,4 @@
-import { User, Users, Stethoscope, Heart, BookOpen, Crown, Shield, Chrome as Home, Printer } from "lucide-react";
+import { User, Users, Stethoscope, Heart, BookOpen, Crown, HeartHandshake, Chrome as Home, Printer } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";
 import type { TeamMemberRole } from "../../types/memory-book";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -63,8 +63,19 @@ export default function OverviewTab({
                     {identityPreferredName && identityPreferredName !== patientName && (
                       <span className="text-sm text-slate-500">({patientName})</span>
                     )}
-                    <RoleBadge role={teamRole} ownerLabel={t("memory_book.role_owner")} memberLabel={t("memory_book.role_member")} />
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-xs font-medium text-cyan-700">
+                      <User className="w-3 h-3" />
+                      {t("memory_book.role_resident")}
+                    </span>
                   </div>
+                  {teamRole && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      {t("memory_book.viewing_as")}{" "}
+                      <span className="font-medium text-slate-500">
+                        <ViewerRoleBadge role={teamRole} ownerLabel={t("memory_book.role_owner")} memberLabel={t("memory_book.role_member")} />
+                      </span>
+                    </p>
+                  )}
                   {age && (
                     <p className="text-sm text-slate-500 mt-1">{t("memory_book.overview_age", { age })}</p>
                   )}
@@ -213,19 +224,19 @@ export default function OverviewTab({
   );
 }
 
-function RoleBadge({ role, ownerLabel, memberLabel }: { role: TeamMemberRole | null; ownerLabel: string; memberLabel: string }) {
+function ViewerRoleBadge({ role, ownerLabel, memberLabel }: { role: TeamMemberRole | null; ownerLabel: string; memberLabel: string }) {
   if (!role) return null;
   if (role === "owner") {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-xs font-medium text-amber-700">
-        <Crown className="w-3 h-3" />
+      <span className="inline-flex items-center gap-1">
+        <Crown className="w-3 h-3 text-amber-500" />
         {ownerLabel}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-600">
-      <Shield className="w-3 h-3" />
+    <span className="inline-flex items-center gap-1">
+      <HeartHandshake className="w-3 h-3 text-slate-400" />
       {memberLabel}
     </span>
   );
