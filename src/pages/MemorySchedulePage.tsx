@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle } from "lucide-react";
+import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Chrome as Home, Printer } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
@@ -11,22 +11,30 @@ import {
   useMemoryBookContacts,
   useMemoryBookMedical,
   useMemoryBookPreferences,
+  useMemoryBookProviders,
+  useMemoryBookInsurance,
+  useMemoryBookFinances,
+  useMemoryBookSubscriptions,
+  useMemoryBookVehicles,
 } from "../hooks/useMemoryBook";
 import type { MemoryBookTab } from "../types/memory-book";
 import OverviewTab from "../components/memory-book/OverviewTab";
 import MemoryBookTab from "../components/memory-book/MemoryBookTab";
+import HouseholdTab from "../components/memory-book/HouseholdTab";
 import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
+import PrintView from "../components/memory-book/PrintView";
 
 const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
-  { key: "overview", label: "Overview", Icon: LayoutDashboard },
-  { key: "memory-book", label: "Memory Book", Icon: BookOpen },
+  { key: "overview",     label: "Overview",     Icon: LayoutDashboard },
+  { key: "memory-book",  label: "Memory Book",  Icon: BookOpen },
+  { key: "household",    label: "Household",    Icon: Home },
   { key: "daily-living", label: "Daily Living", Icon: Utensils },
-  { key: "routines", label: "Routines", Icon: ClipboardList },
-  { key: "calendar", label: "Calendar", Icon: CalendarDays },
-  { key: "tasks", label: "Tasks", Icon: CheckSquare },
+  { key: "routines",     label: "Routines",     Icon: ClipboardList },
+  { key: "calendar",     label: "Calendar",     Icon: CalendarDays },
+  { key: "tasks",        label: "Tasks",        Icon: CheckSquare },
   { key: "observations", label: "Observations", Icon: FileText },
-  { key: "changes", label: "Changes", Icon: History },
+  { key: "changes",      label: "Changes",      Icon: History },
 ];
 
 export default function MemorySchedulePage() {
@@ -54,11 +62,22 @@ export default function MemorySchedulePage() {
   const { data: contacts = [] } = useMemoryBookContacts(bookId);
   const { data: medical } = useMemoryBookMedical(bookId);
   const { data: preferences } = useMemoryBookPreferences(bookId);
+  const { data: providers = [] } = useMemoryBookProviders(bookId);
+  const { data: insurance } = useMemoryBookInsurance(bookId);
+  const { data: finances } = useMemoryBookFinances(isOwner ? bookId : null);
+  const { data: subscriptions = [] } = useMemoryBookSubscriptions(bookId);
+  const { data: vehicles = [] } = useMemoryBookVehicles(bookId);
 
   const hasIdentity = !!identity;
   const hasContacts = contacts.length > 0;
   const hasMedical = !!medical;
   const hasPreferences = !!preferences;
+  const hasInsurance = !!insurance;
+  const hasFinances = !!finances;
+  const hasSubscriptions = subscriptions.length > 0;
+  const hasVehicles = vehicles.length > 0;
+
+  const handlePrint = () => window.print();
 
   const isReady = !authLoading && !teamLoading;
   const isLoading = bookLoading || roleLoading || patientLoading;
@@ -170,27 +189,39 @@ export default function MemorySchedulePage() {
       title={`Memory &amp; Schedule — ${patientName}`}
       hideSignOut
     >
-      <div className="space-y-6">
-        <nav className="flex flex-wrap gap-1.5 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
-          {TABS.map(({ key, label, Icon }) => {
-            const isActive = activeTab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={[
-                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-cyan-600 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-800 hover:bg-slate-100",
-                ].join(" ")}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </button>
-            );
-          })}
-        </nav>
+      <div className="space-y-6 print:hidden">
+        <div className="flex items-center gap-3">
+          <nav className="flex-1 flex flex-wrap gap-1.5 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
+            {TABS.map(({ key, label, Icon }) => {
+              const isActive = activeTab === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={[
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-cyan-600 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-slate-100",
+                  ].join(" ")}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              );
+            })}
+          </nav>
+          {bookId && (
+            <button
+              onClick={handlePrint}
+              className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium hover:border-slate-300 hover:bg-slate-50 transition-colors shadow-sm"
+              title="Print Memory Book"
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden md:inline">Print</span>
+            </button>
+          )}
+        </div>
 
         <div>
           {activeTab === "overview" && (
@@ -204,8 +235,13 @@ export default function MemorySchedulePage() {
               hasContacts={hasContacts}
               hasMedical={hasMedical}
               hasPreferences={hasPreferences}
+              hasInsurance={hasInsurance}
+              hasSubscriptions={hasSubscriptions}
+              hasVehicles={hasVehicles}
               contactCount={contacts.length}
               onNavigate={setActiveTab as (tab: string) => void}
+              onPrint={handlePrint}
+              showPrint={!!bookId}
             />
           )}
 
@@ -224,6 +260,18 @@ export default function MemorySchedulePage() {
 
           {activeTab === "memory-book" && !bookId && isOwner && (
             <InitMemoryBook patientName={patientName} onRetry={refetchBook} isRetrying={bookFetching} />
+          )}
+
+          {activeTab === "household" && bookId && (
+            <HouseholdTab
+              memoryBookId={bookId}
+              teamId={teamId!}
+              isOwner={isOwner}
+              hasInsurance={hasInsurance}
+              hasFinances={hasFinances}
+              hasSubscriptions={hasSubscriptions}
+              hasVehicles={hasVehicles}
+            />
           )}
 
           {activeTab === "daily-living" && (
@@ -270,6 +318,22 @@ export default function MemorySchedulePage() {
           )}
         </div>
       </div>
+
+      {bookId && (
+        <PrintView
+          patientName={patientName}
+          identity={identity}
+          contacts={contacts}
+          medical={medical}
+          preferences={preferences}
+          providers={providers}
+          insurance={insurance}
+          finances={finances}
+          subscriptions={subscriptions}
+          vehicles={vehicles}
+          isOwner={isOwner}
+        />
+      )}
     </PageLayout>
   );
 }

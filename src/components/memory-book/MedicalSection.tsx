@@ -9,6 +9,7 @@ import {
 } from "../../hooks/useMemoryBook";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import ProvidersSection from "./ProvidersSection";
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
@@ -103,6 +104,8 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
   return (
     <div className="space-y-6">
       {isReadOnly && <ReadOnlyBanner />}
+
+      <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
 
       <Card>
         <CardHeader>

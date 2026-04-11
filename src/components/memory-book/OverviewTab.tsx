@@ -1,4 +1,4 @@
-import { User, Users, Stethoscope, Heart, BookOpen, Crown, Shield } from "lucide-react";
+import { User, Users, Stethoscope, Heart, BookOpen, Crown, Shield, Chrome as Home, Printer } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";
 import type { TeamMemberRole } from "../../types/memory-book";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -13,8 +13,13 @@ type Props = {
   hasContacts: boolean;
   hasMedical: boolean;
   hasPreferences: boolean;
+  hasInsurance: boolean;
+  hasSubscriptions: boolean;
+  hasVehicles: boolean;
   contactCount: number;
   onNavigate: (tab: string) => void;
+  onPrint: () => void;
+  showPrint: boolean;
 };
 
 export default function OverviewTab({
@@ -27,8 +32,13 @@ export default function OverviewTab({
   hasContacts,
   hasMedical,
   hasPreferences,
+  hasInsurance,
+  hasSubscriptions,
+  hasVehicles,
   contactCount,
   onNavigate,
+  onPrint,
+  showPrint,
 }: Props) {
   const { t } = useLocale();
   const completedSections = [hasIdentity, hasContacts, hasMedical, hasPreferences].filter(Boolean).length;
@@ -74,7 +84,7 @@ export default function OverviewTab({
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <SectionCard
               icon={<User className="w-5 h-5" />}
               label={t("memory_book.section_identity")}
@@ -105,6 +115,13 @@ export default function OverviewTab({
               complete={hasPreferences}
               notStartedLabel={t("memory_book.overview_not_started")}
               onClick={() => onNavigate("memory-book")}
+            />
+            <SectionCard
+              icon={<Home className="w-5 h-5" />}
+              label={t("memory_book.tab_household")}
+              complete={hasInsurance || hasSubscriptions || hasVehicles}
+              notStartedLabel={t("memory_book.overview_not_started")}
+              onClick={() => onNavigate("household")}
             />
           </div>
         </div>
@@ -164,6 +181,21 @@ export default function OverviewTab({
               </div>
             </CardContent>
           </Card>
+
+          {showPrint && (
+            <button
+              onClick={onPrint}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 transition-colors text-left group"
+            >
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-cyan-50 transition-colors flex-shrink-0">
+                <Printer className="w-4 h-4 text-slate-500 group-hover:text-cyan-600 transition-colors" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-700 group-hover:text-cyan-700">{t("memory_book.print_btn")}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{t("memory_book.print_subtitle")}</p>
+              </div>
+            </button>
+          )}
 
           {teamRole === "owner" && completedSections < totalSections && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">

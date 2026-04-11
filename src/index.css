@@ -21,55 +21,56 @@ body {
 
 /* Print Styles */
 @media print {
-  /* Hide elements that shouldn't appear in print */
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
-  
-  /* Ensure proper page breaks and margins */
+
+  .print\:block {
+    display: block !important;
+  }
+
   @page {
     margin: 0.75in;
     size: letter;
   }
-  
-  /* Remove background colors and shadows for better printing */
-  * {
+
+  body {
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    color: #0f172a !important;
     background: white !important;
-    color: black !important;
+  }
+
+  * {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  
-  /* Ensure cards and content are visible */
-  .bg-white,
-  .border,
-  .rounded-xl {
-    border: 1px solid #e5e7eb !important;
-    border-radius: 0 !important;
+
+  nav,
+  header,
+  footer,
+  [data-print-hide] {
+    display: none !important;
   }
-  
-  /* Optimize typography for print */
-  body {
-    font-size: 12pt !important;
-    line-height: 1.4 !important;
+
+  #print-view {
+    display: block !important;
   }
-  
+
   h1, h2, h3 {
     page-break-after: avoid;
+    color: #0f172a !important;
   }
-  
-  /* Avoid breaking content across pages */
-  .space-y-6 > * {
-    page-break-inside: avoid;
-    margin-bottom: 1rem !important;
+
+  .break-inside-avoid-page {
+    break-inside: avoid;
   }
-  
-  /* Ensure proper spacing for cards */
-  .p-4, .p-6 {
-    padding: 0.5rem !important;
+
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
   }
-  
-  /* Make score indicators more visible in print */
+
   .bg-green-100,
   .bg-yellow-100,
   .bg-red-100 {
