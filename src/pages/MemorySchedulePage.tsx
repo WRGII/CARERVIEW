@@ -34,7 +34,7 @@ const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
   { key: "calendar",     label: "Calendar",     Icon: CalendarDays },
   { key: "tasks",        label: "Tasks",        Icon: CheckSquare },
   { key: "observations", label: "Observations", Icon: FileText },
-  { key: "changes",      label: "Changes",      Icon: History },
+  { key: "changes",      label: "Change Log",   Icon: History },
 ];
 
 export default function MemorySchedulePage() {
@@ -85,7 +85,7 @@ export default function MemorySchedulePage() {
 
   if (!isReady) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="space-y-4 animate-pulse">
           <div className="h-10 bg-slate-100 rounded-xl w-1/2" />
           <div className="h-64 bg-slate-100 rounded-xl" />
@@ -98,11 +98,11 @@ export default function MemorySchedulePage() {
 
   if (!teamId) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <h3 className="text-base font-semibold text-slate-700 mb-2">No active team selected</h3>
           <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
-            Set up or select a team from your dashboard before accessing Memory &amp; Schedule.
+            Set up or select a team from your dashboard before accessing Memory & Schedule.
           </p>
         </div>
       </PageLayout>
@@ -111,7 +111,7 @@ export default function MemorySchedulePage() {
 
   if (isLoading) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="space-y-4 animate-pulse">
           <div className="h-10 bg-slate-100 rounded-xl w-1/2" />
           <div className="h-64 bg-slate-100 rounded-xl" />
@@ -122,7 +122,7 @@ export default function MemorySchedulePage() {
 
   if (isOwner && bookError) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-4">
             <AlertCircle className="w-6 h-6 text-amber-500" />
@@ -157,14 +157,14 @@ export default function MemorySchedulePage() {
 
   if (!isOwner && !book && teamRole) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-4">
             <BookOpen className="w-6 h-6 text-slate-400" />
           </div>
           <h3 className="text-base font-semibold text-slate-700 mb-2">Memory Book not yet set up</h3>
           <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
-            The team owner needs to open Memory &amp; Schedule first to initialize the memory book for this team.
+            The team owner needs to open Memory & Schedule first to initialize the memory book for this team.
           </p>
         </div>
       </PageLayout>
@@ -173,7 +173,7 @@ export default function MemorySchedulePage() {
 
   if (!teamRole) {
     return (
-      <PageLayout title="Memory &amp; Schedule" hideSignOut>
+      <PageLayout title="Memory & Schedule" hideSignOut>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <h3 className="text-base font-semibold text-slate-700 mb-2">No team access</h3>
           <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
@@ -186,7 +186,7 @@ export default function MemorySchedulePage() {
 
   return (
     <PageLayout
-      title={`Memory &amp; Schedule — ${patientName}`}
+      title={`Memory & Schedule — ${patientName}`}
       hideSignOut
     >
       <div className="space-y-6 print:hidden">
