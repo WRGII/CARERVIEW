@@ -44,6 +44,12 @@ export default function AuthCallbackPage() {
           navigate('/create-account', { replace: true });
           return;
         }
+        const joinToken = localStorage.getItem('cv_join_token');
+        if (joinToken) {
+          localStorage.removeItem('cv_join_token');
+          navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+          return;
+        }
         navigate(next, { replace: true });
       }
     });

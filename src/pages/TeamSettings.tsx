@@ -11,6 +11,7 @@ import {
   cvListInvites,
   cvListMembersWithProfile,
   cvRemoveMember,
+  cvSendInviteEmail,
   type CvInvite,
   type CvMember,
 } from "../lib/cv";
@@ -105,7 +106,7 @@ export default function TeamSettings() {
   const [patient, setPatient] = useState<{ full_name: string } | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteResult, setInviteResult] = useState<{ link: string; expires_at: string } | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ link: string; expires_at: string; emailSent: boolean } | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -164,7 +165,16 @@ export default function TeamSettings() {
     try {
       const result = await cvCreateInvite(teamId, inviteEmail.trim());
       const link = `${window.location.origin}/join?t=${encodeURIComponent(result.token)}`;
-      setInviteResult({ link, expires_at: result.expires_at });
+
+      const ownerName = members.find((m) => m.role === "owner")?.display_name;
+      const { sent } = await cvSendInviteEmail({
+        email: inviteEmail.trim(),
+        invite_link: link,
+        team_name: patient?.full_name ? `${patient.full_name}'s care team` : undefined,
+        inviter_name: ownerName || undefined,
+      });
+
+      setInviteResult({ link, expires_at: result.expires_at, emailSent: sent });
       setInviteEmail("");
       const refreshed = await cvListInvites(teamId);
       setInvites(refreshed);
@@ -345,17 +355,34 @@ export default function TeamSettings() {
 
               {inviteResult && (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
-                  <p className="text-sm font-medium text-emerald-800">{t("team.invite_ready_title")}</p>
-                  <div className="flex items-start gap-2">
-                    <code className="flex-1 text-xs bg-white border border-emerald-200 rounded-lg px-3 py-2 break-all text-slate-700 font-mono">
-                      {inviteResult.link}
-                    </code>
-                    <CopyButton text={inviteResult.link} label={t("team.copy_link")} />
+                  {inviteResult.emailSent ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      <p className="text-sm font-medium text-emerald-800">
+                        Invitation email sent! They'll receive it shortly.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm font-medium text-emerald-800">{t("team.invite_ready_title")}</p>
+                  )}
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1.5">
+                      {inviteResult.emailSent
+                        ? "You can also share this link directly:"
+                        : "Share this invite link with them:"}
+                    </p>
+                    <div className="flex items-start gap-2">
+                      <code className="flex-1 text-xs bg-white border border-emerald-200 rounded-lg px-3 py-2 break-all text-slate-700 font-mono">
+                        {inviteResult.link}
+                      </code>
+                      <CopyButton text={inviteResult.link} label={t("team.copy_link")} />
+                    </div>
                   </div>
                   <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     {t("team.invite_expires_on").replace("{date}", formatDate(inviteResult.expires_at))}
                   </p>
-                  <p className="text-xs text-emerald-700">{t("team.invite_copy_note")}</p>
                 </div>
               )}
             </section>

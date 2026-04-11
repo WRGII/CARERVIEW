@@ -99,6 +99,22 @@ export async function cvGetRemaining(teamId: string) {
   return (data?.remaining ?? 0) as number;
 }
 
+export async function cvSendInviteEmail(params: {
+  email: string;
+  invite_link: string;
+  team_name?: string;
+  inviter_name?: string;
+}): Promise<{ sent: boolean }> {
+  const { data, error } = await supabase.functions.invoke("send-invite-email", {
+    body: params,
+  });
+  if (error) {
+    console.error("send-invite-email edge fn error:", error);
+    return { sent: false };
+  }
+  return { sent: data?.sent ?? false };
+}
+
 export async function cvAmIOwner(teamId: string) {
   const u = (await supabase.auth.getUser()).data.user!;
   const { data, error } = await supabase.from("cv_team").select("owner_user_id").eq("id", teamId).single();

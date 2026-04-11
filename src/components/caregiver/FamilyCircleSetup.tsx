@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveTeam } from "../../context/ActiveTeam";
-import { cvCreateInvite, cvCreateTeamWithPatient } from "../../lib/cv";
+import { cvCreateInvite, cvCreateTeamWithPatient, cvSendInviteEmail } from "../../lib/cv";
 import { hasActivePlan, useUserPlan } from "../../hooks/useUserPlan";
 import { useLocale } from "../../i18n/LocaleContext";
 import { Loading } from "../ui/Loading";
 import { Copy, Check, Users, ArrowRight, CircleAlert as AlertCircle } from "lucide-react";
 
 type Invite = { name: string; email: string };
-type GeneratedLink = { email: string; link: string };
+type GeneratedLink = { email: string; link: string; emailSent: boolean };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -83,10 +83,16 @@ export default function FamilyCircleSetup() {
         const email = row.email.trim();
         if (!email) continue;
         const result = await cvCreateInvite(newTeamId, email);
-        linksOut.push({
+        const link = `${location.origin}/join?t=${encodeURIComponent(result.token)}`;
+
+        const { sent } = await cvSendInviteEmail({
           email,
-          link: `${location.origin}/join?t=${encodeURIComponent(result.token)}`,
+          invite_link: link,
+          team_name: `${patient.trim()}'s care team`,
+          inviter_name: undefined,
         });
+
+        linksOut.push({ email, link, emailSent: sent });
       }
       setGeneratedLinks(linksOut);
       setDone(true);
@@ -113,9 +119,17 @@ export default function FamilyCircleSetup() {
         {generatedLinks.length > 0 && (
           <div className="space-y-3">
             <p className="text-sm font-medium text-slate-700">{t("family_setup.invite_links_title")}</p>
-            {generatedLinks.map(({ email, link }, i) => (
+            {generatedLinks.map(({ email, link, emailSent }, i) => (
               <div key={i} className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-                <p className="text-xs font-medium text-slate-600">{email}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-slate-600">{email}</p>
+                  {emailSent && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <Check className="w-2.5 h-2.5" />
+                      Email sent
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-start gap-2">
                   <code className="flex-1 text-xs font-mono text-slate-700 break-all bg-white border border-slate-200 rounded px-2 py-1.5">
                     {link}
