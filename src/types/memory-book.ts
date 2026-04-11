@@ -88,7 +88,7 @@ export type MemoryBookTab =
   | "routines"
   | "calendar"
   | "tasks"
-  | "journal"
+  | "observations"
   | "changes";
 
 export type MemoryBookSection =

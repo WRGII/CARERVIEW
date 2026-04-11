@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, BookMarked, History, RefreshCw, CircleAlert as AlertCircle } from "lucide-react";
+import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
@@ -16,6 +16,7 @@ import type { MemoryBookTab } from "../types/memory-book";
 import OverviewTab from "../components/memory-book/OverviewTab";
 import MemoryBookTab from "../components/memory-book/MemoryBookTab";
 import ComingSoonTab from "../components/memory-book/ComingSoonTab";
+import ObservationsTab from "../components/memory-book/ObservationsTab";
 
 const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", Icon: LayoutDashboard },
@@ -24,7 +25,7 @@ const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
   { key: "routines", label: "Routines", Icon: ClipboardList },
   { key: "calendar", label: "Calendar", Icon: CalendarDays },
   { key: "tasks", label: "Tasks", Icon: CheckSquare },
-  { key: "journal", label: "Journal", Icon: BookMarked },
+  { key: "observations", label: "Observations", Icon: FileText },
   { key: "changes", label: "Changes", Icon: History },
 ];
 
@@ -253,11 +254,11 @@ export default function MemorySchedulePage() {
               phase="Phase 3"
             />
           )}
-          {activeTab === "journal" && (
-            <ComingSoonTab
-              title="Journal"
-              description="A running log of care observations, mood changes, and notable events contributed by all caregivers."
-              phase="Phase 2"
+          {activeTab === "observations" && teamId && teamRole && (
+            <ObservationsTab
+              teamId={teamId}
+              teamRole={teamRole}
+              patientName={patientName}
             />
           )}
           {activeTab === "changes" && (

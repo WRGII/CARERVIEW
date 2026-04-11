@@ -205,6 +205,47 @@ export function useUpsertObservationAndResponses() {
   })
 }
 
+/** =========================
+ * Query: list all observations for a team (used in Memory & Schedule Observations tab)
+ * ========================= */
+export function useTeamObservations(teamId?: string | null) {
+  return useQuery({
+    queryKey: ['observations', 'team', teamId],
+    enabled: !!teamId,
+    queryFn: async () => {
+      if (!teamId) return []
+
+      const { data, error } = await supabase
+        .from('observations')
+        .select(
+          `
+          id,
+          user_id,
+          author_user_id,
+          patient_name,
+          observation_date,
+          notes,
+          caregiver_name,
+          caregiver_email,
+          created_at,
+          updated_at,
+          form_type,
+          team_id
+        `
+        )
+        .eq('team_id', teamId)
+        .order('observation_date', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 60_000,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+  })
+}
+
 /** Optional: delete observation (and cascade responses if FK is ON DELETE CASCADE) */
 export function useDeleteObservation() {
   const { user } = useAuth()
