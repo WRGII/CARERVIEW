@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Chrome as Home, Printer } from "lucide-react";
+import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Printer } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
@@ -16,11 +16,14 @@ import {
   useMemoryBookFinances,
   useMemoryBookSubscriptions,
   useMemoryBookVehicles,
+  useMemoryBookInsuranceEntries,
+  useMemoryBookFinanceEntries,
+  useMemoryBookMedicalEntries,
+  useMemoryBookPreferenceEntries,
 } from "../hooks/useMemoryBook";
 import type { MemoryBookTab } from "../types/memory-book";
 import OverviewTab from "../components/memory-book/OverviewTab";
 import MemoryBookTab from "../components/memory-book/MemoryBookTab";
-import HouseholdTab from "../components/memory-book/HouseholdTab";
 import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
 import PrintView from "../components/memory-book/PrintView";
@@ -28,7 +31,6 @@ import PrintView from "../components/memory-book/PrintView";
 const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
   { key: "overview",     label: "Overview",     Icon: LayoutDashboard },
   { key: "memory-book",  label: "Memory Book",  Icon: BookOpen },
-  { key: "household",    label: "Household",    Icon: Home },
   { key: "daily-living", label: "Daily Living", Icon: Utensils },
   { key: "routines",     label: "Routines",     Icon: ClipboardList },
   { key: "calendar",     label: "Calendar",     Icon: CalendarDays },
@@ -68,12 +70,17 @@ export default function MemorySchedulePage() {
   const { data: subscriptions = [] } = useMemoryBookSubscriptions(bookId);
   const { data: vehicles = [] } = useMemoryBookVehicles(bookId);
 
+  const { data: insuranceEntries = [] } = useMemoryBookInsuranceEntries(bookId);
+  const { data: financeEntries = [] } = useMemoryBookFinanceEntries(isOwner ? bookId : null);
+  const { data: medicalEntries = [] } = useMemoryBookMedicalEntries(bookId);
+  const { data: preferenceEntries = [] } = useMemoryBookPreferenceEntries(bookId);
+
   const hasIdentity = !!identity;
   const hasContacts = contacts.length > 0;
-  const hasMedical = !!medical;
-  const hasPreferences = !!preferences;
-  const hasInsurance = !!insurance;
-  const hasFinances = !!finances;
+  const hasMedical = !!medical || medicalEntries.length > 0;
+  const hasPreferences = !!preferences || preferenceEntries.length > 0;
+  const hasInsurance = !!insurance || insuranceEntries.length > 0;
+  const hasFinances = !!finances || financeEntries.length > 0;
   const hasSubscriptions = subscriptions.length > 0;
   const hasVehicles = vehicles.length > 0;
 
@@ -255,23 +262,15 @@ export default function MemorySchedulePage() {
               hasContacts={hasContacts}
               hasMedical={hasMedical}
               hasPreferences={hasPreferences}
-            />
-          )}
-
-          {activeTab === "memory-book" && !bookId && isOwner && (
-            <InitMemoryBook patientName={patientName} onRetry={refetchBook} isRetrying={bookFetching} />
-          )}
-
-          {activeTab === "household" && bookId && (
-            <HouseholdTab
-              memoryBookId={bookId}
-              teamId={teamId!}
-              isOwner={isOwner}
               hasInsurance={hasInsurance}
               hasFinances={hasFinances}
               hasSubscriptions={hasSubscriptions}
               hasVehicles={hasVehicles}
             />
+          )}
+
+          {activeTab === "memory-book" && !bookId && isOwner && (
+            <InitMemoryBook patientName={patientName} onRetry={refetchBook} isRetrying={bookFetching} />
           )}
 
           {activeTab === "daily-living" && (
@@ -331,6 +330,10 @@ export default function MemorySchedulePage() {
           finances={finances}
           subscriptions={subscriptions}
           vehicles={vehicles}
+          insuranceEntries={insuranceEntries}
+          financeEntries={financeEntries}
+          medicalEntries={medicalEntries}
+          preferenceEntries={preferenceEntries}
           isOwner={isOwner}
         />
       )}

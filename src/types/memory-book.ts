@@ -163,12 +163,108 @@ export type MemoryBookVehicle = {
   updated_by: string | null;
 };
 
+export type InsuranceEntryCategory =
+  | "health_primary"
+  | "health_secondary"
+  | "dental_vision"
+  | "medicare_ab"
+  | "medicare_d"
+  | "long_term_care"
+  | "life"
+  | "disability"
+  | "auto"
+  | "home_contents"
+  | "renters"
+  | "other";
+
+export type MemoryBookInsuranceEntry = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  label: string;
+  insurer: string;
+  policy_number: string;
+  member_id: string;
+  coverage_type: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
+export type FinanceEntryCategory = "bank" | "income" | "auto_pay" | "investment";
+
+export type MemoryBookFinanceEntry = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  label: string;
+  category: FinanceEntryCategory;
+  value: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
+export type MedicalEntryCategory =
+  | "condition"
+  | "allergy"
+  | "medication"
+  | "hearing"
+  | "vision"
+  | "other";
+
+export type MemoryBookMedicalEntry = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  label: string;
+  category: MedicalEntryCategory;
+  value: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
+export type PreferenceEntryCategory =
+  | "likes"
+  | "dislikes"
+  | "food_liked"
+  | "food_disliked"
+  | "music"
+  | "conversation"
+  | "comfort"
+  | "fear"
+  | "sensory"
+  | "avoid";
+
+export type MemoryBookPreferenceEntry = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  label: string;
+  category: PreferenceEntryCategory;
+  value: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
 export type TeamMemberRole = "owner" | "member";
 
 export type MemoryBookTab =
   | "overview"
   | "memory-book"
-  | "household"
   | "daily-living"
   | "routines"
   | "calendar"
@@ -180,7 +276,11 @@ export type MemoryBookSection =
   | "identity"
   | "contacts"
   | "medical"
-  | "preferences";
+  | "preferences"
+  | "insurance"
+  | "finances"
+  | "subscriptions"
+  | "vehicle";
 
 export type HouseholdSection =
   | "providers"

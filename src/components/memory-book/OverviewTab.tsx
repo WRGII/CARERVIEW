@@ -121,7 +121,7 @@ export default function OverviewTab({
               label={t("memory_book.tab_household")}
               complete={hasInsurance || hasSubscriptions || hasVehicles}
               notStartedLabel={t("memory_book.overview_not_started")}
-              onClick={() => onNavigate("household")}
+              onClick={() => onNavigate("memory-book")}
             />
           </div>
         </div>

@@ -8,6 +8,10 @@ import type {
   MemoryBookFinances,
   MemoryBookSubscription,
   MemoryBookVehicle,
+  MemoryBookInsuranceEntry,
+  MemoryBookFinanceEntry,
+  MemoryBookMedicalEntry,
+  MemoryBookPreferenceEntry,
 } from "../../types/memory-book";
 import { useLocale } from "../../i18n/LocaleContext";
 
@@ -22,6 +26,10 @@ type Props = {
   finances: MemoryBookFinances | null | undefined;
   subscriptions: MemoryBookSubscription[];
   vehicles: MemoryBookVehicle[];
+  insuranceEntries: MemoryBookInsuranceEntry[];
+  financeEntries: MemoryBookFinanceEntry[];
+  medicalEntries: MemoryBookMedicalEntry[];
+  preferenceEntries: MemoryBookPreferenceEntry[];
   isOwner: boolean;
 };
 
@@ -36,6 +44,10 @@ export default function PrintView({
   finances,
   subscriptions,
   vehicles,
+  insuranceEntries,
+  financeEntries,
+  medicalEntries,
+  preferenceEntries,
   isOwner,
 }: Props) {
   const { t } = useLocale();
@@ -109,78 +121,100 @@ export default function PrintView({
           </PrintSection>
         )}
 
-        {medical && (
+        {(medical || medicalEntries.length > 0) && (
           <PrintSection title={t("memory_book.print_section_medical")}>
-            <PrintGrid>
-              <PrintField label={t("memory_book.field_conditions")} value={medical.conditions} multiline />
-              <PrintField label={t("memory_book.field_allergies")} value={medical.allergies} multiline />
-              <PrintField label={t("memory_book.field_hearing")} value={medical.hearing_notes} />
-              <PrintField label={t("memory_book.field_vision")} value={medical.vision_notes} />
-              <PrintField label={t("memory_book.field_medications")} value={medical.medication_notes} multiline />
-              <PrintField label={t("memory_book.field_other_medical")} value={medical.other_medical_notes} multiline />
-            </PrintGrid>
+            {medicalEntries.length > 0 ? (
+              <PrintEntryList entries={medicalEntries} />
+            ) : medical ? (
+              <PrintGrid>
+                <PrintField label={t("memory_book.field_conditions")} value={medical.conditions} multiline />
+                <PrintField label={t("memory_book.field_allergies")} value={medical.allergies} multiline />
+                <PrintField label={t("memory_book.field_hearing")} value={medical.hearing_notes} />
+                <PrintField label={t("memory_book.field_vision")} value={medical.vision_notes} />
+                <PrintField label={t("memory_book.field_medications")} value={medical.medication_notes} multiline />
+                <PrintField label={t("memory_book.field_other_medical")} value={medical.other_medical_notes} multiline />
+              </PrintGrid>
+            ) : null}
           </PrintSection>
         )}
 
-        {preferences && (
+        {(preferences || preferenceEntries.length > 0) && (
           <PrintSection title={t("memory_book.print_section_preferences")}>
-            <PrintGrid>
-              <PrintField label={t("memory_book.field_likes")} value={preferences.likes} multiline />
-              <PrintField label={t("memory_book.field_dislikes")} value={preferences.dislikes} multiline />
-              <PrintField label={t("memory_book.field_foods_liked")} value={preferences.foods_liked} />
-              <PrintField label={t("memory_book.field_foods_disliked")} value={preferences.foods_disliked} />
-              <PrintField label={t("memory_book.field_music")} value={preferences.music_preferences} />
-              <PrintField label={t("memory_book.field_conversation")} value={preferences.conversation_topics} />
-              <PrintField label={t("memory_book.field_comforts")} value={preferences.comforts} multiline />
-              <PrintField label={t("memory_book.field_fears")} value={preferences.fears} />
-              <PrintField label={t("memory_book.field_sensory")} value={preferences.sensory_preferences} />
-              <PrintField label={t("memory_book.field_avoid")} value={preferences.things_to_avoid} multiline />
-            </PrintGrid>
+            {preferenceEntries.length > 0 ? (
+              <PrintEntryList entries={preferenceEntries} />
+            ) : preferences ? (
+              <PrintGrid>
+                <PrintField label={t("memory_book.field_likes")} value={preferences.likes} multiline />
+                <PrintField label={t("memory_book.field_dislikes")} value={preferences.dislikes} multiline />
+                <PrintField label={t("memory_book.field_foods_liked")} value={preferences.foods_liked} />
+                <PrintField label={t("memory_book.field_foods_disliked")} value={preferences.foods_disliked} />
+                <PrintField label={t("memory_book.field_music")} value={preferences.music_preferences} />
+                <PrintField label={t("memory_book.field_conversation")} value={preferences.conversation_topics} />
+                <PrintField label={t("memory_book.field_comforts")} value={preferences.comforts} multiline />
+                <PrintField label={t("memory_book.field_fears")} value={preferences.fears} />
+                <PrintField label={t("memory_book.field_sensory")} value={preferences.sensory_preferences} />
+                <PrintField label={t("memory_book.field_avoid")} value={preferences.things_to_avoid} multiline />
+              </PrintGrid>
+            ) : null}
           </PrintSection>
         )}
 
-        {insurance && (
+        {(insuranceEntries.length > 0 || insurance) && (
           <PrintSection title={t("memory_book.print_section_insurance")}>
-            <div className="space-y-4">
-              <InsurancePrintBlock
-                heading={t("memory_book.insurance_primary_heading")}
-                insurer={insurance.primary_insurer}
-                plan={insurance.primary_plan}
-                memberId={insurance.primary_member_id}
-                coverageType={insurance.primary_coverage_type}
-                insurerLabel={t("memory_book.field_insurer")}
-                planLabel={t("memory_book.field_plan")}
-                memberIdLabel={t("memory_book.field_member_id")}
-                coverageLabel={t("memory_book.field_coverage_type")}
-              />
-              <InsurancePrintBlock
-                heading={t("memory_book.insurance_secondary_heading")}
-                insurer={insurance.secondary_insurer}
-                plan={insurance.secondary_plan}
-                memberId={insurance.secondary_member_id}
-                coverageType={insurance.secondary_coverage_type}
-                insurerLabel={t("memory_book.field_insurer")}
-                planLabel={t("memory_book.field_plan")}
-                memberIdLabel={t("memory_book.field_member_id")}
-                coverageLabel={t("memory_book.field_coverage_type")}
-              />
-              {(insurance.dental_vision_insurer || insurance.dental_vision_plan) && (
+            {insuranceEntries.length > 0 ? (
+              <div className="space-y-3">
+                {insuranceEntries.map(e => (
+                  <div key={e.id} className="pb-3 border-b border-slate-100 last:border-0">
+                    <p className="text-sm font-semibold text-slate-800">{e.label}</p>
+                    {e.insurer && <p className="text-xs text-slate-600 mt-0.5">{e.insurer}{e.policy_number ? ` · ${e.policy_number}` : ""}</p>}
+                    {e.member_id && <p className="text-xs text-slate-500">Member ID: {e.member_id}</p>}
+                    {e.coverage_type && <p className="text-xs text-slate-500">{e.coverage_type}</p>}
+                    {e.notes && <p className="text-xs text-slate-500 mt-0.5 italic">{e.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : insurance ? (
+              <div className="space-y-4">
                 <InsurancePrintBlock
-                  heading={t("memory_book.insurance_dental_vision_heading")}
-                  insurer={insurance.dental_vision_insurer}
-                  plan={insurance.dental_vision_plan}
-                  memberId=""
-                  coverageType=""
+                  heading={t("memory_book.insurance_primary_heading")}
+                  insurer={insurance.primary_insurer}
+                  plan={insurance.primary_plan}
+                  memberId={insurance.primary_member_id}
+                  coverageType={insurance.primary_coverage_type}
                   insurerLabel={t("memory_book.field_insurer")}
                   planLabel={t("memory_book.field_plan")}
                   memberIdLabel={t("memory_book.field_member_id")}
                   coverageLabel={t("memory_book.field_coverage_type")}
                 />
-              )}
-              {insurance.notes && (
-                <PrintField label={t("memory_book.field_notes")} value={insurance.notes} multiline />
-              )}
-            </div>
+                <InsurancePrintBlock
+                  heading={t("memory_book.insurance_secondary_heading")}
+                  insurer={insurance.secondary_insurer}
+                  plan={insurance.secondary_plan}
+                  memberId={insurance.secondary_member_id}
+                  coverageType={insurance.secondary_coverage_type}
+                  insurerLabel={t("memory_book.field_insurer")}
+                  planLabel={t("memory_book.field_plan")}
+                  memberIdLabel={t("memory_book.field_member_id")}
+                  coverageLabel={t("memory_book.field_coverage_type")}
+                />
+                {(insurance.dental_vision_insurer || insurance.dental_vision_plan) && (
+                  <InsurancePrintBlock
+                    heading={t("memory_book.insurance_dental_vision_heading")}
+                    insurer={insurance.dental_vision_insurer}
+                    plan={insurance.dental_vision_plan}
+                    memberId=""
+                    coverageType=""
+                    insurerLabel={t("memory_book.field_insurer")}
+                    planLabel={t("memory_book.field_plan")}
+                    memberIdLabel={t("memory_book.field_member_id")}
+                    coverageLabel={t("memory_book.field_coverage_type")}
+                  />
+                )}
+                {insurance.notes && (
+                  <PrintField label={t("memory_book.field_notes")} value={insurance.notes} multiline />
+                )}
+              </div>
+            ) : null}
           </PrintSection>
         )}
 
@@ -220,14 +254,18 @@ export default function PrintView({
           </PrintSection>
         )}
 
-        {isOwner && finances && (
+        {isOwner && (financeEntries.length > 0 || finances) && (
           <PrintSection title={t("memory_book.print_section_finances")}>
-            <PrintGrid>
-              <PrintField label={t("memory_book.field_bank_name")} value={finances.bank_name} />
-              <PrintField label={t("memory_book.field_income_sources")} value={finances.income_sources} multiline />
-              <PrintField label={t("memory_book.field_auto_pay_bills")} value={finances.auto_pay_bills} multiline />
-              <PrintField label={t("memory_book.field_investment_notes")} value={finances.investment_notes} multiline />
-            </PrintGrid>
+            {financeEntries.length > 0 ? (
+              <PrintEntryList entries={financeEntries} />
+            ) : finances ? (
+              <PrintGrid>
+                <PrintField label={t("memory_book.field_bank_name")} value={finances.bank_name} />
+                <PrintField label={t("memory_book.field_income_sources")} value={finances.income_sources} multiline />
+                <PrintField label={t("memory_book.field_auto_pay_bills")} value={finances.auto_pay_bills} multiline />
+                <PrintField label={t("memory_book.field_investment_notes")} value={finances.investment_notes} multiline />
+              </PrintGrid>
+            ) : null}
           </PrintSection>
         )}
 
@@ -236,6 +274,34 @@ export default function PrintView({
           &nbsp;·&nbsp;CarerView
         </div>
       </div>
+    </div>
+  );
+}
+
+function PrintEntryList({ entries }: { entries: Array<{ id: string; label: string; value?: string; notes?: string; category?: string }> }) {
+  const grouped: Record<string, typeof entries> = {};
+  entries.forEach(e => {
+    const cat = e.category ?? "other";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(e);
+  });
+  return (
+    <div className="space-y-4">
+      {Object.entries(grouped).map(([cat, items]) => (
+        <div key={cat}>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 capitalize">{cat.replace(/_/g, " ")}</p>
+          <div className="space-y-2">
+            {items.map(e => (
+              <div key={e.id} className="flex gap-4">
+                <span className="text-sm font-medium text-slate-800 min-w-0">{e.label}</span>
+                {(e.value || e.notes) && (
+                  <span className="text-sm text-slate-600 flex-1">{e.value}{e.value && e.notes ? " — " : ""}{e.notes}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

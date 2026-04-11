@@ -1,16 +1,18 @@
-import { useState, useEffect } from "react";
-import { Save, Stethoscope } from "lucide-react";
+import { useState } from "react";
+import { Stethoscope, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/Card";
-import { Button } from "../ui/Button";
 import { useToast } from "../ui/ToastProvider";
 import {
-  useMemoryBookMedical,
-  useUpsertMemoryBookMedical,
+  useMemoryBookMedicalEntries,
+  useUpsertMemoryBookMedicalEntry,
+  useDeleteMemoryBookMedicalEntry,
 } from "../../hooks/useMemoryBook";
+import EntryCard, { AddEntryForm, SuggestedPromptChip } from "./EntryCard";
+import type { EntryField } from "./EntryCard";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
 import ProvidersSection from "./ProvidersSection";
-import { useLocale } from "../../i18n/LocaleContext";
+import type { MemoryBookMedicalEntry, MedicalEntryCategory } from "../../types/memory-book";
 
 type Props = {
   memoryBookId: string;
@@ -18,92 +20,266 @@ type Props = {
   isOwner: boolean;
 };
 
-const EMPTY_FORM = {
-  conditions: "",
-  allergies: "",
-  hearing_notes: "",
-  vision_notes: "",
-  medication_notes: "",
-  other_medical_notes: "",
+type CategoryConfig = {
+  label: string;
+  color: string;
+  prompts: string[];
+  fields: EntryField[];
 };
 
+const CATEGORIES: Record<MedicalEntryCategory, CategoryConfig> = {
+  condition: {
+    label: "Condition",
+    color: "bg-rose-50 text-rose-700",
+    prompts: [
+      "Alzheimer's Disease",
+      "Dementia",
+      "Parkinson's Disease",
+      "Diabetes - Type 2",
+      "Heart Disease / CHF",
+      "Hypertension",
+      "COPD",
+      "Arthritis",
+      "Stroke",
+      "Kidney Disease",
+      "Osteoporosis",
+      "Depression / Anxiety",
+    ],
+    fields: [
+      { key: "label", label: "Condition Name", placeholder: "e.g. Type 2 Diabetes, Hypertension" },
+      { key: "value", label: "Details / Notes", placeholder: "e.g. Diagnosed 2019, managed with medication", optional: true, multiline: true, rows: 2 },
+      { key: "notes", label: "Care Instructions", placeholder: "e.g. Monitor blood sugar daily", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+  allergy: {
+    label: "Allergy",
+    color: "bg-orange-50 text-orange-700",
+    prompts: [
+      "Penicillin",
+      "Aspirin / NSAIDs",
+      "Sulfa Drugs",
+      "Codeine / Opioids",
+      "Latex",
+      "Shellfish",
+      "Peanuts / Tree Nuts",
+      "Environmental / Pollen",
+      "Iodine / Contrast Dye",
+    ],
+    fields: [
+      { key: "label", label: "Allergy / Substance", placeholder: "e.g. Penicillin, Shellfish" },
+      { key: "value", label: "Reaction / Severity", placeholder: "e.g. Anaphylaxis, hives, mild rash", optional: true },
+      { key: "notes", label: "Notes", placeholder: "e.g. Carry EpiPen", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+  medication: {
+    label: "Medication",
+    color: "bg-cyan-50 text-cyan-700",
+    prompts: [
+      "Metformin",
+      "Lisinopril",
+      "Atorvastatin",
+      "Aspirin (daily)",
+      "Warfarin / Eliquis",
+      "Levothyroxine",
+      "Amlodipine",
+      "Donepezil",
+      "Memantine",
+      "Furosemide",
+      "Vitamin D",
+      "Omega-3 / Fish Oil",
+    ],
+    fields: [
+      { key: "label", label: "Medication Name", placeholder: "e.g. Metformin, Lisinopril" },
+      { key: "value", label: "Dosage & Frequency", placeholder: "e.g. 500mg twice daily with meals", optional: true },
+      { key: "notes", label: "Prescribing Doctor / Notes", placeholder: "e.g. Dr. Smith - refill every 90 days", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+  hearing: {
+    label: "Hearing",
+    color: "bg-violet-50 text-violet-700",
+    prompts: [
+      "Hearing Aids - Right Ear",
+      "Hearing Aids - Left Ear",
+      "Bilateral Hearing Loss",
+      "Tinnitus",
+      "Cochlear Implant",
+    ],
+    fields: [
+      { key: "label", label: "Hearing Note", placeholder: "e.g. Hearing Aids - Right Ear" },
+      { key: "value", label: "Details", placeholder: "e.g. Mild-moderate loss, wears hearing aid daily", optional: true, multiline: true, rows: 2 },
+      { key: "notes", label: "Care Instructions", placeholder: "e.g. Change battery weekly", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+  vision: {
+    label: "Vision",
+    color: "bg-sky-50 text-sky-700",
+    prompts: [
+      "Glasses / Corrective Lenses",
+      "Cataracts",
+      "Macular Degeneration",
+      "Glaucoma",
+      "Diabetic Retinopathy",
+      "Low Vision",
+    ],
+    fields: [
+      { key: "label", label: "Vision Note", placeholder: "e.g. Glasses, Macular Degeneration" },
+      { key: "value", label: "Details", placeholder: "e.g. Wears bifocals, annual eye exam needed", optional: true, multiline: true, rows: 2 },
+      { key: "notes", label: "Care Instructions", placeholder: "e.g. Ensure good lighting at all times", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+  other: {
+    label: "Other",
+    color: "bg-slate-100 text-slate-600",
+    prompts: [
+      "Mobility Aid - Walker",
+      "Mobility Aid - Wheelchair",
+      "Fall Risk",
+      "Incontinence",
+      "Sleep Apnea / CPAP",
+      "DNR / Advance Directive",
+      "Surgical History",
+    ],
+    fields: [
+      { key: "label", label: "Note", placeholder: "e.g. Fall Risk, Uses Walker" },
+      { key: "value", label: "Details", placeholder: "Additional details", optional: true, multiline: true, rows: 2 },
+      { key: "notes", label: "Care Instructions", placeholder: "e.g. Always have call button accessible", optional: true, multiline: true, rows: 2 },
+    ],
+  },
+};
+
+function entryToRecord(e: MemoryBookMedicalEntry): Record<string, string> {
+  return {
+    label: e.label,
+    value: e.value,
+    notes: e.notes,
+    category: e.category,
+  };
+}
+
 export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props) {
-  const { t } = useLocale();
-  const { data: medical, isLoading } = useMemoryBookMedical(memoryBookId);
-  const upsert = useUpsertMemoryBookMedical();
+  const { data: entries = [], isLoading } = useMemoryBookMedicalEntries(memoryBookId);
+  const upsert = useUpsertMemoryBookMedicalEntry();
+  const del = useDeleteMemoryBookMedicalEntry();
   const { showToast } = useToast();
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [editing, setEditing] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addCategory, setAddCategory] = useState<MedicalEntryCategory>("condition");
+  const [addDefaults, setAddDefaults] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    setEditing(false);
-  }, [memoryBookId]);
-
-  useEffect(() => {
-    if (medical) {
-      setForm({
-        conditions: medical.conditions ?? "",
-        allergies: medical.allergies ?? "",
-        hearing_notes: medical.hearing_notes ?? "",
-        vision_notes: medical.vision_notes ?? "",
-        medication_notes: medical.medication_notes ?? "",
-        other_medical_notes: medical.other_medical_notes ?? "",
-      });
-    }
-  }, [medical]);
-
-  const handleSave = async () => {
+  const handleAdd = async (values: Record<string, string>) => {
     try {
-      await upsert.mutateAsync({ memoryBookId, teamId, values: form });
-      showToast(t("memory_book.toast_medical_saved"), "success");
-      setEditing(false);
+      await upsert.mutateAsync({
+        memoryBookId,
+        teamId,
+        entry: { ...values, category: addCategory, sort_order: entries.length } as Partial<MemoryBookMedicalEntry>,
+      });
+      setShowAdd(false);
+      setAddDefaults({});
+      showToast("Medical entry saved", "success");
     } catch (e: any) {
-      showToast(e.message ?? t("common.error_generic"), "error");
+      showToast(e.message ?? "Error saving entry", "error");
     }
+  };
+
+  const handleUpdate = async (id: string, values: Record<string, string>) => {
+    try {
+      await upsert.mutateAsync({ memoryBookId, teamId, entry: { id, ...values } as Partial<MemoryBookMedicalEntry> & { id: string } });
+      showToast("Entry updated", "success");
+    } catch (e: any) {
+      showToast(e.message ?? "Error updating entry", "error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await del.mutateAsync({ id, memoryBookId, teamId });
+      showToast("Entry removed", "success");
+    } catch (e: any) {
+      showToast(e.message ?? "Error removing entry", "error");
+    }
+  };
+
+  const handlePromptClick = (cat: MedicalEntryCategory, label: string) => {
+    setAddCategory(cat);
+    setAddDefaults({ label, category: cat });
+    setShowAdd(true);
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
+          <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />
         ))}
       </div>
     );
   }
 
-  const hasData = !!medical;
-  const isReadOnly = !isOwner;
+  const usedLabels = new Set(entries.map(e => e.label));
 
-  if (!hasData && !isOwner) {
+  const groupedEntries: Record<MedicalEntryCategory, MemoryBookMedicalEntry[]> = {
+    condition: [],
+    allergy: [],
+    medication: [],
+    hearing: [],
+    vision: [],
+    other: [],
+  };
+  entries.forEach(e => {
+    const cat = e.category as MedicalEntryCategory;
+    if (groupedEntries[cat]) groupedEntries[cat].push(e);
+    else groupedEntries.other.push(e);
+  });
+
+  if (entries.length === 0 && !showAdd && !isOwner) {
     return (
-      <SectionEmptyState
-        title={t("memory_book.medical_empty_member_title")}
-        description={t("memory_book.medical_empty_member_desc")}
-        isOwner={false}
-      />
+      <div className="space-y-6">
+        <ReadOnlyBanner />
+        <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+        <SectionEmptyState
+          title="No medical information yet"
+          description="The team owner hasn't added any medical details."
+          isOwner={false}
+        />
+      </div>
     );
   }
 
-  if (!hasData && isOwner && !editing) {
+  if (entries.length === 0 && !showAdd && isOwner) {
     return (
-      <SectionEmptyState
-        title={t("memory_book.medical_empty_owner_title")}
-        description={t("memory_book.medical_empty_owner_desc")}
-        isOwner={true}
-        ownerAction={
-          <Button variant="primary" size="md" onClick={() => setEditing(true)}>
-            <Stethoscope className="w-4 h-4 mr-2 inline" />
-            {t("memory_book.medical_add_btn")}
-          </Button>
-        }
-      />
+      <div className="space-y-6">
+        <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+        <SectionEmptyState
+          title="No medical entries yet"
+          description="Add conditions, allergies, medications, and care notes. Use the prompts below to get started quickly."
+          isOwner={true}
+          ownerAction={
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {(["condition", "allergy", "medication"] as MedicalEntryCategory[]).flatMap(cat =>
+                  CATEGORIES[cat].prompts.slice(0, 2).map(p => (
+                    <SuggestedPromptChip key={`${cat}-${p}`} label={p} onClick={() => handlePromptClick(cat, p)} />
+                  ))
+                )}
+              </div>
+              <button
+                onClick={() => { setAddCategory("condition"); setAddDefaults({}); setShowAdd(true); }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Medical Entry
+              </button>
+            </div>
+          }
+        />
+      </div>
     );
   }
+
+  const allCategories = (["condition", "allergy", "medication", "hearing", "vision", "other"] as MedicalEntryCategory[]);
 
   return (
     <div className="space-y-6">
-      {isReadOnly && <ReadOnlyBanner />}
+      {!isOwner && <ReadOnlyBanner />}
 
       <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
 
@@ -111,138 +287,91 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold text-slate-800">{t("memory_book.medical_title")}</h3>
-              <p className="text-sm text-slate-500 mt-0.5">
-                {t("memory_book.medical_subtitle")}
-              </p>
+              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                <Stethoscope className="w-4 h-4 text-rose-600" />
+                Medical Information
+              </h3>
+              <p className="text-sm text-slate-500 mt-0.5">Conditions, allergies, medications, and care notes</p>
             </div>
-            {isOwner && !editing && (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                {t("memory_book.edit")}
-              </Button>
+            {isOwner && (
+              <button
+                onClick={() => { setAddCategory("condition"); setAddDefaults({}); setShowAdd(true); }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add
+              </button>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          {editing && isOwner ? (
-            <div className="space-y-5">
-              <TextareaField
-                label={t("memory_book.field_conditions")}
-                value={form.conditions}
-                onChange={v => setForm(f => ({ ...f, conditions: v }))}
-                placeholder={t("memory_book.field_conditions_placeholder")}
-              />
-              <TextareaField
-                label={t("memory_book.field_allergies")}
-                value={form.allergies}
-                onChange={v => setForm(f => ({ ...f, allergies: v }))}
-                placeholder={t("memory_book.field_allergies_placeholder")}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <TextareaField
-                  label={t("memory_book.field_hearing")}
-                  value={form.hearing_notes}
-                  onChange={v => setForm(f => ({ ...f, hearing_notes: v }))}
-                  placeholder={t("memory_book.field_hearing_placeholder")}
-                  rows={3}
-                />
-                <TextareaField
-                  label={t("memory_book.field_vision")}
-                  value={form.vision_notes}
-                  onChange={v => setForm(f => ({ ...f, vision_notes: v }))}
-                  placeholder={t("memory_book.field_vision_placeholder")}
-                  rows={3}
-                />
-              </div>
-              <TextareaField
-                label={t("memory_book.field_medications")}
-                value={form.medication_notes}
-                onChange={v => setForm(f => ({ ...f, medication_notes: v }))}
-                placeholder={t("memory_book.field_medications_placeholder")}
-              />
-              <TextareaField
-                label={t("memory_book.field_other_medical")}
-                value={form.other_medical_notes}
-                onChange={v => setForm(f => ({ ...f, other_medical_notes: v }))}
-                placeholder={t("memory_book.field_other_medical_placeholder")}
-              />
-              <div className="flex items-center gap-3 pt-2">
-                <Button variant="primary" size="md" onClick={handleSave} disabled={upsert.isPending}>
-                  <Save className="w-4 h-4 mr-2 inline" />
-                  {upsert.isPending ? t("memory_book.saving") : t("memory_book.save_changes")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="md"
-                  onClick={() => {
-                    setEditing(false);
-                    if (medical) {
-                      setForm({
-                        conditions: medical.conditions ?? "",
-                        allergies: medical.allergies ?? "",
-                        hearing_notes: medical.hearing_notes ?? "",
-                        vision_notes: medical.vision_notes ?? "",
-                        medication_notes: medical.medication_notes ?? "",
-                        other_medical_notes: medical.other_medical_notes ?? "",
-                      });
-                    }
-                  }}
-                >
-                  {t("memory_book.cancel")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              <ReadFieldBlock label={t("memory_book.field_conditions")} value={medical?.conditions} />
-              <ReadFieldBlock label={t("memory_book.field_allergies")} value={medical?.allergies} />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <ReadFieldBlock label={t("memory_book.field_hearing")} value={medical?.hearing_notes} />
-                <ReadFieldBlock label={t("memory_book.field_vision")} value={medical?.vision_notes} />
-              </div>
-              <ReadFieldBlock label={t("memory_book.field_medications")} value={medical?.medication_notes} />
-              <ReadFieldBlock label={t("memory_book.field_other_medical")} value={medical?.other_medical_notes} />
-            </div>
-          )}
+          <div className="space-y-5">
+            {allCategories.map(cat => {
+              const catConfig = CATEGORIES[cat];
+              const catEntries = groupedEntries[cat];
+              const unusedPrompts = catConfig.prompts.filter(p => !usedLabels.has(p));
+              const showSection = catEntries.length > 0 || (isOwner && (showAdd ? addCategory === cat : true));
+
+              if (!showSection && !isOwner) return null;
+
+              return (
+                <div key={cat}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${catConfig.color}`}>
+                      {catConfig.label}
+                    </span>
+                    {isOwner && !showAdd && (
+                      <button
+                        onClick={() => { setAddCategory(cat); setAddDefaults({ category: cat }); setShowAdd(true); }}
+                        className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-cyan-600 transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {catEntries.map(entry => (
+                      <EntryCard
+                        key={entry.id}
+                        entry={entryToRecord(entry)}
+                        fields={catConfig.fields}
+                        isOwner={isOwner}
+                        categoryColor={catConfig.color}
+                        onSave={values => handleUpdate(entry.id, values)}
+                        onDelete={() => handleDelete(entry.id)}
+                        isSaving={upsert.isPending}
+                        isDeleting={del.isPending}
+                      />
+                    ))}
+                    {catEntries.length === 0 && (!showAdd || addCategory !== cat) && isOwner && (
+                      <p className="text-xs text-slate-400 italic pl-1">No entries yet</p>
+                    )}
+                    {showAdd && addCategory === cat && (
+                      <AddEntryForm
+                        fields={catConfig.fields}
+                        onSave={handleAdd}
+                        onCancel={() => { setShowAdd(false); setAddDefaults({}); }}
+                        isSaving={upsert.isPending}
+                        defaultValues={Object.keys(addDefaults).length > 0
+                          ? { ...Object.fromEntries(catConfig.fields.map(f => [f.key, ""])), ...addDefaults }
+                          : undefined}
+                      />
+                    )}
+                  </div>
+                  {isOwner && unusedPrompts.length > 0 && (!showAdd || addCategory !== cat) && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {unusedPrompts.map(p => (
+                        <SuggestedPromptChip key={p} label={p} onClick={() => handlePromptClick(cat, p)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function TextareaField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  rows = 4,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  rows?: number;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
-      <textarea
-        className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-base placeholder-slate-400 shadow-sm focus:border-cyan-600 focus:outline-none focus:ring-1 focus:ring-cyan-600 bg-white text-slate-800 leading-relaxed"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-      />
-    </div>
-  );
-}
-
-function ReadFieldBlock({ label, value }: { label: string; value?: string }) {
-  if (!value) return null;
-  return (
-    <div>
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{value}</p>
     </div>
   );
 }
