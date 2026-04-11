@@ -202,6 +202,7 @@ export type MemoryBookFinanceEntry = {
   team_id: string;
   label: string;
   category: FinanceEntryCategory;
+  company: string;
   value: string;
   notes: string;
   sort_order: number;

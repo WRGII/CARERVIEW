@@ -42,8 +42,7 @@ const CATEGORIES: Record<FinanceEntryCategory, CategoryConfig> = {
     color: "bg-emerald-50 text-emerald-700",
     prompts: [
       "Social Security",
-      "Military / DFAS Pension",
-      "Disability Pension",
+      "Pension",
       "VA Benefits",
       "401k / IRA Distribution",
       "Rental Income",
@@ -84,6 +83,7 @@ const CATEGORIES: Record<FinanceEntryCategory, CategoryConfig> = {
 
 const ENTRY_FIELDS: EntryField[] = [
   { key: "label", label: "Item Label", placeholder: "e.g. Checking Account, Social Security" },
+  { key: "company", label: "Company / Institution Name", placeholder: "e.g. Wells Fargo, Social Security Administration", optional: true },
   { key: "value", label: "Details / Account Info", placeholder: "e.g. Account ending 4521, $1,850/mo", optional: true },
   { key: "notes", label: "Notes", placeholder: "Additional information", optional: true, multiline: true, rows: 2 },
 ];
@@ -91,6 +91,7 @@ const ENTRY_FIELDS: EntryField[] = [
 function entryToRecord(e: MemoryBookFinanceEntry): Record<string, string> {
   return {
     label: e.label,
+    company: e.company,
     value: e.value,
     notes: e.notes,
     category: e.category,

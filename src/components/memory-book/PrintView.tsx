@@ -278,7 +278,7 @@ export default function PrintView({
   );
 }
 
-function PrintEntryList({ entries }: { entries: Array<{ id: string; label: string; value?: string; notes?: string; category?: string }> }) {
+function PrintEntryList({ entries }: { entries: Array<{ id: string; label: string; company?: string; value?: string; notes?: string; category?: string }> }) {
   const grouped: Record<string, typeof entries> = {};
   entries.forEach(e => {
     const cat = e.category ?? "other";
@@ -293,7 +293,12 @@ function PrintEntryList({ entries }: { entries: Array<{ id: string; label: strin
           <div className="space-y-2">
             {items.map(e => (
               <div key={e.id} className="flex gap-4">
-                <span className="text-sm font-medium text-slate-800 min-w-0">{e.label}</span>
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-slate-800">{e.label}</span>
+                  {e.company && (
+                    <span className="text-xs text-slate-500 ml-2">{e.company}</span>
+                  )}
+                </div>
                 {(e.value || e.notes) && (
                   <span className="text-sm text-slate-600 flex-1">{e.value}{e.value && e.notes ? " — " : ""}{e.notes}</span>
                 )}
