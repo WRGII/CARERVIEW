@@ -1,7 +1,7 @@
 export type MemoryBook = {
   id: string;
   team_id: string;
-  patient_id: string;
+  resident_id: string;
   created_at: string;
   updated_at: string;
   created_by: string | null;

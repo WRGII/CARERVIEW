@@ -82,7 +82,7 @@ export default function NewObservationPage() {
           caregiver_email,
           team_id: teamId,
           author_user_id: user!.id,
-          // optional: patient_name, notes, mode_of_observation
+          // optional: resident_name, notes, mode_of_observation
         })
         .select('id')
         .single();

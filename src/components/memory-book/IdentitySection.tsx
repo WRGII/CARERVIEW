@@ -16,7 +16,7 @@ type Props = {
   memoryBookId: string;
   teamId: string;
   isOwner: boolean;
-  patientName: string;
+  residentName: string;
 };
 
 const EMPTY_FORM = {
@@ -30,7 +30,7 @@ const EMPTY_FORM = {
   photo_url: "",
 };
 
-export default function IdentitySection({ memoryBookId, teamId, isOwner, patientName }: Props) {
+export default function IdentitySection({ memoryBookId, teamId, isOwner, residentName }: Props) {
   const { t } = useLocale();
   const { data: identity, isLoading } = useMemoryBookIdentity(memoryBookId);
   const upsert = useUpsertMemoryBookIdentity();
@@ -116,7 +116,7 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, patient
             <div>
               <h3 className="text-base font-semibold text-slate-800">{t("memory_book.identity_title")}</h3>
               <p className="text-sm text-slate-500 mt-0.5">
-                {t("memory_book.identity_subtitle", { patientName })}
+                {t("memory_book.identity_subtitle", { residentName })}
               </p>
             </div>
             {isOwner && !editing && (

@@ -190,9 +190,9 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
             <div className="flex items-center space-x-3">
               <User className="w-5 h-5 text-slate-gray/60" />
               <div>
-                <p className="text-sm text-slate-gray/70">{t('view_obs.patient_name')}</p>
+                <p className="text-sm text-slate-gray/70">{t('view_obs.resident_name')}</p>
                 <p className="font-medium text-slate-gray">
-                  {observation.patient_name || t('obs_list.unnamed_patient')}
+                  {observation.resident_name || t('obs_list.unnamed_resident')}
                 </p>
               </div>
             </div>
@@ -328,7 +328,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
         title={t('obs_list.delete_title')}
         message={
           observation
-            ? t('obs_list.delete_confirm', { name: observation.patient_name || t('obs_list.unnamed_patient'), date: formatDate(observation.observation_date) })
+            ? t('obs_list.delete_confirm', { name: observation.resident_name || t('obs_list.unnamed_resident'), date: formatDate(observation.observation_date) })
             : t('obs_list.delete_confirm_generic')
         }
         confirmLabel={t('common.delete')}

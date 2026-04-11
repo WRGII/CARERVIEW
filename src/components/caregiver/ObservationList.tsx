@@ -19,7 +19,7 @@ interface ObservationListProps {
 
 type ObservationRow = {
   id: string
-  patient_name: string | null
+  resident_name: string | null
   observation_date: string
   notes: string | null
   caregiver_name: string | null
@@ -101,7 +101,7 @@ export const ObservationList: React.FC<ObservationListProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-slate-gray truncate">
-                        {o.patient_name || t('obs_list.unnamed_patient')}
+                        {o.resident_name || t('obs_list.unnamed_resident')}
                       </h3>
                       <FormTypeChip type={o.form_type ?? null} />
                     </div>
@@ -170,7 +170,7 @@ export const ObservationList: React.FC<ObservationListProps> = ({
         title={t('obs_list.delete_title')}
         message={
           confirmDelete
-            ? t('obs_list.delete_confirm', { name: confirmDelete.patient_name || t('obs_list.unnamed_patient'), date: formatDate(confirmDelete.observation_date) })
+            ? t('obs_list.delete_confirm', { name: confirmDelete.resident_name || t('obs_list.unnamed_resident'), date: formatDate(confirmDelete.observation_date) })
             : ''
         }
         confirmLabel={t('common.delete')}

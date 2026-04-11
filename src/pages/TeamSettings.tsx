@@ -7,7 +7,7 @@ import { useUserPlan } from "../hooks/useUserPlan";
 import {
   cvAmIOwner,
   cvCreateInvite,
-  cvGetTeamPatient,
+  cvGetTeamResident,
   cvListInvites,
   cvListMembersWithProfile,
   cvRemoveMember,
@@ -103,7 +103,7 @@ export default function TeamSettings() {
   const [members, setMembers] = useState<CvMember[]>([]);
   const [invites, setInvites] = useState<CvInvite[]>([]);
   const [isOwner, setIsOwner] = useState(false);
-  const [patient, setPatient] = useState<{ full_name: string } | null>(null);
+  const [resident, setResident] = useState<{ full_name: string } | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteResult, setInviteResult] = useState<{ link: string; expires_at: string; emailSent: boolean } | null>(null);
@@ -123,12 +123,12 @@ export default function TeamSettings() {
         cvListMembersWithProfile(teamId),
         cvAmIOwner(teamId),
         cvListInvites(teamId),
-        cvGetTeamPatient(teamId),
+        cvGetTeamResident(teamId),
       ]);
       setMembers(mems);
       setIsOwner(owner);
       setInvites(invs);
-      setPatient(pat);
+      setResident(pat);
       setPageState("ready");
     } catch (e: any) {
       setErrorMsg(e.message ?? t("team.load_failed"));
@@ -170,7 +170,7 @@ export default function TeamSettings() {
       const { sent } = await cvSendInviteEmail({
         email: inviteEmail.trim(),
         invite_link: link,
-        team_name: patient?.full_name ? `${patient.full_name}'s care team` : undefined,
+        team_name: resident?.full_name ? `${resident.full_name}'s care team` : undefined,
         inviter_name: ownerName || undefined,
       });
 
@@ -213,10 +213,10 @@ export default function TeamSettings() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">{t("team.title")}</h1>
-          {patient && (
+          {resident && (
             <p className="mt-1 text-slate-500 text-sm">
               {t("team.caring_for")}{" "}
-              <span className="font-medium text-slate-700">{patient.full_name}</span>
+              <span className="font-medium text-slate-700">{resident.full_name}</span>
             </p>
           )}
         </div>

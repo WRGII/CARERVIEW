@@ -36,7 +36,7 @@ type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE' | null | undefined
 interface ObservationWithResponses {
   id: string
   user_id: string
-  patient_name: string | null
+  resident_name: string | null
   observation_date: string // YYYY-MM-DD
   date_of_observation?: string | null
   mode_of_observation?: 'In Person' | 'Voice Call' | 'Video Call'
@@ -142,7 +142,7 @@ export const exportToDOCX = async (
           new Paragraph({
             children: [
               new TextRun({
-                text: `${t('export.field_name')}: ${observation.patient_name || t('export.not_specified')}`,
+                text: `${t('export.field_name')}: ${observation.resident_name || t('export.not_specified')}`,
                 size: 24,
               }),
             ],
@@ -462,7 +462,7 @@ export const exportToDOCX = async (
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   })
-  const fileName = `observation-${safeFile(observation.patient_name || 'unnamed')}-${
+  const fileName = `observation-${safeFile(observation.resident_name || 'unnamed')}-${
     observation.observation_date
   }.docx`
   saveAs(blob, fileName)
@@ -487,7 +487,7 @@ export const exportToCSV = async (
   }
 
   const headers = [
-    t('export.csv_patient_name'),
+    t('export.csv_resident_name'),
     t('export.csv_obs_date'),
     t('export.csv_obs_type'),
     t('export.csv_mode'),
@@ -506,7 +506,7 @@ export const exportToCSV = async (
     const category = response.question?.category
     const legendDescription = legend.find((l) => l.score === response.score)?.description || ''
     rows.push([
-      observation.patient_name || t('export.unnamed_patient'),
+      observation.resident_name || t('export.unnamed_resident'),
       observation.observation_date,
       formTypeLabel(t, observation.form_type),
       observation.mode_of_observation || '',
@@ -522,7 +522,7 @@ export const exportToCSV = async (
 
   if (rows.length === 0) {
     rows.push([
-      observation.patient_name || t('export.unnamed_patient'),
+      observation.resident_name || t('export.unnamed_resident'),
       observation.observation_date,
       formTypeLabel(t, observation.form_type),
       observation.mode_of_observation || '',
@@ -539,7 +539,7 @@ export const exportToCSV = async (
   const csvContent = [
     [t('export.report_title')],
     [t('export.csv_generated'), new Date().toLocaleString(intlLocale)],
-    [t('export.csv_person_observed'), observation.patient_name || t('export.not_specified')],
+    [t('export.csv_person_observed'), observation.resident_name || t('export.not_specified')],
     [t('export.csv_observed_by'), observation.caregiver_name || ''],
     [''],
     [t('export.csv_caregiver_notes'), observation.notes || t('export.csv_none')],
@@ -558,7 +558,7 @@ export const exportToCSV = async (
     .join('\n')
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const fileName = `observation-${safeFile(observation.patient_name || 'unnamed')}-${
+  const fileName = `observation-${safeFile(observation.resident_name || 'unnamed')}-${
     observation.observation_date
   }.csv`
   saveAs(blob, fileName)

@@ -4,8 +4,8 @@ import type { TeamMemberRole } from "../../types/memory-book";
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
-  patientName: string;
-  patientDob: string | null;
+  residentName: string;
+  residentDob: string | null;
   teamRole: TeamMemberRole | null;
   identityPreferredName: string | null;
   identityAboutMe: string | null;
@@ -23,8 +23,8 @@ type Props = {
 };
 
 export default function OverviewTab({
-  patientName,
-  patientDob,
+  residentName,
+  residentDob,
   teamRole,
   identityPreferredName,
   identityAboutMe,
@@ -44,8 +44,8 @@ export default function OverviewTab({
   const completedSections = [hasIdentity, hasContacts, hasMedical, hasPreferences].filter(Boolean).length;
   const totalSections = 4;
 
-  const displayName = identityPreferredName || patientName;
-  const age = patientDob ? calculateAge(patientDob) : null;
+  const displayName = identityPreferredName || residentName;
+  const age = residentDob ? calculateAge(residentDob) : null;
 
   return (
     <div className="space-y-6">
@@ -60,8 +60,8 @@ export default function OverviewTab({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h2 className="text-xl font-bold text-slate-800">{displayName}</h2>
-                    {identityPreferredName && identityPreferredName !== patientName && (
-                      <span className="text-sm text-slate-500">({patientName})</span>
+                    {identityPreferredName && identityPreferredName !== residentName && (
+                      <span className="text-sm text-slate-500">({residentName})</span>
                     )}
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 border border-cyan-200 text-xs font-medium text-cyan-700">
                       <User className="w-3 h-3" />

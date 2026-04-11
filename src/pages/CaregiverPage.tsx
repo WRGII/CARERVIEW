@@ -97,7 +97,7 @@ export default function CaregiverPage() {
       const { data: obs, error: obsErr } = await supabase
         .from('observations')
         .select(`
-          id, user_id, patient_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
+          id, user_id, resident_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at,
           responses:responses (
             id, observation_id, question_id, score, notes, created_at, updated_at,
             question:questions (

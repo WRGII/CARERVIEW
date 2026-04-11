@@ -56,7 +56,7 @@ export default function ObservationForm({
     }
   }, [observationId])
 
-  const [patientName, setPatientName] = useState('')
+  const [residentName, setResidentName] = useState('')
   const [dateOfObservation, setDateOfObservation] = useState('')
   const [modeOfObservation, setModeOfObservation] =
     useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
@@ -90,7 +90,7 @@ export default function ObservationForm({
     }
   }, [])
 
-  const hasFormContent = patientName.trim() !== '' || notes.trim() !== '' || Object.keys(answers).length > 0
+  const hasFormContent = residentName.trim() !== '' || notes.trim() !== '' || Object.keys(answers).length > 0
 
   useEffect(() => {
     if (hasFormContent) setHasUnsavedChanges(true)
@@ -237,7 +237,7 @@ export default function ObservationForm({
     const payload = {
       observationId: effectiveId,
       observation: {
-        patient_name: patientName,
+        resident_name: residentName,
         observation_date: formattedDate,
         mode_of_observation: modeOfObservation,
         notes,
@@ -273,7 +273,7 @@ export default function ObservationForm({
       if (!isAutoSave) setIsSaving(false)
     }
   }, [
-    dateOfObservation, hasAnyScore, patientName, modeOfObservation, notes,
+    dateOfObservation, hasAnyScore, residentName, modeOfObservation, notes,
     answers, categoryNotes, questionCategoryMap, formType, profile, user,
     upsertObservation, queryClient, onComplete,
   ])
@@ -389,13 +389,13 @@ export default function ObservationForm({
             {/* Person being observed */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t('obs_form.patient_label')}
+                {t('obs_form.resident_label')}
               </label>
               <input
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
+                value={residentName}
+                onChange={(e) => setResidentName(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors placeholder:text-slate-400"
-                placeholder={t('obs_form.patient_placeholder')}
+                placeholder={t('obs_form.resident_placeholder')}
               />
             </div>
 

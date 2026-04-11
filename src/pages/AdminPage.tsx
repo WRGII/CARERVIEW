@@ -70,7 +70,7 @@ export default function AdminPage() {
               </div>
               <h2 className="text-base font-bold text-slate-800 mb-1">Caregiver Management</h2>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Invite new caregivers, enable or disable accounts, and manage access. No patient or observation data is visible here.
+                Invite new caregivers, enable or disable accounts, and manage access. No resident or observation data is visible here.
               </p>
               <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-cyan-600 group-hover:text-cyan-700">
                 Manage caregivers
@@ -146,7 +146,7 @@ export default function AdminPage() {
 
         <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
           <p className="text-xs text-blue-700 leading-relaxed">
-            <strong className="font-semibold">Privacy reminder:</strong> Admin access does not permit reading patient observations, clinical reports, or any care-related content. Aggregate counts are shown for operational purposes only.
+            <strong className="font-semibold">Privacy reminder:</strong> Admin access does not permit reading resident observations, clinical reports, or any care-related content. Aggregate counts are shown for operational purposes only.
           </p>
         </div>
 

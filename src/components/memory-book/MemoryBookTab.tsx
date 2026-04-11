@@ -14,7 +14,7 @@ type Props = {
   memoryBookId: string;
   teamId: string;
   isOwner: boolean;
-  patientName: string;
+  residentName: string;
   hasIdentity: boolean;
   hasContacts: boolean;
   hasMedical: boolean;
@@ -48,7 +48,7 @@ export default function MemoryBookTab({
   memoryBookId,
   teamId,
   isOwner,
-  patientName,
+  residentName,
   hasIdentity,
   hasContacts,
   hasMedical,
@@ -122,7 +122,7 @@ export default function MemoryBookTab({
             memoryBookId={memoryBookId}
             teamId={teamId}
             isOwner={isOwner}
-            patientName={patientName}
+            residentName={residentName}
           />
         )}
         {activeSection === "contacts" && (

@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import {
   useMemoryBook,
   useTeamRole,
-  useTeamPatient,
+  useTeamResident,
   useMemoryBookIdentity,
   useMemoryBookContacts,
   useMemoryBookMedical,
@@ -45,7 +45,7 @@ export default function MemorySchedulePage() {
   const { user, loading: authLoading } = useAuth();
 
   const { data: teamRole, isLoading: roleLoading } = useTeamRole(teamId, user?.id);
-  const { data: patient, isLoading: patientLoading } = useTeamPatient(teamId);
+  const { data: resident, isLoading: residentLoading } = useTeamResident(teamId);
 
   const roleResolved = !roleLoading;
   const isOwner = teamRole === "owner";
@@ -87,8 +87,8 @@ export default function MemorySchedulePage() {
   const handlePrint = () => window.print();
 
   const isReady = !authLoading && !teamLoading;
-  const isLoading = bookLoading || roleLoading || patientLoading;
-  const patientName = patient?.full_name ?? "Care Recipient";
+  const isLoading = bookLoading || roleLoading || residentLoading;
+  const residentName = resident?.full_name ?? "Care Recipient";
 
   if (!isReady) {
     return (
@@ -193,7 +193,7 @@ export default function MemorySchedulePage() {
 
   return (
     <PageLayout
-      title={`Memory & Schedule — ${patientName}`}
+      title={`Memory & Schedule — ${residentName}`}
       hideSignOut
     >
       <div className="space-y-6 print:hidden">
@@ -233,8 +233,8 @@ export default function MemorySchedulePage() {
         <div>
           {activeTab === "overview" && (
             <OverviewTab
-              patientName={patientName}
-              patientDob={patient?.date_of_birth ?? null}
+              residentName={residentName}
+              residentDob={resident?.date_of_birth ?? null}
               teamRole={teamRole}
               identityPreferredName={identity?.preferred_name ?? null}
               identityAboutMe={identity?.about_me ?? null}
@@ -257,7 +257,7 @@ export default function MemorySchedulePage() {
               memoryBookId={bookId}
               teamId={teamId!}
               isOwner={isOwner}
-              patientName={patientName}
+              residentName={residentName}
               hasIdentity={hasIdentity}
               hasContacts={hasContacts}
               hasMedical={hasMedical}
@@ -270,7 +270,7 @@ export default function MemorySchedulePage() {
           )}
 
           {activeTab === "memory-book" && !bookId && isOwner && (
-            <InitMemoryBook patientName={patientName} onRetry={refetchBook} isRetrying={bookFetching} />
+            <InitMemoryBook residentName={residentName} onRetry={refetchBook} isRetrying={bookFetching} />
           )}
 
           {activeTab === "daily-living" && (
@@ -305,7 +305,7 @@ export default function MemorySchedulePage() {
             <ObservationsTab
               teamId={teamId}
               teamRole={teamRole}
-              patientName={patientName}
+              residentName={residentName}
             />
           )}
           {activeTab === "changes" && (
@@ -320,7 +320,7 @@ export default function MemorySchedulePage() {
 
       {bookId && (
         <PrintView
-          patientName={patientName}
+          residentName={residentName}
           identity={identity}
           contacts={contacts}
           medical={medical}
@@ -342,11 +342,11 @@ export default function MemorySchedulePage() {
 }
 
 function InitMemoryBook({
-  patientName,
+  residentName,
   onRetry,
   isRetrying,
 }: {
-  patientName: string;
+  residentName: string;
   onRetry: () => void;
   isRetrying: boolean;
 }) {
@@ -356,7 +356,7 @@ function InitMemoryBook({
         <BookOpen className="w-6 h-6 text-cyan-600" />
       </div>
       <h3 className="text-base font-semibold text-slate-700 mb-2">
-        Memory Book for {patientName}
+        Memory Book for {residentName}
       </h3>
       <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-5">
         The Memory Book is being initialized. If this message persists, use the button below.

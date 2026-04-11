@@ -16,7 +16,7 @@ import type {
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
-  patientName: string;
+  residentName: string;
   identity: MemoryBookIdentity | null | undefined;
   contacts: MemoryBookContact[];
   medical: MemoryBookMedical | null | undefined;
@@ -34,7 +34,7 @@ type Props = {
 };
 
 export default function PrintView({
-  patientName,
+  residentName,
   identity,
   contacts,
   medical,
@@ -51,7 +51,7 @@ export default function PrintView({
   isOwner,
 }: Props) {
   const { t } = useLocale();
-  const displayName = identity?.preferred_name || patientName;
+  const displayName = identity?.preferred_name || residentName;
 
   return (
     <div id="print-view" className="hidden print:block font-sans text-slate-900 bg-white">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActiveTeam } from "../../context/ActiveTeam";
-import { cvCreateInvite, cvCreateTeamWithPatient, cvSendInviteEmail } from "../../lib/cv";
+import { cvCreateInvite, cvCreateTeamWithResident, cvSendInviteEmail } from "../../lib/cv";
 import { hasActivePlan, useUserPlan } from "../../hooks/useUserPlan";
 import { useLocale } from "../../i18n/LocaleContext";
 import { Loading } from "../ui/Loading";
@@ -48,7 +48,7 @@ export default function FamilyCircleSetup() {
   const { teamId, refresh: refreshTeam } = useActiveTeam();
   const { t, isLoading: translationsLoading } = useLocale();
   const { data: plan } = useUserPlan();
-  const [patient, setPatient] = useState("");
+  const [resident, setResident] = useState("");
   const [invites, setInvites] = useState<Invite[]>([
     { name: "", email: "" },
     { name: "", email: "" },
@@ -68,12 +68,12 @@ export default function FamilyCircleSetup() {
     setError(null);
     setGeneratedLinks([]);
     try {
-      if (!patient.trim()) throw new Error(t("family_setup.patient_required"));
+      if (!resident.trim()) throw new Error(t("family_setup.resident_required"));
 
-      const newTeamId = await cvCreateTeamWithPatient({
-        name: `${patient.trim()} Family Circle`,
+      const newTeamId = await cvCreateTeamWithResident({
+        name: `${resident.trim()} Family Circle`,
         plan_id: "family_qtr",
-        patient_name: patient.trim(),
+        resident_name: resident.trim(),
         gender: "unknown",
       });
       await refreshTeam();
@@ -88,7 +88,7 @@ export default function FamilyCircleSetup() {
         const { sent } = await cvSendInviteEmail({
           email,
           invite_link: link,
-          team_name: `${patient.trim()}'s care team`,
+          team_name: `${resident.trim()}'s care team`,
           inviter_name: undefined,
         });
 
@@ -169,12 +169,12 @@ export default function FamilyCircleSetup() {
       )}
 
       <label className="block mb-1.5 text-sm font-medium text-slate-700">
-        {t("family_setup.patient_label")}
+        {t("family_setup.resident_label")}
       </label>
       <input
-        value={patient}
-        onChange={(e) => setPatient(e.target.value)}
-        placeholder={t("family_setup.patient_placeholder")}
+        value={resident}
+        onChange={(e) => setResident(e.target.value)}
+        placeholder={t("family_setup.resident_placeholder")}
         className="border border-slate-300 rounded-lg px-3 py-2 w-full mb-5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
       />
 
@@ -213,7 +213,7 @@ export default function FamilyCircleSetup() {
       <div className="mt-6">
         <button
           onClick={onCreate}
-          disabled={busy || !patient.trim()}
+          disabled={busy || !resident.trim()}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 disabled:opacity-50 transition-colors"
         >
           {busy ? t("common.creating") : t("family_setup.create_btn")}

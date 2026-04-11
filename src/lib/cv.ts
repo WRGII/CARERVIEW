@@ -33,10 +33,10 @@ export async function cvSetActiveTeam(teamId: string) {
   if (error) throw error;
 }
 
-export async function cvCreateTeamWithPatient(p: {
+export async function cvCreateTeamWithResident(p: {
   name: string;
   plan_id: string;
-  patient_name: string;
+  resident_name: string;
   dob?: string | null;
   gender?: CvGender;
   notes?: string | null;
@@ -44,7 +44,7 @@ export async function cvCreateTeamWithPatient(p: {
   const { data, error } = await supabase.rpc("cv_create_team_with_patient", {
     p_name: p.name,
     p_plan_id: p.plan_id,
-    p_patient_name: p.patient_name,
+    p_patient_name: p.resident_name,
     p_dob: p.dob ?? null,
     p_gender: p.gender ?? "unknown",
     p_notes: p.notes ?? null,
@@ -52,6 +52,9 @@ export async function cvCreateTeamWithPatient(p: {
   if (error) throw error;
   return data as string;
 }
+
+/** @deprecated Use cvCreateTeamWithResident */
+export const cvCreateTeamWithPatient = cvCreateTeamWithResident;
 
 export async function cvListMembersWithProfile(teamId: string): Promise<CvMember[]> {
   const { data, error } = await supabase.rpc("cv_list_members_with_profile", { p_team: teamId });
@@ -70,12 +73,15 @@ export async function cvRemoveMember(teamId: string, userId: string): Promise<vo
   if (error) throw error;
 }
 
-export async function cvGetTeamPatient(teamId: string): Promise<{ full_name: string; gender: string; notes: string | null } | null> {
+export async function cvGetTeamResident(teamId: string): Promise<{ full_name: string; gender: string; notes: string | null } | null> {
   const { data, error } = await supabase.rpc("cv_get_team_patient", { p_team: teamId });
   if (error) throw error;
   const rows = data as { full_name: string; gender: string; notes: string | null }[] | null;
   return rows && rows.length > 0 ? rows[0] : null;
 }
+
+/** @deprecated Use cvGetTeamResident */
+export const cvGetTeamPatient = cvGetTeamResident;
 
 export async function cvCreateInvite(teamId: string, email: string): Promise<CreateInviteResult> {
   const { data, error } = await supabase.rpc("cv_create_invite", { p_team: teamId, p_email: email });

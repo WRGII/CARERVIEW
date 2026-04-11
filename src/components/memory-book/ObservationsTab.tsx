@@ -8,14 +8,14 @@ import type { TeamMemberRole } from "../../types/memory-book";
 type Props = {
   teamId: string;
   teamRole: TeamMemberRole;
-  patientName: string;
+  residentName: string;
 };
 
 type ObservationRow = {
   id: string;
   user_id: string;
   author_user_id: string | null;
-  patient_name: string | null;
+  resident_name: string | null;
   observation_date: string;
   notes: string | null;
   caregiver_name: string | null;
@@ -45,7 +45,7 @@ function FormTypeChip({ type }: { type: ObservationRow["form_type"] }) {
   );
 }
 
-export default function ObservationsTab({ teamId, patientName }: Props) {
+export default function ObservationsTab({ teamId, residentName }: Props) {
   const navigate = useNavigate();
   const { formatDate } = useFormatDate();
   const { data: observations, isLoading, error } = useTeamObservations(teamId);
@@ -78,7 +78,7 @@ export default function ObservationsTab({ teamId, patientName }: Props) {
         <div>
           <h2 className="text-base font-semibold text-slate-800">Observations</h2>
           <p className="text-sm text-slate-500 mt-0.5">
-            All care observations recorded by your team for {patientName}.
+            All care observations recorded by your team for {residentName}.
           </p>
         </div>
         <button
@@ -97,7 +97,7 @@ export default function ObservationsTab({ teamId, patientName }: Props) {
           </div>
           <h3 className="text-base font-semibold text-slate-700 mb-2">No observations yet</h3>
           <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-5">
-            Start recording observations for {patientName}. All caregivers in your team can contribute.
+            Start recording observations for {residentName}. All caregivers in your team can contribute.
           </p>
           <button
             onClick={() => navigate("/caregiver/observations/new")}
@@ -124,7 +124,7 @@ export default function ObservationsTab({ teamId, patientName }: Props) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-medium text-slate-900 truncate">
-                        {obs.patient_name || patientName}
+                        {obs.resident_name || residentName}
                       </span>
                       <FormTypeChip type={obs.form_type} />
                     </div>

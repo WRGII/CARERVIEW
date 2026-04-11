@@ -22,7 +22,7 @@ export function useObservations() {
           `
           id,
           user_id,
-          patient_name,
+          resident_name,
           observation_date,
           notes,
           caregiver_name,
@@ -60,7 +60,7 @@ export function useObservationById(id?: string | null) {
         .from('observations')
         .select(
           `
-          id, user_id, patient_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type, team_id, author_user_id,
+          id, user_id, resident_name, observation_date, mode_of_observation, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type, team_id, author_user_id,
           responses:responses (
             id, observation_id, question_id, score, notes, created_at, updated_at,
             question:questions (
@@ -89,7 +89,7 @@ export { useObservationById as useObservation }
 type SavePayload = {
   observationId?: string
   observation: {
-    patient_name?: string | null
+    resident_name?: string | null
     observation_date: string // YYYY-MM-DD
     mode_of_observation?: string | null
     notes?: string | null
@@ -119,7 +119,7 @@ export function useUpsertObservationAndResponses() {
 
       const base = {
         user_id: user.id,
-        patient_name: observation.patient_name ?? null,
+        resident_name: observation.resident_name ?? null,
         observation_date: observation.observation_date,
         mode_of_observation: observation.mode_of_observation ?? null,
         notes: observation.notes ?? null,
@@ -222,7 +222,7 @@ export function useTeamObservations(teamId?: string | null) {
           id,
           user_id,
           author_user_id,
-          patient_name,
+          resident_name,
           observation_date,
           notes,
           caregiver_name,

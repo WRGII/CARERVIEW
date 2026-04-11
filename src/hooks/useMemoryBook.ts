@@ -79,9 +79,9 @@ export function useTeamRole(teamId: string | null, userId?: string | null) {
   };
 }
 
-export function useTeamPatient(teamId: string | null) {
+export function useTeamResident(teamId: string | null) {
   return useQuery({
-    queryKey: ["team-patient", teamId],
+    queryKey: ["team-resident", teamId],
     queryFn: async () => {
       if (!teamId) return null;
       const { data, error } = await supabase
@@ -103,6 +103,9 @@ export function useTeamPatient(teamId: string | null) {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+/** @deprecated Use useTeamResident */
+export const useTeamPatient = useTeamResident;
 
 export function useMemoryBookIdentity(memoryBookId: string | null) {
   return useQuery({
