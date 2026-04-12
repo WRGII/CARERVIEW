@@ -15,6 +15,7 @@ import type {
   MemoryBookFinanceEntry,
   MemoryBookMedicalEntry,
   MemoryBookPreferenceEntry,
+  MemoryBookDailyLivingEntry,
   TeamMemberRole,
 } from "../types/memory-book";
 
@@ -1005,6 +1006,78 @@ export function useDeleteMemoryBookPreferenceEntry() {
     },
     onSuccess: (_data, params) => {
       queryClient.invalidateQueries({ queryKey: ["memory-book-preference-entries", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookDailyLivingEntries(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-daily-living-entries", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return [];
+      const { data, error } = await supabase
+        .from("memory_book_daily_living_entries")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as MemoryBookDailyLivingEntry[];
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookDailyLivingEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      entry: Partial<MemoryBookDailyLivingEntry> & { id?: string };
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (params.entry.id) {
+        const { error } = await supabase
+          .from("memory_book_daily_living_entries")
+          .update({ ...params.entry, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq("id", params.entry.id)
+          .eq("team_id", params.teamId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_daily_living_entries")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.entry,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-daily-living-entries", params.memoryBookId] });
+    },
+  });
+}
+
+export function useDeleteMemoryBookDailyLivingEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; memoryBookId: string; teamId: string }) => {
+      const { error } = await supabase
+        .from("memory_book_daily_living_entries")
+        .delete()
+        .eq("id", params.id)
+        .eq("team_id", params.teamId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-daily-living-entries", params.memoryBookId] });
     },
   });
 }

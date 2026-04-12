@@ -1,6 +1,6 @@
-import { User, Users, Stethoscope, Heart, BookOpen, Crown, HeartHandshake, Chrome as Home, Printer } from "lucide-react";
+import { User, Users, Stethoscope, Activity, BookOpen, Crown, HeartHandshake, Chrome as Home, Printer } from "lucide-react";
 import { Card, CardContent } from "../ui/Card";
-import type { TeamMemberRole } from "../../types/memory-book";
+import type { TeamMemberRole, MemoryBookMedicalEntry } from "../../types/memory-book";
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
@@ -12,11 +12,12 @@ type Props = {
   hasIdentity: boolean;
   hasContacts: boolean;
   hasMedical: boolean;
-  hasPreferences: boolean;
+  hasDailyLiving: boolean;
   hasInsurance: boolean;
   hasSubscriptions: boolean;
   hasVehicles: boolean;
   contactCount: number;
+  medicalEntries: MemoryBookMedicalEntry[];
   onNavigate: (tab: string) => void;
   onPrint: () => void;
   showPrint: boolean;
@@ -31,21 +32,26 @@ export default function OverviewTab({
   hasIdentity,
   hasContacts,
   hasMedical,
-  hasPreferences,
+  hasDailyLiving,
   hasInsurance,
   hasSubscriptions,
   hasVehicles,
   contactCount,
+  medicalEntries,
   onNavigate,
   onPrint,
   showPrint,
 }: Props) {
   const { t } = useLocale();
-  const completedSections = [hasIdentity, hasContacts, hasMedical, hasPreferences].filter(Boolean).length;
+  const completedSections = [hasIdentity, hasContacts, hasMedical, hasDailyLiving].filter(Boolean).length;
   const totalSections = 4;
 
   const displayName = identityPreferredName || residentName;
   const age = residentDob ? calculateAge(residentDob) : null;
+
+  const conditions = medicalEntries.filter(e => e.category === "condition");
+  const medications = medicalEntries.filter(e => e.category === "medication");
+  const allergies = medicalEntries.filter(e => e.category === "allergy");
 
   return (
     <div className="space-y-6">
@@ -95,6 +101,54 @@ export default function OverviewTab({
             </CardContent>
           </Card>
 
+          {hasMedical && medicalEntries.length > 0 && (
+            <Card>
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="w-4 h-4 text-rose-500" />
+                    <h3 className="text-sm font-semibold text-slate-700">Medical Summary</h3>
+                  </div>
+                  <button
+                    onClick={() => onNavigate("memory-book")}
+                    className="text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
+                  >
+                    View all
+                  </button>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {conditions.length > 0 && (
+                    <MedicalSummaryGroup
+                      label="Conditions"
+                      color="bg-rose-50 text-rose-700 border-rose-200"
+                      dotColor="bg-rose-400"
+                      items={conditions.map(e => e.label)}
+                      max={3}
+                    />
+                  )}
+                  {medications.length > 0 && (
+                    <MedicalSummaryGroup
+                      label="Medications"
+                      color="bg-cyan-50 text-cyan-700 border-cyan-200"
+                      dotColor="bg-cyan-400"
+                      items={medications.map(e => e.label)}
+                      max={3}
+                    />
+                  )}
+                  {allergies.length > 0 && (
+                    <MedicalSummaryGroup
+                      label="Allergies"
+                      color="bg-orange-50 text-orange-700 border-orange-200"
+                      dotColor="bg-orange-400"
+                      items={allergies.map(e => e.label)}
+                      max={3}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <SectionCard
               icon={<User className="w-5 h-5" />}
@@ -121,11 +175,11 @@ export default function OverviewTab({
               onClick={() => onNavigate("memory-book")}
             />
             <SectionCard
-              icon={<Heart className="w-5 h-5" />}
-              label={t("memory_book.section_preferences")}
-              complete={hasPreferences}
+              icon={<Activity className="w-5 h-5" />}
+              label="Daily Living"
+              complete={hasDailyLiving}
               notStartedLabel={t("memory_book.overview_not_started")}
-              onClick={() => onNavigate("memory-book")}
+              onClick={() => onNavigate("daily-living")}
             />
             <SectionCard
               icon={<Home className="w-5 h-5" />}
@@ -155,7 +209,7 @@ export default function OverviewTab({
                   { label: t("memory_book.section_identity"), done: hasIdentity },
                   { label: t("memory_book.section_contacts"), done: hasContacts },
                   { label: t("memory_book.section_medical"), done: hasMedical },
-                  { label: t("memory_book.section_preferences"), done: hasPreferences },
+                  { label: "Daily Living & Preferences", done: hasDailyLiving },
                 ].map(({ label, done }) => (
                   <div key={label} className="flex items-center gap-2.5">
                     <div
@@ -220,6 +274,39 @@ export default function OverviewTab({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function MedicalSummaryGroup({
+  label,
+  color,
+  dotColor,
+  items,
+  max,
+}: {
+  label: string;
+  color: string;
+  dotColor: string;
+  items: string[];
+  max: number;
+}) {
+  const shown = items.slice(0, max);
+  const remaining = items.length - max;
+  return (
+    <div className={`rounded-xl border p-3 ${color}`}>
+      <p className="text-xs font-semibold mb-2 uppercase tracking-wide opacity-80">{label}</p>
+      <ul className="space-y-1">
+        {shown.map(item => (
+          <li key={item} className="flex items-center gap-1.5 text-xs">
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor}`} />
+            <span className="truncate">{item}</span>
+          </li>
+        ))}
+        {remaining > 0 && (
+          <li className="text-xs opacity-60 pl-3">+{remaining} more</li>
+        )}
+      </ul>
     </div>
   );
 }

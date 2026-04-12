@@ -289,3 +289,50 @@ export type HouseholdSection =
   | "finances"
   | "subscriptions"
   | "vehicle";
+
+export type DailyLivingSection = "adl" | "iadl";
+
+export type ADLCategory =
+  | "bathing"
+  | "dressing"
+  | "grooming"
+  | "mobility"
+  | "transfers"
+  | "eating"
+  | "continence"
+  | "toileting"
+  | "other";
+
+export type IADLCategory =
+  | "meal_prep"
+  | "medications"
+  | "housekeeping"
+  | "laundry"
+  | "transportation"
+  | "shopping"
+  | "finances_mgmt"
+  | "communication"
+  | "other";
+
+export type IndependenceLevel =
+  | "independent"
+  | "needs_reminders"
+  | "supervision"
+  | "assistance"
+  | "fully_dependent";
+
+export type MemoryBookDailyLivingEntry = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  section: DailyLivingSection;
+  category: ADLCategory | IADLCategory;
+  label: string;
+  independence_level: IndependenceLevel;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};

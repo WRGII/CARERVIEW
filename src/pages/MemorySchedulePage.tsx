@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, LayoutDashboard, Utensils, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Printer } from "lucide-react";
+import { BookOpen, LayoutDashboard, Activity, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Printer } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
@@ -20,18 +20,20 @@ import {
   useMemoryBookFinanceEntries,
   useMemoryBookMedicalEntries,
   useMemoryBookPreferenceEntries,
+  useMemoryBookDailyLivingEntries,
 } from "../hooks/useMemoryBook";
-import type { MemoryBookTab } from "../types/memory-book";
+import type { MemoryBookTab as MemoryBookTabKey } from "../types/memory-book";
 import OverviewTab from "../components/memory-book/OverviewTab";
 import MemoryBookTab from "../components/memory-book/MemoryBookTab";
+import DailyLivingTab from "../components/memory-book/DailyLivingTab";
 import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
 import PrintView from "../components/memory-book/PrintView";
 
-const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
+const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType }[] = [
   { key: "overview",     label: "Overview",     Icon: LayoutDashboard },
   { key: "memory-book",  label: "Memory Book",  Icon: BookOpen },
-  { key: "daily-living", label: "Daily Living", Icon: Utensils },
+  { key: "daily-living", label: "Daily Living", Icon: Activity },
   { key: "routines",     label: "Routines",     Icon: ClipboardList },
   { key: "calendar",     label: "Calendar",     Icon: CalendarDays },
   { key: "tasks",        label: "Tasks",        Icon: CheckSquare },
@@ -40,7 +42,7 @@ const TABS: { key: MemoryBookTab; label: string; Icon: React.ElementType }[] = [
 ];
 
 export default function MemorySchedulePage() {
-  const [activeTab, setActiveTab] = useState<MemoryBookTab>("overview");
+  const [activeTab, setActiveTab] = useState<MemoryBookTabKey>("overview");
   const { teamId, loading: teamLoading } = useActiveTeam();
   const { user, loading: authLoading } = useAuth();
 
@@ -74,15 +76,16 @@ export default function MemorySchedulePage() {
   const { data: financeEntries = [] } = useMemoryBookFinanceEntries(isOwner ? bookId : null);
   const { data: medicalEntries = [] } = useMemoryBookMedicalEntries(bookId);
   const { data: preferenceEntries = [] } = useMemoryBookPreferenceEntries(bookId);
+  const { data: dailyLivingEntries = [] } = useMemoryBookDailyLivingEntries(bookId);
 
   const hasIdentity = !!identity;
   const hasContacts = contacts.length > 0;
   const hasMedical = !!medical || medicalEntries.length > 0;
-  const hasPreferences = !!preferences || preferenceEntries.length > 0;
   const hasInsurance = !!insurance || insuranceEntries.length > 0;
   const hasFinances = !!finances || financeEntries.length > 0;
   const hasSubscriptions = subscriptions.length > 0;
   const hasVehicles = vehicles.length > 0;
+  const hasDailyLiving = dailyLivingEntries.length > 0 || !!preferences || preferenceEntries.length > 0;
 
   const handlePrint = () => window.print();
 
@@ -241,11 +244,12 @@ export default function MemorySchedulePage() {
               hasIdentity={hasIdentity}
               hasContacts={hasContacts}
               hasMedical={hasMedical}
-              hasPreferences={hasPreferences}
+              hasDailyLiving={hasDailyLiving}
               hasInsurance={hasInsurance}
               hasSubscriptions={hasSubscriptions}
               hasVehicles={hasVehicles}
               contactCount={contacts.length}
+              medicalEntries={medicalEntries}
               onNavigate={setActiveTab as (tab: string) => void}
               onPrint={handlePrint}
               showPrint={!!bookId}
@@ -261,7 +265,6 @@ export default function MemorySchedulePage() {
               hasIdentity={hasIdentity}
               hasContacts={hasContacts}
               hasMedical={hasMedical}
-              hasPreferences={hasPreferences}
               hasInsurance={hasInsurance}
               hasFinances={hasFinances}
               hasSubscriptions={hasSubscriptions}
@@ -273,13 +276,18 @@ export default function MemorySchedulePage() {
             <InitMemoryBook residentName={residentName} onRetry={refetchBook} isRetrying={bookFetching} />
           )}
 
-          {activeTab === "daily-living" && (
-            <ComingSoonTab
-              title="Daily Living"
-              description="Structured care support for bathing, dressing, meals, mobility, and daily routines."
-              phase="Phase 2"
+          {activeTab === "daily-living" && bookId && (
+            <DailyLivingTab
+              memoryBookId={bookId}
+              teamId={teamId!}
+              isOwner={isOwner}
             />
           )}
+
+          {activeTab === "daily-living" && !bookId && isOwner && (
+            <InitMemoryBook residentName={residentName} onRetry={refetchBook} isRetrying={bookFetching} />
+          )}
+
           {activeTab === "routines" && (
             <ComingSoonTab
               title="Daily Routines"
