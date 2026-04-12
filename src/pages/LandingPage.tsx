@@ -85,7 +85,7 @@ export default function LandingPage() {
                 {t('landing.scale_eyebrow')}
               </p>
               <h2 className="text-4xl font-bold text-slate-800 tracking-wide mb-6">
-                {t('landing.scale_title')}
+                {t('landing.vital_note')}
               </h2>
               <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">
                 {t('landing.scale_body')}
@@ -144,7 +144,6 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <p className="mt-4 text-center text-sm text-slate-gray/60">{t('landing.vital_note')}</p>
           </div>
         </div>
 
