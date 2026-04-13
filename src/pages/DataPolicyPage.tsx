@@ -33,54 +33,54 @@ export default function DataPolicyPage() {
           </div>
 
           <div className="space-y-8 text-slate-gray leading-relaxed">
-            <div className="rounded-xl bg-amber-50 border border-amber-200 p-6">
-              <p className="text-amber-800 font-medium text-sm">
+            <div className="rounded-xl bg-cyan-primary/5 border border-cyan-primary/20 p-6">
+              <p className="text-slate-gray text-sm leading-relaxed">
                 {t('policy.data_notice')}
               </p>
             </div>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.create_title')}
+                {t('policy.data_s1_title')}
               </h2>
               <p>
-                {t('policy.create_body')}
+                {t('policy.data_s1_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.sharing_title')}
+                {t('policy.data_s2_title')}
               </h2>
               <p>
-                {t('policy.sharing_body')}
+                {t('policy.data_s2_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.retention_title')}
+                {t('policy.data_s3_title')}
               </h2>
               <p>
-                {t('policy.retention_body')}
+                {t('policy.data_s3_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.export_title')}
+                {t('policy.data_s4_title')}
               </h2>
               <p>
-                {t('policy.export_body')}
+                {t('policy.data_s4_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.disclaimer_title')}
+                {t('policy.data_s5_title')}
               </h2>
               <p>
-                {t('policy.disclaimer_body')}
+                {t('policy.data_s5_body')}
               </p>
             </section>
 

@@ -33,54 +33,54 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <div className="space-y-8 text-slate-gray leading-relaxed">
-            <div className="rounded-xl bg-amber-50 border border-amber-200 p-6">
-              <p className="text-amber-800 font-medium text-sm">
-                {t('policy.privacy_notice')}
+            <div className="rounded-xl bg-cyan-primary/5 border border-cyan-primary/20 p-6">
+              <p className="text-slate-gray text-sm leading-relaxed">
+                {t('policy.priv_notice')}
               </p>
             </div>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.collect_title')}
+                {t('policy.priv_s1_title')}
               </h2>
               <p>
-                {t('policy.collect_body')}
+                {t('policy.priv_s1_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.use_title')}
+                {t('policy.priv_s2_title')}
               </h2>
               <p>
-                {t('policy.use_body')}
+                {t('policy.priv_s2_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.storage_title')}
+                {t('policy.priv_s3_title')}
               </h2>
               <p>
-                {t('policy.storage_body')}
+                {t('policy.priv_s3_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.rights_title')}
+                {t('policy.priv_s4_title')}
               </h2>
               <p>
-                {t('policy.rights_body')}
+                {t('policy.priv_s4_body')}
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-800 mb-3">
-                {t('policy.cookies_title')}
+                {t('policy.priv_s5_title')}
               </h2>
               <p>
-                {t('policy.cookies_body')}
+                {t('policy.priv_s5_body')}
               </p>
             </section>
 
