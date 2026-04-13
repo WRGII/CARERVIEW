@@ -989,7 +989,7 @@ const enFallback: Record<string, string> = {
   "dementia.disclaimer_label": "Disclaimer:",
   "dementia.disclaimer_body": "This scale is a clinical reference tool intended for informational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Please consult a qualified healthcare provider for any medical concerns.",
   "footer.tagline": "Built by caregivers, for caregivers. We translate clinical assessment frameworks into everyday language your whole family can use together.",
-  "footer.copyright": "\u00a9 {year} CarerView App | All rights reserved | a GrifDigi company",
+  "footer.copyright": "© {year} CarerView.com | All rights reserved | a GrifDigi company",
   "footer.contact": "Contact",
   "footer.suggestions": "Suggestions? Questions?",
   "footer.locations": "Locations:",

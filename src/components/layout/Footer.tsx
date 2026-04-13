@@ -48,17 +48,9 @@ export function Footer() {
                 className="w-8 h-8 object-contain opacity-80"
               />
             </div>
-            <p className="text-slate-700 text-sm mb-4">
+            <p className="text-slate-700 text-sm leading-relaxed">
               {t('footer.tagline')}
             </p>
-            <div>
-              <Link
-                to="/about"
-                className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-              >
-                {t('footer.about_link')}
-              </Link>
-            </div>
           </div>
 
           {/* Contact Information */}
@@ -95,7 +87,7 @@ export function Footer() {
             <h4 className="font-semibold text-slate-800 text-base mb-4">
               {t('footer.policies')}
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div>
                 <Link
                   to="/privacy-policy"
@@ -114,10 +106,26 @@ export function Footer() {
               </div>
               <div>
                 <Link
+                  to="/about"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('footer.about_link')}
+                </Link>
+              </div>
+              <div>
+                <Link
                   to="/memory-book"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.memory_book')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/why"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.why_carerview')}
                 </Link>
               </div>
               <div>
@@ -127,14 +135,6 @@ export function Footer() {
                 >
                   {t('footer.pricing_link')}
                 </Link>
-              </div>
-              <div>
-                <a
-                  href="/sitemap.xml"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.sitemap')}
-                </a>
               </div>
             </div>
           </div>
