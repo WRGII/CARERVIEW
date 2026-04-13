@@ -154,7 +154,7 @@ export default function Header() {
                   </Link>
                   <Link
                     to="/caregiver-forum"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg"
+                    className="inline-flex items-center px-4 py-2 text-sm font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 hover:text-cyan-800 hover:border-cyan-300 transition-colors"
                   >
                     {t('nav.caregiver_forum')}
                   </Link>
@@ -263,7 +263,7 @@ export default function Header() {
                   <Link
                     to="/caregiver-forum"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg transition-colors min-h-[44px] hover:bg-cyan-100 hover:text-cyan-800 hover:border-cyan-300"
                   >
                     {t('nav.caregiver_forum')}
                   </Link>
