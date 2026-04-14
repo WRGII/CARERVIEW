@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
@@ -56,8 +56,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     return getStoredLocale()
   })
 
-  const prevMapRef = useRef<Record<string, string> | null>(null)
-  const enMapRef = useRef<Record<string, string> | null>(enFallback)
+  const [prevMap, setPrevMap] = useState<Record<string, string> | null>(null)
 
   useEffect(() => {
     if (!isValidLocale(preferredLocale) || preferredLocale === locale) return
@@ -101,20 +100,13 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     gcTime: 60 * 60 * 1000,
   })
 
-  const [activeMap, setActiveMap] = useState<Record<string, string> | null>(null)
+  const activeMap = translationsMap ?? prevMap
 
   useEffect(() => {
     if (translationsMap) {
-      prevMapRef.current = translationsMap
-      setActiveMap(translationsMap)
+      setPrevMap(translationsMap)
     }
   }, [translationsMap])
-
-  useEffect(() => {
-    if (enMap) {
-      enMapRef.current = enMap
-    }
-  }, [enMap])
 
   const setLocale = useCallback(
     async (newLocale: Locale) => {
@@ -141,10 +133,10 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = activeMap?.[key] ?? enMapRef.current?.[key] ?? enFallback[key] ?? key
+      const raw = activeMap?.[key] ?? enMap?.[key] ?? enFallback[key] ?? key
       return interpolate(raw, vars)
     },
-    [activeMap]
+    [activeMap, enMap]
   )
 
   const isLoading = translationsLoading && !translationsMap
