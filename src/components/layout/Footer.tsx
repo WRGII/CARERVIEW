@@ -51,6 +51,40 @@ export function Footer() {
             <p className="text-slate-700 text-sm leading-relaxed">
               {t('footer.tagline')}
             </p>
+            <div className="mt-4 space-y-2">
+              <div>
+                <Link
+                  to="/about"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('footer.about_link')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/memory-book"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.memory_book')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/why"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.why_carerview')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/pricing"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('footer.pricing_link')}
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Contact Information */}
@@ -102,38 +136,6 @@ export function Footer() {
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('footer.data_policy')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/about"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.about_link')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/memory-book"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.memory_book')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/why"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.why_carerview')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/pricing"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.pricing_link')}
                 </Link>
               </div>
             </div>
