@@ -56,7 +56,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     return getStoredLocale()
   })
 
-  const prevMapRef = useRef<Record<string, string>>(enFallback)
+  const prevMapRef = useRef<Record<string, string> | null>(null)
   const enMapRef = useRef<Record<string, string> | null>(enFallback)
 
   useEffect(() => {
@@ -101,9 +101,12 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     gcTime: 60 * 60 * 1000,
   })
 
+  const [activeMap, setActiveMap] = useState<Record<string, string> | null>(null)
+
   useEffect(() => {
     if (translationsMap) {
       prevMapRef.current = translationsMap
+      setActiveMap(translationsMap)
     }
   }, [translationsMap])
 
@@ -135,8 +138,6 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     },
     [userId, queryClient]
   )
-
-  const activeMap = translationsMap ?? prevMapRef.current
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
