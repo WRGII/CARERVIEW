@@ -6,12 +6,12 @@ import type { Locale } from './types'
 
 const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi']
 
-function getStoredLocale(): Locale | null {
+function getStoredLocale(): Locale {
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
     if (stored && VALID_LOCALES.includes(stored as Locale)) return stored as Locale
   } catch {}
-  return null
+  return 'en'
 }
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
 export default function AppLocaleWrapper({ children }: Props) {
   const { user, profile } = useAuth()
 
-  const [reconciledLocale, setReconciledLocale] = useState<Locale | null>(
+  const [reconciledLocale, setReconciledLocale] = useState<Locale>(
     () => getStoredLocale()
   )
   const [reconciledUserId, setReconciledUserId] = useState<string | undefined>(undefined)

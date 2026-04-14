@@ -56,14 +56,20 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     return getStoredLocale()
   })
 
-  const prevMapRef = useRef<Record<string, string> | null>(null)
+  const prevMapRef = useRef<Record<string, string>>(enFallback)
   const enMapRef = useRef<Record<string, string> | null>(enFallback)
 
   useEffect(() => {
-    if (isValidLocale(preferredLocale) && preferredLocale !== locale) {
-      setLocaleState(preferredLocale)
-    }
-  }, [preferredLocale, locale])
+    if (!isValidLocale(preferredLocale) || preferredLocale === locale) return
+    const next = preferredLocale
+    queryClient.prefetchQuery({
+      queryKey: ['ui_translations', next],
+      queryFn: () => fetchTranslations(next),
+      staleTime: 5 * 60 * 1000,
+    }).then(() => {
+      setLocaleState(next)
+    })
+  }, [preferredLocale])
 
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
@@ -140,7 +146,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     [activeMap]
   )
 
-  const isLoading = translationsLoading && prevMapRef.current === null
+  const isLoading = translationsLoading && !translationsMap
 
   const value = useMemo(
     () => ({ locale, setLocale, t, isLoading, supportedLocales }),
