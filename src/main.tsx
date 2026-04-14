@@ -20,23 +20,16 @@ function getBootstrapLocale(): Locale {
 
 async function fetchTranslations(locale: Locale): Promise<Record<string, string>> {
   const { data, error } = await supabase
-    .from('ui_translations')
-    .select('key, value')
-    .eq('locale', locale)
-    .limit(5000)
+    .rpc('get_translations_for_locale', { p_locale: locale })
   if (error) throw error
-  const map: Record<string, string> = {}
-  for (const row of data ?? []) {
-    map[row.key] = row.value
-  }
-  return map
+  return (data as Record<string, string>) ?? {}
 }
 
 const bootstrapLocale = getBootstrapLocale()
 queryClient.prefetchQuery({
   queryKey: ['ui_translations', bootstrapLocale],
   queryFn: () => fetchTranslations(bootstrapLocale),
-  staleTime: 10 * 60 * 1000,
+  staleTime: 5 * 60 * 1000,
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

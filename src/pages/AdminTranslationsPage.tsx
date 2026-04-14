@@ -61,13 +61,12 @@ export default function AdminTranslationsPage() {
     queryKey: ["admin_translations", activeLocale],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("ui_translations")
-        .select("key, locale, value")
-        .eq("locale", activeLocale)
-        .order("key")
-        .limit(5000);
+        .rpc('get_translations_for_locale', { p_locale: activeLocale });
       if (error) throw error;
-      return data ?? [];
+      const map = (data as Record<string, string>) ?? {};
+      return Object.entries(map)
+        .map(([key, value]) => ({ key, locale: activeLocale, value }))
+        .sort((a, b) => a.key.localeCompare(b.key));
     },
     staleTime: 0,
   });

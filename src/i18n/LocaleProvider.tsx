@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
-import enFallback from './enFallback'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 
 const DEFAULT_LOCALE: Locale = 'en'
@@ -31,16 +30,9 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
 
 async function fetchTranslations(locale: Locale): Promise<Record<string, string>> {
   const { data, error } = await supabase
-    .from('ui_translations')
-    .select('key, value')
-    .eq('locale', locale)
-    .limit(5000)
+    .rpc('get_translations_for_locale', { p_locale: locale })
   if (error) throw error
-  const map: Record<string, string> = {}
-  for (const row of data ?? []) {
-    map[row.key] = row.value
-  }
-  return map
+  return (data as Record<string, string>) ?? {}
 }
 
 interface Props {
@@ -134,7 +126,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = activeMap?.[key] ?? enMap?.[key] ?? enFallback[key] ?? key
+      const raw = activeMap?.[key] ?? enMap?.[key] ?? key
       return interpolate(raw, vars)
     },
     [activeMap, enMap]
