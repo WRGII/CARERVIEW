@@ -23,6 +23,7 @@ async function fetchTranslations(locale: Locale): Promise<Record<string, string>
     .from('ui_translations')
     .select('key, value')
     .eq('locale', locale)
+    .limit(5000)
   if (error) throw error
   const map: Record<string, string> = {}
   for (const row of data ?? []) {

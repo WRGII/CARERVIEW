@@ -64,7 +64,8 @@ export default function AdminTranslationsPage() {
         .from("ui_translations")
         .select("key, locale, value")
         .eq("locale", activeLocale)
-        .order("key");
+        .order("key")
+        .limit(5000);
       if (error) throw error;
       return data ?? [];
     },
