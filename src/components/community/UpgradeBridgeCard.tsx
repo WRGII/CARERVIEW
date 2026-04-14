@@ -40,8 +40,8 @@ const CONFIGS: Record<BridgeVariant, BridgeConfig> = {
   general: {
     icon: ClipboardList,
     heading: 'Need more than peer support?',
-    body: 'CarerView\'s structured care tools help you track daily observations, coordinate your care team, and monitor changes over time.',
-    cta: 'Explore CarerView',
+    body: 'Structured observation tools help you track daily care, coordinate your team, and monitor changes over time.',
+    cta: 'Explore Observations',
     href: '/why',
   },
 }

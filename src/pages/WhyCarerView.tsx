@@ -73,14 +73,14 @@ export default function WhyCarerView() {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Why CarerView', item: `${SITE_URL}/why` },
+      { '@type': 'ListItem', position: 2, name: 'Why Observations', item: `${SITE_URL}/why` },
     ],
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
       <PageSEO
-        title="Why CarerView - Caregiver Observation Tracking & Family Care Coordination"
+        title="Why Observations - Caregiver Observation Tracking & Family Care Coordination"
         description="Discover how CarerView helps family caregivers track daily care observations for ageing parents and loved ones. Monitor changes in daily activities, coordinate with family, and share reports with doctors."
         canonical={`${SITE_URL}/why`}
         keywords="why use caregiver tracking app, family care coordination, observation tools for carers, dementia care tracking, carer app for families, care log for elderly parents"
