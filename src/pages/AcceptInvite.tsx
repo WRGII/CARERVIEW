@@ -40,7 +40,7 @@ export default function AcceptInvite() {
         if (urlToken) {
           localStorage.setItem("cv_join_token", urlToken);
         }
-        navigate({ pathname: "/", search: "?join=1", hash: "#get-started" }, { replace: true });
+        navigate(`/invite-setup?t=${encodeURIComponent(token)}`, { replace: true });
         return;
       }
 

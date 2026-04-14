@@ -121,6 +121,7 @@ import ObservationEditPage from "./pages/ObservationEditPage";
 import DementiaScalePage from "./pages/DementiaScalePage";
 
 import AcceptInvite from "./pages/AcceptInvite";
+import InviteSetupPage from "./pages/InviteSetupPage";
 import TeamSettings from "./pages/TeamSettings";
 const MemorySchedulePage = lazy(() => import("./pages/MemorySchedulePage"));
 
@@ -176,6 +177,7 @@ export default function App() {
 
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />
+                  <Route path="/invite-setup" element={<InviteSetupPage />} />
 
                   {/* Admin */}
                   <Route

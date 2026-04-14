@@ -95,6 +95,11 @@ export async function cvAcceptInvite(token: string) {
   return data as string;
 }
 
+export async function cvRevokeInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase.rpc("cv_revoke_invite", { p_invite_id: inviteId });
+  if (error) throw error;
+}
+
 export async function cvGetRemaining(teamId: string) {
   const { data, error } = await supabase
     .from("cv_v_team_remaining")

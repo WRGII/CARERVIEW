@@ -11,13 +11,14 @@ import {
   cvListInvites,
   cvListMembersWithProfile,
   cvRemoveMember,
+  cvRevokeInvite,
   cvSendInviteEmail,
   type CvInvite,
   type CvMember,
 } from "../lib/cv";
 import { useLocale } from "../i18n/LocaleContext";
 import { useFormatDate } from "../hooks/useFormatDate";
-import { Users, UserMinus, Send, Copy, Check, Clock, UserCheck, Crown, RefreshCw, CircleAlert as AlertCircle } from "lucide-react";
+import { Users, UserMinus, Send, Copy, Check, Clock, UserCheck, Crown, RefreshCw, CircleAlert as AlertCircle, Trash2 } from "lucide-react";
 
 type PageState = "loading" | "ready" | "error";
 
@@ -111,6 +112,7 @@ export default function TeamSettings() {
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const isPlanAllowed = !planLoading && plan?.plan_id === "family_qtr";
 
@@ -196,6 +198,19 @@ export default function TeamSettings() {
       setErrorMsg(e.message ?? t("team.remove_failed"));
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  async function onRevokeInvite(inviteId: string) {
+    setRevokingId(inviteId);
+    setErrorMsg(null);
+    try {
+      await cvRevokeInvite(inviteId);
+      setInvites((prev) => prev.filter((i) => i.id !== inviteId));
+    } catch (e: any) {
+      setErrorMsg(e.message ?? t("team.revoke_failed"));
+    } finally {
+      setRevokingId(null);
     }
   }
 
@@ -403,6 +418,18 @@ export default function TeamSettings() {
                       </p>
                     </div>
                     <InviteStatusBadge invite={inv} t={t} />
+                    <button
+                      onClick={() => onRevokeInvite(inv.id)}
+                      disabled={revokingId === inv.id}
+                      title={t("team.revoke_invite")}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+                    >
+                      {revokingId === inv.id ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>
