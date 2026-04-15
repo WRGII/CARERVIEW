@@ -29,12 +29,6 @@ export default function NewObservationPage() {
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
 
-  // Auth guards
-  if (loading) return <Loading message={t('new_obs.loading')} />;
-  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
-  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
-  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
-
   // Load remaining team quota
   React.useEffect(() => {
     (async () => {
@@ -43,6 +37,12 @@ export default function NewObservationPage() {
       catch { setRemaining(null); }
     })();
   }, [teamId]);
+
+  // Auth guards
+  if (loading) return <Loading message={t('new_obs.loading')} />;
+  if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
+  if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
+  if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
   async function createAndStart(mode: FormType) {
     try {

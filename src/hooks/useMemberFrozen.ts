@@ -6,14 +6,19 @@ export function useMemberFrozen(teamId: string | null) {
   useEffect(() => {
     if (!teamId) { setFrozen(false); return; }
     (async () => {
-      const u = (await supabase.auth.getUser()).data.user!;
-      const { data } = await supabase
-        .from("cv_team_members")
-        .select("state")
-        .eq("team_id", teamId)
-        .eq("user_id", u.id)
-        .maybeSingle();
-      setFrozen(data?.state === "frozen");
+      try {
+        const u = (await supabase.auth.getUser()).data.user;
+        if (!u) return;
+        const { data } = await supabase
+          .from("cv_team_members")
+          .select("state")
+          .eq("team_id", teamId)
+          .eq("user_id", u.id)
+          .maybeSingle();
+        setFrozen(data?.state === "frozen");
+      } catch {
+        setFrozen(false);
+      }
     })();
   }, [teamId]);
   return frozen;
