@@ -105,7 +105,7 @@ export async function cvGetRemaining(teamId: string) {
     .from("cv_v_team_remaining")
     .select("remaining")
     .eq("team_id", teamId)
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return (data?.remaining ?? 0) as number;
 }
