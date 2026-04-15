@@ -68,7 +68,7 @@ export default function AdminTranslationsPage() {
         .map(([key, value]) => ({ key, locale: activeLocale, value }))
         .sort((a, b) => a.key.localeCompare(b.key));
     },
-    staleTime: 0,
+    staleTime: 30 * 1000,
   });
 
   const saveMutation = useMutation({

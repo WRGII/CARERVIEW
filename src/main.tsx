@@ -29,7 +29,7 @@ const bootstrapLocale = getBootstrapLocale()
 queryClient.prefetchQuery({
   queryKey: ['ui_translations', bootstrapLocale],
   queryFn: () => fetchTranslations(bootstrapLocale),
-  staleTime: 5 * 60 * 1000,
+  staleTime: 30 * 60 * 1000,
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

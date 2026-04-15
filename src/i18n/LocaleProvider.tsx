@@ -66,15 +66,15 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   const { data: translationsMap, isLoading: translationsLoading } = useQuery({
     queryKey: ['ui_translations', locale],
     queryFn: () => fetchTranslations(locale),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   })
 
   const { data: enMap } = useQuery({
     queryKey: ['ui_translations', 'en'],
     queryFn: () => fetchTranslations('en'),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
     enabled: locale !== 'en',
   })
 
