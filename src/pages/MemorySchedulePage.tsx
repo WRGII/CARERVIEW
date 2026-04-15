@@ -16,6 +16,7 @@ import {
   useMemoryBookFinances,
   useMemoryBookSubscriptions,
   useMemoryBookVehicles,
+  useMemoryBookSocialAccounts,
   useMemoryBookInsuranceEntries,
   useMemoryBookFinanceEntries,
   useMemoryBookMedicalEntries,
@@ -71,6 +72,7 @@ export default function MemorySchedulePage() {
   const { data: finances } = useMemoryBookFinances(isOwner ? bookId : null);
   const { data: subscriptions = [] } = useMemoryBookSubscriptions(bookId);
   const { data: vehicles = [] } = useMemoryBookVehicles(bookId);
+  const { data: socialAccounts = [] } = useMemoryBookSocialAccounts(bookId);
 
   const { data: insuranceEntries = [] } = useMemoryBookInsuranceEntries(bookId);
   const { data: financeEntries = [] } = useMemoryBookFinanceEntries(isOwner ? bookId : null);
@@ -85,6 +87,7 @@ export default function MemorySchedulePage() {
   const hasFinances = !!finances || financeEntries.length > 0;
   const hasSubscriptions = subscriptions.length > 0;
   const hasVehicles = vehicles.length > 0;
+  const hasSocialAccounts = socialAccounts.length > 0;
   const hasDailyLiving = dailyLivingEntries.length > 0 || !!preferences || preferenceEntries.length > 0;
 
   const handlePrint = () => window.print();
@@ -269,6 +272,7 @@ export default function MemorySchedulePage() {
               hasFinances={hasFinances}
               hasSubscriptions={hasSubscriptions}
               hasVehicles={hasVehicles}
+              hasSocialAccounts={hasSocialAccounts}
             />
           )}
 

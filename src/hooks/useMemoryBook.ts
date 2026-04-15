@@ -11,6 +11,7 @@ import type {
   MemoryBookFinances,
   MemoryBookSubscription,
   MemoryBookVehicle,
+  MemoryBookSocialAccount,
   MemoryBookInsuranceEntry,
   MemoryBookFinanceEntry,
   MemoryBookMedicalEntry,
@@ -1078,6 +1079,82 @@ export function useDeleteMemoryBookDailyLivingEntry() {
     },
     onSuccess: (_data, params) => {
       queryClient.invalidateQueries({ queryKey: ["memory-book-daily-living-entries", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookSocialAccounts(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-social-accounts", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return [];
+      const { data, error } = await supabase
+        .from("memory_book_social_accounts")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as MemoryBookSocialAccount[];
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookSocialAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      account: Partial<MemoryBookSocialAccount> & { id?: string };
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (params.account.id) {
+        const { error } = await supabase
+          .from("memory_book_social_accounts")
+          .update({
+            ...params.account,
+            updated_at: new Date().toISOString(),
+            updated_by: user.id,
+          })
+          .eq("id", params.account.id)
+          .eq("team_id", params.teamId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_social_accounts")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.account,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-social-accounts", params.memoryBookId] });
+    },
+  });
+}
+
+export function useDeleteMemoryBookSocialAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; memoryBookId: string; teamId: string }) => {
+      const { error } = await supabase
+        .from("memory_book_social_accounts")
+        .delete()
+        .eq("id", params.id)
+        .eq("team_id", params.teamId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-social-accounts", params.memoryBookId] });
     },
   });
 }

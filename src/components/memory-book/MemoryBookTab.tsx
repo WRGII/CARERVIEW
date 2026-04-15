@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Users, Stethoscope, ShieldCheck, Landmark, Tv, Car } from "lucide-react";
+import { User, Users, Stethoscope, ShieldCheck, Landmark, Tv, Car, Share2 } from "lucide-react";
 import IdentitySection from "./IdentitySection";
 import ContactsSection from "./ContactsSection";
 import MedicalSection from "./MedicalSection";
@@ -7,6 +7,7 @@ import InsuranceSection from "./InsuranceSection";
 import FinancesSection from "./FinancesSection";
 import SubscriptionsSection from "./SubscriptionsSection";
 import VehicleSection from "./VehicleSection";
+import SocialAccountsSection from "./SocialAccountsSection";
 import type { MemoryBookSection } from "../../types/memory-book";
 
 type Props = {
@@ -21,6 +22,7 @@ type Props = {
   hasFinances: boolean;
   hasSubscriptions: boolean;
   hasVehicles: boolean;
+  hasSocialAccounts: boolean;
 };
 
 type SectionConfig = {
@@ -32,13 +34,14 @@ type SectionConfig = {
 };
 
 const SECTIONS: SectionConfig[] = [
-  { key: "identity",      label: "Identity",      Icon: User,        group: "personal" },
-  { key: "contacts",      label: "Contacts",       Icon: Users,       group: "personal" },
-  { key: "medical",       label: "Medical",        Icon: Stethoscope, group: "personal" },
-  { key: "insurance",     label: "Insurance",      Icon: ShieldCheck, group: "household" },
-  { key: "finances",      label: "Finances",       Icon: Landmark,    group: "household", ownerOnly: true },
-  { key: "subscriptions", label: "Subscriptions",  Icon: Tv,          group: "household" },
-  { key: "vehicle",       label: "Vehicle",        Icon: Car,         group: "household" },
+  { key: "identity",       label: "Identity",        Icon: User,        group: "personal" },
+  { key: "contacts",       label: "Contacts",        Icon: Users,       group: "personal" },
+  { key: "medical",        label: "Medical",         Icon: Stethoscope, group: "personal" },
+  { key: "social_accounts", label: "Online Accounts", Icon: Share2,     group: "personal" },
+  { key: "insurance",      label: "Insurance",       Icon: ShieldCheck, group: "household" },
+  { key: "finances",       label: "Finances",        Icon: Landmark,    group: "household", ownerOnly: true },
+  { key: "subscriptions",  label: "Subscriptions",   Icon: Tv,          group: "household" },
+  { key: "vehicle",        label: "Vehicle",         Icon: Car,         group: "household" },
 ];
 
 export default function MemoryBookTab({
@@ -53,17 +56,19 @@ export default function MemoryBookTab({
   hasFinances,
   hasSubscriptions,
   hasVehicles,
+  hasSocialAccounts,
 }: Props) {
   const [activeSection, setActiveSection] = useState<MemoryBookSection>("identity");
 
   const completionMap: Partial<Record<MemoryBookSection, boolean>> = {
-    identity:      hasIdentity,
-    contacts:      hasContacts,
-    medical:       hasMedical,
-    insurance:     hasInsurance,
-    finances:      hasFinances,
-    subscriptions: hasSubscriptions,
-    vehicle:       hasVehicles,
+    identity:        hasIdentity,
+    contacts:        hasContacts,
+    medical:         hasMedical,
+    social_accounts: hasSocialAccounts,
+    insurance:       hasInsurance,
+    finances:        hasFinances,
+    subscriptions:   hasSubscriptions,
+    vehicle:         hasVehicles,
   };
 
   const visibleSections = SECTIONS.filter(s => isOwner || !s.ownerOnly);
@@ -129,6 +134,13 @@ export default function MemoryBookTab({
         )}
         {activeSection === "medical" && (
           <MedicalSection
+            memoryBookId={memoryBookId}
+            teamId={teamId}
+            isOwner={isOwner}
+          />
+        )}
+        {activeSection === "social_accounts" && (
+          <SocialAccountsSection
             memoryBookId={memoryBookId}
             teamId={teamId}
             isOwner={isOwner}

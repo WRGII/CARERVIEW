@@ -163,6 +163,21 @@ export type MemoryBookVehicle = {
   updated_by: string | null;
 };
 
+export type MemoryBookSocialAccount = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  platform: string;
+  username: string;
+  url: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
 export type InsuranceEntryCategory =
   | "health_primary"
   | "health_secondary"
@@ -281,7 +296,8 @@ export type MemoryBookSection =
   | "insurance"
   | "finances"
   | "subscriptions"
-  | "vehicle";
+  | "vehicle"
+  | "social_accounts";
 
 export type HouseholdSection =
   | "providers"
