@@ -81,29 +81,28 @@ export default function InviteSetupPage() {
       if (!user) throw new Error(t("create_account.signup_failed") || "Sign-up failed");
 
       if (session && user.id) {
-        await supabase.from("profiles").upsert({
+        const displayName = name.trim() || email.split("@")[0];
+        const { error: profileErr } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? email.trim(),
-          display_name: name.trim() || email.split("@")[0],
+          display_name: displayName,
           role: "caregiver",
           disabled: false,
-        }, { onConflict: "id", ignoreDuplicates: true });
+        }, { onConflict: "id" });
+        if (profileErr) throw profileErr;
 
         const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
         if (acceptErr) throw acceptErr;
 
-        await supabase.rpc("cv_set_active_team", { p_team: teamId });
         localStorage.removeItem("cv_join_token");
         setStage("done");
         setTimeout(() => navigate("/caregiver", { replace: true }), 1500);
       } else {
-        localStorage.removeItem("cv_join_token");
         setStage("error");
         setErrorMsg(t("create_account.email_confirm_required") || "Please confirm your email then sign in.");
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "";
-      localStorage.removeItem("cv_join_token");
       setStage("error");
       setErrorMsg(msg || t("accept_invite.failed"));
     } finally {
@@ -137,6 +136,7 @@ export default function InviteSetupPage() {
   }
 
   if (stage === "error") {
+    const isTokenError = !token || errorMsg?.toLowerCase().includes("invalid") || errorMsg?.toLowerCase().includes("expir");
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-red-100 p-10 text-center">
@@ -145,12 +145,22 @@ export default function InviteSetupPage() {
           </div>
           <h2 className="text-xl font-semibold text-slate-800 mb-2">{t("accept_invite.error_title")}</h2>
           <p className="text-slate-500 text-sm mb-6">{errorMsg || t("accept_invite.failed")}</p>
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
-          >
-            {t("common.go_home")}
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            {!isTokenError && (
+              <button
+                onClick={() => { setStage("form"); setErrorMsg(""); }}
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors"
+              >
+                Try again
+              </button>
+            )}
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              {t("common.go_home")}
+            </Link>
+          </div>
         </div>
       </div>
     );

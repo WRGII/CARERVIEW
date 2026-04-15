@@ -48,13 +48,14 @@ export default function AcceptInvite() {
         setStatus("idle");
 
         const user = sess.session.user;
-        await supabase.from("profiles").upsert({
+        const { error: profileErr } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? null,
           display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "",
           role: "caregiver",
           disabled: false,
-        }, { onConflict: "id", ignoreDuplicates: true });
+        }, { onConflict: "id" });
+        if (profileErr) throw profileErr;
 
         const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
         if (acceptErr) throw acceptErr;
