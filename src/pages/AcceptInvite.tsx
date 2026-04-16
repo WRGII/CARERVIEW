@@ -4,10 +4,11 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useLocale } from "../i18n/LocaleContext";
 
-type ErrorKind = "expired" | "consumed" | "already_member" | "invalid" | "generic";
+type ErrorKind = "expired" | "consumed" | "already_member" | "invalid" | "email_mismatch" | "generic";
 
 function classifyError(message: string): ErrorKind {
   const lower = message.toLowerCase();
+  if (lower.includes("different email")) return "email_mismatch";
   if (lower.includes("expir")) return "expired";
   if (lower.includes("already a member")) return "already_member";
   if (lower.includes("already") || lower.includes("consumed") || lower.includes("used")) return "consumed";
@@ -47,16 +48,6 @@ export default function AcceptInvite() {
       try {
         setStatus("idle");
 
-        const user = sess.session.user;
-        const { error: profileErr } = await supabase.from("profiles").upsert({
-          id: user.id,
-          email: user.email ?? null,
-          display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "",
-          role: "caregiver",
-          disabled: false,
-        }, { onConflict: "id" });
-        if (profileErr) throw profileErr;
-
         const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
         if (acceptErr) throw acceptErr;
 
@@ -67,12 +58,15 @@ export default function AcceptInvite() {
         setStatus("ok");
         navigate("/caregiver", { replace: true });
       } catch (e: any) {
-        localStorage.removeItem("cv_join_token");
         const rawMsg: string = e?.message || "";
         const kind = classifyError(rawMsg);
         if (kind === "already_member") {
+          localStorage.removeItem("cv_join_token");
           navigate("/caregiver", { replace: true });
           return;
+        }
+        if (kind === "expired" || kind === "consumed" || kind === "invalid") {
+          localStorage.removeItem("cv_join_token");
         }
         setErrorKind(kind);
         setStatus("error");
@@ -95,15 +89,20 @@ export default function AcceptInvite() {
   if (status === "error") {
     const isExpired = errorKind === "expired";
     const isConsumed = errorKind === "consumed";
+    const isMismatch = errorKind === "email_mismatch";
     const title = isExpired
       ? t('accept_invite.error_expired_title')
       : isConsumed
       ? t('accept_invite.error_consumed_title')
+      : isMismatch
+      ? "Wrong account"
       : t('accept_invite.error_title');
     const body = isExpired
       ? t('accept_invite.error_expired_body')
       : isConsumed
       ? t('accept_invite.error_consumed_body')
+      : isMismatch
+      ? "This invitation was sent to a different email address. Please sign in with the address the invitation was sent to."
       : msg || t('accept_invite.failed');
 
     return (

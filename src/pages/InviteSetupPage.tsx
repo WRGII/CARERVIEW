@@ -7,6 +7,16 @@ import PasswordStrengthBar from "../components/ui/PasswordStrengthBar";
 import { Eye, EyeOff, Users, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from "lucide-react";
 
 type Stage = "form" | "joining" | "done" | "error";
+type Mode = "signup" | "signin";
+
+type PeekResult = {
+  invalid?: boolean;
+  email?: string;
+  expires_at?: string;
+  consumed?: boolean;
+  expired?: boolean;
+  team_id?: string;
+};
 
 export default function InviteSetupPage() {
   const [params] = useSearchParams();
@@ -15,7 +25,9 @@ export default function InviteSetupPage() {
 
   const [token, setToken] = useState("");
   const [stage, setStage] = useState<Stage>("form");
+  const [mode, setMode] = useState<Mode>("signup");
   const [errorMsg, setErrorMsg] = useState("");
+  const [invitedEmail, setInvitedEmail] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,14 +53,51 @@ export default function InviteSetupPage() {
     }
     setToken(resolved);
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    (async () => {
+      const { data: sessData } = await supabase.auth.getSession();
+      if (sessData.session) {
         navigate(`/join?t=${encodeURIComponent(resolved)}`, { replace: true });
+        return;
       }
-    });
-  }, [params, navigate]);
 
-  async function handleSubmit(e: React.FormEvent) {
+      const { data: peek, error: peekErr } = await supabase.rpc("cv_peek_invite", { p_token: resolved });
+      if (peekErr) return;
+
+      const result = peek as PeekResult | null;
+      if (!result || result.invalid) {
+        setStage("error");
+        setErrorMsg(t("accept_invite.invalid_token"));
+        return;
+      }
+      if (result.consumed) {
+        setStage("error");
+        setErrorMsg(t("accept_invite.error_consumed_body") || "This invite has already been used.");
+        return;
+      }
+      if (result.expired) {
+        setStage("error");
+        setErrorMsg(t("accept_invite.error_expired_body") || "This invite has expired.");
+        return;
+      }
+      if (result.email) {
+        setInvitedEmail(result.email);
+        setEmail(result.email);
+      }
+    })();
+  }, [params, navigate, t]);
+
+  async function finalizeJoin(): Promise<void> {
+    const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
+    if (acceptErr) throw acceptErr;
+    if (teamId) {
+      await supabase.rpc("cv_set_active_team", { p_team: teamId });
+    }
+    localStorage.removeItem("cv_join_token");
+    setStage("done");
+    setTimeout(() => navigate("/caregiver", { replace: true }), 1200);
+  }
+
+  async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
     setErrorMsg("");
@@ -67,10 +116,11 @@ export default function InviteSetupPage() {
     setStage("joining");
 
     try {
+      const signupEmail = email.trim();
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: signupEmail,
         password,
-        options: { data: { display_name: name.trim() || email.split("@")[0] } },
+        options: { data: { display_name: name.trim() || signupEmail.split("@")[0] } },
       });
 
       if (signUpErr) throw signUpErr;
@@ -81,26 +131,36 @@ export default function InviteSetupPage() {
       if (!user) throw new Error(t("create_account.signup_failed") || "Sign-up failed");
 
       if (session && user.id) {
-        const displayName = name.trim() || email.split("@")[0];
-        const { error: profileErr } = await supabase.from("profiles").upsert({
-          id: user.id,
-          email: user.email ?? email.trim(),
-          display_name: displayName,
-          role: "caregiver",
-          disabled: false,
-        }, { onConflict: "id" });
-        if (profileErr) throw profileErr;
-
-        const { data: teamId, error: acceptErr } = await supabase.rpc("cv_accept_invite", { p_token: token });
-        if (acceptErr) throw acceptErr;
-
-        localStorage.removeItem("cv_join_token");
-        setStage("done");
-        setTimeout(() => navigate("/caregiver", { replace: true }), 1500);
+        await finalizeJoin();
       } else {
         setStage("error");
-        setErrorMsg(t("create_account.email_confirm_required") || "Please confirm your email then sign in.");
+        setErrorMsg(t("create_account.email_confirm_required") || "Check your inbox to confirm your email. You'll be brought back here to finish joining the Family Circle.");
       }
+    } catch (err: any) {
+      const msg: string = err?.message ?? "";
+      setStage("error");
+      setErrorMsg(msg || t("accept_invite.failed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSignin(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setErrorMsg("");
+
+    setBusy(true);
+    setStage("joining");
+
+    try {
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (signInErr) throw signInErr;
+
+      await finalizeJoin();
     } catch (err: any) {
       const msg: string = err?.message ?? "";
       setStage("error");
@@ -136,7 +196,8 @@ export default function InviteSetupPage() {
   }
 
   if (stage === "error") {
-    const isTokenError = !token || errorMsg?.toLowerCase().includes("invalid") || errorMsg?.toLowerCase().includes("expir");
+    const lower = errorMsg?.toLowerCase() || "";
+    const isTokenError = !token || lower.includes("invalid") || lower.includes("expir") || lower.includes("used");
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-red-100 p-10 text-center">
@@ -166,6 +227,8 @@ export default function InviteSetupPage() {
     );
   }
 
+  const isSignup = mode === "signup";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full space-y-6">
@@ -176,26 +239,47 @@ export default function InviteSetupPage() {
           </div>
           <h1 className="text-2xl font-semibold text-slate-900">Join your care team</h1>
           <p className="text-slate-500 text-sm mt-2">
-            Create your CarerView account to accept the invitation and start collaborating.
+            {isSignup
+              ? "Create your CarerView account to accept the invitation and start collaborating."
+              : "Sign in to accept the invitation and join the Family Circle."}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <div className="flex rounded-xl bg-slate-100 p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => { setMode("signup"); setErrorMsg(""); }}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${isSignup ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              Create account
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("signin"); setErrorMsg(""); }}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${!isSignup ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              I already have an account
+            </button>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t("create_account.name_label") || "Your name"}
-              </label>
-              <input
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("create_account.name_placeholder") || "Full name"}
-                className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
-              />
-            </div>
+          <form onSubmit={isSignup ? handleSignup : handleSignin} className="space-y-5" noValidate>
+
+            {isSignup && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t("create_account.name_label") || "Your name"}
+                </label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("create_account.name_placeholder") || "Full name"}
+                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -210,6 +294,11 @@ export default function InviteSetupPage() {
                 placeholder="you@example.com"
                 className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
               />
+              {invitedEmail && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  You were invited as <span className="font-medium text-slate-700">{invitedEmail}</span>. You can change this if needed.
+                </p>
+              )}
             </div>
 
             <div>
@@ -219,11 +308,11 @@ export default function InviteSetupPage() {
               <div className="relative">
                 <input
                   type={showPw ? "text" : "password"}
-                  autoComplete="new-password"
+                  autoComplete={isSignup ? "new-password" : "current-password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("create_account.password_placeholder") || "Min. 8 characters"}
+                  placeholder={isSignup ? (t("create_account.password_placeholder") || "Min. 8 characters") : "Your password"}
                   className="w-full border border-slate-300 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
                 />
                 <button
@@ -235,38 +324,40 @@ export default function InviteSetupPage() {
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <PasswordStrengthBar password={password} tFn={t} />
+              {isSignup && <PasswordStrengthBar password={password} tFn={t} />}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t("create_account.confirm_password_label") || "Confirm password"}
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  autoComplete="new-password"
-                  required
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder={t("create_account.confirm_password_placeholder") || "Re-enter password"}
-                  className="w-full border border-slate-300 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  tabIndex={-1}
-                >
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            {isSignup && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t("create_account.confirm_password_label") || "Confirm password"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder={t("create_account.confirm_password_placeholder") || "Re-enter password"}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    tabIndex={-1}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {errorMsg && (
               <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                {errorMsg}
+                <span>{errorMsg}</span>
               </div>
             )}
 
@@ -275,23 +366,15 @@ export default function InviteSetupPage() {
               disabled={busy || !email.trim() || !password}
               className="w-full py-3 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 disabled:opacity-50 transition-colors"
             >
-              {busy ? "Creating account\u2026" : "Create account and join"}
+              {busy
+                ? (isSignup ? "Creating account\u2026" : "Signing in\u2026")
+                : (isSignup ? "Create account and join" : "Sign in and join")}
             </button>
           </form>
-
-          <p className="mt-5 text-center text-xs text-slate-400">
-            Already have an account?{" "}
-            <Link
-              to={token ? `/join?t=${encodeURIComponent(token)}` : "/"}
-              className="text-cyan-600 hover:underline font-medium"
-            >
-              Sign in instead
-            </Link>
-          </p>
         </div>
 
         <p className="text-center text-xs text-slate-400">
-          By creating an account you agree to our{" "}
+          By continuing you agree to our{" "}
           <Link to="/privacy-policy" className="underline hover:text-slate-600">
             Privacy Policy
           </Link>
