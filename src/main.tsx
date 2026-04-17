@@ -35,28 +35,49 @@ function mount() {
   )
 }
 
-const prefetches: Array<Promise<unknown>> = [
-  queryClient.prefetchQuery({
-    queryKey: ['ui_translations', bootstrapLocale],
-    queryFn: () => fetchTranslations(bootstrapLocale),
-    staleTime: 30 * 60 * 1000,
-  }),
-]
-
-if (bootstrapLocale !== 'en') {
-  prefetches.push(
-    queryClient.prefetchQuery({
-      queryKey: ['ui_translations', 'en'],
-      queryFn: () => fetchTranslations('en'),
-      staleTime: 24 * 60 * 60 * 1000,
-    })
+function timeoutAfter<T>(ms: number): Promise<T> {
+  return new Promise<T>((_, reject) =>
+    setTimeout(() => reject(new Error('bootstrap-timeout')), ms)
   )
 }
 
-const bootstrapTimeout = new Promise<void>((resolve) => setTimeout(resolve, 2500))
+type TranslationWindow = {
+  __CV_TRANSLATIONS__?: Record<string, Record<string, string>>
+}
 
-Promise.race([Promise.all(prefetches).then(() => undefined), bootstrapTimeout])
-  .catch((err) => {
-    console.error('[bootstrap] Translation prefetch failed', err)
-  })
-  .finally(mount)
+function writeCache(locale: Locale, map: Record<string, string>): void {
+  queryClient.setQueryData(['ui_translations', locale], map)
+  try {
+    const w = window as unknown as TranslationWindow
+    w.__CV_TRANSLATIONS__ = {
+      ...(w.__CV_TRANSLATIONS__ ?? {}),
+      [locale]: map,
+    }
+  } catch {}
+}
+
+async function bootstrapOne(locale: Locale): Promise<void> {
+  try {
+    const data = await Promise.race([
+      fetchTranslations(locale),
+      timeoutAfter<Record<string, string>>(3000),
+    ])
+    if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+      writeCache(locale, data)
+    } else {
+      console.error('[bootstrap] empty translations for locale', locale)
+    }
+  } catch (err) {
+    console.error('[bootstrap] translations failed for locale', locale, err)
+  }
+}
+
+async function bootstrap(): Promise<void> {
+  const tasks: Array<Promise<void>> = [bootstrapOne(bootstrapLocale)]
+  if (bootstrapLocale !== 'en') {
+    tasks.push(bootstrapOne('en'))
+  }
+  await Promise.all(tasks)
+}
+
+bootstrap().finally(mount)

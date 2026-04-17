@@ -35,6 +35,22 @@ async function fetchTranslations(locale: Locale): Promise<Record<string, string>
   return (data as Record<string, string>) ?? {}
 }
 
+type TranslationWindow = {
+  __CV_TRANSLATIONS__?: Record<string, Record<string, string>>
+}
+
+function readBootstrapCache(locale: Locale): Record<string, string> | undefined {
+  if (typeof window === 'undefined') return undefined
+  try {
+    const w = window as unknown as TranslationWindow
+    const cached = w.__CV_TRANSLATIONS__?.[locale]
+    if (cached && typeof cached === 'object' && Object.keys(cached).length > 0) {
+      return cached
+    }
+  } catch {}
+  return undefined
+}
+
 interface Props {
   children: React.ReactNode
   userId?: string
@@ -72,6 +88,8 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     queryFn: () => fetchTranslations(locale),
     staleTime: 30 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    initialData: () => readBootstrapCache(locale),
+    initialDataUpdatedAt: () => (readBootstrapCache(locale) ? Date.now() : 0),
   })
 
   const { data: enMap, error: enError } = useQuery({
@@ -79,6 +97,8 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     queryFn: () => fetchTranslations('en'),
     staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    initialData: () => readBootstrapCache('en'),
+    initialDataUpdatedAt: () => (readBootstrapCache('en') ? Date.now() : 0),
   })
 
   useEffect(() => {
