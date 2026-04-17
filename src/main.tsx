@@ -26,14 +26,37 @@ async function fetchTranslations(locale: Locale): Promise<Record<string, string>
 }
 
 const bootstrapLocale = getBootstrapLocale()
-queryClient.prefetchQuery({
-  queryKey: ['ui_translations', bootstrapLocale],
-  queryFn: () => fetchTranslations(bootstrapLocale),
-  staleTime: 30 * 60 * 1000,
-})
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+function mount() {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  )
+}
+
+const prefetches: Array<Promise<unknown>> = [
+  queryClient.prefetchQuery({
+    queryKey: ['ui_translations', bootstrapLocale],
+    queryFn: () => fetchTranslations(bootstrapLocale),
+    staleTime: 30 * 60 * 1000,
+  }),
+]
+
+if (bootstrapLocale !== 'en') {
+  prefetches.push(
+    queryClient.prefetchQuery({
+      queryKey: ['ui_translations', 'en'],
+      queryFn: () => fetchTranslations('en'),
+      staleTime: 24 * 60 * 60 * 1000,
+    })
+  )
+}
+
+const bootstrapTimeout = new Promise<void>((resolve) => setTimeout(resolve, 2500))
+
+Promise.race([Promise.all(prefetches).then(() => undefined), bootstrapTimeout])
+  .catch((err) => {
+    console.error('[bootstrap] Translation prefetch failed', err)
+  })
+  .finally(mount)

@@ -63,20 +63,35 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     })
   }, [preferredLocale])
 
-  const { data: translationsMap, isLoading: translationsLoading } = useQuery({
+  const {
+    data: translationsMap,
+    isLoading: translationsLoading,
+    error: translationsError,
+  } = useQuery({
     queryKey: ['ui_translations', locale],
     queryFn: () => fetchTranslations(locale),
     staleTime: 30 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
   })
 
-  const { data: enMap } = useQuery({
+  const { data: enMap, error: enError } = useQuery({
     queryKey: ['ui_translations', 'en'],
     queryFn: () => fetchTranslations('en'),
     staleTime: 24 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
-    enabled: locale !== 'en',
   })
+
+  useEffect(() => {
+    if (translationsError) {
+      console.error('[i18n] Failed to fetch translations for locale', locale, translationsError)
+    }
+  }, [translationsError, locale])
+
+  useEffect(() => {
+    if (enError) {
+      console.error('[i18n] Failed to fetch English fallback translations', enError)
+    }
+  }, [enError])
 
   const { data: supportedLocales = [] } = useQuery<SupportedLocale[]>({
     queryKey: ['supported_locales'],
@@ -138,6 +153,27 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     () => ({ locale, setLocale, t, isLoading, supportedLocales }),
     [locale, setLocale, t, isLoading, supportedLocales]
   )
+
+  const hasAnyData = Boolean(activeMap || enMap)
+  const hardError = Boolean(translationsError && enError)
+
+  if (!hasAnyData && !hardError) {
+    return (
+      <LocaleContext.Provider value={value}>
+        <div
+          role="status"
+          aria-live="polite"
+          className="min-h-screen flex items-center justify-center bg-white"
+        >
+          <div className="flex gap-1.5" aria-label="Loading">
+            <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.3s]" />
+            <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce [animation-delay:-0.15s]" />
+            <span className="h-2 w-2 rounded-full bg-teal-500 animate-bounce" />
+          </div>
+        </div>
+      </LocaleContext.Provider>
+    )
+  }
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }
