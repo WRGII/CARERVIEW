@@ -29,7 +29,7 @@ function PopularTopicsSection() {
           to={FORUM_URL}
           className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
         >
-          Browse all
+          {t('public.community.topics_browse_all')}
           <ArrowRight className="w-3 h-3" />
         </Link>
       </div>

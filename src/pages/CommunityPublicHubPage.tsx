@@ -167,7 +167,7 @@ function PopularTopicsSection() {
           to={RESOURCES_PAGE}
           className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
         >
-          See resources
+          {t('public.community.topics_see_resources')}
           <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
@@ -495,7 +495,11 @@ export default function CommunityTopicHubPage() {
           <>
             {rooms.map((room, index) => (
               <div key={room.id}>
-                <PublicRoomSection room={room} useExamples />
+                <PublicRoomSection
+                  room={room}
+                  useExamples
+                  onJoinClick={() => setShowJoinModal(true)}
+                />
 
                 {index === 1 && (
                   <div className="mt-4">

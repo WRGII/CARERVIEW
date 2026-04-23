@@ -52,53 +52,68 @@ function PostRowSkeletons() {
 function PublicPostRow({
   post,
   signupUrl,
+  onJoinClick,
 }: {
   post: CommunityPost
   signupUrl: string
+  onJoinClick?: () => void
 }) {
   const preview = post.body.length > 180 ? post.body.slice(0, 180).trimEnd() + '…' : post.body
 
-  return (
-    <Link
-      to={signupUrl}
-      className="block border-b border-slate-100 last:border-0"
-    >
-      <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 group-hover:text-cyan-700 transition-colors leading-snug mb-1">
-              {post.title}
-            </p>
-            <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
-              {preview}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 mt-2 text-slate-400">
-          <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
-            {post.is_anonymous
-              ? <Users className="w-2.5 h-2.5 text-slate-400" />
-              : <span className="text-[10px] font-bold text-slate-500">C</span>
-            }
-          </div>
-          <span className="text-xs text-slate-500 font-medium">
-            {post.is_anonymous ? 'Anonymous' : 'Caregiver'}
-          </span>
-          <span className="text-slate-300">·</span>
-          <span className="flex items-center gap-1 text-xs">
-            <Clock className="w-3 h-3" />
-            {timeAgo(post.last_activity_at)}
-          </span>
-          <span className="flex items-center gap-1 text-xs">
-            <MessageCircle className="w-3 h-3" />
-            {post.reply_count}
-          </span>
-          <span className="flex items-center gap-1 text-xs">
-            <Heart className="w-3 h-3" />
-            {post.reaction_count}
-          </span>
+  const inner = (
+    <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-slate-800 group-hover:text-cyan-700 transition-colors leading-snug mb-1">
+            {post.title}
+          </p>
+          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+            {preview}
+          </p>
         </div>
       </div>
+      <div className="flex items-center gap-3 mt-2 text-slate-400">
+        <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
+          {post.is_anonymous
+            ? <Users className="w-2.5 h-2.5 text-slate-400" />
+            : <span className="text-[10px] font-bold text-slate-500">C</span>
+          }
+        </div>
+        <span className="text-xs text-slate-500 font-medium">
+          {post.is_anonymous ? 'Anonymous' : 'Caregiver'}
+        </span>
+        <span className="text-slate-300">·</span>
+        <span className="flex items-center gap-1 text-xs">
+          <Clock className="w-3 h-3" />
+          {timeAgo(post.last_activity_at)}
+        </span>
+        <span className="flex items-center gap-1 text-xs">
+          <MessageCircle className="w-3 h-3" />
+          {post.reply_count}
+        </span>
+        <span className="flex items-center gap-1 text-xs">
+          <Heart className="w-3 h-3" />
+          {post.reaction_count}
+        </span>
+      </div>
+    </div>
+  )
+
+  if (onJoinClick) {
+    return (
+      <button
+        type="button"
+        onClick={onJoinClick}
+        className="block w-full text-left border-b border-slate-100 last:border-0"
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return (
+    <Link to={signupUrl} className="block border-b border-slate-100 last:border-0">
+      {inner}
     </Link>
   )
 }
@@ -113,33 +128,48 @@ interface ExampleRow {
 function ExamplePostRow({
   example,
   signupUrl,
+  onJoinClick,
 }: {
   example: ExampleRow
   signupUrl: string
+  onJoinClick?: () => void
 }) {
-  return (
-    <Link
-      to={signupUrl}
-      className="block border-b border-slate-100 last:border-0"
-    >
-      <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
-                Example
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-slate-700 group-hover:text-cyan-700 transition-colors leading-snug">
-              {example.title}
-            </p>
+  const inner = (
+    <div className="group px-4 py-3.5 hover:bg-slate-50 transition-colors duration-150 cursor-pointer">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 mb-1">
+            <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wide">
+              Example
+            </span>
           </div>
-          <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-cyan-500 transition-colors flex-shrink-0 mt-0.5" />
+          <p className="text-sm font-semibold text-slate-700 group-hover:text-cyan-700 transition-colors leading-snug">
+            {example.title}
+          </p>
         </div>
-        <p className="text-xs text-slate-400 mt-1.5">
-          Join free to read the full discussion and reply
-        </p>
+        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-cyan-500 transition-colors flex-shrink-0 mt-0.5" />
       </div>
+      <p className="text-xs text-slate-400 mt-1.5">
+        Join free to read the full discussion and reply
+      </p>
+    </div>
+  )
+
+  if (onJoinClick) {
+    return (
+      <button
+        type="button"
+        onClick={onJoinClick}
+        className="block w-full text-left border-b border-slate-100 last:border-0"
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return (
+    <Link to={signupUrl} className="block border-b border-slate-100 last:border-0">
+      {inner}
     </Link>
   )
 }
@@ -147,9 +177,10 @@ function ExamplePostRow({
 interface Props {
   room: CommunityRoom
   useExamples?: boolean
+  onJoinClick?: () => void
 }
 
-export default function PublicRoomSection({ room, useExamples = false }: Props) {
+export default function PublicRoomSection({ room, useExamples = false, onJoinClick }: Props) {
   const signupUrl = `/create-account?plan=free&source=caregiver-forum`
 
   const { data: posts, isLoading: postsLoading } = useQuery<CommunityPost[]>({
@@ -205,14 +236,26 @@ export default function PublicRoomSection({ room, useExamples = false }: Props) 
               {room.post_count} {room.post_count === 1 ? 'post' : 'posts'}
             </span>
           )}
-          <Link
-            to={signupUrl}
-            className="flex items-center gap-1 text-xs font-semibold transition-colors"
-            style={{ color: room.color }}
-          >
-            Join to post
-            <ArrowRight className="w-3 h-3" />
-          </Link>
+          {onJoinClick ? (
+            <button
+              type="button"
+              onClick={onJoinClick}
+              className="flex items-center gap-1 text-xs font-semibold transition-colors"
+              style={{ color: room.color }}
+            >
+              Join to post
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          ) : (
+            <Link
+              to={signupUrl}
+              className="flex items-center gap-1 text-xs font-semibold transition-colors"
+              style={{ color: room.color }}
+            >
+              Join to post
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
         </div>
       </div>
 
@@ -226,18 +269,30 @@ export default function PublicRoomSection({ room, useExamples = false }: Props) 
                 key={ex.id}
                 example={ex}
                 signupUrl={signupUrl}
+                onJoinClick={onJoinClick}
               />
             ))
           ) : (
             <div className="px-4 py-6 text-center">
               <p className="text-sm text-slate-400">Be the first to start a discussion here.</p>
-              <Link
-                to={signupUrl}
-                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
-              >
-                Join free to post
-                <ArrowRight className="w-3 h-3" />
-              </Link>
+              {onJoinClick ? (
+                <button
+                  type="button"
+                  onClick={onJoinClick}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+                >
+                  Join free to post
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              ) : (
+                <Link
+                  to={signupUrl}
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+                >
+                  Join free to post
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              )}
             </div>
           )
         ) : posts && posts.length > 0 ? (
@@ -246,18 +301,30 @@ export default function PublicRoomSection({ room, useExamples = false }: Props) 
               key={post.id}
               post={post}
               signupUrl={signupUrl}
+              onJoinClick={onJoinClick}
             />
           ))
         ) : (
           <div className="px-4 py-6 text-center">
             <p className="text-sm text-slate-400">No discussions yet — be the first to post.</p>
-            <Link
-              to={signupUrl}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
-            >
-              Join free to start the conversation
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+            {onJoinClick ? (
+              <button
+                type="button"
+                onClick={onJoinClick}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+              >
+                Join free to start the conversation
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            ) : (
+              <Link
+                to={signupUrl}
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 transition-colors"
+              >
+                Join free to start the conversation
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            )}
           </div>
         )}
       </div>

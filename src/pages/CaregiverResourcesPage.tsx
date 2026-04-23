@@ -120,7 +120,7 @@ export default function CaregiverResourcesPage() {
             <h2 id="resources-heading" className="text-lg font-bold text-slate-800">Trusted Organizations</h2>
             <p className="text-sm text-slate-500 mt-0.5">Government and nonprofit resources for dementia caregivers</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {RESOURCES.map((res, i) => (
               <a
                 key={i}
