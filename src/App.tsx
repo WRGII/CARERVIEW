@@ -101,6 +101,15 @@ import AuthCallbackPage from "./pages/AuthCallbackPage";
 import AuthErrorPage from "./pages/AuthErrorPage";
 import AboutPage from "./pages/AboutPage";
 import PricingPage from "./pages/PricingPage";
+import NewCarerPage from "./pages/new-carer/NewCarerPage";
+import BigPicturePage from "./pages/new-carer/BigPicturePage";
+import CarePlanPage from "./pages/new-carer/CarePlanPage";
+import RolesPage from "./pages/new-carer/RolesPage";
+import LivingArrangementsPage from "./pages/new-carer/LivingArrangementsPage";
+import DocumentsAuthorityPage from "./pages/new-carer/DocumentsAuthorityPage";
+import HealthCoordinationPage from "./pages/new-carer/HealthCoordinationPage";
+import SustainabilityPage from "./pages/new-carer/SustainabilityPage";
+import ReviewPlanPage from "./pages/new-carer/ReviewPlanPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import DataPolicyPage from "./pages/DataPolicyPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -174,6 +183,17 @@ export default function App() {
                   <Route path="/auth/error" element={<AuthErrorPage />} />
                   <Route path="/caregiver-forum" element={<CommunityPublicHubPage />} />
                   <Route path="/community-hub" element={<Navigate to="/caregiver-forum" replace />} />
+
+                  {/* New Carer */}
+                  <Route path="/new-carer" element={<NewCarerPage />} />
+                  <Route path="/new-carer/big-picture" element={<BigPicturePage />} />
+                  <Route path="/new-carer/care-plan" element={<CarePlanPage />} />
+                  <Route path="/new-carer/roles" element={<RolesPage />} />
+                  <Route path="/new-carer/living-arrangements" element={<LivingArrangementsPage />} />
+                  <Route path="/new-carer/documents-authority" element={<DocumentsAuthorityPage />} />
+                  <Route path="/new-carer/health-coordination" element={<HealthCoordinationPage />} />
+                  <Route path="/new-carer/sustainability" element={<SustainabilityPage />} />
+                  <Route path="/new-carer/review-plan" element={<ReviewPlanPage />} />
 
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />

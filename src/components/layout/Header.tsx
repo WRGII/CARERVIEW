@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
-import { useUserPlan } from "../../hooks/useUserPlan";
+import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
 import { useActiveTeam } from "../../context/ActiveTeam";
 import AccountMenu from "../caregiver/AccountMenu";
 import { Menu, X } from "lucide-react";
@@ -52,6 +52,10 @@ export default function Header() {
 
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
+  const isPaidCarer =
+    profile?.role === "caregiver" &&
+    plan?.plan_id !== "free" &&
+    hasActivePlan(plan);
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -97,6 +101,15 @@ export default function Header() {
                   >
                     {t('nav.dashboard')}
                   </Link>
+
+                  {isPaidCarer && (
+                    <Link
+                      to="/new-carer"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                    >
+                      {t('nav.new_carer')}
+                    </Link>
+                  )}
 
                   {canUseTeam && (
                     <Link
@@ -208,6 +221,15 @@ export default function Header() {
                   >
                     {t('nav.dashboard')}
                   </Link>
+                  {isPaidCarer && (
+                    <Link
+                      to="/new-carer"
+                      onClick={closeMobileMenu}
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    >
+                      {t('nav.new_carer')}
+                    </Link>
+                  )}
                   {canUseTeam && (
                     <Link
                       to="/team"

@@ -45,6 +45,11 @@ type TranslationWindow = {
   __CV_TRANSLATIONS__?: Record<string, Record<string, string>>
 }
 
+const LS_TRANS_VERSION = 'v2'
+function lsTransKey(locale: Locale): string {
+  return `cv_trans_${locale}_${LS_TRANS_VERSION}`
+}
+
 function writeCache(locale: Locale, map: Record<string, string>): void {
   queryClient.setQueryData(['ui_translations', locale], map)
   try {
@@ -53,6 +58,9 @@ function writeCache(locale: Locale, map: Record<string, string>): void {
       ...(w.__CV_TRANSLATIONS__ ?? {}),
       [locale]: map,
     }
+  } catch {}
+  try {
+    localStorage.setItem(lsTransKey(locale), JSON.stringify(map))
   } catch {}
 }
 
