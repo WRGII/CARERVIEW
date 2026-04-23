@@ -1,5 +1,3 @@
-// src/pages/new-carer/ReviewPlanPage.tsx
-import React from 'react'
 import { RefreshCw, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
@@ -9,6 +7,7 @@ import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import { REVIEW_TRIGGERS } from '../../content/newCarerContent'
+import { SITE_URL } from '../../lib/siteConfig'
 
 const REVIEW_WHY_KEYS = [
   'new_carer.review_why_1',
@@ -33,6 +32,38 @@ const REVIEW_QUESTIONS = [
   'new_carer.review_q4',
 ]
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+    { '@type': 'ListItem', position: 3, name: 'Review and Update the Care Plan', item: `${SITE_URL}/new-carer/review-plan` },
+  ],
+}
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'When should a family care plan be reviewed?',
+      acceptedAnswer: { '@type': 'Answer', text: 'A care plan should be reviewed on a scheduled basis — at minimum every six to twelve months. It should also be reviewed immediately after any significant event: a health decline or hospitalisation, a change in living situation, a major change in family circumstances, or when the primary carer\'s capacity changes significantly.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I update a care plan when my parent\'s needs change?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Start by reassessing the current situation: what has changed, what is no longer working, and what new needs have emerged. Then update the relevant parts of the plan — care tasks, team responsibilities, living arrangements, or health coordination — and communicate the changes to everyone involved in the care.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Who should be part of a care plan review?',
+      acceptedAnswer: { '@type': 'Answer', text: 'At minimum, the primary carer and any family members with active responsibilities. For significant reviews, include the person being cared for (where possible), a GP or care coordinator, and any professional carers involved. The goal is shared understanding — not a decision made by one person alone.' },
+    },
+  ],
+}
+
 export default function ReviewPlanPage() {
   const { t } = useLocale()
 
@@ -42,12 +73,13 @@ export default function ReviewPlanPage() {
         title={t('new_carer.review_page_title')}
         description={t('new_carer.review_meta_desc')}
         canonical="/new-carer/review-plan"
+        structuredData={[breadcrumbSchema, faqSchema]}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <NewCarerBreadcrumb />
+            <NewCarerBreadcrumb currentLabel={t('new_carer.review_title')} />
           </div>
 
           <SectionIntro

@@ -1,4 +1,3 @@
-// src/pages/new-carer/DocumentsAuthorityPage.tsx
 import React from 'react'
 import { FileText, Stethoscope, Banknote, Scale, MessageSquare, FolderOpen, TriangleAlert as AlertTriangle } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -10,6 +9,7 @@ import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
 import { DOC_AREAS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
+import { SITE_URL } from '../../lib/siteConfig'
 
 const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   Stethoscope, Banknote, Scale, MessageSquare, FolderOpen, AlertTriangle,
@@ -25,6 +25,38 @@ const DOCS_QUESTIONS = [
 
 const RELATED_WS_IDS = ['documents']
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+    { '@type': 'ListItem', position: 3, name: 'Documents and Authority', item: `${SITE_URL}/new-carer/documents-authority` },
+  ],
+}
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What legal documents does a family caregiver need?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Key documents typically include: a power of attorney for financial decisions, a lasting or enduring power of attorney for health and welfare decisions, an advance care directive or living will expressing the person\'s wishes, and organised access to financial accounts, insurance policies, and identification documents. Requirements vary by country.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Does being next of kin give me legal authority over my parent\'s care?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Not automatically. In most countries, being next of kin does not give you legal authority to access medical records, make treatment decisions, or manage finances if the person has lost capacity. Formal legal documents — such as power of attorney — must be put in place while the person still has the capacity to grant them.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What happens if we don\'t get power of attorney in time?',
+      acceptedAnswer: { '@type': 'Answer', text: "If a person loses mental capacity before a power of attorney is in place, the process becomes significantly more complex and expensive. In most jurisdictions you would need to apply to a court for a deputyship or guardianship order. Acting early — while the person still has capacity — is strongly recommended." },
+    },
+  ],
+}
+
 export default function DocumentsAuthorityPage() {
   const { t } = useLocale()
   const relatedWorksheets = WORKSHEET_RESOURCES.filter((w) => RELATED_WS_IDS.includes(w.id))
@@ -35,12 +67,13 @@ export default function DocumentsAuthorityPage() {
         title={t('new_carer.docs_page_title')}
         description={t('new_carer.docs_meta_desc')}
         canonical="/new-carer/documents-authority"
+        structuredData={[breadcrumbSchema, faqSchema]}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <NewCarerBreadcrumb />
+            <NewCarerBreadcrumb currentLabel={t('new_carer.docs_title')} />
           </div>
 
           <SectionIntro

@@ -1,11 +1,35 @@
-// src/pages/new-carer/NewCarerPage.tsx
-import React from 'react'
 import { CircleCheck as CheckCircle } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import ResourceCard from '../../components/new-carer/ResourceCard'
+import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import { WORKSHEET_RESOURCES } from '../../content/newCarerContent'
+import { SITE_URL } from '../../lib/siteConfig'
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+  ],
+}
+
+const webPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: 'New to Caregiving? Where to Start',
+  url: `${SITE_URL}/new-carer`,
+  description: 'A practical guide for first-time family carers covering care planning, roles, living arrangements, legal documents, health coordination, and carer sustainability.',
+  breadcrumb: {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+    ],
+  },
+}
 
 export default function NewCarerPage() {
   const { t } = useLocale()
@@ -29,6 +53,7 @@ export default function NewCarerPage() {
         title={t('new_carer.page_title')}
         description={t('new_carer.meta_desc')}
         canonical="/new-carer"
+        structuredData={[breadcrumbSchema, webPageSchema]}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
@@ -55,8 +80,13 @@ export default function NewCarerPage() {
           </div>
         </section>
 
+        {/* ── Breadcrumb (below hero) ── */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+          <NewCarerBreadcrumb />
+        </div>
+
         {/* ── Summary blocks ── */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid md:grid-cols-2 gap-6">
             {/* Helps you */}
             <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

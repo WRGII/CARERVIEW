@@ -7,6 +7,8 @@ Allow: /pricing
 Allow: /privacy-policy
 Allow: /data-policy
 Allow: /caregiver-forum
+Allow: /caregiver-resources
+Allow: /new-carer
 Allow: /create-account
 
 # Disallow authenticated and account-gated pages

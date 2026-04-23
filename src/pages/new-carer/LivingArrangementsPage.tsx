@@ -1,4 +1,3 @@
-// src/pages/new-carer/LivingArrangementsPage.tsx
 import React from 'react'
 import { Chrome as Home, Users, HeartHandshake, Building2, CircleCheck as CheckCircle } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -10,6 +9,7 @@ import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
 import { LIVING_OPTIONS, LIVING_DIMENSIONS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
+import { SITE_URL } from '../../lib/siteConfig'
 
 const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   Home, Users, HeartHandshake, Building2,
@@ -23,8 +23,39 @@ const LIVING_QUESTIONS = [
   'new_carer.living_q5',
 ]
 
-// Worksheets relevant to this page
 const RELATED_WS_IDS = ['home-safety', 'moving-in']
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+    { '@type': 'ListItem', position: 3, name: 'Living Arrangements', item: `${SITE_URL}/new-carer/living-arrangements` },
+  ],
+}
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What are the options for elderly parent living arrangements?',
+      acceptedAnswer: { '@type': 'Answer', text: 'The main options are: staying in their current home (with or without in-home support), moving into a family member\'s home, receiving professional in-home care, or moving to a residential care facility. The right choice depends on safety needs, supervision requirements, financial sustainability, and the wishes of the person being cared for.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I know if my parent is safe living at home?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Key factors to assess include: whether the home can be made physically safe, whether supervision needs can be met, whether medications can be managed reliably, whether transport to appointments is possible, and whether the person can manage emergencies. A formal home safety assessment can help identify risks.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Should I move my elderly parent into my home?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Moving a parent into your home can work well when care needs are moderate, the physical space is suitable, and the impact on your family and work is sustainable. It requires honest planning around daily routines, safety modifications, supervision needs, and what happens if care needs increase over time.' },
+    },
+  ],
+}
 
 export default function LivingArrangementsPage() {
   const { t } = useLocale()
@@ -36,12 +67,13 @@ export default function LivingArrangementsPage() {
         title={t('new_carer.living_page_title')}
         description={t('new_carer.living_meta_desc')}
         canonical="/new-carer/living-arrangements"
+        structuredData={[breadcrumbSchema, faqSchema]}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <NewCarerBreadcrumb />
+            <NewCarerBreadcrumb currentLabel={t('new_carer.living_title')} />
           </div>
 
           <SectionIntro

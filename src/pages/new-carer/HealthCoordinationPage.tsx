@@ -1,6 +1,7 @@
-// src/pages/new-carer/HealthCoordinationPage.tsx
 import React from 'react'
 import { HeartPulse, ClipboardList, Pill, CalendarDays, Users, RefreshCw, FileText, TriangleAlert as AlertTriangle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
 import SectionIntro from '../../components/new-carer/SectionIntro'
@@ -10,6 +11,7 @@ import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
 import { HEALTH_SYSTEMS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
+import { SITE_URL } from '../../lib/siteConfig'
 
 const ICON_MAP: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   ClipboardList, Pill, CalendarDays, Users, RefreshCw, FileText, AlertTriangle,
@@ -25,6 +27,38 @@ const HEALTH_QUESTIONS = [
 
 const RELATED_WS_IDS = ['medications']
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    { '@type': 'ListItem', position: 2, name: 'New Carer Guide', item: `${SITE_URL}/new-carer` },
+    { '@type': 'ListItem', position: 3, name: 'Health Coordination', item: `${SITE_URL}/new-carer/health-coordination` },
+  ],
+}
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'How do I manage medications for an elderly parent?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Start by creating a single, up-to-date medication list including dosages, prescribing doctors, and timing. Use a pill organiser or dispensing system for daily management. Keep the list accessible to all carers and bring it to every medical appointment. Review it regularly with the GP, particularly after any hospital admission.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I coordinate between multiple doctors for my parent?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Designate one GP as the primary coordinator and ensure all specialists copy them on correspondence. Keep a single record of all providers, diagnoses, and medications. Bring this record to every appointment. Ask each specialist to communicate changes back to the GP so nothing falls through the gaps between providers.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What health information should a family caregiver keep on record?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Essential records include: all current diagnoses and conditions, full medication list with dosages, all treating providers and their contact details, upcoming and recurring appointments, recent test results and hospital discharge summaries, emergency contacts, and any advance care directives or treatment preferences.' },
+    },
+  ],
+}
+
 export default function HealthCoordinationPage() {
   const { t } = useLocale()
   const relatedWorksheets = WORKSHEET_RESOURCES.filter((w) => RELATED_WS_IDS.includes(w.id))
@@ -35,12 +69,13 @@ export default function HealthCoordinationPage() {
         title={t('new_carer.health_page_title')}
         description={t('new_carer.health_meta_desc')}
         canonical="/new-carer/health-coordination"
+        structuredData={[breadcrumbSchema, faqSchema]}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <NewCarerBreadcrumb />
+            <NewCarerBreadcrumb currentLabel={t('new_carer.health_title')} />
           </div>
 
           <SectionIntro
@@ -98,6 +133,23 @@ export default function HealthCoordinationPage() {
               questionKeys={HEALTH_QUESTIONS}
               headingKey="new_carer.health_questions_heading"
             />
+          </div>
+
+          {/* Cross-link to CarerView observation tools */}
+          <div className="bg-teal-50 border border-teal-100 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-800 leading-snug">Keep a dated health record with CarerView</p>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                CarerView's observation tools let you log health changes over time using the same ADL/IADL framework healthcare professionals use — making doctor visits and assessments faster and more accurate.
+              </p>
+            </div>
+            <Link
+              to="/why"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-700 hover:text-teal-900 transition-colors flex-shrink-0 group"
+            >
+              See how it works
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </div>
 
           {/* Related worksheets */}

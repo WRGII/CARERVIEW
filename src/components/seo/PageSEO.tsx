@@ -27,7 +27,14 @@ export default function PageSEO({
   keywords,
 }: PageSEOProps) {
   const fullTitle = title.includes('CarerView') ? title : `${title} | CarerView`
-  const canonicalUrl = canonical ?? ''
+
+  // Always resolve to absolute URL — relative paths like "/new-carer" produce invalid
+  // canonical and hrefLang tags that Google ignores or misinterprets.
+  const canonicalUrl = canonical
+    ? canonical.startsWith('http')
+      ? canonical
+      : `${SITE_URL}${canonical}`
+    : ''
 
   const schemas = structuredData
     ? Array.isArray(structuredData)
@@ -45,9 +52,9 @@ export default function PageSEO({
       ) : (
         <meta name="robots" content="index, follow" />
       )}
-      {canonical && <link rel="canonical" href={canonical} />}
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-      {canonical &&
+      {canonicalUrl &&
         SUPPORTED_LOCALES.map(locale => (
           <link
             key={locale}
@@ -56,7 +63,7 @@ export default function PageSEO({
             href={`${canonicalUrl}?lang=${locale}`}
           />
         ))}
-      {canonical && (
+      {canonicalUrl && (
         <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
       )}
 
@@ -64,7 +71,7 @@ export default function PageSEO({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
-      {canonical && <meta property="og:url" content={canonicalUrl} />}
+      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
