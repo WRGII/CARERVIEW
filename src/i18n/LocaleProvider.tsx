@@ -204,7 +204,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
               queryClient.invalidateQueries({ queryKey: ['profile', userId] })
             }
           })
-          .catch(() => {})
+          .then(undefined, () => {})
       }
     },
     [userId, queryClient]
