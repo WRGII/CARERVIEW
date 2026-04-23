@@ -70,6 +70,14 @@ export function Footer() {
               </div>
               <div>
                 <Link
+                  to="/new-carer"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.new_carer')}
+                </Link>
+              </div>
+              <div>
+                <Link
                   to="/why"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
