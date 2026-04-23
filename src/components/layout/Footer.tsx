@@ -38,7 +38,7 @@ export function Footer() {
   return (
     <footer className="w-full border-t border-slate-200 bg-white">
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand & About Section */}
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start mb-4">
@@ -70,14 +70,6 @@ export function Footer() {
               </div>
               <div>
                 <Link
-                  to="/new-carer"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.new_carer')}
-                </Link>
-              </div>
-              <div>
-                <Link
                   to="/why"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
@@ -90,6 +82,39 @@ export function Footer() {
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('footer.pricing_link')}
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Resources */}
+          <div className="text-center md:text-left">
+            <h4 className="font-semibold text-slate-800 text-base mb-4">
+              {t('footer.resources_heading')}
+            </h4>
+            <div className="space-y-2">
+              <div>
+                <Link
+                  to="/caregiver-resources"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.caregiver_resources')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/new-carer"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.new_carer')}
+                </Link>
+              </div>
+              <div>
+                <Link
+                  to="/caregiver-forum"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('nav.caregiver_forum')}
                 </Link>
               </div>
             </div>

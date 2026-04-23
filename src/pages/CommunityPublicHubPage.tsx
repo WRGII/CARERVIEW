@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Users, Heart, ArrowRight, MessageCircle, ShieldCheck,
-  BookOpen, TrendingUp, Sparkles, ChevronDown,
+  BookOpen, TrendingUp, Sparkles, ChevronDown, X,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabaseClient'
@@ -9,6 +10,15 @@ import { SITE_URL } from '../lib/siteConfig'
 import type { CommunityRoom } from '../lib/community'
 import PublicRoomSection from '../components/community/PublicRoomSection'
 import PageSEO from '../components/seo/PageSEO'
+import { useLocale } from '../i18n/LocaleContext'
+
+const RESOURCES_PAGE = '/caregiver-resources'
+
+function trackEvent(name: string) {
+  if (typeof (window as Window & { plausible?: (e: string) => void }).plausible === 'function') {
+    (window as Window & { plausible?: (e: string) => void }).plausible!(name)
+  }
+}
 
 const SIGNUP_URL = '/create-account?plan=free&source=caregiver-forum'
 
@@ -74,6 +84,107 @@ const COMMUNITY_FAQ = [
     a: "Yes. What you're feeling is called anticipatory grief or ambiguous loss, and it's extremely common among family caregivers — particularly those caring for someone with dementia. You may grieve the relationship you had, the future you expected, or the person they were before illness changed them. This grief is real, valid, and does not mean you love them any less. Many caregivers in our community have shared their experiences with this, and connecting with others who understand can help enormously.",
   },
 ]
+
+interface JoinModalProps {
+  onClose: () => void
+}
+
+function JoinModal({ onClose }: JoinModalProps) {
+  const { t } = useLocale()
+  useEffect(() => {
+    trackEvent('community_signup_prompt_triggered')
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="join-modal-title"
+    >
+      <div
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-7">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <div className="w-10 h-10 bg-cyan-50 rounded-full flex items-center justify-center mb-4">
+          <Users className="w-5 h-5 text-cyan-500" />
+        </div>
+        <h2 id="join-modal-title" className="text-lg font-bold text-slate-800 mb-2">
+          {t('public.community.join_modal_title')}
+        </h2>
+        <p className="text-sm text-slate-600 leading-relaxed mb-5">
+          {t('public.community.join_modal_body')}
+        </p>
+        <div className="flex flex-col gap-2.5">
+          <Link
+            to="/create-account?plan=free&source=community-join"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white font-semibold rounded-xl transition-colors text-sm"
+          >
+            {t('public.community.join_modal_create_btn')}
+          </Link>
+          <Link
+            to="/#get-started"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm"
+          >
+            {t('public.community.join_modal_signin_btn')}
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PopularTopicsSection() {
+  const { t } = useLocale()
+  const topics = [
+    { titleKey: 'public.community.topic1_title', excerptKey: 'public.community.topic1_excerpt' },
+    { titleKey: 'public.community.topic2_title', excerptKey: 'public.community.topic2_excerpt' },
+    { titleKey: 'public.community.topic3_title', excerptKey: 'public.community.topic3_excerpt' },
+  ]
+
+  return (
+    <section aria-labelledby="popular-topics-heading" className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 id="popular-topics-heading" className="text-sm font-bold text-slate-800">
+            {t('public.community.popular_topics_heading')}
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">{t('public.community.popular_topics_intro')}</p>
+        </div>
+        <Link
+          to={RESOURCES_PAGE}
+          className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
+        >
+          See resources
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {topics.map((topic, i) => (
+          <div key={i} className="px-5 py-3.5 flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800 leading-snug">{t(topic.titleKey)}</p>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t(topic.excerptKey)}</p>
+            </div>
+            <MessageCircle className="w-4 h-4 text-slate-300 flex-shrink-0 mt-0.5" />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 function RoomSkeleton() {
   return (
@@ -184,6 +295,14 @@ function CommunityFAQ() {
 }
 
 export default function CommunityTopicHubPage() {
+  const [showJoinModal, setShowJoinModal] = useState(false)
+
+  useEffect(() => {
+    if (document.referrer.includes('/caregiver-resources')) {
+      trackEvent('community_view_from_resources')
+    }
+  }, [])
+
   const { data: rooms, isLoading: roomsLoading } = useQuery<CommunityRoom[]>({
     queryKey: ['public-community', 'rooms'],
     queryFn: async () => {
@@ -253,6 +372,7 @@ export default function CommunityTopicHubPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {showJoinModal && <JoinModal onClose={() => setShowJoinModal(false)} />}
       <PageSEO
         title="Free Caregiver Forum & Support Community - CarerView"
         description="Join CarerView's free caregiver support forum. Discuss dementia care, caregiver burnout, caring for ageing parents, sibling conflict, and more. Anonymous posting available. Free for all family caregivers."
@@ -342,6 +462,9 @@ export default function CommunityTopicHubPage() {
 
       {/* Forum feed */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+
+        {/* Popular Starting Topics */}
+        <PopularTopicsSection />
 
         <div className="flex items-baseline justify-between">
           <div>

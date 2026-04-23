@@ -112,6 +112,7 @@ import SustainabilityPage from "./pages/new-carer/SustainabilityPage";
 import ReviewPlanPage from "./pages/new-carer/ReviewPlanPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import DataPolicyPage from "./pages/DataPolicyPage";
+import CaregiverResourcesPage from "./pages/CaregiverResourcesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -183,6 +184,7 @@ export default function App() {
                   <Route path="/auth/error" element={<AuthErrorPage />} />
                   <Route path="/caregiver-forum" element={<CommunityPublicHubPage />} />
                   <Route path="/community-hub" element={<Navigate to="/caregiver-forum" replace />} />
+                  <Route path="/caregiver-resources" element={<CaregiverResourcesPage />} />
 
                   {/* New Carer */}
                   <Route path="/new-carer" element={<NewCarerPage />} />

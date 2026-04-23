@@ -14,6 +14,7 @@ const ROUTES = [
   '/about',
   '/pricing',
   '/caregiver-forum',
+  '/caregiver-resources',
   '/privacy-policy',
   '/data-policy',
 ]

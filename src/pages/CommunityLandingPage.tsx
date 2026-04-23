@@ -1,9 +1,52 @@
-import { Users, MessageCircle, Pencil } from 'lucide-react'
+import { Users, MessageCircle, Pencil, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCommunityRooms } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import CommunityGuidelinesModal from '../components/community/CommunityGuidelinesModal'
 import CommunityRoomSection from '../components/community/CommunityRoomSection'
+import { useLocale } from '../i18n/LocaleContext'
+
+const FORUM_URL = '/caregiver-forum'
+
+function PopularTopicsSection() {
+  const { t } = useLocale()
+  const topics = [
+    { titleKey: 'public.community.topic1_title', excerptKey: 'public.community.topic1_excerpt' },
+    { titleKey: 'public.community.topic2_title', excerptKey: 'public.community.topic2_excerpt' },
+    { titleKey: 'public.community.topic3_title', excerptKey: 'public.community.topic3_excerpt' },
+  ]
+
+  return (
+    <section aria-labelledby="popular-topics-auth-heading" className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 id="popular-topics-auth-heading" className="text-sm font-bold text-slate-800">
+            {t('public.community.popular_topics_heading')}
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5">{t('public.community.popular_topics_intro')}</p>
+        </div>
+        <Link
+          to={FORUM_URL}
+          className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1"
+        >
+          Browse all
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {topics.map((topic, i) => (
+          <div key={i} className="px-5 py-3.5 flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800 leading-snug">{t(topic.titleKey)}</p>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t(topic.excerptKey)}</p>
+            </div>
+            <MessageCircle className="w-4 h-4 text-slate-300 flex-shrink-0 mt-0.5" />
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 function RoomSkeleton() {
   return (
@@ -116,6 +159,9 @@ export default function CommunityLandingPage() {
               </Link>
             </div>
           )}
+
+          {/* Popular Starting Topics */}
+          <PopularTopicsSection />
 
           {/* Room sections */}
           {roomsLoading ? (
