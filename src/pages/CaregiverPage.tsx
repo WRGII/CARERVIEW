@@ -21,6 +21,7 @@ import { ScoreLegendDisplay } from '../components/caregiver/ScoreLegendDisplay';
 import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
 import MedicalSummaryCard from '../components/caregiver/MedicalSummaryCard';
+import CarePlanStatusPanel from '../components/caregiver/CarePlanStatusPanel';
 import { useDeleteObservation } from '../hooks/useObservations';
 import { useToast } from '../components/ui/ToastProvider';
 
@@ -248,6 +249,9 @@ export default function CaregiverPage() {
       )}
 
       {!planActive && <InactivePlanNotice className="mb-6" />}
+
+      {/* Care Plan status — paid users only */}
+      {planActive && plan?.plan_id !== 'free' && <CarePlanStatusPanel />}
 
       <div className="mb-6">
         <MedicalSummaryCard />

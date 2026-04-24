@@ -8,6 +8,7 @@ type OnboardingRow = {
   tutorial_step: number;
   tutorial_dismissed: boolean;
   welcome_dismissed: boolean;
+  care_hub_visited: boolean;
 };
 
 export function useOnboarding() {
@@ -49,12 +50,14 @@ export function useOnboarding() {
   const showTutorial = !isLoading && !!user?.id && !data?.tutorial_completed && !data?.tutorial_dismissed;
   const showWelcome = !isLoading && !!user?.id && !data?.welcome_dismissed;
   const currentStep = data?.tutorial_step ?? 0;
+  const careHubVisited = !isLoading && (data?.care_hub_visited ?? false);
 
   const setStep = (step: number) => upsert.mutate({ tutorial_step: step });
   const completeTutorial = () => upsert.mutate({ tutorial_completed: true, tutorial_step: 0 });
   const dismissTutorial = () => upsert.mutate({ tutorial_dismissed: true });
   const dismissWelcome = () => upsert.mutate({ welcome_dismissed: true });
   const restartTutorial = () => upsert.mutate({ tutorial_completed: false, tutorial_dismissed: false, tutorial_step: 0 });
+  const markCareHubVisited = () => upsert.mutate({ care_hub_visited: true });
 
   return {
     data,
@@ -62,10 +65,12 @@ export function useOnboarding() {
     showTutorial,
     showWelcome,
     currentStep,
+    careHubVisited,
     setStep,
     completeTutorial,
     dismissTutorial,
     dismissWelcome,
     restartTutorial,
+    markCareHubVisited,
   };
 }

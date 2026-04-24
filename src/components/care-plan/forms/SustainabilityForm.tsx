@@ -1,5 +1,6 @@
 import type { SectionFormProps } from '../SectionFormModal'
 import { TriangleAlert as AlertTriangle } from 'lucide-react'
+import { getSustainabilityFlags } from '../../../lib/carePlanGaps'
 
 const STRESS_FACTORS = [
   'Time — caring expands to fill all available hours',
@@ -52,15 +53,9 @@ export default function SustainabilityForm({ data, onChange, readOnly }: Section
 
   const stressFactors = (data.stress_factors as string[]) ?? []
   const availableHours = (data.available_hours as string) ?? ''
-  const hasNoBackup = !(data.backup_person as string)
-  const hasNoRespite = !(data.respite_plan as string)
   const stressLevel = (data.stress_level as string) ?? ''
-  const highStress = stressLevel === 'High' || stressLevel === 'Very high'
 
-  const flags: string[] = []
-  if (hasNoBackup) flags.push('No backup caregiver identified')
-  if (hasNoRespite) flags.push('No respite plan in place')
-  if (highStress) flags.push('Primary caregiver reports high stress')
+  const flags = getSustainabilityFlags(data)
 
   return (
     <div className="space-y-7">

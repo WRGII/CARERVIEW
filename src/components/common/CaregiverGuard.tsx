@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
+import { useOnboarding } from "../../hooks/useOnboarding";
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = { children: React.ReactNode };
@@ -9,6 +10,7 @@ type Props = { children: React.ReactNode };
 export default function CaregiverGuard({ children }: Props) {
   const { user, profile, loading } = useAuth();
   const { data: userPlan, isLoading: planLoading } = useUserPlan();
+  const { careHubVisited, isLoading: onboardingLoading, markCareHubVisited } = useOnboarding();
   const { t } = useLocale();
   const location = useLocation();
   const [expired, setExpired] = React.useState(false);
@@ -48,6 +50,30 @@ export default function CaregiverGuard({ children }: Props) {
 
   if (!loading && !planLoading && user && !hasActivePlan(userPlan)) {
     return <Navigate to="/create-account?incomplete=1" replace state={{ from: location }} />;
+  }
+
+  // First-visit redirect for paid caregiver users
+  // Only fires once (care_hub_visited flag), only from the dashboard root,
+  // and only when onboarding data is ready.
+  const isPaidCarer =
+    profile?.role === 'caregiver' &&
+    userPlan?.plan_id !== 'free' &&
+    hasActivePlan(userPlan)
+
+  const isOnDashboard = location.pathname === '/caregiver'
+  const alreadyOnCareHub = location.pathname.startsWith('/care-hub')
+
+  if (
+    !loading &&
+    !planLoading &&
+    !onboardingLoading &&
+    isPaidCarer &&
+    !careHubVisited &&
+    isOnDashboard &&
+    !alreadyOnCareHub
+  ) {
+    markCareHubVisited();
+    return <Navigate to="/care-hub" replace />;
   }
 
   return <>{children}</>;

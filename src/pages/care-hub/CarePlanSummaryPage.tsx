@@ -10,106 +10,10 @@ import {
   getSectionByKey,
   SECTION_LABELS,
   SECTION_KEYS,
-  type CarePlanSection,
   type SectionKey,
 } from '../../hooks/useCarePlan'
+import { detectGaps, type GapItem } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
-
-// ── Gap detection ────────────────────────────────────────────────────────────
-
-interface Gap {
-  label: string
-  action: string
-}
-
-function detectGaps(sections: CarePlanSection[]): Gap[] {
-  const gaps: Gap[] = []
-
-  // Authority gaps
-  const auth = getSectionByKey(sections, 'authority')
-  if (!auth || auth.completion_status === 'not_started') {
-    gaps.push({ label: 'Authority section not completed', action: 'Complete the Authority section to identify who can make key decisions.' })
-  } else {
-    const d = auth.content_json as Record<string, string>
-    const authFields = ['health_decisions', 'financial_authority', 'legal_documents', 'document_location']
-    for (const f of authFields) {
-      if (d[f] === 'missing' || d[f] === 'unclear') {
-        const label = f === 'health_decisions' ? 'Health decision authority'
-          : f === 'financial_authority' ? 'Financial authority'
-          : f === 'legal_documents' ? 'Legal documents'
-          : 'Document location'
-        gaps.push({ label: `${label} is ${d[f]}`, action: `Resolve the "${label}" gap in the Authority section.` })
-      }
-    }
-  }
-
-  // Responsibilities gaps
-  const resp = getSectionByKey(sections, 'responsibilities')
-  if (resp && resp.completion_status !== 'not_started') {
-    const d = resp.content_json as Record<string, Record<string, string>>
-    const areaKeys = ['household', 'personal_care', 'emotional', 'health', 'scheduling', 'admin', 'respite']
-    const areaLabels: Record<string, string> = {
-      household: 'Household support',
-      personal_care: 'Personal care and mobility',
-      emotional: 'Emotional support',
-      health: 'Health coordination',
-      scheduling: 'Appointments and transport',
-      admin: 'Financial and administration',
-      respite: 'Backup and respite',
-    }
-    for (const k of areaKeys) {
-      if (d[k]?.status === 'gap' || d[k]?.status === 'unclear') {
-        gaps.push({
-          label: `${areaLabels[k]} responsibility is ${d[k].status}`,
-          action: `Assign a responsible person for "${areaLabels[k]}" in the Responsibilities section.`,
-        })
-      }
-    }
-  }
-
-  // Living arrangement gaps
-  const living = getSectionByKey(sections, 'living_arrangement')
-  if (living && living.completion_status !== 'not_started') {
-    const d = living.content_json as Record<string, string>
-    if (d.currently_working === 'Struggling' || d.currently_working === 'No') {
-      gaps.push({
-        label: 'Current living arrangement is not working well',
-        action: 'Review and update the Living Arrangement section — consider alternatives.',
-      })
-    }
-  }
-
-  // Sustainability gaps
-  const sustain = getSectionByKey(sections, 'sustainability')
-  if (sustain && sustain.completion_status !== 'not_started') {
-    const d = sustain.content_json as Record<string, unknown>
-    if (!d.backup_person) {
-      gaps.push({ label: 'No backup caregiver identified', action: 'Identify a backup caregiver in the Sustainability section.' })
-    }
-    if (!d.respite_plan) {
-      gaps.push({ label: 'No respite plan in place', action: 'Add a respite plan in the Sustainability section.' })
-    }
-    if (d.stress_level === 'High' || d.stress_level === 'Very high') {
-      gaps.push({ label: 'Primary caregiver reports high stress', action: 'Review sustainability and backup arrangements urgently.' })
-    }
-  }
-
-  // Review gaps
-  const review = getSectionByKey(sections, 'review')
-  if (!review || review.completion_status === 'not_started') {
-    gaps.push({ label: 'No review schedule set', action: 'Complete the Review section and set a next review date.' })
-  } else {
-    const d = review.content_json as Record<string, string>
-    if (!d.next_review_date) {
-      gaps.push({ label: 'No next review date set', action: 'Set a next review date in the Review section.' })
-    }
-    if (!d.review_owner) {
-      gaps.push({ label: 'No review owner named', action: 'Identify who is responsible for leading reviews.' })
-    }
-  }
-
-  return gaps
-}
 
 // ── Section summary blocks ────────────────────────────────────────────────────
 
@@ -258,10 +162,19 @@ export default function CarePlanSummaryPage() {
                     </h2>
                   </div>
                   <div className="space-y-3">
-                    {gaps.map((gap, i) => (
-                      <div key={i} className="bg-white rounded-xl border border-amber-100 p-4">
-                        <p className="text-sm font-semibold text-amber-900 mb-0.5">{gap.label}</p>
-                        <p className="text-xs text-amber-700 leading-relaxed">{gap.action}</p>
+                    {gaps.map((gap: GapItem, i) => (
+                      <div key={i} className={`bg-white rounded-xl border p-4 ${
+                        gap.severity === 'critical' ? 'border-red-200' : gap.severity === 'important' ? 'border-amber-200' : 'border-slate-200'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                            gap.severity === 'critical' ? 'bg-red-500' : gap.severity === 'important' ? 'bg-amber-500' : 'bg-slate-400'
+                          }`} />
+                          <p className={`text-sm font-semibold ${
+                            gap.severity === 'critical' ? 'text-red-900' : 'text-amber-900'
+                          }`}>{gap.label}</p>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed pl-4">{gap.action}</p>
                       </div>
                     ))}
                   </div>

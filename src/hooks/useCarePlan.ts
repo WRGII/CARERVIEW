@@ -94,6 +94,27 @@ export function useCarePlan(teamId: string | null) {
   })
 }
 
+// ── Read-only: find existing plan without creating one ───────────────────────
+
+export function useCarePlanReadOnly(teamId: string | null) {
+  return useQuery({
+    queryKey: ['care_plans_ro', teamId],
+    enabled: !!teamId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<CarePlan | null> => {
+      if (!teamId) return null
+      const { data, error } = await supabase
+        .from('care_plans')
+        .select('*')
+        .eq('team_id', teamId)
+        .maybeSingle()
+      if (error) throw error
+      return data as CarePlan | null
+    },
+    retry: 1,
+  })
+}
+
 // ── Get all sections for a care plan ────────────────────────────────────────
 
 export function useCarePlanSections(carePlanId: string | null | undefined) {
