@@ -5,7 +5,7 @@ import { useActiveTeam } from '../../context/ActiveTeam'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamRole } from '../../hooks/useMemoryBook'
 import {
-  useCarePlan,
+  useCarePlanReadOnly,
   useCarePlanSections,
   SECTION_KEYS,
   SECTION_LABELS,
@@ -16,6 +16,7 @@ import {
   type CarePlan,
   type CarePlanSection,
 } from '../../hooks/useCarePlan'
+import { supabase } from '../../lib/supabaseClient'
 import PageSEO from '../../components/seo/PageSEO'
 
 const SectionFormModal = lazy(() => import('../../components/care-plan/SectionFormModal'))
@@ -134,15 +135,29 @@ function SectionCard({
 export default function CarePlanBuilderPage() {
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
-  const { data: teamRole } = useTeamRole(teamId, user?.id)
+  const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id)
   const isOwner = teamRole === 'owner'
 
-  const { data: carePlan, isLoading: planLoading, error: planError } = useCarePlan(teamId)
+  const { data: carePlan, isLoading: planLoading, error: planError, refetch: refetchPlan } = useCarePlanReadOnly(teamId)
   const { data: sections = [], isLoading: sectionsLoading } = useCarePlanSections(carePlan?.id)
 
   const [openSection, setOpenSection] = useState<SectionKey | null>(null)
+  const [creating, setCreating] = useState(false)
 
-  const isLoading = planLoading || sectionsLoading
+  async function handleCreatePlan() {
+    if (!teamId || !user?.id || !isOwner) return
+    setCreating(true)
+    try {
+      await supabase
+        .from('care_plans')
+        .insert({ team_id: teamId, created_by: user.id, status: 'draft' })
+      await refetchPlan()
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const isLoading = planLoading || sectionsLoading || teamRoleLoading
   const completedCount = countCompletedSections(sections)
   const totalCount = SECTION_KEYS.length
 
@@ -259,6 +274,37 @@ export default function CarePlanBuilderPage() {
           {planError && !isLoading && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-800">
               Unable to load Care Plan. Please refresh the page.
+            </div>
+          )}
+
+          {/* No plan yet */}
+          {!isLoading && !carePlan && (
+            <div className="text-center py-16">
+              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5">
+                <ClipboardList className="w-7 h-7 text-blue-600" />
+              </div>
+              {isOwner ? (
+                <>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-2">Start your Care Plan</h2>
+                  <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
+                    Your team doesn&apos;t have a Care Plan yet. Create one to coordinate responsibilities, authority, and living arrangements.
+                  </p>
+                  <button
+                    onClick={handleCreatePlan}
+                    disabled={creating}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                  >
+                    {creating ? 'Creating…' : 'Create Care Plan'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-2">No Care Plan yet</h2>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    The care team owner has not created a Care Plan yet. Check back later.
+                  </p>
+                </>
+              )}
             </div>
           )}
 

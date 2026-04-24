@@ -3,6 +3,8 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
 import { useOnboarding } from "../../hooks/useOnboarding";
+import { useActiveTeam } from "../../context/ActiveTeam";
+import { useTeamRole } from "../../hooks/useMemoryBook";
 import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = { children: React.ReactNode };
@@ -11,6 +13,8 @@ export default function CaregiverGuard({ children }: Props) {
   const { user, profile, loading } = useAuth();
   const { data: userPlan, isLoading: planLoading } = useUserPlan();
   const { careHubVisited, isLoading: onboardingLoading, markCareHubVisited } = useOnboarding();
+  const { teamId } = useActiveTeam();
+  const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id);
   const { t } = useLocale();
   const location = useLocation();
   const [expired, setExpired] = React.useState(false);
@@ -24,7 +28,7 @@ export default function CaregiverGuard({ children }: Props) {
     return <Navigate to={{ pathname: "/", hash: "#get-started" }} replace />;
   }
 
-  if ((loading || planLoading) && !expired) {
+  if ((loading || planLoading || (!!teamId && teamRoleLoading)) && !expired) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
         <p className="text-slate-gray mb-2">{t('guard.preparing_workspace')}</p>
@@ -58,7 +62,8 @@ export default function CaregiverGuard({ children }: Props) {
   const isPaidCarer =
     profile?.role === 'caregiver' &&
     userPlan?.plan_id !== 'free' &&
-    hasActivePlan(userPlan)
+    hasActivePlan(userPlan) &&
+    (teamRole === 'owner' || !teamId)
 
   const isOnDashboard = location.pathname === '/caregiver'
   const alreadyOnCareHub = location.pathname.startsWith('/care-hub')
@@ -67,6 +72,7 @@ export default function CaregiverGuard({ children }: Props) {
     !loading &&
     !planLoading &&
     !onboardingLoading &&
+    !(!!teamId && teamRoleLoading) &&
     isPaidCarer &&
     !careHubVisited &&
     isOnDashboard &&
