@@ -1,17 +1,112 @@
 // src/components/layout/Header.tsx
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../hooks/useAuth";
 import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
 import { useActiveTeam } from "../../context/ActiveTeam";
 import AccountMenu from "../caregiver/AccountMenu";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, BookOpen, ClipboardList, Activity, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useLocale } from "../../i18n/LocaleContext";
 
 const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
+
+const CARE_HUB_ITEMS = [
+  {
+    to: "/caregiver/memory-schedule",
+    icon: BookOpen,
+    label: "Memory Book",
+    sub: "Know the person",
+    color: "text-teal-600",
+    bg: "hover:bg-teal-50",
+  },
+  {
+    to: "/care-hub/care-plan",
+    icon: ClipboardList,
+    label: "Care Plan",
+    sub: "Coordinate the team",
+    color: "text-blue-600",
+    bg: "hover:bg-blue-50",
+  },
+  {
+    to: "/caregiver/observations/new",
+    icon: Activity,
+    label: "Observations",
+    sub: "Track change",
+    color: "text-amber-600",
+    bg: "hover:bg-amber-50",
+  },
+] as const;
+
+function CareHubDropdown({ isActive }: { isActive: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+          isActive || open
+            ? "text-slate-900 bg-slate-50 border-slate-400"
+            : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+        }`}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        Care Hub
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden">
+          <div className="px-4 pt-3 pb-2">
+            <Link
+              to="/care-hub"
+              onClick={() => setOpen(false)}
+              className="text-xs font-semibold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+            >
+              Care Hub overview →
+            </Link>
+          </div>
+          <div className="pb-2">
+            {CARE_HUB_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 ${item.bg} transition-colors group`}
+                >
+                  <div className={`w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 ${item.color}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+                    <p className="text-xs text-slate-400">{item.sub}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function useBrandingLogo() {
   return useQuery({
@@ -46,9 +141,10 @@ export default function Header() {
   const { data: plan } = useUserPlan();
   const { teamId } = useActiveTeam();
   const { t } = useLocale();
+  const location = useLocation();
   const canUseTeam = plan?.plan_id === "family_qtr";
-  const hasActiveTeam = !!teamId;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [careHubMobileOpen, setCareHubMobileOpen] = useState(false);
 
   const isAuthed = !!user && !profile?.disabled;
   const dashPath = profile?.role === "admin" ? "/admin" : "/caregiver";
@@ -57,7 +153,14 @@ export default function Header() {
     plan?.plan_id !== "free" &&
     hasActivePlan(plan);
 
-  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const isCareHubActive = location.pathname.startsWith("/care-hub") ||
+    location.pathname.startsWith("/caregiver/memory-schedule") ||
+    location.pathname.startsWith("/caregiver/observations");
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setCareHubMobileOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
@@ -97,24 +200,27 @@ export default function Header() {
                 <div className="hidden md:flex items-center gap-3">
                   <Link
                     to={dashPath}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+                      location.pathname === "/caregiver" || location.pathname === "/admin"
+                        ? "text-slate-900 bg-slate-50 border-slate-400"
+                        : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+                    }`}
                   >
                     {t('nav.dashboard')}
                   </Link>
 
                   {isPaidCarer && (
-                    <Link
-                      to="/care-hub"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
-                    >
-                      Care Hub
-                    </Link>
+                    <CareHubDropdown isActive={isCareHubActive} />
                   )}
 
                   {isPaidCarer && (
                     <Link
                       to="/new-carer"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+                        location.pathname.startsWith("/new-carer")
+                          ? "text-slate-900 bg-slate-50 border-slate-400"
+                          : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+                      }`}
                     >
                       {t('nav.new_carer')}
                     </Link>
@@ -123,18 +229,13 @@ export default function Header() {
                   {canUseTeam && (
                     <Link
                       to="/team"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+                        location.pathname === "/team"
+                          ? "text-slate-900 bg-slate-50 border-slate-400"
+                          : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+                      }`}
                     >
                       {t('nav.family_circle')}
-                    </Link>
-                  )}
-
-                  {hasActiveTeam && profile?.role === "caregiver" && (
-                    <Link
-                      to="/caregiver/memory-schedule"
-                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
-                    >
-                      Memory &amp; Schedule
                     </Link>
                   )}
 
@@ -238,24 +339,60 @@ export default function Header() {
                   <Link
                     to={dashPath}
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.dashboard')}
                   </Link>
+
                   {isPaidCarer && (
-                    <Link
-                      to="/care-hub"
-                      onClick={closeMobileMenu}
-                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
-                    >
-                      Care Hub
-                    </Link>
+                    <div>
+                      {/* Care Hub parent row */}
+                      <button
+                        onClick={() => setCareHubMobileOpen((v) => !v)}
+                        className="flex items-center justify-between w-full px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                        aria-expanded={careHubMobileOpen}
+                      >
+                        Care Hub
+                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${careHubMobileOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {/* Sub-items */}
+                      {careHubMobileOpen && (
+                        <div className="ml-4 border-l-2 border-slate-100 pl-3 space-y-0.5 mb-1">
+                          <Link
+                            to="/care-hub"
+                            onClick={closeMobileMenu}
+                            className="block px-3 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+                          >
+                            Overview
+                          </Link>
+                          {CARE_HUB_ITEMS.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.to}
+                                to={item.to}
+                                onClick={closeMobileMenu}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors"
+                              >
+                                <Icon className={`w-4 h-4 shrink-0 ${item.color}`} />
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-800">{item.label}</p>
+                                  <p className="text-xs text-slate-400">{item.sub}</p>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   )}
+
                   {isPaidCarer && (
                     <Link
                       to="/new-carer"
                       onClick={closeMobileMenu}
-                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                     >
                       {t('nav.new_carer')}
                     </Link>
@@ -264,24 +401,15 @@ export default function Header() {
                     <Link
                       to="/team"
                       onClick={closeMobileMenu}
-                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                     >
                       {t('nav.family_circle')}
-                    </Link>
-                  )}
-                  {hasActiveTeam && profile?.role === "caregiver" && (
-                    <Link
-                      to="/caregiver/memory-schedule"
-                      onClick={closeMobileMenu}
-                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
-                    >
-                      Memory &amp; Schedule
                     </Link>
                   )}
                   <Link
                     to="/choose-plan?manage=true"
                     onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.manage_billing')}
                   </Link>
@@ -291,7 +419,7 @@ export default function Header() {
                       await supabase.auth.signOut();
                       window.location.assign("/");
                     }}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                   >
                     {t('nav.sign_out')}
                   </button>
