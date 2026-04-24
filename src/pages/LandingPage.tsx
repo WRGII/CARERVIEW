@@ -163,21 +163,6 @@ export default function LandingPage() {
           <p className="mt-4 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t('landing.hero_body')}
           </p>
-
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
-            >
-              {t('landing.hero_cta_primary')} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/why"
-              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-gray/30 px-8 py-4 text-lg font-semibold text-slate-gray hover:bg-peach-blush/20 transition-all duration-200"
-            >
-              {t('landing.hero_cta_secondary')}
-            </Link>
-          </div>
         </div>
 
         {/* Four-Pillar System */}
@@ -271,6 +256,20 @@ export default function LandingPage() {
                   <span className={`text-xs font-semibold ${g.textColor} flex-shrink-0`}>{g.severityLabel}</span>
                 </div>
               ))}
+            </div>
+            <div className="mt-8 pt-8 border-t border-slate-700 flex flex-col sm:flex-row gap-4 items-center justify-center">
+              <Link
+                to="/create-account"
+                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+              >
+                {t('landing.hero_cta_primary')} <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/why"
+                className="inline-flex items-center gap-3 rounded-xl border border-slate-500 px-8 py-4 text-lg font-semibold text-slate-200 hover:bg-slate-700 transition-all duration-200"
+              >
+                {t('landing.hero_cta_secondary')}
+              </Link>
             </div>
           </div>
 
