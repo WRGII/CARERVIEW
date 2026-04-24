@@ -42,10 +42,10 @@ export default function NewCarerCTA({ variant, headlineKey, bodyKey, source, cla
         >
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-800 leading-snug">
-              Ready to build your actual Care Plan?
+              {t('new_carer.cta_paid_mid_headline')}
             </p>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              This guide explains what to think through. The Care Plan Builder helps your team turn that thinking into a saved plan.
+              {t('new_carer.cta_paid_mid_body')}
             </p>
           </div>
           <div className="flex items-center gap-4 flex-shrink-0">
@@ -54,7 +54,7 @@ export default function NewCarerCTA({ variant, headlineKey, bodyKey, source, cla
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors group"
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              Open Care Plan
+              {t('new_carer.cta_open_care_plan')}
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
@@ -98,10 +98,10 @@ export default function NewCarerCTA({ variant, headlineKey, bodyKey, source, cla
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold text-slate-900 mb-1 leading-snug">
-              Ready to build your actual Care Plan?
+              {t('new_carer.cta_paid_end_headline')}
             </p>
             <p className="text-sm text-slate-500 leading-relaxed">
-              The New Carer guide helps you understand what to think through. The Care Plan Builder helps your caregiver team turn that thinking into a saved plan.
+              {t('new_carer.cta_paid_end_body')}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-shrink-0">
@@ -110,13 +110,13 @@ export default function NewCarerCTA({ variant, headlineKey, bodyKey, source, cla
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
             >
               <ClipboardList className="w-4 h-4" />
-              Open Care Plan Builder
+              {t('new_carer.cta_open_builder')}
             </Link>
             <Link
               to="/care-hub"
               className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
             >
-              Go to Care Hub
+              {t('new_carer.cta_go_to_hub')}
             </Link>
           </div>
         </div>

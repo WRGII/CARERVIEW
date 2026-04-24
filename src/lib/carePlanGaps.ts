@@ -40,6 +40,20 @@ const RESP_AREAS_CHECKED = Object.keys(RESP_AREA_LABELS)
 export function detectGaps(sections: CarePlanSection[]): GapItem[] {
   const gaps: GapItem[] = []
 
+  // Situation
+  const situation = getSectionByKey(sections, 'situation')
+  if (situation && situation.completion_status !== 'not_started') {
+    const d = situation.content_json as Record<string, unknown>
+    if (d.urgent_decisions && String(d.urgent_decisions).trim().length > 0 && !d.current_situation) {
+      gaps.push({
+        label: 'Urgent decisions recorded with no situation context',
+        action: 'Describe the current situation in the Situation section to give the urgent decisions context.',
+        severity: 'important',
+        sectionKey: 'situation',
+      })
+    }
+  }
+
   // Authority
   const auth = getSectionByKey(sections, 'authority')
   if (!auth || auth.completion_status === 'not_started') {

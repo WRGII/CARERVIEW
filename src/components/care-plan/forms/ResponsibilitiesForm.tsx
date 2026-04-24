@@ -62,7 +62,6 @@ export default function ResponsibilitiesForm({ data, onChange, readOnly }: Secti
 
       {RESPONSIBILITY_AREAS.map((area) => {
         const areaData = (data[area.key] as Record<string, string>) ?? {}
-        const status = (areaData.status as RespStatus) | undefined
 
         return (
           <div key={area.key} className="border border-slate-200 rounded-xl p-5 space-y-4">

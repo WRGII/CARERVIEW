@@ -21,7 +21,8 @@ export default function CarePlanStatusPanel() {
   const { data: carePlan, isLoading: planLoading } = useCarePlanReadOnly(teamId)
   const { data: sections = [], isLoading: sectionsLoading } = useCarePlanSections(carePlan?.id)
 
-  // Don't render anything while loading or if no plan exists yet
+  // Don't render anything if no team, while loading, or if no plan exists yet
+  if (!teamId) return null
   if (planLoading || sectionsLoading) return null
   if (!carePlan) return null
 
