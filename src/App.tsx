@@ -125,6 +125,10 @@ const AdminCommunityModerationPage = lazy(() => import("./pages/AdminCommunityMo
 // CommunityLandingPage:   authenticated members-only hub at /community (requires CommunityGuard)
 const CommunityPublicHubPage = lazy(() => import("./pages/CommunityPublicHubPage"));
 
+import CareHubPage from "./pages/care-hub/CareHubPage";
+const CarePlanBuilderPage = lazy(() => import("./pages/care-hub/CarePlanBuilderPage"));
+const CarePlanSummaryPage = lazy(() => import("./pages/care-hub/CarePlanSummaryPage"));
+
 import CaregiverPage from "./pages/CaregiverPage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
@@ -244,6 +248,44 @@ export default function App() {
                           <AdminCommunityModerationPage />
                         </ErrorBoundary>
                       </AdminGuard>
+                    }
+                  />
+
+                  {/* Care Hub */}
+                  <Route
+                    path="/care-hub"
+                    element={
+                      <CaregiverGuard>
+                        <PaidPlanGuard>
+                          <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                            <CareHubPage />
+                          </ErrorBoundary>
+                        </PaidPlanGuard>
+                      </CaregiverGuard>
+                    }
+                  />
+                  <Route
+                    path="/care-hub/care-plan"
+                    element={
+                      <CaregiverGuard>
+                        <PaidPlanGuard>
+                          <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                            <CarePlanBuilderPage />
+                          </ErrorBoundary>
+                        </PaidPlanGuard>
+                      </CaregiverGuard>
+                    }
+                  />
+                  <Route
+                    path="/care-hub/care-plan/summary"
+                    element={
+                      <CaregiverGuard>
+                        <PaidPlanGuard>
+                          <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                            <CarePlanSummaryPage />
+                          </ErrorBoundary>
+                        </PaidPlanGuard>
+                      </CaregiverGuard>
                     }
                   />
 

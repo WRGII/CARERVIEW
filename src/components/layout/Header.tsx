@@ -104,6 +104,15 @@ export default function Header() {
 
                   {isPaidCarer && (
                     <Link
+                      to="/care-hub"
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
+                    >
+                      Care Hub
+                    </Link>
+                  )}
+
+                  {isPaidCarer && (
+                    <Link
                       to="/new-carer"
                       className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 min-h-[44px]"
                     >
@@ -233,6 +242,15 @@ export default function Header() {
                   >
                     {t('nav.dashboard')}
                   </Link>
+                  {isPaidCarer && (
+                    <Link
+                      to="/care-hub"
+                      onClick={closeMobileMenu}
+                      className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                    >
+                      Care Hub
+                    </Link>
+                  )}
                   {isPaidCarer && (
                     <Link
                       to="/new-carer"
