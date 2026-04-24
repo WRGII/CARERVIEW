@@ -85,8 +85,8 @@ export default function PricingPage() {
   return (
     <main className="min-h-screen bg-white">
       <PageSEO
-        title="CarerView Pricing - Free Caregiver Community & Care Tracking Plans"
-        description="Join CarerView free to access our caregiver community forum. Upgrade for structured observation tracking, family care coordination, and healthcare export tools. Plans from £4.99/month."
+        title="CarerView Pricing - Care Plan, Coordination & Observation Tracking Plans"
+        description="CarerView paid plans include Care Plan Builder, Decision Engine gap detection, Memory Book, and observation tracking — all in one coordinated Care Hub. Free observer tier available."
         canonical={`${SITE_URL}/pricing`}
         keywords="caregiver app pricing, family caregiver subscription, care tracking plans, caregiver tools cost, free caregiver community"
         structuredData={[faqStructuredData, productStructuredData, breadcrumbStructuredData]}
@@ -148,6 +148,10 @@ export default function PricingPage() {
               <Feature>{t('pricing.plan_primary_f2')}</Feature>
               <Feature>{t('pricing.plan_primary_f3')}</Feature>
               <Feature>{t('pricing.plan_primary_f4')}</Feature>
+              <Feature>{t('pricing.plan_primary_feat5')}</Feature>
+              <Feature>{t('pricing.plan_primary_feat6')}</Feature>
+              <Feature>{t('pricing.plan_primary_feat7')}</Feature>
+              <Feature>{t('pricing.plan_primary_feat8')}</Feature>
             </ul>
             <div className="mt-6">
               <Link
@@ -176,6 +180,10 @@ export default function PricingPage() {
               <Feature>{t('pricing.plan_family_f2')}</Feature>
               <Feature>{t('pricing.plan_family_f3')}</Feature>
               <Feature>{t('pricing.plan_family_f4')}</Feature>
+              <Feature>{t('pricing.plan_family_feat5')}</Feature>
+              <Feature>{t('pricing.plan_family_feat6')}</Feature>
+              <Feature>{t('pricing.plan_family_feat7')}</Feature>
+              <Feature>{t('pricing.plan_family_feat8')}</Feature>
             </ul>
             <div className="mt-6">
               <Link
