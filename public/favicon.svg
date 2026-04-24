@@ -1,12 +1,24 @@
-<svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="80" fill="#FDF0E8"/>
-  <path d="M256 440C256 440 64 298 64 182C64 114 116 62 184 62C222 62 248 84 256 108C264 84 290 62 328 62C396 62 448 114 448 182C448 298 256 440 256 440Z" fill="#F4A882"/>
-  <circle cx="200" cy="210" r="58" stroke="#2DBDBA" stroke-width="20" fill="none"/>
-  <circle cx="312" cy="210" r="58" stroke="#2DBDBA" stroke-width="20" fill="none"/>
-  <path d="M258 210 L242 210" stroke="#2DBDBA" stroke-width="20" stroke-linecap="round"/>
-  <path d="M142 210 L98 210" stroke="#2DBDBA" stroke-width="20" stroke-linecap="round"/>
-  <path d="M370 210 L414 210" stroke="#2DBDBA" stroke-width="20" stroke-linecap="round"/>
-  <path d="M178 188 C182 176 198 180 210 186" stroke="#2DBDBA" stroke-width="14" fill="none" stroke-linecap="round"/>
-  <path d="M334 188 C330 176 314 180 302 186" stroke="#2DBDBA" stroke-width="14" fill="none" stroke-linecap="round"/>
-  <path d="M218 322 Q256 358 294 322" stroke="#2DBDBA" stroke-width="18" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Teal heart (V2 brand colour) -->
+  <path fill="#87C5BC" d="M256 460 C256 460 56 310 56 178 C56 100 112 44 184 44 C222 44 252 66 256 90 C260 66 290 44 328 44 C400 44 456 100 456 178 C456 310 256 460 256 460Z"/>
+
+  <!-- Left lens (filled ring — thick charcoal frame) -->
+  <circle cx="186" cy="210" r="72" fill="#374151"/>
+  <circle cx="186" cy="210" r="50" fill="#87C5BC"/>
+
+  <!-- Right lens -->
+  <circle cx="326" cy="210" r="72" fill="#374151"/>
+  <circle cx="326" cy="210" r="50" fill="#87C5BC"/>
+
+  <!-- Bridge -->
+  <rect x="258" y="196" width="44" height="28" rx="8" fill="#374151"/>
+
+  <!-- Left temple arm -->
+  <rect x="94" y="196" width="42" height="28" rx="8" fill="#374151"/>
+
+  <!-- Right temple arm -->
+  <rect x="370" y="196" width="42" height="28" rx="8" fill="#374151"/>
+
+  <!-- Smile -->
+  <path d="M210 320 Q256 366 302 320 L296 340 Q256 388 216 340 Z" fill="#374151"/>
 </svg>
