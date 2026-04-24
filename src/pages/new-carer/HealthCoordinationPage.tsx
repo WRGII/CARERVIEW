@@ -164,9 +164,10 @@ export default function HealthCoordinationPage() {
           {/* Related worksheets */}
           {relatedWorksheets.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-base font-bold text-slate-800 mb-3">
+              <h2 className="text-base font-bold text-slate-800 mb-1">
                 {t('new_carer.worksheets_heading')}
               </h2>
+              <p className="text-xs text-slate-400 mb-3">{t('new_carer.ws_subscriber_note')}</p>
               <div className="grid sm:grid-cols-2 gap-4">
                 {relatedWorksheets.map((r) => (
                   <ResourceCard key={r.id} resource={r} />

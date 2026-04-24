@@ -1,6 +1,5 @@
-// src/components/new-carer/ResourceCard.tsx
 import React from 'react'
-import { FileDown, Clock } from 'lucide-react'
+import { FileDown, Lock } from 'lucide-react'
 import clsx from 'clsx'
 import { useLocale } from '../../i18n/LocaleContext'
 import type { WorksheetResource } from '../../content/newCarerContent'
@@ -36,8 +35,8 @@ export default function ResourceCard({ resource }: Props) {
       </p>
       {resource.comingSoon ? (
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-          <Clock className="w-3.5 h-3.5" />
-          {t('new_carer.ws_coming_soon')}
+          <Lock className="w-3 h-3" />
+          {t('new_carer.ws_subscriber_access')}
         </div>
       ) : (
         <button className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors">
