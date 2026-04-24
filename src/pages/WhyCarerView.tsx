@@ -120,27 +120,13 @@ export default function WhyCarerView() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <div className="pt-8 pb-12 text-center">
+        <div className="pt-6 pb-8 text-center">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-6 leading-tight max-w-4xl mx-auto">
             {t('why.hero_title')}
           </h1>
-          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed mb-10">
+          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t('why.hero_body')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
-            >
-              {t('why.cta_begin')} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/pricing"
-              className="inline-flex items-center gap-2 text-base font-medium text-slate-gray/70 hover:text-slate-gray transition-colors"
-            >
-              {t('why.cta_pricing')} <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
         </div>
 
         {/* CARE PLAN SECTION */}
@@ -235,6 +221,20 @@ export default function WhyCarerView() {
                 </div>
               </article>
             ))}
+          </div>
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/create-account"
+              className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+            >
+              {t('why.cta_begin')} <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-2 text-base font-medium text-slate-gray/70 hover:text-slate-gray transition-colors"
+            >
+              {t('why.cta_pricing')} <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
