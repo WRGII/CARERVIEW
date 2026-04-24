@@ -8,6 +8,7 @@ import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { LIVING_OPTIONS, LIVING_DIMENSIONS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -126,6 +127,14 @@ export default function LivingArrangementsPage() {
             </ul>
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_living_headline"
+            bodyKey="new_carer.cta_mid_living_body"
+            source="new-carer-living-mid"
+            className="mb-8"
+          />
+
           {/* Moving in callout */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <h2 className="text-lg font-bold text-slate-900 mb-3">
@@ -146,7 +155,7 @@ export default function LivingArrangementsPage() {
 
           {/* Related worksheets */}
           {relatedWorksheets.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="text-base font-bold text-slate-800 mb-3">
                 {t('new_carer.worksheets_heading')}
               </h2>
@@ -157,6 +166,14 @@ export default function LivingArrangementsPage() {
               </div>
             </div>
           )}
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_living_headline"
+            bodyKey="new_carer.cta_end_living_body"
+            source="new-carer-living-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

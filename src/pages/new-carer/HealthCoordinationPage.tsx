@@ -10,6 +10,7 @@ import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { HEALTH_SYSTEMS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -127,6 +128,14 @@ export default function HealthCoordinationPage() {
             </p>
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_health_headline"
+            bodyKey="new_carer.cta_mid_health_body"
+            source="new-carer-health-mid"
+            className="mb-8"
+          />
+
           {/* Questions */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <QuestionPromptList
@@ -135,7 +144,7 @@ export default function HealthCoordinationPage() {
             />
           </div>
 
-          {/* Cross-link to CarerView observation tools */}
+          {/* Cross-link to CarerView product tour */}
           <div className="bg-teal-50 border border-teal-100 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-semibold text-slate-800 leading-snug">Keep a dated health record with CarerView</p>
@@ -154,7 +163,7 @@ export default function HealthCoordinationPage() {
 
           {/* Related worksheets */}
           {relatedWorksheets.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="text-base font-bold text-slate-800 mb-3">
                 {t('new_carer.worksheets_heading')}
               </h2>
@@ -165,6 +174,14 @@ export default function HealthCoordinationPage() {
               </div>
             </div>
           )}
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_health_headline"
+            bodyKey="new_carer.cta_end_health_body"
+            source="new-carer-health-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

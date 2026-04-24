@@ -4,6 +4,7 @@ import PageSEO from '../../components/seo/PageSEO'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import ResourceCard from '../../components/new-carer/ResourceCard'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { WORKSHEET_RESOURCES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -126,6 +127,16 @@ export default function NewCarerPage() {
           </div>
         </section>
 
+        {/* ── Mid CTA ── */}
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_hub_headline"
+            bodyKey="new_carer.cta_mid_hub_body"
+            source="new-carer-hub-mid"
+          />
+        </section>
+
         {/* ── Module nav ── */}
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
@@ -151,6 +162,14 @@ export default function NewCarerPage() {
               <ResourceCard key={r.id} resource={r} />
             ))}
           </div>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_hub_headline"
+            bodyKey="new_carer.cta_end_hub_body"
+            source="new-carer-hub-end"
+            className="mt-8"
+          />
         </section>
       </div>
     </>

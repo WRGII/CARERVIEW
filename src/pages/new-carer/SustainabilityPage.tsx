@@ -1,4 +1,4 @@
-import { Battery, CircleAlert as AlertCircle, CircleCheck as CheckCircle } from 'lucide-react'
+import { Battery, CircleAlert as AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -8,6 +8,7 @@ import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { SUSTAIN_PRESSURES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -117,6 +118,14 @@ export default function SustainabilityPage() {
             </p>
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_sustain_headline"
+            bodyKey="new_carer.cta_mid_sustain_body"
+            source="new-carer-sustain-mid"
+            className="mb-8"
+          />
+
           {/* Questions */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <QuestionPromptList
@@ -126,7 +135,7 @@ export default function SustainabilityPage() {
           </div>
 
           {/* Cross-link to caregiver community */}
-          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 mb-10 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-sm font-semibold text-slate-800 leading-snug">Connect with carers who understand</p>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
@@ -141,6 +150,14 @@ export default function SustainabilityPage() {
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_sustain_headline"
+            bodyKey="new_carer.cta_end_sustain_body"
+            source="new-carer-sustain-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

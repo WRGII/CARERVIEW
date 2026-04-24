@@ -8,6 +8,7 @@ import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
 import ResourceCard from '../../components/new-carer/ResourceCard'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { DOC_AREAS, WORKSHEET_RESOURCES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -99,6 +100,14 @@ export default function DocumentsAuthorityPage() {
             {t('new_carer.docs_governance_callout')}
           </CalloutPanel>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_docs_headline"
+            bodyKey="new_carer.cta_mid_docs_body"
+            source="new-carer-docs-mid"
+            className="mb-8"
+          />
+
           {/* Areas */}
           <div className="mb-5">
             <h2 className="text-xl font-bold text-slate-900">
@@ -140,7 +149,7 @@ export default function DocumentsAuthorityPage() {
 
           {/* Related worksheets */}
           {relatedWorksheets.length > 0 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <h2 className="text-base font-bold text-slate-800 mb-3">
                 {t('new_carer.worksheets_heading')}
               </h2>
@@ -151,6 +160,14 @@ export default function DocumentsAuthorityPage() {
               </div>
             </div>
           )}
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_docs_headline"
+            bodyKey="new_carer.cta_end_docs_body"
+            source="new-carer-docs-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

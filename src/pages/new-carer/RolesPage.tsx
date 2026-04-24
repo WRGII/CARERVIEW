@@ -7,6 +7,7 @@ import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { ROLE_AREAS } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -101,7 +102,7 @@ export default function RolesPage() {
               {t('new_carer.roles_areas_heading')}
             </h2>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4 mb-10">
+          <div className="grid sm:grid-cols-2 gap-4 mb-8">
             {ROLE_AREAS.map((area) => {
               const Icon = ICON_MAP[area.icon] ?? Users
               return (
@@ -123,13 +124,29 @@ export default function RolesPage() {
             })}
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_roles_headline"
+            bodyKey="new_carer.cta_mid_roles_body"
+            source="new-carer-roles-mid"
+            className="mb-8"
+          />
+
           {/* Questions */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-10">
+          <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <QuestionPromptList
               questionKeys={ROLE_QUESTIONS}
               headingKey="new_carer.roles_questions_heading"
             />
           </div>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_roles_headline"
+            bodyKey="new_carer.cta_end_roles_body"
+            source="new-carer-roles-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

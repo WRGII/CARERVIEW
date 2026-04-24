@@ -6,6 +6,7 @@ import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import QuestionPromptList from '../../components/new-carer/QuestionPromptList'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { REVIEW_TRIGGERS } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -124,6 +125,14 @@ export default function ReviewPlanPage() {
             </ol>
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_review_headline"
+            bodyKey="new_carer.cta_mid_review_body"
+            source="new-carer-review-mid"
+            className="mb-6"
+          />
+
           {/* Unscheduled triggers */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <h2 className="text-lg font-bold text-slate-900 mb-5">
@@ -144,12 +153,20 @@ export default function ReviewPlanPage() {
           </CalloutPanel>
 
           {/* Questions */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-10">
+          <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-8">
             <QuestionPromptList
               questionKeys={REVIEW_QUESTIONS}
               headingKey="new_carer.review_questions_heading"
             />
           </div>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_review_headline"
+            bodyKey="new_carer.cta_end_review_body"
+            source="new-carer-review-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

@@ -5,6 +5,7 @@ import SectionIntro from '../../components/new-carer/SectionIntro'
 import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { SITE_URL } from '../../lib/siteConfig'
 
 const SCOPE_KEYS = [
@@ -114,6 +115,14 @@ export default function BigPicturePage() {
             </p>
           </div>
 
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_bp_headline"
+            bodyKey="new_carer.cta_mid_bp_body"
+            source="new-carer-bp-mid"
+            className="mb-6"
+          />
+
           {/* Risks */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm mb-6">
             <h2 className="text-lg font-bold text-slate-900 mb-5">
@@ -129,9 +138,17 @@ export default function BigPicturePage() {
             </ul>
           </div>
 
-          <CalloutPanel variant="emphasis" className="mb-10">
+          <CalloutPanel variant="emphasis" className="mb-8">
             {t('new_carer.bp_callout')}
           </CalloutPanel>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_bp_headline"
+            bodyKey="new_carer.cta_end_bp_body"
+            source="new-carer-bp-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">

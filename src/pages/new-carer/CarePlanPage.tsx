@@ -6,6 +6,7 @@ import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import PlanningPillarCard from '../../components/new-carer/PlanningPillarCard'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { CARE_PLAN_PILLARS } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
 
@@ -84,9 +85,25 @@ export default function CarePlanPage() {
             ))}
           </div>
 
-          <CalloutPanel variant="emphasis" className="mb-10">
+          <NewCarerCTA
+            variant="mid"
+            headlineKey="new_carer.cta_mid_cp_headline"
+            bodyKey="new_carer.cta_mid_cp_body"
+            source="new-carer-cp-mid"
+            className="mb-8"
+          />
+
+          <CalloutPanel variant="emphasis" className="mb-8">
             {t('new_carer.cp_callout')}
           </CalloutPanel>
+
+          <NewCarerCTA
+            variant="end"
+            headlineKey="new_carer.cta_end_cp_headline"
+            bodyKey="new_carer.cta_end_cp_body"
+            source="new-carer-cp-end"
+            className="mb-8"
+          />
 
           {/* Module nav */}
           <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
