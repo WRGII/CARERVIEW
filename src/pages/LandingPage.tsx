@@ -136,7 +136,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
+    <div className="min-h-screen bg-white">
       <PageSEO
         title="CarerView - Family Caregiver Care Plan, Coordination & Observation Tracking"
         description="CarerView helps family caregivers build a structured care plan, coordinate their team, and track daily observations — keeping the plan accurate as needs evolve."
@@ -146,9 +146,9 @@ export default function LandingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Hero */}
-        <div className="pt-8 pb-10 text-center">
+        <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-16 sm:py-20 text-center">
           <div className="flex flex-col items-center justify-center mb-6">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-slate-gray mb-4">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
               {t('common.app_name')}
             </h1>
             <p className="text-base font-semibold tracking-widest text-cyan-primary uppercase">
@@ -156,11 +156,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-gray/90 mb-8 leading-tight max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-8 leading-tight max-w-4xl mx-auto">
             {t('landing.hero_title')}
           </h2>
 
-          <p className="mt-4 text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+          <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-4xl mx-auto leading-relaxed">
             {t('landing.hero_body')}
           </p>
         </div>
