@@ -7,7 +7,7 @@ import LanguageSwitcher from "../common/LanguageSwitcher";
 export function Footer() {
   const { t } = useLocale();
   const [logoUrl, setLogoUrl] = React.useState<string>(
-    "/CareView_logo_1_colored_highres.png"
+    "/CareView_logo_icon_only.png"
   );
 
   React.useEffect(() => {

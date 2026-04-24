@@ -17,7 +17,7 @@ async function fetchLogoUrl(): Promise<string | null> {
   }
 
   // 2) Final fallback (local asset shipped with app)
-  return "/CareView_logo_1_colored_highres.png";
+  return "/CareView_logo_icon_only.png";
 }
 
 export function useBrandingLogo() {

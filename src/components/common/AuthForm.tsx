@@ -144,7 +144,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
       {/* Card header */}
       <div className="bg-gradient-to-r from-cyan-primary/10 to-mint-green/15 px-8 pt-8 pb-6 flex items-center gap-5 border-b border-slate-gray/10">
         <img
-          src="/CareView_logo_1_colored_highres.png"
+          src="/CareView_logo_icon_only.png"
           alt={t('nav.logo_aria')}
           className="w-24 h-24 md:w-28 md:h-28 object-contain flex-shrink-0 drop-shadow-md"
         />

@@ -11,7 +11,7 @@ import { useState, useRef, useEffect } from "react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useLocale } from "../../i18n/LocaleContext";
 
-const FALLBACK_LOGO = "/CareView_logo_1_colored_highres.png";
+const FALLBACK_LOGO = "/CareView_logo_icon_only.png";
 
 const CARE_HUB_ITEMS = [
   {

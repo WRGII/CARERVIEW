@@ -34,7 +34,7 @@ export default function LandingPage() {
     '@type': 'Organization',
     name: 'CarerView',
     url: SITE_URL,
-    logo: `${SITE_URL}/CareView_logo_1_colored_highres.png`,
+    logo: `${SITE_URL}/CareView_logo_icon_only.png`,
     description: 'CarerView helps family caregivers build a structured care plan, coordinate their team, and track daily observations to keep the plan current.',
     sameAs: [],
   }
