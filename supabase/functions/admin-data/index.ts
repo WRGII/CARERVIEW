@@ -89,6 +89,37 @@ Deno.serve(async (req) => {
   try {
     switch (action) {
 
+      // ── Aggregate stats ─────────────────────────────────────────────────────
+
+      case 'get_aggregate_stats': {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        const [
+          { count: totalCaregivers },
+          { count: totalObservations },
+          { count: familyCircleSubscribers },
+          { data: recentData },
+        ] = await Promise.all([
+          srv.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'caregiver').eq('disabled', false),
+          srv.from('observations').select('*', { count: 'exact', head: true }),
+          srv.from('user_subscriptions').select('*', { count: 'exact', head: true }).eq('plan_id', 'family_qtr').eq('status', 'active'),
+          srv.from('observations').select('observation_date').gte('observation_date', sevenDaysAgo),
+        ])
+        const activityMap = new Map<string, number>()
+        recentData?.forEach((obs: { observation_date: string }) => {
+          activityMap.set(obs.observation_date, (activityMap.get(obs.observation_date) || 0) + 1)
+        })
+        const thisWeek = Array.from(activityMap.values()).reduce((s, n) => s + n, 0)
+        return json({
+          ok: true,
+          data: {
+            totalCaregivers: totalCaregivers ?? 0,
+            totalObservations: totalObservations ?? 0,
+            familyCircleSubscribers: familyCircleSubscribers ?? 0,
+            thisWeek,
+          },
+        }, 200, req)
+      }
+
       // ── Caregivers ──────────────────────────────────────────────────────────
 
       case 'list_caregivers': {

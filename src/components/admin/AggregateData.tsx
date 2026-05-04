@@ -1,21 +1,39 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabaseClient'
-import { Card, CardContent, CardHeader } from '../ui/Card'
+import { Card, CardContent } from '../ui/Card'
 import { Loading } from '../ui/Loading'
-import { BarChart3, Users, FileText, TrendingUp } from 'lucide-react'
+import { CreditCard, Users, FileText, TrendingUp } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
+import { getAdminToken } from '../../hooks/useAdminSession'
 
 interface AggregateStats {
   totalObservations: number
   totalCaregivers: number
-  averageScoreByCategory: { category: string; average: number; type: string }[]
-  recentActivity: { date: string; count: number }[]
+  familyCircleSubscribers: number
+  thisWeek: number
+}
+
+async function fetchAggregateStats(): Promise<AggregateStats> {
+  const token = getAdminToken()
+  if (!token) throw new Error('Not authenticated as admin')
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-data`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: 'get_aggregate_stats' }),
+    }
+  )
+  const json = await res.json()
+  if (!res.ok) throw new Error(json?.error || 'Failed to load stats')
+  return json.data as AggregateStats
 }
 
 type AggregateDataProps = {
-  /** If provided, the “Active Caregivers” metric becomes a link to this route. */
   caregiversLink?: string
 }
 
@@ -23,67 +41,14 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
   const { t } = useLocale()
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['aggregate-stats'],
-    queryFn: async (): Promise<AggregateStats> => {
-      // Total observations
-      const { count: totalObservations, error: obsErr } = await supabase
-        .from('observations')
-        .select('*', { count: 'exact', head: true })
-
-      if (obsErr) console.warn('Failed to count observations:', obsErr)
-
-      // Total active caregivers
-      const { count: totalCaregivers, error: cgErr } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'caregiver')
-        .eq('disabled', false)
-
-      if (cgErr) console.warn('Failed to count caregivers:', cgErr)
-
-      // Average scores by category (RPC)
-      const { data: avgData, error: avgError } = await supabase
-        .rpc('get_average_scores_by_category')
-
-      if (avgError) console.warn('Failed to get average scores:', avgError)
-
-      // Recent activity (last 7 days)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-      const { data: recentData, error: recentError } = await supabase
-        .from('observations')
-        .select('observation_date')
-        .gte('observation_date', sevenDaysAgo.toISOString().split('T')[0])
-
-      if (recentError) console.warn('Failed to get recent activity:', recentError)
-
-      // Group counts by date (YYYY-MM-DD)
-      const activityMap = new Map<string, number>()
-      recentData?.forEach((obs: { observation_date: string }) => {
-        const date = obs.observation_date
-        activityMap.set(date, (activityMap.get(date) || 0) + 1)
-      })
-
-      const recentActivity = Array.from(activityMap.entries()).map(([date, count]) => ({
-        date,
-        count,
-      }))
-
-      return {
-        totalObservations: totalObservations || 0,
-        totalCaregivers: totalCaregivers || 0,
-        averageScoreByCategory: avgData || [],
-        recentActivity,
-      }
-    },
-    staleTime: 60_000, // 1 min
+    queryFn: fetchAggregateStats,
+    staleTime: 60_000,
   })
 
   if (isLoading) return <Loading message={t('admin.loading_aggregate')} />
   if (error) return <div className="text-red-600">{t('admin.error_aggregate')}</div>
   if (!stats) return <div>{t('admin.no_data')}</div>
 
-  // Prebuild the Active Caregivers card once; optionally wrap in a Link.
   const caregiversCard = (
     <Card className="bg-warm-white transition hover:shadow-md">
       <CardContent>
@@ -102,7 +67,6 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
 
   return (
     <div className="space-y-6">
-      {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Observations */}
         <Card className="bg-warm-white">
@@ -132,23 +96,16 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
           caregiversCard
         )}
 
-        {/* Avg Category Score */}
+        {/* Family Circle Subscribers */}
         <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-peach-blush/60 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-slate-gray" />
+                <CreditCard className="w-6 h-6 text-slate-gray" />
               </div>
               <div>
-                <p className="text-sm text-slate-gray/70">{t('admin.avg_score')}</p>
-                <p className="text-2xl font-bold text-slate-gray">
-                  {stats.averageScoreByCategory.length > 0
-                    ? (
-                        stats.averageScoreByCategory.reduce((sum, cat) => sum + cat.average, 0) /
-                        stats.averageScoreByCategory.length
-                      ).toFixed(1)
-                    : '0.0'}
-                </p>
+                <p className="text-sm text-slate-gray/70">{t('admin.family_circle_subscribers')}</p>
+                <p className="text-2xl font-bold text-slate-gray">{stats.familyCircleSubscribers}</p>
               </div>
             </div>
           </CardContent>
@@ -163,54 +120,12 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
               </div>
               <div>
                 <p className="text-sm text-slate-gray/70">{t('admin.this_week')}</p>
-                <p className="text-2xl font-bold text-slate-gray">
-                  {stats.recentActivity.reduce((sum, day) => sum + day.count, 0)}
-                </p>
+                <p className="text-2xl font-bold text-slate-gray">{stats.thisWeek}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Average Scores by Category */}
-      {stats.averageScoreByCategory.length > 0 && (
-        <Card className="bg-warm-white">
-          <CardHeader>
-            <h3 className="text-lg font-semibold text-slate-gray">{t('admin.avg_scores_by_category')}</h3>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.averageScoreByCategory.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        (item.type ?? 'ADL') === 'ADL'
-                          ? 'bg-cyan-primary/20 text-cyan-primary'
-                          : 'bg-mint-green/60 text-slate-gray'
-                      }`}
-                    >
-                      {item.type ?? 'ADL'}
-                    </span>
-                    <span className="text-slate-gray">{item.category}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-slate-gray/20 rounded-full h-3">
-                      <div
-                        className="bg-cyan-primary h-3 rounded-full"
-                        style={{ width: `${(item.average / 10) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-lg font-semibold text-slate-gray w-12 text-right">
-                      {item.average.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }
