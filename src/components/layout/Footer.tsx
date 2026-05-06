@@ -117,6 +117,14 @@ export function Footer() {
                   {t('nav.caregiver_forum')}
                 </Link>
               </div>
+              <div>
+                <Link
+                  to="/tutorial"
+                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                >
+                  {t('footer.tutorial_link')}
+                </Link>
+              </div>
             </div>
           </div>
 

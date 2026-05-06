@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ExternalLink, ArrowRight, MessageCircle, Users, BookOpen } from 'lucide-react'
+import { ExternalLink, ArrowRight, MessageCircle, Users, BookOpen, GraduationCap } from 'lucide-react'
 import { useLocale } from '../i18n/LocaleContext'
 import PageSEO from '../components/seo/PageSEO'
 import { SITE_URL } from '../lib/siteConfig'
@@ -276,6 +276,24 @@ export default function CaregiverResourcesPage() {
                 {t('public.caregiver_resources.final_cta_secondary_btn')}
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* Tutorial nudge */}
+        <section className="py-10 px-4 max-w-3xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-cyan-50 border border-cyan-200 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-cyan-100 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-5 h-5 text-cyan-700" />
+              </div>
+              <p className="text-sm font-semibold text-slate-800">{t('tutorial.public_description')}</p>
+            </div>
+            <Link
+              to="/tutorial"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
+            >
+              {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </section>
 

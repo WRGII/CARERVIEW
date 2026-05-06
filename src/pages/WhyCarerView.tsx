@@ -356,6 +356,14 @@ export default function WhyCarerView() {
               <h2 className="text-4xl font-bold text-slate-gray mb-4">{t('why.cta_trend_title')}</h2>
               <p className="text-lg text-slate-gray/75 leading-relaxed">{t('why.cta_trend_body')}</p>
             </div>
+            <div className="mt-8 text-center">
+              <Link
+                to="/tutorial"
+                className="inline-flex items-center gap-2 text-sm text-cyan-primary hover:text-cyan-hover font-medium transition-colors"
+              >
+                {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
             <AuthForm initialMode="signup" showToggle={true} />
           </div>
         </section>

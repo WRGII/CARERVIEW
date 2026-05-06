@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, GraduationCap } from "lucide-react";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
 import { SITE_URL } from "../lib/siteConfig";
@@ -211,13 +211,22 @@ export default function PricingPage() {
             </details>
           ))}
         </div>
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-3">
           <Link
             to="/create-account"
             className="inline-flex items-center rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           >
             {t('pricing.cta_begin')}
           </Link>
+          <div>
+            <Link
+              to="/tutorial"
+              className="inline-flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-800 font-medium transition-colors"
+            >
+              <GraduationCap className="w-4 h-4" />
+              {t('tutorial.cta_start')}
+            </Link>
+          </div>
         </div>
       </section>
     </main>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList } from 'lucide-react';
+import GuidedTutorial from '../components/caregiver/GuidedTutorial';
 
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
@@ -13,6 +14,7 @@ import { supabase } from '../lib/supabaseClient';
 import { exportToDOCX, exportToCSV } from '../lib/exports';
 import InactivePlanNotice from '../components/caregiver/InactivePlanNotice';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
 import DashboardCarePlanPanel from '../components/caregiver/DashboardCarePlanPanel';
@@ -83,6 +85,7 @@ export default function CaregiverPage() {
   const { t, locale } = useLocale();
   const intlLocale = localeToIntl(locale);
   const { data: observations = [] } = useObservations();
+  const { restartTutorial } = useOnboarding();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
@@ -113,6 +116,15 @@ export default function CaregiverPage() {
       setTimeout(() => setShowSuccessMessage(false), 5000);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get('startTutorial') === 'true') {
+      restartTutorial();
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('startTutorial');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams, restartTutorial]);
 
   if (loading) return <Loading message={t('caregiver.loading')} />;
   if (error || !user) return <ErrorMessage message={error || t('common.auth_required')} />;
@@ -216,7 +228,7 @@ export default function CaregiverPage() {
             </h2>
             <p className="text-xs font-semibold text-amber-700 mt-0.5">Track change</p>
           </div>
-          <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+          <Button data-tutorial="new-observation" variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" />
             {t('caregiver.new_obs_btn')}
           </Button>
@@ -271,7 +283,10 @@ export default function CaregiverPage() {
       user={{ ...user, profile }}
       hideSignOut={true}
     >
-      <FamilyCircleSetup />
+      <GuidedTutorial />
+      <div data-tutorial="family-circle">
+        <FamilyCircleSetup />
+      </div>
 
       {showSuccessMessage && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
@@ -299,8 +314,8 @@ export default function CaregiverPage() {
         <div className="space-y-5">
           {/* Top row: Care Plan + Memory Book side by side on md+ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <DashboardCarePlanPanel />
-            <DashboardMemoryBookPanel />
+            <div data-tutorial="care-plan-panel"><DashboardCarePlanPanel /></div>
+            <div data-tutorial="memory-book-panel"><DashboardMemoryBookPanel /></div>
           </div>
 
           {/* Observations section */}

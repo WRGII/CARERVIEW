@@ -551,6 +551,22 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Tutorial CTA */}
+        <div className="py-10">
+          <div className="bg-gradient-to-r from-cyan-primary/10 to-teal-50 rounded-2xl border border-cyan-primary/20 px-8 py-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-cyan-700 uppercase tracking-wider mb-1">{t('nav.tutorial')}</p>
+              <p className="text-base font-bold text-slate-800">{t('tutorial.public_description')}</p>
+            </div>
+            <Link
+              to="/tutorial"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold rounded-xl transition-colors shrink-0 whitespace-nowrap"
+            >
+              {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
         {/* Auth form */}
         <div id="get-started" className="py-20">
           <div className="max-w-xl mx-auto">

@@ -1,4 +1,5 @@
-import { CircleCheck as CheckCircle } from 'lucide-react'
+import { CircleCheck as CheckCircle, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
@@ -170,6 +171,16 @@ export default function NewCarerPage() {
             source="new-carer-hub-end"
             className="mt-8"
           />
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/tutorial"
+              className="inline-flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-800 font-medium transition-colors"
+            >
+              <span>{t('tutorial.cta_start')}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </section>
       </div>
     </>

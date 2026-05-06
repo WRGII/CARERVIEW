@@ -6,10 +6,11 @@ import { useUserPlan, hasActivePlan } from "../../hooks/useUserPlan";
 import { useActiveTeam } from "../../context/ActiveTeam";
 import { useTeamRole } from "../../hooks/useMemoryBook";
 import AccountMenu from "../caregiver/AccountMenu";
-import { Menu, X } from "lucide-react";
+import { Menu, X, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useOnboarding } from "../../hooks/useOnboarding";
 
 const FALLBACK_LOGO = "/CareView_logo_icon_only.png";
 
@@ -59,6 +60,7 @@ export default function Header() {
   const { data: teamRole } = useTeamRole(isFamilyPlan ? teamId : null, user?.id);
   const showOwnerBadge = isFamilyPlan && !!teamId && teamRole === "owner";
 
+  const { restartTutorial } = useOnboarding();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -165,6 +167,17 @@ export default function Header() {
                   </Link>
                   <Link to="/caregiver-resources" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
                     {t('nav.caregiver_resources')}
+                  </Link>
+                  <Link
+                    to="/tutorial"
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+                      location.pathname === '/tutorial'
+                        ? 'text-cyan-700 bg-cyan-50 border-cyan-300'
+                        : 'text-cyan-700 bg-cyan-50 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300'
+                    }`}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    {t('nav.tutorial')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
@@ -274,6 +287,17 @@ export default function Header() {
                     {t('nav.manage_billing')}
                   </Link>
                   <button
+                    onClick={() => {
+                      restartTutorial();
+                      closeMobileMenu();
+                      window.location.assign('/caregiver');
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
+                  >
+                    <GraduationCap className="w-4 h-4 text-slate-500" />
+                    {t('account_menu.restart_tutorial')}
+                  </button>
+                  <button
                     onClick={async () => {
                       closeMobileMenu();
                       await supabase.auth.signOut();
@@ -300,6 +324,14 @@ export default function Header() {
                   </Link>
                   <Link to="/caregiver-resources" onClick={closeMobileMenu} className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]">
                     {t('nav.caregiver_resources')}
+                  </Link>
+                  <Link
+                    to="/tutorial"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-base font-medium text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors min-h-[44px]"
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    {t('nav.tutorial')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
