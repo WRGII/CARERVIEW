@@ -198,7 +198,7 @@ export default function CaregiverPage() {
   function getContextSubtitle(): string {
     if (!isPaid) return t('caregiver.subtitle_free') || 'Track care, log observations, and access community resources.';
     if (lastModule === 'care_plan') return 'Your care plan progress is shown below.';
-    if (lastModule === 'memory_book') return 'Your memory book progress is shown below.';
+    if (lastModule === 'memory_book') return 'Your care plan, memory book and observations progress is shown below.';
     if (lastModule === 'observations') return 'Your recent observations are shown below.';
     return 'Here is a summary of your current care activities.';
   }

@@ -67,7 +67,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left: Brand */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             <Link to="/" aria-label={t('nav.home_aria')} className="flex items-center hover:opacity-80 transition-opacity">
               {logoLoading ? (
                 <div className="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-md bg-slate-200 animate-pulse" />
@@ -80,20 +80,18 @@ export default function Header() {
                   decoding="async"
                 />
               )}
-              <div className="flex items-center gap-3">
-                <span className="text-xl font-bold text-slate-800">{t('common.app_name')}</span>
-                {isAuthed && profile?.role === "caregiver" && (
-                  <span className="hidden lg:flex items-center gap-2 text-sm text-slate-600 font-medium">
-                    {t('nav.welcome')} {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
-                    {showOwnerBadge && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                        {t('team.role_owner')}
-                      </span>
-                    )}
+              <span className="text-xl font-bold text-slate-800">{t('common.app_name')}</span>
+            </Link>
+            {isAuthed && profile?.role === "caregiver" && (
+              <span className="hidden lg:flex items-center gap-2 text-sm text-slate-600 font-medium">
+                {t('nav.welcome')} {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
+                {showOwnerBadge && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                    {t('team.role_owner')}
                   </span>
                 )}
-              </div>
-            </Link>
+              </span>
+            )}
           </div>
 
           {/* Right: Nav */}
@@ -128,8 +126,8 @@ export default function Header() {
                     </Link>
                   )}
 
-                  <LanguageSwitcher />
                   <AccountMenu />
+                  <LanguageSwitcher />
                 </div>
 
                 {/* Mobile hamburger */}
