@@ -1,13 +1,16 @@
-// src/components/caregiver/AccountMenu.tsx
 import React from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { ChevronDown, LogOut, CreditCard, GraduationCap } from "lucide-react";
+import { ChevronDown, LogOut, CreditCard, GraduationCap, Users } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { useLocale } from '../../i18n/LocaleContext';
+import { useUserPlan } from "../../hooks/useUserPlan";
 
 export default function AccountMenu() {
   const { restartTutorial } = useOnboarding();
   const { t } = useLocale();
+  const { data: plan } = useUserPlan();
+  const canUseTeam = plan?.plan_id === "family_qtr";
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -16,8 +19,6 @@ export default function AccountMenu() {
   const close = () => setOpen(false);
 
   const goManageBilling = () => {
-    // Force a full document navigation to avoid stale SPA chunk errors
-    // after deployments (dynamic import chunk name changes).
     window.location.assign("/choose-plan?manage=true");
     close();
   };
@@ -32,16 +33,12 @@ export default function AccountMenu() {
     }
   };
 
-  // Close on outside click
   React.useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (!t) return;
-      if (
-        !btnRef.current?.contains(t) &&
-        !menuRef.current?.contains(t)
-      ) {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (!btnRef.current?.contains(target) && !menuRef.current?.contains(target)) {
         close();
       }
     };
@@ -49,14 +46,12 @@ export default function AccountMenu() {
     return () => document.removeEventListener("click", onDoc);
   }, [open]);
 
-  // Close on Escape
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
-        // Return focus to the trigger for keyboard users
         btnRef.current?.focus();
       }
     };
@@ -87,8 +82,20 @@ export default function AccountMenu() {
           id={menuId}
           ref={menuRef}
           role="menu"
-          className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1"
+          className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5"
         >
+          {canUseTeam && (
+            <Link
+              to="/team"
+              onClick={close}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
+              role="menuitem"
+            >
+              <Users className="w-4 h-4 text-slate-500" aria-hidden="true" />
+              {t('nav.family_circle')}
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={goManageBilling}
@@ -109,7 +116,7 @@ export default function AccountMenu() {
             {t('account_menu.restart_tutorial')}
           </button>
 
-          <div className="my-1 h-px bg-slate-200" />
+          <div className="my-1.5 h-px bg-slate-100" />
 
           <button
             type="button"

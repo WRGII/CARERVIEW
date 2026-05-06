@@ -1,4 +1,5 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, lazy, Suspense, useEffect } from 'react'
+import { setLastModule } from '../../lib/lastModule'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, BookOpen, Activity } from 'lucide-react'
 import { useActiveTeam } from '../../context/ActiveTeam'
@@ -133,6 +134,7 @@ function SectionCard({
 }
 
 export default function CarePlanBuilderPage() {
+  useEffect(() => { setLastModule('care_plan'); }, [])
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id)

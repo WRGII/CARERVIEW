@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { setLastModule } from "../lib/lastModule";
 import { BookOpen, LayoutDashboard, Activity, ClipboardList, CalendarDays, SquareCheck as CheckSquare, FileText, History, RefreshCw, CircleAlert as AlertCircle, Printer } from "lucide-react";
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
@@ -43,6 +44,7 @@ const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType }[] 
 ];
 
 export default function MemorySchedulePage() {
+  useEffect(() => { setLastModule('memory_book'); }, []);
   const [activeTab, setActiveTab] = useState<MemoryBookTabKey>("overview");
   const { teamId, loading: teamLoading } = useActiveTeam();
   const { user, loading: authLoading } = useAuth();

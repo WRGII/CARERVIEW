@@ -14,6 +14,7 @@ import { Loading } from '../components/ui/Loading';
 import { useActiveTeam } from '../context/ActiveTeam';
 import { cvGetRemaining } from '../lib/cv';
 import { useMemberFrozen } from '../hooks/useMemberFrozen';
+import { setLastModule } from '../lib/lastModule';
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
 
@@ -28,6 +29,8 @@ export default function NewObservationPage() {
 
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
+
+  React.useEffect(() => { setLastModule('observations'); }, []);
 
   // Load remaining team quota
   React.useEffect(() => {

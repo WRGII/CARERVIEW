@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
+import AuthLayout from "./components/layout/AuthLayout";
 import HashScroll from "./components/util/HashScroll";
 import { ErrorBoundary } from "./components/util/ErrorBoundary";
 
@@ -251,79 +252,93 @@ export default function App() {
                     }
                   />
 
-                  {/* Care Hub */}
+                  {/* Authenticated caregiver routes — all share the persistent side nav */}
                   <Route
-                    path="/care-hub"
                     element={
                       <CaregiverGuard>
+                        <AuthLayout />
+                      </CaregiverGuard>
+                    }
+                  >
+                    <Route
+                      path="/caregiver"
+                      element={
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <CaregiverPage />
+                        </ErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="/team"
+                      element={
+                        <TeamGuard>
+                          <TeamSettings />
+                        </TeamGuard>
+                      }
+                    />
+                    <Route
+                      path="/caregiver/memory-schedule"
+                      element={
+                        <PaidPlanGuard>
+                          <MemorySchedulePage />
+                        </PaidPlanGuard>
+                      }
+                    />
+                    <Route
+                      path="/care-hub"
+                      element={
                         <PaidPlanGuard>
                           <ErrorBoundary fallback={<CaregiverErrorFallback />}>
                             <CareHubPage />
                           </ErrorBoundary>
                         </PaidPlanGuard>
-                      </CaregiverGuard>
-                    }
-                  />
-                  <Route
-                    path="/care-hub/care-plan"
-                    element={
-                      <CaregiverGuard>
+                      }
+                    />
+                    <Route
+                      path="/care-hub/care-plan"
+                      element={
                         <PaidPlanGuard>
                           <ErrorBoundary fallback={<CaregiverErrorFallback />}>
                             <CarePlanBuilderPage />
                           </ErrorBoundary>
                         </PaidPlanGuard>
-                      </CaregiverGuard>
-                    }
-                  />
-                  <Route
-                    path="/care-hub/care-plan/summary"
-                    element={
-                      <CaregiverGuard>
+                      }
+                    />
+                    <Route
+                      path="/care-hub/care-plan/summary"
+                      element={
                         <PaidPlanGuard>
                           <ErrorBoundary fallback={<CaregiverErrorFallback />}>
                             <CarePlanSummaryPage />
                           </ErrorBoundary>
                         </PaidPlanGuard>
-                      </CaregiverGuard>
-                    }
-                  />
-
-                  {/* Caregiver */}
-                  <Route
-                    path="/caregiver"
-                    element={
-                      <CaregiverGuard>
+                      }
+                    />
+                    <Route
+                      path="/caregiver/observations/new"
+                      element={
                         <ErrorBoundary fallback={<CaregiverErrorFallback />}>
-                          <CaregiverPage />
+                          <NewObservationPage />
                         </ErrorBoundary>
-                      </CaregiverGuard>
-                    }
-                  />
-
-                  {/* Team (Family only) */}
-                  <Route
-                    path="/team"
-                    element={
-                      <CaregiverGuard>
-                        <TeamGuard>
-                          <TeamSettings />
-                        </TeamGuard>
-                      </CaregiverGuard>
-                    }
-                  />
-
-                  {/* Memory & Schedule */}
-                  <Route
-                    path="/caregiver/memory-schedule"
-                    element={
-                      <CaregiverGuard>
-                        <PaidPlanGuard>
-                          <MemorySchedulePage />
-                        </PaidPlanGuard>
-                      </CaregiverGuard>
-                    }
-                  />
+                      }
+                    />
+                    <Route
+                      path="/caregiver/observations/:id"
+                      element={
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <ObservationEditPage />
+                        </ErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="/caregiver/dementia-scale"
+                      element={
+                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                          <DementiaScalePage />
+                        </ErrorBoundary>
+                      }
+                    />
+                  </Route>
 
                   {/* Community */}
                   <Route
@@ -377,37 +392,6 @@ export default function App() {
                     }
                   />
 
-                  {/* Observations */}
-                  <Route
-                    path="/caregiver/observations/new"
-                    element={
-                      <CaregiverGuard>
-                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
-                          <NewObservationPage />
-                        </ErrorBoundary>
-                      </CaregiverGuard>
-                    }
-                  />
-                  <Route
-                    path="/caregiver/observations/:id"
-                    element={
-                      <CaregiverGuard>
-                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
-                          <ObservationEditPage />
-                        </ErrorBoundary>
-                      </CaregiverGuard>
-                    }
-                  />
-                  <Route
-                    path="/caregiver/dementia-scale"
-                    element={
-                      <CaregiverGuard>
-                        <ErrorBoundary fallback={<CaregiverErrorFallback />}>
-                          <DementiaScalePage />
-                        </ErrorBoundary>
-                      </CaregiverGuard>
-                    }
-                  />
                 </Route>
 
                 {/* Admin Login — full-screen, no header/footer */}
