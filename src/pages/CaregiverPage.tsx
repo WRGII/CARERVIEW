@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, ClipboardList, Activity, LayoutGrid, ArrowRight, Clock } from 'lucide-react';
+import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
@@ -15,8 +15,8 @@ import InactivePlanNotice from '../components/caregiver/InactivePlanNotice';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
 import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
-import MedicalSummaryCard from '../components/caregiver/MedicalSummaryCard';
-import CarePlanStatusPanel from '../components/caregiver/CarePlanStatusPanel';
+import DashboardCarePlanPanel from '../components/caregiver/DashboardCarePlanPanel';
+import DashboardMemoryBookPanel from '../components/caregiver/DashboardMemoryBookPanel';
 import { useDeleteObservation, useObservations } from '../hooks/useObservations';
 import { useToast } from '../components/ui/ToastProvider';
 import { localeToIntl } from '../lib/utils';
@@ -27,43 +27,47 @@ import { ViewObservation } from '../components/caregiver/ViewObservation';
 type ViewMode = 'list' | 'view';
 type ExportFormat = 'docx' | 'csv';
 
-function QuickActionCard({
-  to,
-  icon: Icon,
-  iconColor,
-  iconBg,
-  title,
-  subtitle,
-  ctaLabel,
-  mobileOnly,
-}: {
-  to: string;
-  icon: React.ElementType;
-  iconColor: string;
-  iconBg: string;
-  title: string;
-  subtitle: string;
-  ctaLabel: string;
-  mobileOnly?: boolean;
-}) {
+// ── How the tools work together panel ────────────────────────────────────────
+
+function HowToolsWorkPanel() {
   return (
-    <Link
-      to={to}
-      className={`group flex flex-col gap-3 p-5 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 ${mobileOnly ? 'md:hidden' : ''}`}
-    >
-      <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}>
-        <Icon className={`w-4 h-4 ${iconColor}`} />
+    <div className="bg-slate-900 rounded-2xl p-6 md:p-8">
+      <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">
+        How the tools work together
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {[
+          {
+            label: 'Memory Book',
+            tag: 'Know the person',
+            body: 'Built with and about the resident. A reference covering identity, health, preferences, contacts, and practical details.',
+            dot: 'bg-teal-400',
+          },
+          {
+            label: 'Care Plan',
+            tag: 'Coordinate the team',
+            body: 'Built by the care team. Covers the big-picture operating plan: who does what, authority, risks, living arrangements, and when to review.',
+            dot: 'bg-blue-400',
+          },
+          {
+            label: 'Observations',
+            tag: 'Track change',
+            body: 'Periodic functional tracking. Helps the team see how the resident is changing and make better decisions as needs evolve.',
+            dot: 'bg-amber-400',
+          },
+        ].map((item) => (
+          <div key={item.label}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${item.dot}`} />
+              <span className="text-sm font-bold text-white">{item.label}</span>
+            </div>
+            <p className="text-xs font-semibold text-slate-400 mb-2">{item.tag}</p>
+            <p className="text-sm text-slate-400 leading-relaxed">{item.body}</p>
+          </div>
+        ))}
       </div>
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-slate-800">{title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{subtitle}</p>
-      </div>
-      <div className={`inline-flex items-center gap-1 text-xs font-semibold ${iconColor} group-hover:gap-2 transition-all`}>
-        {ctaLabel}
-        <ArrowRight className="w-3.5 h-3.5" />
-      </div>
-    </Link>
-  );
+    </div>
+  )
 }
 
 export default function CaregiverPage() {
@@ -192,97 +196,72 @@ export default function CaregiverPage() {
   }
 
   function getContextSubtitle(): string {
-    if (!isPaid) return 'Track care, log observations, and access community resources.';
-    if (lastModule === 'care_plan') return 'You were last in Care Plan \u2014 here is your current progress.';
-    if (lastModule === 'memory_book') return 'You were last in Memory Book \u2014 medical context is shown below.';
-    if (lastModule === 'observations') return 'You were last adding an observation \u2014 recent logs are shown below.';
+    if (!isPaid) return t('caregiver.subtitle_free') || 'Track care, log observations, and access community resources.';
+    if (lastModule === 'care_plan') return 'Your care plan progress is shown below.';
+    if (lastModule === 'memory_book') return 'Your memory book progress is shown below.';
+    if (lastModule === 'observations') return 'Your recent observations are shown below.';
     return 'Here is a summary of your current care activities.';
   }
 
-  function renderPrimaryFocus() {
-    // Free users: always show the full observation list
-    if (!isPaid) {
-      return (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-800">{t('caregiver.observations_title')}</h2>
-            <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5" />
-              {t('caregiver.new_obs_btn')}
-            </Button>
-          </div>
-          <ObservationList
-            onViewObservation={handleViewObservation}
-            onExportObservation={handleExportObservation}
-            onDeleteObservation={handleDeleteObservation}
-            deletingId={deletingId}
-          />
-        </section>
-      );
-    }
+  // ── Observations section (used in paid layout) ─────────────────────────────
 
-    if (lastModule === 'observations') {
-      return (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-800">{t('caregiver.observations_title')}</h2>
-            <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5" />
-              {t('caregiver.new_obs_btn')}
-            </Button>
-          </div>
-          {observations.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
-              <Activity className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">No observations recorded yet.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
-              {(observations as any[]).slice(0, 5).map((obs) => (
-                <button
-                  key={obs.id}
-                  onClick={() => handleViewObservation(obs.id)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors text-left"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{obs.resident_name || 'Observation'}</p>
-                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                      <Clock className="w-3 h-3" />
-                      {obs.observation_date}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
-                </button>
-              ))}
-              {observations.length > 5 && (
-                <div className="px-5 py-3">
-                  <Link to="/caregiver/observations/new" className="text-xs font-semibold text-cyan-600 hover:text-cyan-800">
-                    View all observations →
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-      );
-    }
-
-    if (lastModule === 'memory_book') {
-      return (
-        <section className="space-y-4">
-          <MedicalSummaryCard />
-          <CarePlanStatusPanel />
-        </section>
-      );
-    }
-
-    // Default (care_plan or null): Care Plan first
+  function renderObservationsSection() {
     return (
-      <section className="space-y-4">
-        <CarePlanStatusPanel />
-        <MedicalSummaryCard />
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-amber-500" />
+              Observations
+            </h2>
+            <p className="text-xs font-semibold text-amber-700 mt-0.5">Track change</p>
+          </div>
+          <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            {t('caregiver.new_obs_btn')}
+          </Button>
+        </div>
+
+        {observations.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
+            <Activity className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No observations recorded yet.</p>
+            <button
+              onClick={() => navigate('/caregiver/observations/new')}
+              className="mt-3 text-xs font-semibold text-amber-600 hover:text-amber-800 transition-colors"
+            >
+              Record your first observation →
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+            {(observations as any[]).slice(0, 4).map((obs) => (
+              <button
+                key={obs.id}
+                onClick={() => handleViewObservation(obs.id)}
+                className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors text-left"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{obs.resident_name || 'Observation'}</p>
+                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                    <Clock className="w-3 h-3" />
+                    {obs.observation_date}
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+              </button>
+            ))}
+            {observations.length > 4 && (
+              <div className="px-5 py-3">
+                <Link to="/caregiver/observations/new" className="text-xs font-semibold text-amber-600 hover:text-amber-800">
+                  View all {observations.length} observations →
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </section>
-    );
+    )
   }
 
   return (
@@ -291,18 +270,6 @@ export default function CaregiverPage() {
       subtitle={getContextSubtitle()}
       user={{ ...user, profile }}
       hideSignOut={true}
-      headerRight={
-        isPaid ? (
-          <Button
-            variant="primary"
-            onClick={() => navigate('/caregiver/observations/new')}
-            className="flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('caregiver.new_obs_btn')}</span>
-          </Button>
-        ) : undefined
-      }
     >
       <FamilyCircleSetup />
 
@@ -327,56 +294,78 @@ export default function CaregiverPage() {
           isExporting={exportingFor === currentObservationId}
           isDeleting={deletingId === currentObservationId}
         />
-      ) : (
-        <div className="space-y-8">
-          {renderPrimaryFocus()}
+      ) : isPaid ? (
+        /* ── Paid user layout ── */
+        <div className="space-y-5">
+          {/* Top row: Care Plan + Memory Book side by side on md+ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <DashboardCarePlanPanel />
+            <DashboardMemoryBookPanel />
+          </div>
 
-          {/* Quick access cards — visible for paid users */}
-          {isPaid && (
-            <section>
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Quick access</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <QuickActionCard
-                  to="/caregiver/memory-schedule"
-                  icon={BookOpen}
-                  iconColor="text-teal-700"
-                  iconBg="bg-teal-50"
-                  title="Memory Book"
-                  subtitle="Preferences, health, providers"
-                  ctaLabel="Open"
-                />
-                <QuickActionCard
-                  to="/care-hub/care-plan"
-                  icon={ClipboardList}
-                  iconColor="text-blue-700"
-                  iconBg="bg-blue-50"
-                  title="Care Plan"
-                  subtitle="Roles, authority, sustainability"
-                  ctaLabel="Open"
-                />
-                <QuickActionCard
-                  to="/caregiver/observations/new"
-                  icon={Activity}
-                  iconColor="text-amber-700"
-                  iconBg="bg-amber-50"
-                  title="Observations"
-                  subtitle="Log functional status over time"
-                  ctaLabel="New observation"
-                />
-                {/* Care Hub — mobile only (side nav handles it on md+) */}
-                <QuickActionCard
-                  to="/care-hub"
-                  icon={LayoutGrid}
-                  iconColor="text-slate-700"
-                  iconBg="bg-slate-100"
-                  title="Care Hub"
-                  subtitle="All subscriber tools"
-                  ctaLabel="Open"
-                  mobileOnly
-                />
-              </div>
-            </section>
-          )}
+          {/* Observations section */}
+          {renderObservationsSection()}
+
+          {/* How the tools work together */}
+          <HowToolsWorkPanel />
+        </div>
+      ) : (
+        /* ── Free user layout ── */
+        <div className="space-y-8">
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-800">{t('caregiver.observations_title')}</h2>
+              <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5" />
+                {t('caregiver.new_obs_btn')}
+              </Button>
+            </div>
+            <ObservationList
+              onViewObservation={handleViewObservation}
+              onExportObservation={handleExportObservation}
+              onDeleteObservation={handleDeleteObservation}
+              deletingId={deletingId}
+            />
+          </section>
+
+          {/* Upsell quick access for free users */}
+          <section>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Subscriber tools</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Link
+                to="/pricing"
+                className="group flex flex-col gap-3 p-5 bg-white rounded-2xl border border-slate-200 hover:border-teal-200 hover:shadow-md transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-4 h-4 text-teal-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-800">Memory Book</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Know the person — identity, health, preferences, contacts</p>
+                </div>
+                <div className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 group-hover:gap-2 transition-all">
+                  Upgrade to access
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+              <Link
+                to="/pricing"
+                className="group flex flex-col gap-3 p-5 bg-white rounded-2xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <ClipboardList className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-800">Care Plan</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Coordinate the team — roles, authority, sustainability</p>
+                </div>
+                <div className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 group-hover:gap-2 transition-all">
+                  Upgrade to access
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </Link>
+            </div>
+          </section>
         </div>
       )}
     </PageLayout>

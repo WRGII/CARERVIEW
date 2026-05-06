@@ -126,7 +126,6 @@ const AdminCommunityModerationPage = lazy(() => import("./pages/AdminCommunityMo
 // CommunityLandingPage:   authenticated members-only hub at /community (requires CommunityGuard)
 const CommunityPublicHubPage = lazy(() => import("./pages/CommunityPublicHubPage"));
 
-import CareHubPage from "./pages/care-hub/CareHubPage";
 const CarePlanBuilderPage = lazy(() => import("./pages/care-hub/CarePlanBuilderPage"));
 const CarePlanSummaryPage = lazy(() => import("./pages/care-hub/CarePlanSummaryPage"));
 
@@ -286,13 +285,7 @@ export default function App() {
                     />
                     <Route
                       path="/care-hub"
-                      element={
-                        <PaidPlanGuard>
-                          <ErrorBoundary fallback={<CaregiverErrorFallback />}>
-                            <CareHubPage />
-                          </ErrorBoundary>
-                        </PaidPlanGuard>
-                      }
+                      element={<Navigate to="/caregiver" replace />}
                     />
                     <Route
                       path="/care-hub/care-plan"

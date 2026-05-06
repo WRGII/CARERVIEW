@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutGrid, BookOpen, ClipboardList, Activity, GraduationCap, LayoutDashboard } from 'lucide-react'
+import { BookOpen, ClipboardList, Activity, GraduationCap, LayoutDashboard } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan'
 import { useAuth } from '../../hooks/useAuth'
@@ -54,15 +54,6 @@ export default function CareHubSideNav() {
     },
     ...(isPaidCarer ? [
       {
-        to: '/care-hub',
-        icon: LayoutGrid,
-        label: 'Care Hub',
-        iconColor: 'text-slate-500',
-        activeIconColor: 'text-slate-700',
-        activeBg: 'bg-slate-100 text-slate-900',
-        paidOnly: true,
-      },
-      {
         to: '/caregiver/memory-schedule',
         matchPrefix: '/caregiver/memory-schedule',
         icon: BookOpen,
@@ -108,9 +99,6 @@ export default function CareHubSideNav() {
   function isActive(item: NavItem): boolean {
     const prefix = item.matchPrefix ?? item.to
     if (prefix === '/caregiver') return location.pathname === '/caregiver'
-    if (prefix === '/care-hub' && !item.matchPrefix) {
-      return location.pathname === '/care-hub'
-    }
     return location.pathname.startsWith(prefix)
   }
 
