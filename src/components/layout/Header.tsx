@@ -169,18 +169,12 @@ export default function Header() {
                     {t('nav.caregiver_resources')}
                   </Link>
                   <Link
-                    to="/caregiver-forum"
-                    className="inline-flex items-center px-4 py-2 text-sm font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 hover:text-cyan-800 hover:border-cyan-300 transition-colors"
-                  >
-                    {t('nav.caregiver_forum')}
-                  </Link>
-                  <LanguageSwitcher />
-                  <Link
                     to={{ pathname: "/", hash: "#get-started" }}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
                   >
                     {t('nav.sign_in')}
                   </Link>
+                  <LanguageSwitcher />
                 </div>
 
                 <div className="md:hidden flex items-center gap-2">
@@ -308,13 +302,6 @@ export default function Header() {
                   </Link>
                   <Link to="/caregiver-resources" onClick={closeMobileMenu} className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]">
                     {t('nav.caregiver_resources')}
-                  </Link>
-                  <Link
-                    to="/caregiver-forum"
-                    onClick={closeMobileMenu}
-                    className="block w-full text-left px-4 py-3 text-base font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 rounded-lg transition-colors min-h-[44px] hover:bg-cyan-100 hover:text-cyan-800 hover:border-cyan-300"
-                  >
-                    {t('nav.caregiver_forum')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
