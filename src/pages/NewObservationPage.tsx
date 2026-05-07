@@ -15,6 +15,7 @@ import { useActiveTeam } from '../context/ActiveTeam';
 import { cvGetRemaining } from '../lib/cv';
 import { useMemberFrozen } from '../hooks/useMemberFrozen';
 import { setLastModule } from '../lib/lastModule';
+import { useTeamResident } from '../hooks/useMemoryBook';
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
 
@@ -24,6 +25,7 @@ export default function NewObservationPage() {
   const { t } = useLocale();
 
   const { teamId } = useActiveTeam();
+  const { data: resident } = useTeamResident(teamId ?? null);
   const [remaining, setRemaining] = React.useState<number | null>(null);
   const frozen = useMemberFrozen(teamId ?? null);
 
@@ -85,7 +87,7 @@ export default function NewObservationPage() {
           caregiver_email,
           team_id: teamId,
           author_user_id: user!.id,
-          // optional: resident_name, notes, mode_of_observation
+          resident_name: resident?.full_name ?? null,
         })
         .select('id')
         .single();

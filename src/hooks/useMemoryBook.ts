@@ -81,6 +81,24 @@ export function useTeamRole(teamId: string | null, userId?: string | null) {
   };
 }
 
+export type TeamResident = {
+  team_id: string;
+  full_name: string;
+  preferred_name: string | null;
+  date_of_birth: string | null;
+  gender: string;
+  notes: string | null;
+  birthplace: string | null;
+  address_preference: string | null;
+  relationship_status: string | null;
+  cultural_preferences: string | null;
+  language_preferences: string | null;
+  about_me: string | null;
+  photo_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export function useTeamResident(teamId: string | null) {
   return useQuery({
     queryKey: ["team-resident", teamId],
@@ -92,14 +110,7 @@ export function useTeamResident(teamId: string | null) {
         .eq("team_id", teamId)
         .maybeSingle();
       if (error) throw error;
-      return data as {
-        team_id: string;
-        full_name: string;
-        date_of_birth: string | null;
-        gender: string;
-        notes: string | null;
-        created_at: string;
-      } | null;
+      return data as TeamResident | null;
     },
     enabled: !!teamId,
     staleTime: 5 * 60 * 1000,
@@ -108,6 +119,44 @@ export function useTeamResident(teamId: string | null) {
 
 /** @deprecated Use useTeamResident */
 export const useTeamPatient = useTeamResident;
+
+export function useUpsertResident() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      teamId: string;
+      full_name: string;
+      preferred_name?: string;
+      date_of_birth?: string | null;
+      gender?: string;
+      notes?: string;
+      birthplace?: string;
+      address_preference?: string;
+      relationship_status?: string;
+      cultural_preferences?: string;
+      language_preferences?: string;
+      about_me?: string;
+      photo_url?: string;
+    }) => {
+      const { teamId, ...rest } = values;
+      const { error } = await supabase
+        .from("cv_team_patient")
+        .update({ ...rest, updated_at: new Date().toISOString() })
+        .eq("team_id", teamId);
+      if (error) throw error;
+      // Sync to memory_book_identity so Memory Book stays current
+      const { error: syncErr } = await supabase.rpc("cv_sync_resident_to_memory_book_identity", {
+        p_team_id: teamId,
+      });
+      // Sync failure is non-fatal — memory book may not exist yet
+      if (syncErr) console.warn("cv_sync_resident_to_memory_book_identity:", syncErr.message);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["team-resident", variables.teamId] });
+      queryClient.invalidateQueries({ queryKey: ["memory-book-identity"] });
+    },
+  });
+}
 
 export function useMemoryBookIdentity(memoryBookId: string | null) {
   return useQuery({

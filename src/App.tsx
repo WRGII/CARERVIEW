@@ -131,6 +131,7 @@ const CarePlanBuilderPage = lazy(() => import("./pages/care-hub/CarePlanBuilderP
 const CarePlanSummaryPage = lazy(() => import("./pages/care-hub/CarePlanSummaryPage"));
 
 import CaregiverPage from "./pages/CaregiverPage";
+import ResidentProfilePage from "./pages/ResidentProfilePage";
 import NewObservationPage from "./pages/NewObservationPage";
 import ObservationEditPage from "./pages/ObservationEditPage";
 import DementiaScalePage from "./pages/DementiaScalePage";
@@ -275,6 +276,16 @@ export default function App() {
                         <TeamGuard>
                           <TeamSettings />
                         </TeamGuard>
+                      }
+                    />
+                    <Route
+                      path="/caregiver/resident"
+                      element={
+                        <PaidPlanGuard>
+                          <ErrorBoundary fallback={<CaregiverErrorFallback />}>
+                            <ResidentProfilePage />
+                          </ErrorBoundary>
+                        </PaidPlanGuard>
                       }
                     />
                     <Route

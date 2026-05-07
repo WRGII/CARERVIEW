@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, BookOpen, Activity } from 'lucide-react'
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useAuth } from '../../hooks/useAuth'
-import { useTeamRole } from '../../hooks/useMemoryBook'
+import { useTeamRole, useTeamResident } from '../../hooks/useMemoryBook'
 import {
   useCarePlanReadOnly,
   useCarePlanSections,
@@ -139,6 +139,7 @@ export default function CarePlanBuilderPage() {
   const { user } = useAuth()
   const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id)
   const isOwner = teamRole === 'owner'
+  const { data: resident } = useTeamResident(teamId ?? null)
 
   const { data: carePlan, isLoading: planLoading, error: planError, refetch: refetchPlan } = useCarePlanReadOnly(teamId)
   const { data: sections = [], isLoading: sectionsLoading } = useCarePlanSections(carePlan?.id)
@@ -204,6 +205,35 @@ export default function CarePlanBuilderPage() {
                 </p>
               </div>
             </div>
+
+            {/* Resident context strip */}
+            {resident && (
+              <Link
+                to="/caregiver/resident"
+                className="mt-5 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:border-slate-300 hover:bg-slate-100 transition-colors group"
+              >
+                <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-slate-600">
+                    {resident.full_name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Care plan for</span>
+                  <p className="text-sm font-semibold text-slate-800 truncate">
+                    {resident.preferred_name ? `${resident.full_name} ("${resident.preferred_name}")` : resident.full_name}
+                    {resident.date_of_birth && (() => {
+                      const dob = new Date(resident.date_of_birth)
+                      const today = new Date()
+                      let age = today.getFullYear() - dob.getFullYear()
+                      const m = today.getMonth() - dob.getMonth()
+                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--
+                      return <span className="font-normal text-slate-500"> · Age {age}</span>
+                    })()}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+              </Link>
+            )}
 
             {/* How this differs callout */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { BookOpen, ClipboardList, Activity, GraduationCap, LayoutDashboard } from 'lucide-react'
+import { BookOpen, ClipboardList, Activity, GraduationCap, LayoutDashboard, CircleUser as UserCircle } from 'lucide-react'
 import { useLocale } from '../../i18n/LocaleContext'
 import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan'
 import { useAuth } from '../../hooks/useAuth'
@@ -55,6 +55,16 @@ export default function CareHubSideNav() {
       activeBg: 'bg-slate-100 text-slate-900',
     },
     ...(isPaidCarer ? [
+      {
+        to: '/caregiver/resident',
+        matchPrefix: '/caregiver/resident',
+        icon: UserCircle,
+        label: 'Resident',
+        iconColor: 'text-slate-500',
+        activeIconColor: 'text-slate-700',
+        activeBg: 'bg-slate-100 text-slate-900',
+        paidOnly: true,
+      },
       {
         to: '/caregiver/memory-schedule',
         matchPrefix: '/caregiver/memory-schedule',

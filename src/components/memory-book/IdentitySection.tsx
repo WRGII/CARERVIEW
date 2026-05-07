@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Save, User } from "lucide-react";
+import { Save, User, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -109,6 +110,21 @@ export default function IdentitySection({ memoryBookId, teamId, isOwner, residen
   return (
     <div className="space-y-6">
       {isReadOnly && <ReadOnlyBanner />}
+
+      {/* Resident Profile link notice */}
+      <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-xl px-4 py-3">
+        <p className="text-sm text-teal-800">
+          Identity is managed in the{" "}
+          <strong>Resident Profile</strong>. Changes made there sync here automatically.
+        </p>
+        <Link
+          to="/caregiver/resident"
+          className="ml-4 inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 hover:text-teal-900 shrink-0"
+        >
+          {isOwner ? "Edit Profile" : "View Profile"}
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </div>
 
       <Card>
         <CardHeader>

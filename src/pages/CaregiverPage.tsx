@@ -19,6 +19,7 @@ import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
 import DashboardCarePlanPanel from '../components/caregiver/DashboardCarePlanPanel';
 import DashboardMemoryBookPanel from '../components/caregiver/DashboardMemoryBookPanel';
+import DashboardResidentPanel from '../components/caregiver/DashboardResidentPanel';
 import { useDeleteObservation, useObservations } from '../hooks/useObservations';
 import { useToast } from '../components/ui/ToastProvider';
 import { localeToIntl } from '../lib/utils';
@@ -312,6 +313,9 @@ export default function CaregiverPage() {
       ) : isPaid ? (
         /* ── Paid user layout ── */
         <div className="space-y-5">
+          {/* Resident panel — full width, foundational context */}
+          <DashboardResidentPanel />
+
           {/* Top row: Care Plan + Memory Book side by side on md+ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div data-tutorial="care-plan-panel"><DashboardCarePlanPanel /></div>
