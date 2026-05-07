@@ -146,8 +146,8 @@ export default function LandingPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-16 sm:py-20 text-center">
-          <div className="flex flex-col items-center justify-center mb-6">
+        <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-10 sm:py-14 text-center">
+          <div className="flex flex-col items-center justify-center mb-4">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
               {t('common.app_name')}
             </h1>
@@ -156,7 +156,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-8 leading-tight max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 leading-tight max-w-4xl mx-auto">
             {t('landing.hero_title')}
           </h2>
 
@@ -166,8 +166,8 @@ export default function LandingPage() {
         </div>
 
         {/* Four-Pillar System */}
-        <div className="py-16 sm:py-24">
-          <div className="text-center mb-14">
+        <div className="py-10 sm:py-16">
+          <div className="text-center mb-10">
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.pillars_eyebrow')}
             </p>
@@ -208,8 +208,8 @@ export default function LandingPage() {
         </div>
 
         {/* Care Plan — dedicated section */}
-        <div className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-cyan-primary/5 rounded-3xl px-6 sm:px-12">
-          <div className="text-center mb-14">
+        <div className="py-10 sm:py-16 bg-gradient-to-br from-slate-50 to-cyan-primary/5 rounded-3xl px-6 sm:px-12">
+          <div className="text-center mb-10">
             <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest mb-2">
               {t('landing.careplan_eyebrow')}
             </p>
@@ -220,7 +220,7 @@ export default function LandingPage() {
           </div>
 
           {/* Six sections */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-16">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
             {carePlanSections.map((s) => {
               const Icon = s.icon
               return (
@@ -238,7 +238,7 @@ export default function LandingPage() {
           </div>
 
           {/* Decision Engine callout */}
-          <div className="bg-slate-800 rounded-3xl p-8 sm:p-10 mb-16">
+          <div className="bg-slate-800 rounded-3xl p-8 sm:p-10 mb-10">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 bg-cyan-primary rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-6 h-6 text-warm-white" />
@@ -257,7 +257,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-8 pt-8 border-t border-slate-700 flex flex-col sm:flex-row gap-4 items-center justify-center">
+            <div className="mt-6 pt-6 border-t border-slate-700 flex flex-col sm:flex-row gap-4 items-center justify-center">
               <Link
                 to="/create-account"
                 className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
@@ -307,8 +307,8 @@ export default function LandingPage() {
         </div>
 
         {/* Sustainability callout */}
-        <div className="py-16 sm:py-24">
-          <div className="bg-gradient-to-br from-peach-blush/30 via-peach-blush/10 to-mint-green/10 rounded-3xl px-8 sm:px-14 py-14">
+        <div className="py-10 sm:py-16">
+          <div className="bg-gradient-to-br from-peach-blush/30 via-peach-blush/10 to-mint-green/10 rounded-3xl px-8 sm:px-14 py-10">
             <div className="max-w-4xl mx-auto">
               <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-3">
                 {t('landing.sustainability_eyebrow')}
@@ -332,9 +332,9 @@ export default function LandingPage() {
         </div>
 
         {/* Coordinate — Memory Book */}
-        <div className="py-4 pb-16 sm:pb-24">
-          <div className="bg-gradient-to-br from-cyan-primary/6 via-mint-green/10 to-peach-blush/20 rounded-3xl px-6 sm:px-12 py-16">
-            <div className="text-center mb-14">
+        <div className="py-4 pb-10 sm:pb-16">
+          <div className="bg-gradient-to-br from-cyan-primary/6 via-mint-green/10 to-peach-blush/20 rounded-3xl px-6 sm:px-12 py-12">
+            <div className="text-center mb-10">
               <div className="inline-flex items-center gap-2 bg-cyan-primary border border-cyan-primary rounded-full px-5 py-2 mb-5 shadow-md">
                 <BookOpen className="w-4 h-4 text-warm-white" />
                 <p className="text-sm font-bold text-warm-white uppercase tracking-widest">
@@ -349,7 +349,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 mb-8">
+            <div className="grid gap-5 sm:grid-cols-2 mb-6">
               {[
                 { key: 'identity', Icon: User, bg: 'bg-cyan-primary/15', hbg: 'bg-cyan-primary/25', ic: 'text-cyan-primary' },
                 { key: 'contacts', Icon: Users, bg: 'bg-mint-green/50', hbg: 'bg-mint-green/70', ic: 'text-slate-600' },
@@ -370,7 +370,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="bg-warm-white/60 rounded-xl px-6 py-4 border border-slate-gray/10 text-center mb-8">
+            <div className="bg-warm-white/60 rounded-xl px-6 py-4 border border-slate-gray/10 text-center mb-5">
               <p className="text-sm text-slate-gray/60 leading-relaxed">{t('landing.mb_team_note')}</p>
             </div>
 
@@ -389,8 +389,8 @@ export default function LandingPage() {
         </div>
 
         {/* Observe — ADL Scale + features */}
-        <div className="py-16 sm:py-24 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl px-6 sm:px-12">
-          <div className="text-center mb-12">
+        <div className="py-10 sm:py-16 bg-gradient-to-r from-blue-50 to-slate-50 rounded-3xl px-6 sm:px-12">
+          <div className="text-center mb-8">
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.scale_eyebrow')}
             </p>
@@ -419,7 +419,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <p className="text-slate-gray/70 text-lg">{t('landing.scale_summary')}</p>
           </div>
 
@@ -442,8 +442,8 @@ export default function LandingPage() {
         </div>
 
         {/* Micro-scenarios */}
-        <div className="py-16 sm:py-24">
-          <div className="text-center mb-12">
+        <div className="py-10 sm:py-16">
+          <div className="text-center mb-8">
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.scenarios_eyebrow')}
             </p>
@@ -463,8 +463,8 @@ export default function LandingPage() {
         </div>
 
         {/* New Carer Guide callout */}
-        <div className="py-4 pb-16 sm:pb-24">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl px-8 sm:px-14 py-14">
+        <div className="py-4 pb-10 sm:pb-14">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-3xl px-8 sm:px-14 py-10">
             <div className="flex flex-col lg:flex-row gap-10 items-start">
               <div className="flex-1">
                 <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest mb-3">
@@ -494,9 +494,9 @@ export default function LandingPage() {
         </div>
 
         {/* Trust & Privacy */}
-        <div className="py-16 sm:py-20 bg-gradient-to-r from-mint-green/20 to-cyan-primary/10 rounded-3xl">
+        <div className="py-10 sm:py-14 bg-gradient-to-r from-mint-green/20 to-cyan-primary/10 rounded-3xl">
           <div className="max-w-4xl mx-auto px-8 text-center">
-            <h2 className="text-4xl font-bold text-slate-gray mb-12">{t('landing.trust_title')}</h2>
+            <h2 className="text-4xl font-bold text-slate-gray mb-8">{t('landing.trust_title')}</h2>
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 { icon: Shield, bg: 'bg-cyan-primary/20', ic: 'text-cyan-primary', k: '1' },
@@ -521,9 +521,9 @@ export default function LandingPage() {
         </div>
 
         {/* Testimonials */}
-        <div className="py-16 sm:py-24 text-center bg-gradient-to-r from-peach-blush/30 to-mint-green/20 rounded-3xl my-16">
+        <div className="py-10 sm:py-16 text-center bg-gradient-to-r from-peach-blush/30 to-mint-green/20 rounded-3xl my-10">
           <h2 className="text-3xl font-bold text-slate-gray mb-6">{t('landing.alone_title')}</h2>
-          <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto leading-relaxed mb-12">
+          <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto leading-relaxed mb-8">
             {t('landing.alone_body')}
           </p>
 
@@ -552,7 +552,7 @@ export default function LandingPage() {
         </div>
 
         {/* Tutorial CTA */}
-        <div className="py-10">
+        <div className="py-6">
           <div className="bg-gradient-to-r from-cyan-primary/10 to-teal-50 rounded-2xl border border-cyan-primary/20 px-8 py-7 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-cyan-700 uppercase tracking-wider mb-1">{t('nav.tutorial')}</p>
@@ -568,9 +568,9 @@ export default function LandingPage() {
         </div>
 
         {/* Auth form */}
-        <div id="get-started" className="py-20">
+        <div id="get-started" className="py-12">
           <div className="max-w-xl mx-auto">
-            <div className="text-center mb-10">
+            <div className="text-center mb-7">
               <h2 className="text-4xl font-bold text-slate-gray mb-4">
                 {t('landing.getstarted_title')}
               </h2>
