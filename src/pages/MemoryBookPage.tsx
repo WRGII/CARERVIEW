@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { User, Phone, Heart, Stethoscope, ArrowRight, ChevronDown, BookOpen, Users, Shield, Star, CircleCheck as CheckCircleIcon, FileText, Smile, ClipboardList, GraduationCap } from "lucide-react";
+import { ChevronDown, CircleCheck as CheckCircleIcon, ArrowRight, GraduationCap } from "lucide-react";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
 import { useLocale } from "../i18n/LocaleContext";
@@ -11,7 +11,6 @@ export default function MemoryBookPage() {
 
   const features = [
     {
-      icon: <User className="w-7 h-7 text-cyan-600" />,
       bg: "bg-cyan-50",
       title: t("mb_page.feat_identity_title"),
       body: t("mb_page.feat_identity_body"),
@@ -24,7 +23,6 @@ export default function MemoryBookPage() {
       ],
     },
     {
-      icon: <Phone className="w-7 h-7 text-teal-600" />,
       bg: "bg-teal-50",
       title: t("mb_page.feat_contacts_title"),
       body: t("mb_page.feat_contacts_body"),
@@ -36,7 +34,6 @@ export default function MemoryBookPage() {
       ],
     },
     {
-      icon: <Stethoscope className="w-7 h-7 text-slate-600" />,
       bg: "bg-slate-100",
       title: t("mb_page.feat_medical_title"),
       body: t("mb_page.feat_medical_body"),
@@ -49,7 +46,6 @@ export default function MemoryBookPage() {
       ],
     },
     {
-      icon: <Heart className="w-7 h-7 text-rose-500" />,
       bg: "bg-rose-50",
       title: t("mb_page.feat_prefs_title"),
       body: t("mb_page.feat_prefs_body"),
@@ -65,26 +61,18 @@ export default function MemoryBookPage() {
 
   const benefits = [
     {
-      icon: <BookOpen className="w-8 h-8 text-cyan-600" />,
-      bg: "bg-cyan-50",
       title: t("mb_page.benefit1_title"),
       body: t("mb_page.benefit1_body"),
     },
     {
-      icon: <Users className="w-8 h-8 text-teal-600" />,
-      bg: "bg-teal-50",
       title: t("mb_page.benefit2_title"),
       body: t("mb_page.benefit2_body"),
     },
     {
-      icon: <Shield className="w-8 h-8 text-slate-600" />,
-      bg: "bg-slate-100",
       title: t("mb_page.benefit3_title"),
       body: t("mb_page.benefit3_body"),
     },
     {
-      icon: <Star className="w-8 h-8 text-amber-500" />,
-      bg: "bg-amber-50",
       title: t("mb_page.benefit4_title"),
       body: t("mb_page.benefit4_body"),
     },
@@ -160,36 +148,21 @@ export default function MemoryBookPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <div className="pt-8 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-6">
-            <BookOpen className="w-4 h-4" />
+        <div className="pt-8 pb-6 text-center">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-5">
             {t("mb_page.eyebrow")}
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-6">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-5">
             {t("mb_page.hero_title")}
           </h1>
-          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed mb-10">
+          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t("mb_page.hero_body")}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-3 rounded-xl bg-cyan-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-cyan-700 transition-all duration-200 hover:shadow-xl"
-            >
-              {t("mb_page.hero_cta_primary")} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              to={{ pathname: "/", hash: "#get-started" }}
-              className="inline-flex items-center gap-3 rounded-xl border-2 border-slate-300 px-8 py-4 text-lg font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-200"
-            >
-              {t("mb_page.hero_cta_secondary")}
-            </Link>
-          </div>
         </div>
 
         {/* VISUAL MOCK-UP */}
-        <div className="py-16">
-          <div className="text-center mb-12">
+        <div className="py-14">
+          <div className="text-center mb-10">
             <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.mock_title")}</h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">{t("mb_page.mock_subtitle")}</p>
           </div>
@@ -197,8 +170,8 @@ export default function MemoryBookPage() {
         </div>
 
         {/* BENEFITS */}
-        <div className="py-16">
-          <div className="text-center mb-14">
+        <div className="py-14">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.benefits_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.benefits_subtitle")}</p>
           </div>
@@ -206,9 +179,6 @@ export default function MemoryBookPage() {
             {benefits.map((b) => (
               <Card key={b.title} className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-warm-white">
                 <CardContent className="p-8 text-center">
-                  <div className={`w-16 h-16 ${b.bg} rounded-full flex items-center justify-center mx-auto mb-6`}>
-                    {b.icon}
-                  </div>
                   <h3 className="text-xl font-semibold text-slate-800 mb-3">{b.title}</h3>
                   <p className="text-slate-600 leading-relaxed">{b.body}</p>
                 </CardContent>
@@ -218,8 +188,8 @@ export default function MemoryBookPage() {
         </div>
 
         {/* FEATURE SECTIONS */}
-        <div className="py-16">
-          <div className="text-center mb-14">
+        <div className="py-14">
+          <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.features_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.features_subtitle")}</p>
           </div>
@@ -230,9 +200,6 @@ export default function MemoryBookPage() {
                 className={`flex flex-col ${idx % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"} gap-8 md:gap-14 items-center`}
               >
                 <div className="flex-1">
-                  <div className={`w-14 h-14 ${feat.bg} rounded-2xl flex items-center justify-center mb-5`}>
-                    {feat.icon}
-                  </div>
                   <h3 className="text-3xl font-bold text-slate-800 mb-4">{feat.title}</h3>
                   <p className="text-lg text-slate-600 leading-relaxed mb-6">{feat.body}</p>
                   <ul className="space-y-3">
@@ -253,9 +220,8 @@ export default function MemoryBookPage() {
         </div>
 
         {/* HOW IT WORKS — TEAM ACCESS */}
-        <div className="py-16">
+        <div className="py-14">
           <div className="rounded-3xl bg-slate-800 text-white px-8 md:px-14 py-14 text-center">
-            <ClipboardList className="w-14 h-14 text-cyan-400 mx-auto mb-6" />
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("mb_page.access_title")}</h2>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8">
               {t("mb_page.access_body")}
@@ -278,7 +244,7 @@ export default function MemoryBookPage() {
         </div>
 
         {/* WHO IT HELPS */}
-        <section className="pb-16">
+        <section className="pb-14">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.personas_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.personas_subtitle")}</p>
@@ -308,7 +274,7 @@ export default function MemoryBookPage() {
         </section>
 
         {/* FAQ */}
-        <section className="pb-20">
+        <section className="pb-16">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.faq_title")}</h2>
@@ -335,9 +301,6 @@ export default function MemoryBookPage() {
         <section className="pb-12">
           <div className="max-w-3xl mx-auto px-4">
             <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
-                <GraduationCap className="w-7 h-7 text-white" />
-              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{t('tutorial.callout_heading')}</h3>
                 <p className="text-slate-600 leading-relaxed text-sm">{t('tutorial.callout_body')}</p>
@@ -389,7 +352,6 @@ function MemoryBookMockup({ t }: { t: (key: string) => string }) {
 
         {/* App header strip */}
         <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center gap-3">
-          <BookOpen className="w-5 h-5 text-cyan-600" />
           <span className="font-semibold text-slate-800 text-sm">{t("mb_page.mock_book_title")}</span>
           <span className="ml-2 px-2.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-medium">Margaret H.</span>
         </div>
@@ -398,21 +360,20 @@ function MemoryBookMockup({ t }: { t: (key: string) => string }) {
         <div className="border-b border-slate-200 bg-white">
           <div className="flex overflow-x-auto">
             {[
-              { icon: <FileText className="w-4 h-4" />, label: t("mb_page.mock_tab_overview"), active: false },
-              { icon: <User className="w-4 h-4" />, label: t("mb_page.mock_tab_identity"), active: true },
-              { icon: <Phone className="w-4 h-4" />, label: t("mb_page.mock_tab_contacts"), active: false },
-              { icon: <Stethoscope className="w-4 h-4" />, label: t("mb_page.mock_tab_medical"), active: false },
-              { icon: <Smile className="w-4 h-4" />, label: t("mb_page.mock_tab_prefs"), active: false },
+              { label: t("mb_page.mock_tab_overview"), active: false },
+              { label: t("mb_page.mock_tab_identity"), active: true },
+              { label: t("mb_page.mock_tab_contacts"), active: false },
+              { label: t("mb_page.mock_tab_medical"), active: false },
+              { label: t("mb_page.mock_tab_prefs"), active: false },
             ].map((tab) => (
               <div
                 key={tab.label}
-                className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   tab.active
                     ? "border-cyan-600 text-cyan-700 bg-cyan-50/40"
                     : "border-transparent text-slate-500"
                 }`}
               >
-                {tab.icon}
                 {tab.label}
               </div>
             ))}
@@ -454,7 +415,7 @@ function MemoryBookMockup({ t }: { t: (key: string) => string }) {
             </div>
           </div>
 
-          {/* Progress strip at the bottom */}
+          {/* Progress strip */}
           <div className="mt-4 bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center gap-4">
             <div className="flex-1">
               <p className="text-xs font-semibold text-slate-500 mb-1.5">{t("mb_page.mock_progress_label")}</p>
@@ -472,7 +433,6 @@ function MemoryBookMockup({ t }: { t: (key: string) => string }) {
 
 type FeatureMockCardProps = {
   feat: {
-    icon: React.ReactNode;
     bg: string;
     title: string;
     body: string;
@@ -483,10 +443,7 @@ type FeatureMockCardProps = {
 function FeatureMockCard({ feat }: FeatureMockCardProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
-      <div className={`${feat.bg} px-6 py-5 flex items-center gap-3 border-b border-slate-100`}>
-        <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center shadow-sm">
-          {feat.icon}
-        </div>
+      <div className={`${feat.bg} px-6 py-4 border-b border-slate-100`}>
         <span className="font-semibold text-slate-800 text-sm">{feat.title}</span>
       </div>
       <div className="px-6 py-5 space-y-3">
