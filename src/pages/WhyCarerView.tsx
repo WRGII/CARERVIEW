@@ -1,7 +1,7 @@
 // src/pages/WhyCarerView.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, ChevronDown, ClipboardList, MapPin, Shield, UserCheck, Chrome as Home, Leaf, RotateCcw, TriangleAlert as AlertTriangle, CircleAlert as AlertCircle, Heart, BookOpen, ChevronRight } from "lucide-react";
+import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, ChevronDown, ClipboardList, MapPin, Shield, UserCheck, Chrome as Home, Leaf, RotateCcw, TriangleAlert as AlertTriangle, CircleAlert as AlertCircle, Heart, BookOpen, ChevronRight, GraduationCap } from "lucide-react";
 import ObservationPreview from "../components/ObservationPreview";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
@@ -349,20 +349,35 @@ export default function WhyCarerView() {
           </div>
         </section>
 
+        {/* Tutorial Callout */}
+        <section className="pb-12">
+          <div className="max-w-3xl mx-auto">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
+                <GraduationCap className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">{t('tutorial.callout_heading')}</h3>
+                <p className="text-slate-600 leading-relaxed text-sm">{t('tutorial.callout_body')}</p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link
+                  to="/tutorial"
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-hover transition-all duration-200 whitespace-nowrap shadow-sm"
+                >
+                  {t('nav.tutorial')} <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* GET STARTED FORM */}
         <section className="pb-24">
           <div className="max-w-xl mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-4xl font-bold text-slate-gray mb-4">{t('why.cta_trend_title')}</h2>
               <p className="text-lg text-slate-gray/75 leading-relaxed">{t('why.cta_trend_body')}</p>
-            </div>
-            <div className="mt-8 text-center">
-              <Link
-                to="/tutorial"
-                className="inline-flex items-center gap-2 text-sm text-cyan-primary hover:text-cyan-hover font-medium transition-colors"
-              >
-                {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
             <AuthForm initialMode="signup" showToggle={true} />
           </div>

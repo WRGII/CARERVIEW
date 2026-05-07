@@ -279,21 +279,24 @@ export default function CaregiverResourcesPage() {
           </div>
         </section>
 
-        {/* Tutorial nudge */}
+        {/* Tutorial Callout */}
         <section className="py-10 px-4 max-w-3xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-cyan-50 border border-cyan-200 rounded-2xl px-6 py-5">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-cyan-100 flex items-center justify-center shrink-0">
-                <GraduationCap className="w-5 h-5 text-cyan-700" />
-              </div>
-              <p className="text-sm font-semibold text-slate-800">{t('tutorial.public_description')}</p>
+          <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
+              <GraduationCap className="w-7 h-7 text-white" />
             </div>
-            <Link
-              to="/tutorial"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
-            >
-              {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-bold text-slate-800 mb-2">{t('tutorial.callout_heading')}</h3>
+              <p className="text-slate-600 leading-relaxed text-sm">{t('tutorial.callout_body')}</p>
+            </div>
+            <div className="flex-shrink-0">
+              <Link
+                to="/tutorial"
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-hover transition-all duration-200 whitespace-nowrap shadow-sm"
+              >
+                {t('nav.tutorial')} <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </section>
 

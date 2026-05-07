@@ -1,4 +1,4 @@
-import { CircleCheck as CheckCircle, ArrowRight } from 'lucide-react'
+import { CircleCheck as CheckCircle, ArrowRight, GraduationCap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
@@ -172,14 +172,23 @@ export default function NewCarerPage() {
             className="mt-8"
           />
 
-          <div className="mt-6 text-center">
-            <Link
-              to="/tutorial"
-              className="inline-flex items-center gap-1.5 text-sm text-cyan-600 hover:text-cyan-800 font-medium transition-colors"
-            >
-              <span>{t('tutorial.cta_start')}</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+          {/* Tutorial Callout */}
+          <div className="mt-8 rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
+              <GraduationCap className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-bold text-slate-800 mb-2">{t('tutorial.callout_heading')}</h3>
+              <p className="text-slate-600 leading-relaxed text-sm">{t('tutorial.callout_body')}</p>
+            </div>
+            <div className="flex-shrink-0">
+              <Link
+                to="/tutorial"
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-hover transition-all duration-200 whitespace-nowrap shadow-sm"
+              >
+                {t('nav.tutorial')} <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </section>
       </div>
