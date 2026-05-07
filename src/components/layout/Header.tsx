@@ -55,7 +55,6 @@ export default function Header() {
     plan?.plan_id !== "free" &&
     hasActivePlan(plan);
 
-  // Show "Primary Caregiver" badge only for Family Circle plan owners
   const isFamilyPlan = plan?.plan_id === "family_qtr";
   const { data: teamRole } = useTeamRole(isFamilyPlan ? teamId : null, user?.id);
   const showOwnerBadge = isFamilyPlan && !!teamId && teamRole === "owner";
@@ -64,31 +63,38 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  const deskLink = (active: boolean) =>
+    `inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+      active
+        ? 'text-slate-900 bg-slate-100'
+        : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+    }`;
+
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left: Brand */}
-          <div className="flex items-center gap-3">
-            <Link to="/" aria-label={t('nav.home_aria')} className="flex items-center hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-2 min-w-0">
+            <Link to="/" aria-label={t('nav.home_aria')} className="flex items-center shrink-0 hover:opacity-80 transition-opacity">
               {logoLoading ? (
-                <div className="w-10 h-10 md:w-12 md:h-12 mr-3 rounded-md bg-slate-200 animate-pulse" />
+                <div className="w-9 h-9 mr-2 rounded-md bg-slate-200 animate-pulse" />
               ) : (
                 <img
                   src={logoSrc || FALLBACK_LOGO}
                   alt={t('nav.logo_aria')}
-                  className="w-10 h-10 md:w-12 md:h-12 object-contain mr-3 rounded-md"
+                  className="w-9 h-9 object-contain mr-2 rounded-md"
                   loading="eager"
                   decoding="async"
                 />
               )}
-              <span className="text-xl font-bold text-slate-800">{t('common.app_name')}</span>
+              <span className="text-lg font-bold text-slate-800 whitespace-nowrap">{t('common.app_name')}</span>
             </Link>
             {isAuthed && profile?.role === "caregiver" && (
-              <span className="hidden lg:flex items-center gap-2 text-sm text-slate-600 font-medium">
+              <span className="hidden xl:flex items-center gap-2 text-sm text-slate-500 font-medium ml-1 truncate max-w-[200px]">
                 {t('nav.welcome')} {profile?.display_name || profile?.email || user?.email || 'Caregiver'}
                 {showOwnerBadge && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                     {t('team.role_owner')}
                   </span>
                 )}
@@ -103,27 +109,13 @@ export default function Header() {
             ) : isAuthed ? (
               <>
                 {/* Desktop nav — authenticated */}
-                <div className="hidden md:flex items-center gap-3">
-                  <Link
-                    to={dashPath}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
-                      location.pathname === "/caregiver" || location.pathname === "/admin"
-                        ? "text-slate-900 bg-slate-50 border-slate-400"
-                        : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
-                    }`}
-                  >
+                <div className="hidden lg:flex items-center gap-1.5">
+                  <Link to={dashPath} className={deskLink(location.pathname === "/caregiver" || location.pathname === "/admin")}>
                     {t('nav.dashboard')}
                   </Link>
 
                   {isPaidCarer && (
-                    <Link
-                      to="/new-carer"
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
-                        location.pathname.startsWith("/new-carer")
-                          ? "text-slate-900 bg-slate-50 border-slate-400"
-                          : "text-slate-700 bg-white border-slate-300 hover:bg-slate-50 hover:border-slate-400"
-                      }`}
-                    >
+                    <Link to="/new-carer" className={deskLink(location.pathname.startsWith("/new-carer"))}>
                       {t('nav.new_carer')}
                     </Link>
                   )}
@@ -132,8 +124,8 @@ export default function Header() {
                   <LanguageSwitcher />
                 </div>
 
-                {/* Mobile hamburger */}
-                <div className="md:hidden flex items-center gap-2">
+                {/* Mobile/tablet hamburger */}
+                <div className="lg:hidden flex items-center gap-2">
                   <LanguageSwitcher />
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -152,43 +144,44 @@ export default function Header() {
             ) : (
               <>
                 {/* Desktop nav — unauthenticated */}
-                <div className="hidden md:flex items-center gap-3">
-                  <Link to="/why" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
+                <nav className="hidden lg:flex items-center gap-0.5">
+                  <Link to="/why" className={deskLink(location.pathname === '/why')}>
                     {t('nav.why_carerview')}
                   </Link>
-                  <Link to="/about" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
+                  <Link to="/about" className={deskLink(location.pathname === '/about')}>
                     {t('nav.about')}
                   </Link>
-                  <Link to="/memory-book" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
-                    {t('nav.memory_book')}
+                  <Link to="/memory-book" className={deskLink(location.pathname === '/memory-book')}>
+                    {t('nav.memory_book_short')}
                   </Link>
-                  <Link to="/new-carer" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
+                  <Link to="/new-carer" className={deskLink(location.pathname.startsWith('/new-carer'))}>
                     {t('nav.new_carer')}
                   </Link>
-                  <Link to="/caregiver-resources" className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
+                  <Link to="/caregiver-resources" className={deskLink(location.pathname === '/caregiver-resources')}>
                     {t('nav.caregiver_resources')}
                   </Link>
                   <Link
                     to="/tutorial"
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border min-h-[44px] transition-colors ${
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors whitespace-nowrap ${
                       location.pathname === '/tutorial'
-                        ? 'text-cyan-700 bg-cyan-50 border-cyan-300'
+                        ? 'text-cyan-700 bg-cyan-100 border-cyan-300'
                         : 'text-cyan-700 bg-cyan-50 border-cyan-200 hover:bg-cyan-100 hover:border-cyan-300'
                     }`}
                   >
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    {t('nav.tutorial')}
+                    <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+                    {t('nav.tutorial_short')}
                   </Link>
                   <Link
                     to={{ pathname: "/", hash: "#get-started" }}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700"
+                    className="inline-flex items-center px-4 py-1.5 text-sm font-semibold text-white bg-cyan-600 border border-transparent rounded-lg hover:bg-cyan-700 transition-colors whitespace-nowrap ml-1"
                   >
                     {t('nav.sign_in')}
                   </Link>
                   <LanguageSwitcher />
-                </div>
+                </nav>
 
-                <div className="md:hidden flex items-center gap-2">
+                {/* Mobile/tablet hamburger */}
+                <div className="lg:hidden flex items-center gap-2">
                   <LanguageSwitcher />
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -213,11 +206,11 @@ export default function Header() {
       {mobileMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 md:hidden"
+            className="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 lg:hidden"
             onClick={closeMobileMenu}
             aria-hidden="true"
           />
-          <div className="fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-50 md:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
+          <div className="fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-lg z-50 lg:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
             <nav className="px-4 py-3 space-y-1">
               {isAuthed ? (
                 <>
