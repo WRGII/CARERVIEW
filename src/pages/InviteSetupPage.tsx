@@ -8,6 +8,7 @@ import { Eye, EyeOff, Users, CircleCheck as CheckCircle, CircleAlert as AlertCir
 
 type Stage = "form" | "joining" | "done" | "error";
 type Mode = "signup" | "signin";
+type ErrorKind = "expired" | "generic";
 
 type PeekResult = {
   invalid?: boolean;
@@ -25,8 +26,9 @@ export default function InviteSetupPage() {
 
   const [token, setToken] = useState("");
   const [stage, setStage] = useState<Stage>("form");
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>(() => params.get("mode") === "signin" ? "signin" : "signup");
   const [errorMsg, setErrorMsg] = useState("");
+  const [errorKind, setErrorKind] = useState<ErrorKind>("generic");
   const [invitedEmail, setInvitedEmail] = useState<string | null>(null);
 
   const [name, setName] = useState("");
@@ -130,6 +132,18 @@ export default function InviteSetupPage() {
 
       if (!user) throw new Error(t("create_account.signup_failed") || "Sign-up failed");
 
+      // Supabase returns session:null + identities:[] when the email already
+      // exists (security-by-design — no explicit error is thrown). Switch the
+      // user to the sign-in tab instead of showing a confusing "check inbox" message.
+      if (!session && Array.isArray((user as any).identities) && (user as any).identities.length === 0) {
+        setStage("form");
+        setMode("signin");
+        setPassword("");
+        setConfirm("");
+        setErrorMsg("It looks like you already have a CarerView account. Please sign in instead.");
+        return;
+      }
+
       if (session && user.id) {
         await finalizeJoin();
       } else {
@@ -138,6 +152,8 @@ export default function InviteSetupPage() {
       }
     } catch (err: any) {
       const msg: string = err?.message ?? "";
+      const kind: ErrorKind = msg.toLowerCase().includes("expir") ? "expired" : "generic";
+      setErrorKind(kind);
       setStage("error");
       setErrorMsg(msg || t("accept_invite.failed"));
     } finally {
@@ -163,6 +179,8 @@ export default function InviteSetupPage() {
       await finalizeJoin();
     } catch (err: any) {
       const msg: string = err?.message ?? "";
+      const kind: ErrorKind = msg.toLowerCase().includes("expir") ? "expired" : "generic";
+      setErrorKind(kind);
       setStage("error");
       setErrorMsg(msg || t("accept_invite.failed"));
     } finally {
@@ -197,19 +215,28 @@ export default function InviteSetupPage() {
 
   if (stage === "error") {
     const lower = errorMsg?.toLowerCase() || "";
-    const isTokenError = !token || lower.includes("invalid") || lower.includes("expir") || lower.includes("used");
+    const isExpired = errorKind === "expired" || lower.includes("expir");
+    const isTokenError = !token || isExpired || lower.includes("invalid") || lower.includes("used");
+
+    const errorTitle = isExpired
+      ? "Invite link has expired"
+      : t("accept_invite.error_title");
+    const errorBody = isExpired
+      ? "This invite link is no longer valid. Please ask the team owner to send you a fresh invitation."
+      : (errorMsg || t("accept_invite.failed"));
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-red-100 p-10 text-center">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
             <AlertCircle className="w-7 h-7 text-red-500" />
           </div>
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">{t("accept_invite.error_title")}</h2>
-          <p className="text-slate-500 text-sm mb-6">{errorMsg || t("accept_invite.failed")}</p>
+          <h2 className="text-xl font-semibold text-slate-800 mb-2">{errorTitle}</h2>
+          <p className="text-slate-500 text-sm mb-6">{errorBody}</p>
           <div className="flex items-center justify-center gap-3">
             {!isTokenError && (
               <button
-                onClick={() => { setStage("form"); setErrorMsg(""); }}
+                onClick={() => { setStage("form"); setErrorMsg(""); setErrorKind("generic"); }}
                 className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-700 transition-colors"
               >
                 Try again

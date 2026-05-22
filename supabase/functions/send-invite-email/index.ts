@@ -118,11 +118,16 @@ Deno.serve(async (req: Request) => {
     // generateLink produces a signed action_link that authenticates the user
     // AND redirects to invite_link in a single click.  We use this link as the
     // button href in the branded email so the full invite flow works correctly.
+    // Append ?mode=signin so InviteSetupPage opens on the correct tab by default.
+    const inviteLinkForExisting = invite_link.includes("?")
+      ? `${invite_link}&mode=signin`
+      : `${invite_link}?mode=signin`;
+
     const { data: linkData, error: linkErr } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: { redirectTo: invite_link },
+        options: { redirectTo: inviteLinkForExisting },
       });
 
     if (linkErr) {
