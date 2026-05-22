@@ -114,33 +114,34 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // ── Existing user path ──
-    // generateLink with type:"invite" generates the signed action_link AND
-    // dispatches the email in a single admin operation — no separate send call
-    // needed.  Append ?mode=signin so InviteSetupPage opens on the correct tab.
+    // ── Existing confirmed user path ──
+    // generateLink with type:"magiclink" works for already-confirmed accounts.
+    // type:"invite" is rejected by GoTrue for confirmed users ("already registered").
+    // generateLink dispatches the email automatically — no separate send needed.
+    // Append ?mode=signin so InviteSetupPage opens on the correct tab.
     const inviteLinkForExisting = invite_link.includes("?")
       ? `${invite_link}&mode=signin`
       : `${invite_link}?mode=signin`;
 
     const { data: linkData, error: linkErr } =
       await adminClient.auth.admin.generateLink({
-        type: "invite",
+        type: "magiclink",
         email,
         options: { redirectTo: inviteLinkForExisting },
       });
 
     if (linkErr) {
-      console.error("generateLink (invite) error:", linkErr);
+      console.error("generateLink (magiclink) error:", linkErr);
       return jsonResponse({
         sent: false,
-        method: "invite_failed",
+        method: "magiclink_failed",
         error: linkErr.message,
       });
     }
 
     return jsonResponse({
       sent: true,
-      method: "invite",
+      method: "magiclink",
       new_user: false,
       action_link: linkData?.properties?.action_link ?? null,
     });
