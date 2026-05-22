@@ -6,7 +6,7 @@ import { validatePassword } from "../lib/passwordValidation";
 import PasswordStrengthBar from "../components/ui/PasswordStrengthBar";
 import { Eye, EyeOff, Users, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from "lucide-react";
 
-type Stage = "form" | "joining" | "done" | "error";
+type Stage = "loading" | "form" | "joining" | "done" | "error";
 type Mode = "signup" | "signin";
 type ErrorKind = "expired" | "generic";
 
@@ -25,8 +25,8 @@ export default function InviteSetupPage() {
   const { t } = useLocale();
 
   const [token, setToken] = useState("");
-  const [stage, setStage] = useState<Stage>("form");
-  const [mode, setMode] = useState<Mode>(() => params.get("mode") === "signin" ? "signin" : "signup");
+  const [stage, setStage] = useState<Stage>("loading");
+  const [mode, setMode] = useState<Mode>("signup");
   const [errorMsg, setErrorMsg] = useState("");
   const [errorKind, setErrorKind] = useState<ErrorKind>("generic");
   const [invitedEmail, setInvitedEmail] = useState<string | null>(null);
@@ -63,7 +63,10 @@ export default function InviteSetupPage() {
       }
 
       const { data: peek, error: peekErr } = await supabase.rpc("cv_peek_invite", { p_token: resolved });
-      if (peekErr) return;
+      if (peekErr) {
+        setStage("form");
+        return;
+      }
 
       const result = peek as PeekResult | null;
       if (!result || result.invalid) {
@@ -84,7 +87,18 @@ export default function InviteSetupPage() {
       if (result.email) {
         setInvitedEmail(result.email);
         setEmail(result.email);
+
+        // Determine which form to show based on whether an account already exists.
+        // Falls back to signup if the check itself fails (e.g. network error).
+        try {
+          const { data: exists } = await supabase.rpc("cv_email_registered", { p_email: result.email });
+          setMode(exists === true ? "signin" : "signup");
+        } catch {
+          setMode("signup");
+        }
       }
+
+      setStage("form");
     })();
   }, [params, navigate, t]);
 
@@ -202,6 +216,17 @@ export default function InviteSetupPage() {
     );
   }
 
+  if (stage === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-600 text-sm font-medium">Checking your invitation&hellip;</p>
+        </div>
+      </div>
+    );
+  }
+
   if (stage === "joining") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-cyan-50 flex items-center justify-center px-4">
@@ -273,21 +298,13 @@ export default function InviteSetupPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-          <div className="flex rounded-xl bg-slate-100 p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => { setMode("signup"); setErrorMsg(""); }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${isSignup ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-            >
-              Create account
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("signin"); setErrorMsg(""); }}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${!isSignup ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-            >
-              I already have an account
-            </button>
+          <div className={`flex items-center gap-3 mb-6 px-3 py-2.5 rounded-xl text-sm ${isSignup ? "bg-emerald-50 border border-emerald-200" : "bg-cyan-50 border border-cyan-200"}`}>
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isSignup ? "bg-emerald-500" : "bg-cyan-500"}`} />
+            <p className={`font-medium ${isSignup ? "text-emerald-800" : "text-cyan-800"}`}>
+              {isSignup
+                ? "No existing account found — create a new one below."
+                : "An existing CarerView account was found for this email."}
+            </p>
           </div>
 
           <form onSubmit={isSignup ? handleSignup : handleSignin} className="space-y-5" noValidate>
@@ -317,13 +334,16 @@ export default function InviteSetupPage() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                readOnly={!!invitedEmail}
+                onChange={(e) => !invitedEmail && setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition"
+                className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition ${
+                  invitedEmail ? "border-slate-200 bg-slate-50 text-slate-600 cursor-default" : "border-slate-300"
+                }`}
               />
               {invitedEmail && (
                 <p className="mt-1.5 text-xs text-slate-500">
-                  You were invited as <span className="font-medium text-slate-700">{invitedEmail}</span>. You can change this if needed.
+                  This invite is addressed to <span className="font-medium text-slate-700">{invitedEmail}</span>.
                 </p>
               )}
             </div>
@@ -395,8 +415,17 @@ export default function InviteSetupPage() {
             >
               {busy
                 ? (isSignup ? "Creating account\u2026" : "Signing in\u2026")
-                : (isSignup ? "Create account and join" : "Sign in and join")}
+                : (isSignup ? "Create account and join" : "Log in and join")}
             </button>
+
+            {!isSignup && (
+              <p className="text-center text-xs text-slate-500">
+                Not your account?{" "}
+                <a href="mailto:support@carerview.com" className="underline hover:text-slate-700">
+                  Contact support
+                </a>
+              </p>
+            )}
           </form>
         </div>
 
