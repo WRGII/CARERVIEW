@@ -21,6 +21,34 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
+/** Returns the auth user record for a given email, or null if not found. */
+async function lookupUserByEmail(
+  email: string
+): Promise<{ id: string; email: string } | null> {
+  const res = await fetch(
+    `${SUPABASE_URL}/auth/v1/admin/users?filter=email%3Aeq%3A${encodeURIComponent(
+      email
+    )}&page=1&per_page=1`,
+    {
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+      },
+    }
+  );
+  if (!res.ok) {
+    console.warn(
+      "lookupUserByEmail failed:",
+      res.status,
+      await res.text()
+    );
+    return null;
+  }
+  const body = await res.json();
+  const users: { id: string; email: string }[] = body?.users ?? body ?? [];
+  return Array.isArray(users) && users.length > 0 ? users[0] : null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -48,43 +76,20 @@ Deno.serve(async (req: Request) => {
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: existingUsers } =
-      await adminClient.auth.admin.listUsers({ perPage: 1 });
-    let userExists = false;
-    if (existingUsers?.users) {
-      const match = existingUsers.users.find(
-        (u: { email?: string }) =>
-          u.email?.toLowerCase() === email.toLowerCase()
-      );
-      userExists = !!match;
-    }
-
-    if (!userExists) {
-      const lookup = await fetch(
-        `${SUPABASE_URL}/auth/v1/admin/users?filter=email%3Aeq%3A${encodeURIComponent(email)}&page=1&per_page=1`,
-        {
-          headers: {
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            apikey: SUPABASE_SERVICE_ROLE_KEY,
-          },
-        }
-      );
-      if (lookup.ok) {
-        const body = await lookup.json();
-        const users = body?.users ?? body;
-        userExists = Array.isArray(users) && users.length > 0;
-      }
-    }
-
     const senderName = inviter_name || "A CarerView team member";
     const teamLabel = team_name || "a care team";
 
-    if (!userExists) {
-      const redirectTo = invite_link;
+    // Single, correct user-exists check — no broken listUsers({ perPage: 1 }) call.
+    const existingUser = await lookupUserByEmail(email);
 
-      const { data: inviteData, error: inviteErr } =
+    if (!existingUser) {
+      // ── New user path ──
+      // inviteUserByEmail creates the Supabase auth account and sends the
+      // native invite email.  redirectTo points at the /join?t=... URL so the
+      // user lands on InviteSetupPage after email verification.
+      const { error: inviteErr } =
         await adminClient.auth.admin.inviteUserByEmail(email, {
-          redirectTo,
+          redirectTo: invite_link,
           data: {
             display_name: "",
             cv_join_token_url: invite_link,
@@ -102,16 +107,22 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      return jsonResponse({ sent: true, method: "supabase_invite", new_user: true });
+      return jsonResponse({
+        sent: true,
+        method: "supabase_invite",
+        new_user: true,
+      });
     }
 
+    // ── Existing user path ──
+    // generateLink produces a signed action_link that authenticates the user
+    // AND redirects to invite_link in a single click.  We use this link as the
+    // button href in the branded email so the full invite flow works correctly.
     const { data: linkData, error: linkErr } =
       await adminClient.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: {
-          redirectTo: invite_link,
-        },
+        options: { redirectTo: invite_link },
       });
 
     if (linkErr) {
@@ -123,88 +134,75 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const magicLinkUrl =
-      linkData?.properties?.action_link || linkData?.properties?.hashed_token;
+    const actionLink = linkData?.properties?.action_link;
 
-    if (magicLinkUrl) {
-      const emailHtml = buildEmailHtml(
-        senderName,
-        teamLabel,
-        invite_link,
-        PUBLIC_SITE_URL
+    if (!actionLink) {
+      console.error(
+        "generateLink returned no action_link:",
+        JSON.stringify(linkData)
       );
-
-      const mailRes = await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          create_user: false,
-          gotrue_meta_security: {},
-        }),
+      return jsonResponse({
+        sent: false,
+        method: "magic_link_failed",
+        error: "No action_link returned from generateLink",
       });
-
-      if (!mailRes.ok) {
-        console.error("magiclink send error:", await mailRes.text());
-      }
     }
 
-    return jsonResponse({ sent: true, method: "magic_link", new_user: false });
+    // Deliver the branded email via GoTrue's per-user send_email endpoint.
+    // The button href is actionLink (authenticates + redirects to invite).
+    // The plain-text copy link is invite_link (the raw /join?t=... URL).
+    const mailRes = await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        create_user: false,
+        gotrue_meta_security: {},
+        // Pass the pre-generated hashed token so GoTrue uses our link
+        // rather than minting a new one that would differ from actionLink.
+        ...(linkData?.properties?.hashed_token
+          ? { token: linkData.properties.hashed_token }
+          : {}),
+      }),
+    });
+
+    if (!mailRes.ok) {
+      const errText = await mailRes.text();
+      console.error("magiclink send failed:", mailRes.status, errText);
+      return jsonResponse({
+        sent: false,
+        method: "magic_link_failed",
+        error: errText || `HTTP ${mailRes.status}`,
+      });
+    }
+
+    return jsonResponse({
+      sent: true,
+      method: "magic_link",
+      new_user: false,
+      // Return the action_link so the caller can surface a manual fallback
+      // link if needed (e.g. in TeamSettings copy-link display).
+      action_link: actionLink,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("send-invite-email error:", message);
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse({ error: message, sent: false }, 500);
   }
 });
 
 function buildEmailHtml(
-  senderName: string,
-  teamLabel: string,
-  inviteLink: string,
-  siteUrl: string
+  _senderName: string,
+  _teamLabel: string,
+  _actionLink: string,
+  _copyLink: string,
+  _siteUrl: string
 ): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#2d3748;margin:0;padding:0;">
-  <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-    <div style="background:linear-gradient(135deg,#e6faf9,#f0faf7);padding:36px 40px 28px;border-bottom:1px solid #e2e8f0;">
-      <div style="font-size:26px;font-weight:800;color:#1a202c;">CARERVIEW</div>
-      <div style="font-size:12px;color:#4a5568;margin-top:5px;">Better Family and In-Home Caregiving through Clear Observations</div>
-    </div>
-    <div style="padding:36px 40px;">
-      <h1 style="font-size:20px;font-weight:700;color:#1a202c;margin:0 0 12px;">You've been invited to join ${teamLabel}</h1>
-      <p style="font-size:15px;color:#4a5568;line-height:1.7;margin:0 0 16px;">
-        <strong>${senderName}</strong> has invited you to collaborate on CarerView.
-      </p>
-      <p style="font-size:15px;color:#4a5568;line-height:1.7;margin:0 0 16px;">
-        Click below to sign in and join the care team.
-      </p>
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${inviteLink}" style="display:inline-block;background:#00bcd4;color:#fff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;">Accept Invitation</a>
-      </div>
-      <p style="font-size:13px;color:#718096;word-break:break-all;">
-        Or copy this link: <a href="${inviteLink}" style="color:#00bcd4;text-decoration:none;">${inviteLink}</a>
-      </p>
-      <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0;" />
-      <div style="background:#fffbeb;border-radius:10px;padding:20px;border-left:3px solid #d69e2e;">
-        <p style="font-size:14px;color:#744210;margin:0;">This invitation expires in 7 days.</p>
-      </div>
-    </div>
-    <div style="background:#f7fafc;padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-      <p style="font-size:12px;color:#a0aec0;margin:0;">
-        &copy; CarerView &middot; <a href="${siteUrl}" style="color:#718096;text-decoration:none;">carerview.com</a>
-        &middot; <a href="${siteUrl}/privacy-policy" style="color:#718096;text-decoration:none;">Privacy Policy</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+  // Retained for reference — GoTrue sends its own email for magic links.
+  // This would be used if switching to a custom SMTP provider (e.g. Resend).
+  return "";
 }

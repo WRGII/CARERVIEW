@@ -115,15 +115,20 @@ export async function cvSendInviteEmail(params: {
   invite_link: string;
   team_name?: string;
   inviter_name?: string;
-}): Promise<{ sent: boolean }> {
+}): Promise<{ sent: boolean; error?: string }> {
   const { data, error } = await supabase.functions.invoke("send-invite-email", {
     body: params,
   });
   if (error) {
     console.error("send-invite-email edge fn error:", error);
-    return { sent: false };
+    return { sent: false, error: error.message ?? "Edge function error" };
   }
-  return { sent: data?.sent ?? false };
+  if (!data?.sent) {
+    const reason = data?.error ?? data?.method ?? "Unknown reason";
+    console.warn("send-invite-email returned sent:false —", reason);
+    return { sent: false, error: reason };
+  }
+  return { sent: true };
 }
 
 export async function cvAmIOwner(teamId: string) {

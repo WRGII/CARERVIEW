@@ -107,7 +107,7 @@ export default function TeamSettings() {
   const [resident, setResident] = useState<{ full_name: string } | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteResult, setInviteResult] = useState<{ link: string; expires_at: string; emailSent: boolean } | null>(null);
+  const [inviteResult, setInviteResult] = useState<{ link: string; expires_at: string; emailSent: boolean; emailError?: string } | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -169,14 +169,14 @@ export default function TeamSettings() {
       const link = `${window.location.origin}/join?t=${encodeURIComponent(result.token)}`;
 
       const ownerName = members.find((m) => m.role === "owner")?.display_name;
-      const { sent } = await cvSendInviteEmail({
+      const { sent, error: emailErr } = await cvSendInviteEmail({
         email: inviteEmail.trim(),
         invite_link: link,
         team_name: resident?.full_name ? `${resident.full_name}'s care team` : undefined,
         inviter_name: ownerName || undefined,
       });
 
-      setInviteResult({ link, expires_at: result.expires_at, emailSent: sent });
+      setInviteResult({ link, expires_at: result.expires_at, emailSent: sent, emailError: emailErr });
       setInviteEmail("");
       const refreshed = await cvListInvites(teamId);
       setInvites(refreshed);
@@ -369,7 +369,7 @@ export default function TeamSettings() {
               )}
 
               {inviteResult && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                <div className={`rounded-xl border p-4 space-y-3 ${inviteResult.emailSent ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
                   {inviteResult.emailSent ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -380,16 +380,29 @@ export default function TeamSettings() {
                       </p>
                     </div>
                   ) : (
-                    <p className="text-sm font-medium text-emerald-800">{t("team.invite_ready_title")}</p>
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">
+                          Email could not be sent automatically.
+                        </p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          Please share the invite link below directly with your team member.
+                          {inviteResult.emailError && (
+                            <span className="block mt-1 text-amber-600 font-mono">{inviteResult.emailError}</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   )}
                   <div>
                     <p className="text-xs text-slate-500 mb-1.5">
                       {inviteResult.emailSent
                         ? "You can also share this link directly:"
-                        : "Share this invite link with them:"}
+                        : "Send this link to your team member:"}
                     </p>
                     <div className="flex items-start gap-2">
-                      <code className="flex-1 text-xs bg-white border border-emerald-200 rounded-lg px-3 py-2 break-all text-slate-700 font-mono">
+                      <code className={`flex-1 text-xs border rounded-lg px-3 py-2 break-all font-mono ${inviteResult.emailSent ? "bg-white border-emerald-200 text-slate-700" : "bg-white border-amber-200 text-slate-700"}`}>
                         {inviteResult.link}
                       </code>
                       <CopyButton text={inviteResult.link} label={t("team.copy_link")} />
