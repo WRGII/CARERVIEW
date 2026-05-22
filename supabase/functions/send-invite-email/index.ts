@@ -115,83 +115,34 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── Existing user path ──
-    // generateLink produces a signed action_link that authenticates the user
-    // AND redirects to invite_link in a single click.  We use this link as the
-    // button href in the branded email so the full invite flow works correctly.
-    // Append ?mode=signin so InviteSetupPage opens on the correct tab by default.
+    // generateLink with type:"invite" generates the signed action_link AND
+    // dispatches the email in a single admin operation — no separate send call
+    // needed.  Append ?mode=signin so InviteSetupPage opens on the correct tab.
     const inviteLinkForExisting = invite_link.includes("?")
       ? `${invite_link}&mode=signin`
       : `${invite_link}?mode=signin`;
 
     const { data: linkData, error: linkErr } =
       await adminClient.auth.admin.generateLink({
-        type: "magiclink",
+        type: "invite",
         email,
         options: { redirectTo: inviteLinkForExisting },
       });
 
     if (linkErr) {
-      console.error("generateLink error:", linkErr);
+      console.error("generateLink (invite) error:", linkErr);
       return jsonResponse({
         sent: false,
-        method: "magic_link_failed",
+        method: "invite_failed",
         error: linkErr.message,
-      });
-    }
-
-    const actionLink = linkData?.properties?.action_link;
-
-    if (!actionLink) {
-      console.error(
-        "generateLink returned no action_link:",
-        JSON.stringify(linkData)
-      );
-      return jsonResponse({
-        sent: false,
-        method: "magic_link_failed",
-        error: "No action_link returned from generateLink",
-      });
-    }
-
-    // Deliver the branded email via GoTrue's per-user send_email endpoint.
-    // The button href is actionLink (authenticates + redirects to invite).
-    // The plain-text copy link is invite_link (the raw /join?t=... URL).
-    const mailRes = await fetch(`${SUPABASE_URL}/auth/v1/magiclink`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        create_user: false,
-        gotrue_meta_security: {},
-        // Pass the pre-generated hashed token so GoTrue uses our link
-        // rather than minting a new one that would differ from actionLink.
-        ...(linkData?.properties?.hashed_token
-          ? { token: linkData.properties.hashed_token }
-          : {}),
-      }),
-    });
-
-    if (!mailRes.ok) {
-      const errText = await mailRes.text();
-      console.error("magiclink send failed:", mailRes.status, errText);
-      return jsonResponse({
-        sent: false,
-        method: "magic_link_failed",
-        error: errText || `HTTP ${mailRes.status}`,
       });
     }
 
     return jsonResponse({
       sent: true,
-      method: "magic_link",
+      method: "invite",
       new_user: false,
-      // Return the action_link so the caller can surface a manual fallback
-      // link if needed (e.g. in TeamSettings copy-link display).
-      action_link: actionLink,
+      action_link: linkData?.properties?.action_link ?? null,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
