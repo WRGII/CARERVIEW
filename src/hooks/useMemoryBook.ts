@@ -1285,3 +1285,98 @@ export function useDeleteMemoryBookHouseholdProvider() {
     },
   });
 }
+
+// ── Vehicle Care ─────────────────────────────────────────────────────────────
+
+export function useMemoryBookVehicleCare(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-vehicle-care", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return [];
+      const { data, error } = await supabase
+        .from("memory_book_vehicle_care")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!memoryBookId,
+  });
+}
+
+export function useUpsertMemoryBookVehicleCare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      provider: {
+        id?: string;
+        provider_name: string;
+        sub_category: string;
+        phone: string;
+        website: string;
+        notes: string;
+        sort_order?: number;
+      };
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const now = new Date().toISOString();
+      if (params.provider.id) {
+        const { error } = await supabase
+          .from("memory_book_vehicle_care")
+          .update({
+            provider_name: params.provider.provider_name,
+            sub_category:  params.provider.sub_category,
+            phone:         params.provider.phone,
+            website:       params.provider.website,
+            notes:         params.provider.notes,
+            updated_at:    now,
+            updated_by:    user?.id ?? null,
+          })
+          .eq("id", params.provider.id)
+          .eq("team_id", params.teamId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_vehicle_care")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id:        params.teamId,
+            provider_name:  params.provider.provider_name,
+            sub_category:   params.provider.sub_category,
+            phone:          params.provider.phone,
+            website:        params.provider.website,
+            notes:          params.provider.notes,
+            sort_order:     params.provider.sort_order ?? 0,
+            created_at:     now,
+            updated_at:     now,
+            created_by:     user?.id ?? null,
+            updated_by:     user?.id ?? null,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-vehicle-care", params.memoryBookId] });
+    },
+  });
+}
+
+export function useDeleteMemoryBookVehicleCare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; memoryBookId: string; teamId: string }) => {
+      const { error } = await supabase
+        .from("memory_book_vehicle_care")
+        .delete()
+        .eq("id", params.id)
+        .eq("team_id", params.teamId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-vehicle-care", params.memoryBookId] });
+    },
+  });
+}

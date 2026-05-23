@@ -339,6 +339,31 @@ export type MemoryBookHouseholdProvider = {
   updated_by: string | null;
 };
 
+export type VehicleCareSubCategory =
+  | "oil_change"
+  | "tires"
+  | "brakes"
+  | "detailing"
+  | "inspection"
+  | "body_work"
+  | "other";
+
+export type MemoryBookVehicleCare = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  provider_name: string;
+  sub_category: VehicleCareSubCategory;
+  phone: string;
+  website: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
 export type HouseholdSection =
   | "providers"
   | "insurance"
