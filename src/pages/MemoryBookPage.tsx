@@ -219,31 +219,17 @@ export default function MemoryBookPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <div className="pt-8 pb-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-5">
+        <div className="pt-6 pb-4 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-4">
             <BookOpen className="w-4 h-4" />
             {t("mb_page.eyebrow")}
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-5 max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-4 max-w-4xl mx-auto">
             {t("mb_page.hero_title")}
           </h1>
           <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t("mb_page.hero_body")}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Link
-              to="/create-account"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-white transition-colors shadow-sm"
-            >
-              {t("mb_page.access_cta")} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              to="/pricing"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-slate-300 hover:border-slate-400 bg-white font-semibold text-slate-700 transition-colors"
-            >
-              {t("mb_page.access_plans")}
-            </Link>
-          </div>
         </div>
 
         {/* VISUAL MOCK-UP */}
