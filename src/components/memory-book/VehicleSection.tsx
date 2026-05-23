@@ -68,6 +68,7 @@ const CARE_SUB_CATEGORIES: CareSubMeta[] = [
   { value: "detailing",   label: "Detailing",   Icon: Sparkles },
   { value: "inspection",  label: "Inspection",  Icon: ClipboardCheck },
   { value: "body_work",   label: "Body Work",   Icon: PaintBucket },
+  { value: "dealer",      label: "Dealer",      Icon: Car },
   { value: "other",       label: "Other",       Icon: Wrench },
 ];
 

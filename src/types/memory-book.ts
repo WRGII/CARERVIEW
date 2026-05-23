@@ -346,6 +346,7 @@ export type VehicleCareSubCategory =
   | "detailing"
   | "inspection"
   | "body_work"
+  | "dealer"
   | "other";
 
 export type MemoryBookVehicleCare = {
