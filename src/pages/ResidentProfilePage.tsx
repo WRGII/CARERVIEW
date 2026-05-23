@@ -9,13 +9,7 @@ import { useToast } from '../components/ui/ToastProvider'
 import { useActiveTeam } from '../context/ActiveTeam'
 import { useAuth } from '../hooks/useAuth'
 import { useTeamResident, useTeamRole, useUpsertResident } from '../hooks/useMemoryBook'
-
-const GENDER_OPTIONS = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'non_binary', label: 'Non-binary' },
-  { value: 'unknown', label: 'Prefer not to say' },
-]
+import { useLocale } from '../i18n/LocaleContext'
 
 const EMPTY_FORM = {
   full_name: '',
@@ -43,7 +37,7 @@ function FieldDisplay({ label, value, icon: Icon }: { label: string; value?: str
   )
 }
 
-function ProfileCompletionBadge({ resident }: { resident: any }) {
+function ProfileCompletionBadge({ resident, t }: { resident: any; t: (k: string) => string }) {
   const fields = [
     resident?.full_name,
     resident?.preferred_name,
@@ -64,12 +58,12 @@ function ProfileCompletionBadge({ resident }: { resident: any }) {
       <div className="flex-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-slate-500">
-            <span className="font-semibold text-slate-700">{filled}</span> of {total} fields complete
+            <span className="font-semibold text-slate-700">{filled}</span> {t('resident_profile.fields_complete').replace('{total}', String(total))}
           </span>
           {isComplete && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700">
               <CheckCircle className="w-3.5 h-3.5" />
-              Complete
+              {t('care_plan.status_complete')}
             </span>
           )}
         </div>
@@ -85,12 +79,20 @@ function ProfileCompletionBadge({ resident }: { resident: any }) {
 }
 
 export default function ResidentProfilePage() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: resident, isLoading: residentLoading } = useTeamResident(teamId)
   const { data: role, isLoading: roleLoading } = useTeamRole(teamId, user?.id)
   const upsert = useUpsertResident()
   const { showToast } = useToast()
+
+  const GENDER_OPTIONS = [
+    { value: 'male', label: t('resident_profile.gender_male') },
+    { value: 'female', label: t('resident_profile.gender_female') },
+    { value: 'non_binary', label: t('resident_profile.gender_non_binary') },
+    { value: 'unknown', label: t('resident_profile.gender_prefer_not') },
+  ]
 
   const isOwner = role === 'owner'
   const [editing, setEditing] = useState(false)
@@ -116,7 +118,7 @@ export default function ResidentProfilePage() {
   async function handleSave() {
     if (!teamId) return
     if (!form.full_name.trim()) {
-      showToast('Full name is required', 'error')
+      showToast(t('resident_profile.full_name_required'), 'error')
       return
     }
     try {
@@ -133,10 +135,10 @@ export default function ResidentProfilePage() {
         language_preferences: form.language_preferences.trim(),
         about_me: form.about_me.trim(),
       })
-      showToast('Resident profile saved', 'success')
+      showToast(t('resident_profile.save_success'), 'success')
       setEditing(false)
     } catch (e: any) {
-      showToast(e.message ?? 'Failed to save', 'error')
+      showToast(e.message ?? t('resident_profile.save_error'), 'error')
     }
   }
 
@@ -172,8 +174,8 @@ export default function ResidentProfilePage() {
 
   return (
     <PageLayout
-      title="Resident Profile"
-      subtitle="The single source of truth for the person at the centre of your care."
+      title={t('resident_profile.title')}
+      subtitle={t('resident_profile.subtitle')}
       hideSignOut
     >
       {isLoading ? (
@@ -185,8 +187,8 @@ export default function ResidentProfilePage() {
       ) : !resident ? (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
           <AlertCircle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-amber-900 mb-1">No resident found</h3>
-          <p className="text-sm text-amber-700">Set up your Family Circle first to create a resident profile.</p>
+          <h3 className="text-base font-semibold text-amber-900 mb-1">{t('resident_profile.no_resident_title')}</h3>
+          <p className="text-sm text-amber-700">{t('resident_profile.no_resident_body')}</p>
         </div>
       ) : (
         <div className="space-y-5">
@@ -207,7 +209,7 @@ export default function ResidentProfilePage() {
                     {residentAge !== null && (
                       <span className="inline-flex items-center gap-1 text-xs text-slate-300">
                         <Calendar className="w-3 h-3" />
-                        Age {residentAge}
+                        {t('resident_profile.age_label').replace('{age}', String(residentAge))}
                       </span>
                     )}
                     {resident.gender && resident.gender !== 'unknown' && (
@@ -230,14 +232,14 @@ export default function ResidentProfilePage() {
                   className="border-white/30 text-white hover:bg-white/10 shrink-0"
                 >
                   <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-                  Edit Profile
+                  {t('resident_profile.edit_profile')}
                 </Button>
               )}
             </div>
 
             {/* Profile completion */}
             <div className="mt-5 pt-5 border-t border-white/10">
-              <ProfileCompletionBadge resident={resident} />
+              <ProfileCompletionBadge resident={resident} t={t} />
             </div>
           </div>
 
@@ -245,10 +247,10 @@ export default function ResidentProfilePage() {
           <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 flex items-start gap-3">
             <Info className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
             <p className="text-sm text-teal-800 leading-relaxed">
-              This profile is shared across the{' '}
-              <Link to="/caregiver/memory-schedule" className="font-semibold underline hover:text-teal-900">Memory Book</Link>,{' '}
-              <Link to="/care-hub/care-plan" className="font-semibold underline hover:text-teal-900">Care Plan</Link>, and{' '}
-              Observations. Keeping it complete helps the whole team stay aligned.
+              {t('resident_profile.shared_notice_prefix')}{' '}
+              <Link to="/caregiver/memory-schedule" className="font-semibold underline hover:text-teal-900">{t('resident_profile.memory_book_link')}</Link>,{' '}
+              <Link to="/care-hub/care-plan" className="font-semibold underline hover:text-teal-900">{t('resident_profile.care_plan_link')}</Link>,{' '}
+              {t('resident_profile.shared_notice_suffix')}
             </p>
           </div>
 
@@ -256,35 +258,35 @@ export default function ResidentProfilePage() {
             /* ── Edit form ── */
             <Card>
               <CardHeader>
-                <h3 className="text-base font-semibold text-slate-800">Edit Resident Profile</h3>
-                <p className="text-sm text-slate-500 mt-0.5">Changes sync automatically to the Memory Book Identity section.</p>
+                <h3 className="text-base font-semibold text-slate-800">{t('resident_profile.edit_form_title')}</h3>
+                <p className="text-sm text-slate-500 mt-0.5">{t('resident_profile.edit_form_subtitle')}</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {/* Core identity */}
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Core Identity</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('resident_profile.section_core_identity')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
-                        label="Full Name *"
+                        label={t('resident_profile.full_name_label')}
                         value={form.full_name}
                         onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                        placeholder="Legal full name"
+                        placeholder={t('resident_profile.full_name_placeholder')}
                       />
                       <Input
-                        label="Preferred Name"
+                        label={t('resident_profile.preferred_name_label')}
                         value={form.preferred_name}
                         onChange={e => setForm(f => ({ ...f, preferred_name: e.target.value }))}
-                        placeholder="What they like to be called"
+                        placeholder={t('resident_profile.preferred_name_placeholder')}
                       />
                       <Input
-                        label="Date of Birth"
+                        label={t('resident_profile.dob_label')}
                         type="date"
                         value={form.date_of_birth}
                         onChange={e => setForm(f => ({ ...f, date_of_birth: e.target.value }))}
                       />
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Gender</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('resident_profile.gender_label')}</label>
                         <select
                           value={form.gender}
                           onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}
@@ -300,50 +302,50 @@ export default function ResidentProfilePage() {
 
                   {/* Background */}
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Background & Context</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('resident_profile.section_background')}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
-                        label="Birthplace"
+                        label={t('resident_profile.birthplace_label')}
                         value={form.birthplace}
                         onChange={e => setForm(f => ({ ...f, birthplace: e.target.value }))}
-                        placeholder="City, country"
+                        placeholder={t('resident_profile.birthplace_placeholder')}
                       />
                       <Input
-                        label="Lives At / Address Preference"
+                        label={t('resident_profile.address_label')}
                         value={form.address_preference}
                         onChange={e => setForm(f => ({ ...f, address_preference: e.target.value }))}
-                        placeholder="Home, care facility, etc."
+                        placeholder={t('resident_profile.address_placeholder')}
                       />
                       <Input
-                        label="Relationship Status"
+                        label={t('resident_profile.relationship_label')}
                         value={form.relationship_status}
                         onChange={e => setForm(f => ({ ...f, relationship_status: e.target.value }))}
-                        placeholder="Widowed, married, etc."
+                        placeholder={t('resident_profile.relationship_placeholder')}
                       />
                       <Input
-                        label="Cultural Background"
+                        label={t('resident_profile.cultural_label')}
                         value={form.cultural_preferences}
                         onChange={e => setForm(f => ({ ...f, cultural_preferences: e.target.value }))}
-                        placeholder="Heritage, traditions"
+                        placeholder={t('resident_profile.cultural_placeholder')}
                       />
                       <Input
-                        label="Language Preferences"
+                        label={t('resident_profile.language_label')}
                         value={form.language_preferences}
                         onChange={e => setForm(f => ({ ...f, language_preferences: e.target.value }))}
-                        placeholder="First language, other languages"
+                        placeholder={t('resident_profile.language_placeholder')}
                       />
                     </div>
                   </div>
 
                   {/* About */}
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">About</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{t('resident_profile.section_about')}</p>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">About the Resident</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('resident_profile.about_label')}</label>
                       <textarea
                         value={form.about_me}
                         onChange={e => setForm(f => ({ ...f, about_me: e.target.value }))}
-                        placeholder="Who they are — their story, personality, what matters to them..."
+                        placeholder={t('resident_profile.about_placeholder')}
                         className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 bg-white focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 min-h-[120px] leading-relaxed"
                       />
                     </div>
@@ -352,10 +354,10 @@ export default function ResidentProfilePage() {
                   <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
                     <Button variant="primary" size="md" onClick={handleSave} disabled={upsert.isPending}>
                       <Save className="w-4 h-4 mr-1.5" />
-                      {upsert.isPending ? 'Saving...' : 'Save Profile'}
+                      {upsert.isPending ? t('common.saving') : t('resident_profile.save_button')}
                     </Button>
                     <Button variant="ghost" size="md" onClick={handleCancel}>
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -369,22 +371,22 @@ export default function ResidentProfilePage() {
                 <CardHeader>
                   <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <User className="w-4 h-4 text-slate-400" />
-                    Core Identity
+                    {t('resident_profile.section_core_identity')}
                   </h3>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <FieldDisplay label="Full Name" value={resident.full_name} />
-                    <FieldDisplay label="Preferred Name" value={resident.preferred_name} />
+                    <FieldDisplay label={t('resident_profile.full_name_label')} value={resident.full_name} />
+                    <FieldDisplay label={t('resident_profile.preferred_name_label')} value={resident.preferred_name} />
                     <FieldDisplay
-                      label="Date of Birth"
+                      label={t('resident_profile.dob_label')}
                       value={resident.date_of_birth
                         ? new Date(resident.date_of_birth).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
                         : null}
                       icon={Calendar}
                     />
                     <FieldDisplay
-                      label="Gender"
+                      label={t('resident_profile.gender_label')}
                       value={resident.gender && resident.gender !== 'unknown'
                         ? GENDER_OPTIONS.find(o => o.value === resident.gender)?.label
                         : null}
@@ -394,7 +396,7 @@ export default function ResidentProfilePage() {
                         onClick={() => setEditing(true)}
                         className="text-xs font-semibold text-teal-600 hover:text-teal-800 flex items-center gap-1"
                       >
-                        Add more details <ChevronRight className="w-3 h-3" />
+                        {t('resident_profile.add_more_details')} <ChevronRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -406,22 +408,22 @@ export default function ResidentProfilePage() {
                 <CardHeader>
                   <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <Globe className="w-4 h-4 text-slate-400" />
-                    Background & Context
+                    {t('resident_profile.section_background')}
                   </h3>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <FieldDisplay label="Lives At" value={resident.address_preference} icon={MapPin} />
-                    <FieldDisplay label="Birthplace" value={resident.birthplace} />
-                    <FieldDisplay label="Relationship Status" value={resident.relationship_status} icon={Heart} />
-                    <FieldDisplay label="Cultural Background" value={resident.cultural_preferences} icon={Globe} />
-                    <FieldDisplay label="Language Preferences" value={resident.language_preferences} icon={Languages} />
+                    <FieldDisplay label={t('resident_profile.lives_at_label')} value={resident.address_preference} icon={MapPin} />
+                    <FieldDisplay label={t('resident_profile.birthplace_label')} value={resident.birthplace} />
+                    <FieldDisplay label={t('resident_profile.relationship_label')} value={resident.relationship_status} icon={Heart} />
+                    <FieldDisplay label={t('resident_profile.cultural_label')} value={resident.cultural_preferences} icon={Globe} />
+                    <FieldDisplay label={t('resident_profile.language_label')} value={resident.language_preferences} icon={Languages} />
                     {!resident.birthplace && !resident.cultural_preferences && isOwner && (
                       <button
                         onClick={() => setEditing(true)}
                         className="text-xs font-semibold text-teal-600 hover:text-teal-800 flex items-center gap-1"
                       >
-                        Add background details <ChevronRight className="w-3 h-3" />
+                        {t('resident_profile.add_background_details')} <ChevronRight className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -432,7 +434,7 @@ export default function ResidentProfilePage() {
               {resident.about_me ? (
                 <Card className="lg:col-span-2">
                   <CardHeader>
-                    <h3 className="text-sm font-semibold text-slate-700">About the Resident</h3>
+                    <h3 className="text-sm font-semibold text-slate-700">{t('resident_profile.about_label')}</h3>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{resident.about_me}</p>
@@ -440,12 +442,12 @@ export default function ResidentProfilePage() {
                 </Card>
               ) : isOwner ? (
                 <div className="lg:col-span-2 bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 text-center">
-                  <p className="text-sm text-slate-500 mb-2">No "About" narrative yet.</p>
+                  <p className="text-sm text-slate-500 mb-2">{t('resident_profile.no_about_narrative')}</p>
                   <button
                     onClick={() => setEditing(true)}
                     className="text-xs font-semibold text-teal-600 hover:text-teal-800 flex items-center gap-1 mx-auto"
                   >
-                    Add their story <ChevronRight className="w-3 h-3" />
+                    {t('resident_profile.add_their_story')} <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
               ) : null}
@@ -458,14 +460,14 @@ export default function ResidentProfilePage() {
               to="/caregiver/memory-schedule"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-800 transition-colors"
             >
-              View Memory Book
+              {t('resident_profile.view_memory_book')}
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
             <Link
               to="/care-hub/care-plan"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
             >
-              View Care Plan
+              {t('resident_profile.view_care_plan')}
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>

@@ -8,41 +8,6 @@ import { detectGaps, getTopPriorities, countBySeverity, getNextStep } from '../.
 import PageSEO from '../../components/seo/PageSEO'
 import { useLocale } from '../../i18n/LocaleContext'
 
-// ── Tool card definitions ─────────────────────────────────────────────────────
-
-const TOOLS = [
-  {
-    icon: BookOpen,
-    title: 'Memory Book',
-    subtitle: 'Know the person',
-    description:
-      'Build a shared reference for the person being cared for — preferences, health context, providers, contacts, and practical information caregivers need day to day.',
-    cta: 'Open Memory Book',
-    href: '/caregiver/memory-schedule',
-    accent: 'teal' as const,
-  },
-  {
-    icon: ClipboardList,
-    title: 'Care Plan',
-    subtitle: 'Coordinate the team',
-    description:
-      'Create the care team\u2019s big-picture operating plan: who is responsible for what, what authority exists, what risks need attention, and when to review.',
-    cta: 'Open Care Plan',
-    href: '/care-hub/care-plan',
-    accent: 'blue' as const,
-  },
-  {
-    icon: Activity,
-    title: 'Observations',
-    subtitle: 'Track change',
-    description:
-      'Record functional observations over time so the care team can see what is changing and make informed decisions as needs evolve.',
-    cta: 'Open Observations',
-    href: '/caregiver/observations/new',
-    accent: 'amber' as const,
-  },
-] as const
-
 const ACCENT = {
   teal: {
     icon: 'bg-teal-50 text-teal-600',
@@ -64,15 +29,11 @@ const ACCENT = {
   },
 }
 
-// ── Section status icon ───────────────────────────────────────────────────────
-
 function SectionDot({ status }: { status: string }) {
   if (status === 'complete') return <CheckCircle2 className="w-4 h-4 text-emerald-500" />
   if (status === 'in_progress') return <Clock className="w-4 h-4 text-blue-400" />
   return <Circle className="w-4 h-4 text-slate-300" />
 }
-
-// ── Care Plan live panel ──────────────────────────────────────────────────────
 
 function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
   const { t } = useLocale()
@@ -99,15 +60,16 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Progress */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-slate-700">
-            {completedCount} of {total} sections complete
+            {t('care_hub.progress_sections_complete')
+              .replace('{completed}', String(completedCount))
+              .replace('{total}', String(total))}
           </p>
           {completedCount > 0 && (
             <Link to="/care-hub/care-plan/summary" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
-              View summary →
+              {t('care_hub.view_summary_link')}
             </Link>
           )}
         </div>
@@ -119,7 +81,6 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
         </div>
       </div>
 
-      {/* Section list */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {SECTION_KEYS.map((key: SectionKey) => {
           const section = sectionMap.get(key)
@@ -133,40 +94,41 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
         })}
       </div>
 
-      {/* All done */}
       {allDone && (
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <p className="text-sm font-semibold text-emerald-900">All sections complete — no gaps identified.</p>
+          <p className="text-sm font-semibold text-emerald-900">{t('care_hub.all_sections_complete')}</p>
         </div>
       )}
 
-      {/* Gaps */}
       {gaps.length > 0 && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-slate-700">{gaps.length} gap{gaps.length !== 1 ? 's' : ''} identified</span>
+            <span className="text-sm font-semibold text-slate-700">
+              {t('care_hub.gaps_identified')
+                .replace('{count}', String(gaps.length))
+                .replace('{plural}', gaps.length !== 1 ? 's' : '')}
+            </span>
             {counts.critical > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-100 text-xs font-medium text-red-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                {counts.critical} critical
+                {t('care_hub.gap_critical').replace('{count}', String(counts.critical))}
               </span>
             )}
             {counts.important > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-xs font-medium text-amber-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                {counts.important} important
+                {t('care_hub.gap_important').replace('{count}', String(counts.important))}
               </span>
             )}
             {counts.monitor > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                {counts.monitor} to monitor
+                {t('care_hub.gap_to_monitor').replace('{count}', String(counts.monitor))}
               </span>
             )}
           </div>
 
-          {/* Top gaps */}
           <div className="space-y-2">
             {topGaps.map((gap, i) => (
               <div key={i} className={`flex items-start gap-2.5 p-3 rounded-xl border ${
@@ -182,16 +144,18 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
               </div>
             ))}
             {gaps.length > 3 && (
-              <p className="text-xs text-slate-400 pl-1">+{gaps.length - 3} more gaps — <Link to="/care-hub/care-plan/summary" className="text-blue-600 hover:underline">view all</Link></p>
+              <p className="text-xs text-slate-400 pl-1">
+                {t('care_hub.more_gaps').replace('{count}', String(gaps.length - 3))}{' '}
+                <Link to="/care-hub/care-plan/summary" className="text-blue-600 hover:underline">{t('care_hub.view_all_link')}</Link>
+              </p>
             )}
           </div>
 
-          {/* Next step highlight */}
           {nextStep && counts.critical > 0 && (
             <div className="flex items-start gap-2.5 bg-white border border-slate-200 rounded-xl p-4">
               <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-bold text-slate-800 mb-0.5">Most urgent next step</p>
+                <p className="text-xs font-bold text-slate-800 mb-0.5">{t('care_hub.most_urgent_next_step')}</p>
                 <p className="text-xs text-slate-600 leading-relaxed">{nextStep}</p>
               </div>
             </div>
@@ -204,20 +168,22 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
         className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
       >
         <ClipboardList className="w-4 h-4" />
-        {completedCount === 0 ? 'Start Care Plan' : completedCount === total ? 'Review Care Plan' : 'Continue Care Plan'}
+        {completedCount === 0
+          ? t('care_hub.cta_start_plan')
+          : completedCount === total
+          ? t('care_hub.cta_review_plan')
+          : t('care_hub.cta_continue_plan')}
       </Link>
     </div>
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
-
 export default function CareHubPage() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { markCareHubVisited, careHubVisited } = useOnboarding()
   const { data: carePlan, isLoading: planLoading } = useCarePlanReadOnly(teamId)
 
-  // Mark visited on mount — idempotent (only fires the upsert if not already set)
   useEffect(() => {
     if (!careHubVisited) {
       markCareHubVisited()
@@ -228,6 +194,57 @@ export default function CareHubPage() {
   const hasPlan = !planLoading && !!carePlan
   const isFirstVisit = !careHubVisited
 
+  const TOOLS = [
+    {
+      icon: BookOpen,
+      title: t('care_hub.tool_memory_book_title'),
+      subtitle: t('care_hub.tool_memory_book_subtitle'),
+      description: t('care_hub.tool_memory_book_desc'),
+      cta: t('care_hub.tool_memory_book_cta'),
+      href: '/caregiver/memory-schedule',
+      accent: 'teal' as const,
+    },
+    {
+      icon: ClipboardList,
+      title: t('care_hub.tool_care_plan_title'),
+      subtitle: t('care_hub.tool_care_plan_subtitle'),
+      description: t('care_hub.tool_care_plan_desc'),
+      cta: t('care_hub.tool_care_plan_cta'),
+      href: '/care-hub/care-plan',
+      accent: 'blue' as const,
+    },
+    {
+      icon: Activity,
+      title: t('care_hub.tool_observations_title'),
+      subtitle: t('care_hub.tool_observations_subtitle'),
+      description: t('care_hub.tool_observations_desc'),
+      cta: t('care_hub.tool_observations_cta'),
+      href: '/caregiver/observations/new',
+      accent: 'amber' as const,
+    },
+  ]
+
+  const MENTAL_MODEL = [
+    {
+      label: t('care_hub.mental_model_mb_label'),
+      tag: t('care_hub.mental_model_mb_tag'),
+      body: t('care_hub.mental_model_mb_body'),
+      dot: 'bg-teal-400',
+    },
+    {
+      label: t('care_hub.mental_model_cp_label'),
+      tag: t('care_hub.mental_model_cp_tag'),
+      body: t('care_hub.mental_model_cp_body'),
+      dot: 'bg-blue-400',
+    },
+    {
+      label: t('care_hub.mental_model_obs_label'),
+      tag: t('care_hub.mental_model_obs_tag'),
+      body: t('care_hub.mental_model_obs_body'),
+      dot: 'bg-amber-400',
+    },
+  ]
+
   return (
     <>
       <PageSEO
@@ -237,22 +254,18 @@ export default function CareHubPage() {
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        {/* ── Header ── */}
         <div className="bg-white border-b border-slate-200">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Subscriber tools</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">Care Hub</h1>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">{t('care_hub.page_eyebrow')}</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">{t('care_hub.page_title')}</h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
-              {isFirstVisit
-                ? 'Welcome to Care Hub. Your subscriber toolkit has three parts — each with a different purpose. Start with Care Plan to coordinate your care team.'
-                : 'Your subscriber toolkit — Memory Book, Care Plan, and Observations.'}
+              {isFirstVisit ? t('care_hub.page_intro_first_visit') : t('care_hub.page_intro_returning')}
             </p>
           </div>
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
 
-          {/* ── Care Plan Decision Engine panel (when plan exists) ── */}
           {hasPlan && (
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
               <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-100">
@@ -260,8 +273,8 @@ export default function CareHubPage() {
                   <ClipboardList className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Care Plan</h2>
-                  <p className="text-xs text-blue-700 font-semibold">Coordinate the team</p>
+                  <h2 className="text-base font-bold text-slate-900">{t('care_hub.live_panel_heading')}</h2>
+                  <p className="text-xs text-blue-700 font-semibold">{t('care_hub.live_panel_subtitle')}</p>
                 </div>
               </div>
               <div className="p-6">
@@ -270,31 +283,27 @@ export default function CareHubPage() {
             </div>
           )}
 
-          {/* ── No plan yet: Care Plan CTA ── */}
           {!planLoading && !hasPlan && (
             <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
                 <ClipboardList className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-base font-bold text-slate-900 mb-1">Start your Care Plan</h2>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  A Care Plan helps your team coordinate who does what, what authority is in place, and when to review. It takes about 20 minutes to build a first draft.
-                </p>
+                <h2 className="text-base font-bold text-slate-900 mb-1">{t('care_hub.start_plan_heading')}</h2>
+                <p className="text-sm text-slate-600 leading-relaxed">{t('care_hub.start_plan_body')}</p>
               </div>
               <Link
                 to="/care-hub/care-plan"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors whitespace-nowrap shrink-0"
               >
-                Start building
+                {t('care_hub.start_building_link')}
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           )}
 
-          {/* ── Three tool cards ── */}
           <div>
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">All tools</h2>
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">{t('care_hub.all_tools_heading')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {TOOLS.map((tool) => {
                 const styles = ACCENT[tool.accent]
@@ -323,30 +332,10 @@ export default function CareHubPage() {
             </div>
           </div>
 
-          {/* ── Mental model framing (always shown, more compact when plan active) ── */}
           <div className="bg-slate-900 rounded-2xl p-7 md:p-9">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">How the tools work together</h2>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">{t('care_hub.mental_model_heading')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {[
-                {
-                  label: 'Memory Book',
-                  tag: 'Know the person',
-                  body: 'Built with and about the resident. A reference covering identity, health, preferences, contacts, and practical details.',
-                  dot: 'bg-teal-400',
-                },
-                {
-                  label: 'Care Plan',
-                  tag: 'Coordinate the team',
-                  body: 'Built by the care team. Covers the big-picture operating plan: who does what, authority, risks, living arrangements, and when to review.',
-                  dot: 'bg-blue-400',
-                },
-                {
-                  label: 'Observations',
-                  tag: 'Track change',
-                  body: 'Periodic functional tracking. Helps the team see how the resident is changing and make better decisions as needs evolve.',
-                  dot: 'bg-amber-400',
-                },
-              ].map((item) => (
+              {MENTAL_MODEL.map((item) => (
                 <div key={item.label}>
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className={`w-2 h-2 rounded-full ${item.dot}`} />

@@ -51,15 +51,15 @@ export default function DashboardCarePlanPanel() {
             <ClipboardList className="w-4 h-4 text-blue-600" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">Care Plan</p>
-            <p className="text-xs font-semibold text-blue-700">Coordinate the team</p>
+            <p className="text-sm font-bold text-slate-900">{t('care_plan.title')}</p>
+            <p className="text-xs font-semibold text-blue-700">{t('care_plan.subtitle')}</p>
           </div>
         </div>
         <Link
           to="/care-hub/care-plan"
           className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
         >
-          {hasStarted ? (allDone ? 'Review' : 'Continue') : 'Start'}
+          {hasStarted ? (allDone ? t('care_plan.cta_review') : t('care_plan.cta_continue')) : t('care_plan.cta_start')}
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -69,14 +69,15 @@ export default function DashboardCarePlanPanel() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">{completedCount}</span> of {total} sections complete
+              <span className="font-semibold text-slate-700">{completedCount}</span> {t('care_plan.of_total_sections')
+                .replace('{total}', String(total))}
             </p>
             {hasStarted && (
               <Link
                 to="/care-hub/care-plan/summary"
                 className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
               >
-                View summary →
+                {t('care_plan.view_summary')} →
               </Link>
             )}
           </div>
@@ -106,7 +107,7 @@ export default function DashboardCarePlanPanel() {
         {allDone && (
           <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <p className="text-xs font-semibold text-emerald-900">All sections complete</p>
+            <p className="text-xs font-semibold text-emerald-900">{t('care_plan.all_sections_complete')}</p>
           </div>
         )}
 
@@ -116,19 +117,21 @@ export default function DashboardCarePlanPanel() {
             {counts.critical > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-100 text-xs font-medium text-red-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                {counts.critical} critical gap{counts.critical !== 1 ? 's' : ''}
+                {t('care_plan.gap_critical')
+                  .replace('{count}', String(counts.critical))
+                  .replace('{plural}', counts.critical !== 1 ? 's' : '')}
               </span>
             )}
             {counts.important > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-xs font-medium text-amber-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                {counts.important} important
+                {t('care_plan.gap_important').replace('{count}', String(counts.important))}
               </span>
             )}
             {counts.monitor > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                {counts.monitor} to monitor
+                {t('care_plan.gap_monitor').replace('{count}', String(counts.monitor))}
               </span>
             )}
           </div>
@@ -140,7 +143,9 @@ export default function DashboardCarePlanPanel() {
         <div className="flex items-center gap-2 bg-red-50 border-t border-red-100 px-5 py-2.5">
           <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
           <p className="text-xs text-red-800 font-medium">
-            {counts.critical} critical gap{counts.critical !== 1 ? 's' : ''} need attention
+            {t('care_plan.critical_alert')
+              .replace('{count}', String(counts.critical))
+              .replace('{plural}', counts.critical !== 1 ? 's' : '')}
           </p>
         </div>
       )}

@@ -18,30 +18,30 @@ import { useLocale } from '../../i18n/LocaleContext'
 
 // ── Section summary blocks ────────────────────────────────────────────────────
 
-function SectionStatus({ section }: { section: CarePlanSection | undefined }) {
+function SectionStatus({ section, t }: { section: CarePlanSection | undefined; t: (k: string) => string }) {
   const status = section?.completion_status ?? 'not_started'
   if (status === 'complete')
-    return <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="w-3.5 h-3.5" />Complete</span>
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="w-3.5 h-3.5" />{t('care_plan.status_complete')}</span>
   if (status === 'in_progress')
-    return <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600"><Clock className="w-3.5 h-3.5" />In progress</span>
-  return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><Circle className="w-3.5 h-3.5" />Not started</span>
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600"><Clock className="w-3.5 h-3.5" />{t('care_plan.status_in_progress')}</span>
+  return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><Circle className="w-3.5 h-3.5" />{t('care_plan.status_not_started')}</span>
 }
 
-function SectionBlock({ sectionKey, section, children }: { sectionKey: SectionKey; section: CarePlanSection | undefined; children: React.ReactNode }) {
+function SectionBlock({ sectionKey, section, t, children }: { sectionKey: SectionKey; section: CarePlanSection | undefined; t: (k: string) => string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-slate-900">{SECTION_LABELS[sectionKey]}</h2>
-        <SectionStatus section={section} />
+        <SectionStatus section={section} t={t} />
       </div>
       {children}
     </div>
   )
 }
 
-function TextRow({ label, value }: { label: string; value: string | undefined }) {
+function TextRow({ label, value, emptyLabel }: { label: string; value: string | undefined; emptyLabel: string }) {
   if (!value) return (
-    <div className="text-xs text-slate-400 italic">— not filled in</div>
+    <div className="text-xs text-slate-400 italic">— {emptyLabel}</div>
   )
   return (
     <div>
@@ -84,8 +84,8 @@ export default function CarePlanSummaryPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4 text-center">
         <div>
-          <p className="text-slate-500 mb-4">No care team found.</p>
-          <Link to="/caregiver" className="text-sm font-semibold text-blue-600 hover:underline">Go to Dashboard</Link>
+          <p className="text-slate-500 mb-4">{t('care_plan.no_team_title')}</p>
+          <Link to="/caregiver" className="text-sm font-semibold text-blue-600 hover:underline">{t('care_plan.go_to_dashboard')}</Link>
         </div>
       </div>
     )
@@ -106,18 +106,21 @@ export default function CarePlanSummaryPage() {
             <nav className="flex items-center gap-2 text-sm text-slate-400 mb-5">
               <Link to="/care-hub/care-plan" className="flex items-center gap-1.5 hover:text-slate-600 transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Care Plan
+                {t('care_plan.title')}
               </Link>
               <span>/</span>
-              <span className="text-slate-600 font-medium">Summary</span>
+              <span className="text-slate-600 font-medium">{t('care_plan.summary_breadcrumb')}</span>
             </nav>
 
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-extrabold text-slate-900 mb-1">Care Plan Summary</h1>
+                <h1 className="text-3xl font-extrabold text-slate-900 mb-1">{t('care_plan.summary_title')}</h1>
                 {resident && (
                   <p className="text-sm text-slate-500">
-                    For {resident.resident_name ?? 'resident'} · {completedCount} of {SECTION_KEYS.length} sections complete
+                    {t('care_plan.summary_for_resident')
+                      .replace('{name}', resident.resident_name ?? t('care_plan.resident_fallback'))
+                      .replace('{completed}', String(completedCount))
+                      .replace('{total}', String(SECTION_KEYS.length))}
                   </p>
                 )}
               </div>
@@ -126,7 +129,7 @@ export default function CarePlanSummaryPage() {
                 className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
               >
                 <Printer className="w-4 h-4" />
-                Print
+                {t('care_plan.print')}
               </button>
             </div>
           </div>
@@ -134,8 +137,8 @@ export default function CarePlanSummaryPage() {
 
         {/* ── Print header ── */}
         <div className="hidden print:block max-w-4xl mx-auto px-8 pt-8 pb-4">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">Care Plan Summary</h1>
-          <p className="text-sm text-slate-500">Generated {new Date().toLocaleDateString()}</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">{t('care_plan.summary_title')}</h1>
+          <p className="text-sm text-slate-500">{t('care_plan.generated_on').replace('{date}', new Date().toLocaleDateString())}</p>
           <hr className="mt-4 border-slate-200" />
         </div>
 
@@ -160,7 +163,9 @@ export default function CarePlanSummaryPage() {
                   <div className="flex items-center gap-2 mb-4">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
                     <h2 className="text-base font-bold text-amber-900">
-                      {gaps.length} gap{gaps.length !== 1 ? 's' : ''} identified
+                      {t('care_plan.gaps_identified')
+                        .replace('{count}', String(gaps.length))
+                        .replace('{plural}', gaps.length !== 1 ? 's' : '')}
                     </h2>
                   </div>
                   <div className="space-y-3">
@@ -187,7 +192,7 @@ export default function CarePlanSummaryPage() {
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <p className="text-sm font-semibold text-emerald-900">
-                    All sections complete with no gaps identified.
+                    {t('care_plan.all_complete_no_gaps')}
                   </p>
                 </div>
               )}
@@ -197,12 +202,12 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'situation')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="situation" section={s}>
-                    <TextRow label="Current situation" value={d.current_situation as string} />
-                    <TextRow label="What triggered the need for more care" value={d.trigger as string} />
-                    <TagList label="Key concerns" values={(d.concerns as string[]) ?? []} />
-                    <TextRow label="Anticipated changes (6–12 months)" value={d.anticipated_changes as string} />
-                    <TextRow label="Most urgent decisions" value={d.urgent_decisions as string} />
+                  <SectionBlock sectionKey="situation" section={s} t={t}>
+                    <TextRow label={t('care_plan.situation_current')} value={d.current_situation as string} emptyLabel={t('care_plan.not_filled_in')} />
+                    <TextRow label={t('care_plan.situation_trigger')} value={d.trigger as string} emptyLabel={t('care_plan.not_filled_in')} />
+                    <TagList label={t('care_plan.situation_concerns')} values={(d.concerns as string[]) ?? []} />
+                    <TextRow label={t('care_plan.situation_anticipated')} value={d.anticipated_changes as string} emptyLabel={t('care_plan.not_filled_in')} />
+                    <TextRow label={t('care_plan.situation_urgent')} value={d.urgent_decisions as string} emptyLabel={t('care_plan.not_filled_in')} />
                   </SectionBlock>
                 )
               })()}
@@ -212,12 +217,12 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'authority')
                 const d = (s?.content_json ?? {}) as Record<string, string>
                 const authFields = [
-                  { key: 'health_decisions', label: 'Health decision authority', personKey: 'health_decision_person' },
-                  { key: 'financial_authority', label: 'Financial authority', personKey: 'financial_authority_person' },
-                  { key: 'legal_documents', label: 'Legal documents', personKey: 'legal_documents_person' },
-                  { key: 'care_preferences_documented', label: 'Care preferences documented', personKey: 'care_preferences_person' },
-                  { key: 'document_location', label: 'Organised records', personKey: 'document_location_person' },
-                  { key: 'emergency_access', label: 'Emergency readiness', personKey: 'emergency_access_person' },
+                  { key: 'health_decisions', label: t('care_plan.auth_health'), personKey: 'health_decision_person' },
+                  { key: 'financial_authority', label: t('care_plan.auth_financial'), personKey: 'financial_authority_person' },
+                  { key: 'legal_documents', label: t('care_plan.auth_legal'), personKey: 'legal_documents_person' },
+                  { key: 'care_preferences_documented', label: t('care_plan.auth_preferences'), personKey: 'care_preferences_person' },
+                  { key: 'document_location', label: t('care_plan.auth_records'), personKey: 'document_location_person' },
+                  { key: 'emergency_access', label: t('care_plan.auth_emergency'), personKey: 'emergency_access_person' },
                 ]
                 const statusStyle: Record<string, string> = {
                   confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -226,7 +231,7 @@ export default function CarePlanSummaryPage() {
                   not_applicable: 'bg-slate-50 text-slate-500 border-slate-100',
                 }
                 return (
-                  <SectionBlock sectionKey="authority" section={s}>
+                  <SectionBlock sectionKey="authority" section={s} t={t}>
                     <div className="space-y-2">
                       {authFields.map((f) => {
                         const status = d[f.key]
@@ -252,13 +257,13 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'responsibilities')
                 const d = (s?.content_json ?? {}) as Record<string, Record<string, string>>
                 const areas = [
-                  { key: 'household', label: 'Household support' },
-                  { key: 'personal_care', label: 'Personal care' },
-                  { key: 'emotional', label: 'Emotional support' },
-                  { key: 'health', label: 'Health coordination' },
-                  { key: 'scheduling', label: 'Appointments' },
-                  { key: 'admin', label: 'Administration' },
-                  { key: 'respite', label: 'Backup / respite' },
+                  { key: 'household', label: t('care_plan.resp_household') },
+                  { key: 'personal_care', label: t('care_plan.resp_personal_care') },
+                  { key: 'emotional', label: t('care_plan.resp_emotional') },
+                  { key: 'health', label: t('care_plan.resp_health') },
+                  { key: 'scheduling', label: t('care_plan.resp_scheduling') },
+                  { key: 'admin', label: t('care_plan.resp_admin') },
+                  { key: 'respite', label: t('care_plan.resp_respite') },
                 ]
                 const statusStyle: Record<string, string> = {
                   assigned: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -266,14 +271,14 @@ export default function CarePlanSummaryPage() {
                   gap: 'bg-red-50 text-red-700 border-red-100',
                 }
                 return (
-                  <SectionBlock sectionKey="responsibilities" section={s}>
+                  <SectionBlock sectionKey="responsibilities" section={s} t={t}>
                     <div className="space-y-2">
                       {areas.map((a) => {
                         const areaData = d[a.key]
                         if (!areaData) return (
                           <div key={a.key} className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 text-sm">
                             <span className="font-medium text-slate-700">{a.label}</span>
-                            <span className="text-xs text-slate-400 italic">Not filled in</span>
+                            <span className="text-xs text-slate-400 italic">{t('care_plan.not_filled_in')}</span>
                           </div>
                         )
                         return (
@@ -283,8 +288,8 @@ export default function CarePlanSummaryPage() {
                               {areaData.status && <span className="text-xs font-semibold capitalize">{areaData.status}</span>}
                             </div>
                             <div className="flex gap-4 text-xs opacity-80">
-                              {areaData.person && <span>Owner: {areaData.person}</span>}
-                              {areaData.backup && <span>Backup: {areaData.backup}</span>}
+                              {areaData.person && <span>{t('care_plan.owner_label')}: {areaData.person}</span>}
+                              {areaData.backup && <span>{t('care_plan.backup_label')}: {areaData.backup}</span>}
                             </div>
                           </div>
                         )
@@ -299,17 +304,17 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'living_arrangement')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 const arrangementLabels: Record<string, string> = {
-                  resident_home: 'Resident stays in their own home',
-                  family_home: 'Resident moves into a family home',
-                  paid_in_home: 'Paid in-home support',
-                  assisted_living: 'Assisted living or residential care',
-                  undecided: 'Undecided / still assessing',
+                  resident_home: t('care_plan.living_resident_home'),
+                  family_home: t('care_plan.living_family_home'),
+                  paid_in_home: t('care_plan.living_paid_in_home'),
+                  assisted_living: t('care_plan.living_assisted'),
+                  undecided: t('care_plan.living_undecided'),
                 }
                 return (
-                  <SectionBlock sectionKey="living_arrangement" section={s}>
+                  <SectionBlock sectionKey="living_arrangement" section={s} t={t}>
                     {d.current_arrangement && (
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-slate-500">Arrangement</span>
+                        <span className="text-xs font-semibold text-slate-500">{t('care_plan.living_arrangement_label')}</span>
                         <span className="px-3 py-1 bg-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-100">
                           {arrangementLabels[d.current_arrangement as string] ?? String(d.current_arrangement)}
                         </span>
@@ -319,15 +324,15 @@ export default function CarePlanSummaryPage() {
                             : d.currently_working === 'Struggling' || d.currently_working === 'No' ? 'bg-red-50 text-red-700 border-red-100'
                             : 'bg-amber-50 text-amber-700 border-amber-100'
                           }`}>
-                            Working: {d.currently_working as string}
+                            {t('care_plan.living_working_label')}: {d.currently_working as string}
                           </span>
                         )}
                       </div>
                     )}
-                    <TextRow label="Safety concerns" value={d.safety_concerns as string} />
-                    <TextRow label="Alternatives being considered" value={d.alternatives_considered as string} />
-                    <TagList label="Triggers for change" values={(d.change_triggers as string[]) ?? []} />
-                    <TextRow label="Financial / family constraints" value={d.constraints as string} />
+                    <TextRow label={t('care_plan.living_safety')} value={d.safety_concerns as string} emptyLabel={t('care_plan.not_filled_in')} />
+                    <TextRow label={t('care_plan.living_alternatives')} value={d.alternatives_considered as string} emptyLabel={t('care_plan.not_filled_in')} />
+                    <TagList label={t('care_plan.living_triggers')} values={(d.change_triggers as string[]) ?? []} />
+                    <TextRow label={t('care_plan.living_constraints')} value={d.constraints as string} emptyLabel={t('care_plan.not_filled_in')} />
                   </SectionBlock>
                 )
               })()}
@@ -337,20 +342,20 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'sustainability')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="sustainability" section={s}>
+                  <SectionBlock sectionKey="sustainability" section={s} t={t}>
                     {d.primary_caregiver && (
-                      <TextRow label="Primary caregiver" value={d.primary_caregiver as string} />
+                      <TextRow label={t('care_plan.sust_primary')} value={d.primary_caregiver as string} emptyLabel={t('care_plan.not_filled_in')} />
                     )}
                     <div className="flex flex-wrap gap-4 text-sm">
                       {d.available_hours && (
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-0.5">Available hours</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-0.5">{t('care_plan.sust_hours')}</p>
                           <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs rounded-full">{d.available_hours as string}</span>
                         </div>
                       )}
                       {d.stress_level && (
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-0.5">Stress level</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-0.5">{t('care_plan.sust_stress_level')}</p>
                           <span className={`px-2.5 py-1 text-xs rounded-full ${
                             d.stress_level === 'High' || d.stress_level === 'Very high' ? 'bg-red-50 text-red-700'
                             : d.stress_level === 'Moderate' ? 'bg-amber-50 text-amber-700'
@@ -359,10 +364,10 @@ export default function CarePlanSummaryPage() {
                         </div>
                       )}
                     </div>
-                    <TagList label="Stress factors" values={(d.stress_factors as string[]) ?? []} />
-                    {d.backup_person && <TextRow label="Backup caregiver" value={d.backup_person as string} />}
-                    {d.respite_plan && <TextRow label="Respite plan" value={d.respite_plan as string} />}
-                    {d.sustainability_threshold && <TextRow label="Sustainability threshold" value={d.sustainability_threshold as string} />}
+                    <TagList label={t('care_plan.sust_stress_factors')} values={(d.stress_factors as string[]) ?? []} />
+                    {d.backup_person && <TextRow label={t('care_plan.sust_backup')} value={d.backup_person as string} emptyLabel={t('care_plan.not_filled_in')} />}
+                    {d.respite_plan && <TextRow label={t('care_plan.sust_respite')} value={d.respite_plan as string} emptyLabel={t('care_plan.not_filled_in')} />}
+                    {d.sustainability_threshold && <TextRow label={t('care_plan.sust_threshold')} value={d.sustainability_threshold as string} emptyLabel={t('care_plan.not_filled_in')} />}
                   </SectionBlock>
                 )
               })()}
@@ -372,24 +377,24 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'review')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="review" section={s}>
+                  <SectionBlock sectionKey="review" section={s} t={t}>
                     <div className="flex flex-wrap gap-4">
                       {d.review_frequency && (
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-0.5">Frequency</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-0.5">{t('care_plan.review_frequency_label')}</p>
                           <span className="px-2.5 py-1 bg-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-100">{d.review_frequency as string}</span>
                         </div>
                       )}
                       {d.next_review_date && (
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-0.5">Next review</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-0.5">{t('care_plan.review_next_date_label')}</p>
                           <span className="px-2.5 py-1 bg-blue-50 text-blue-800 text-xs font-medium rounded-full border border-blue-100">{new Date(d.next_review_date as string).toLocaleDateString()}</span>
                         </div>
                       )}
                     </div>
-                    {d.review_owner && <TextRow label="Review owner" value={d.review_owner as string} />}
-                    <TagList label="Unscheduled triggers" values={(d.review_triggers as string[]) ?? []} />
-                    {d.decisions_to_revisit && <TextRow label="Decisions to revisit" value={d.decisions_to_revisit as string} />}
+                    {d.review_owner && <TextRow label={t('care_plan.review_owner_label')} value={d.review_owner as string} emptyLabel={t('care_plan.not_filled_in')} />}
+                    <TagList label={t('care_plan.review_triggers_label')} values={(d.review_triggers as string[]) ?? []} />
+                    {d.decisions_to_revisit && <TextRow label={t('care_plan.review_decisions_label')} value={d.decisions_to_revisit as string} emptyLabel={t('care_plan.not_filled_in')} />}
                   </SectionBlock>
                 )
               })()}
@@ -401,21 +406,21 @@ export default function CarePlanSummaryPage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   <ClipboardList className="w-4 h-4" />
-                  Edit Care Plan
+                  {t('care_plan.edit_care_plan')}
                 </Link>
                 <button
                   onClick={() => window.print()}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-colors"
                 >
                   <Printer className="w-4 h-4" />
-                  Print summary
+                  {t('care_plan.print_summary')}
                 </button>
                 <Link
                   to="/caregiver/memory-schedule"
                   className="inline-flex items-center gap-2 px-5 py-2.5 border border-slate-200 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Open Memory Book
+                  {t('care_plan.open_memory_book')}
                 </Link>
               </div>
             </>

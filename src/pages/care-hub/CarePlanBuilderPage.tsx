@@ -19,6 +19,7 @@ import {
 } from '../../hooks/useCarePlan'
 import { supabase } from '../../lib/supabaseClient'
 import PageSEO from '../../components/seo/PageSEO'
+import { useLocale } from '../../i18n/LocaleContext'
 
 const SectionFormModal = lazy(() => import('../../components/care-plan/SectionFormModal'))
 
@@ -42,42 +43,42 @@ function StatusIcon({ status }: { status: string }) {
   return <Circle className="w-5 h-5 text-slate-300 shrink-0" />
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, t }: { status: string; t: (k: string) => string }) {
   if (status === 'complete')
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-        Complete
+        {t('care_plan.status_complete')}
       </span>
     )
   if (status === 'in_progress')
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-        In progress
+        {t('care_plan.status_in_progress')}
       </span>
     )
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
-      Not started
+      {t('care_plan.status_not_started')}
     </span>
   )
 }
 
-function NoTeamState() {
+function NoTeamState({ t }: { t: (k: string) => string }) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="max-w-md text-center">
         <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-5">
           <ClipboardList className="w-7 h-7 text-blue-600" />
         </div>
-        <h2 className="text-xl font-semibold text-slate-800 mb-2">No care team found</h2>
+        <h2 className="text-xl font-semibold text-slate-800 mb-2">{t('care_plan.no_team_title')}</h2>
         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-          The Care Plan is linked to your care team. Set up your care team first to get started.
+          {t('care_plan.no_team_body')}
         </p>
         <Link
           to="/caregiver"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors"
         >
-          Go to Dashboard
+          {t('care_plan.go_to_dashboard')}
         </Link>
       </div>
     </div>
@@ -90,12 +91,14 @@ function SectionCard({
   index,
   isOwner,
   onOpen,
+  t,
 }: {
   sectionKey: SectionKey
   section: CarePlanSection | undefined
   index: number
   isOwner: boolean
   onOpen: (key: SectionKey) => void
+  t: (k: string) => string
 }) {
   const status = section?.completion_status ?? 'not_started'
 
@@ -116,7 +119,7 @@ function SectionCard({
             <h3 className="text-base font-bold text-slate-900">
               {SECTION_LABELS[sectionKey]}
             </h3>
-            <StatusBadge status={status} />
+            <StatusBadge status={status} t={t} />
           </div>
           <p className="text-sm text-slate-500 leading-relaxed">
             {SECTION_SUBTITLES[sectionKey]}
@@ -135,6 +138,7 @@ function SectionCard({
 
 export default function CarePlanBuilderPage() {
   useEffect(() => { setLastModule('care_plan'); }, [])
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id)
@@ -164,7 +168,7 @@ export default function CarePlanBuilderPage() {
   const completedCount = countCompletedSections(sections)
   const totalCount = SECTION_KEYS.length
 
-  if (!teamId) return <NoTeamState />
+  if (!teamId) return <NoTeamState t={t} />
 
   return (
     <>
@@ -182,10 +186,10 @@ export default function CarePlanBuilderPage() {
             <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
               <Link to="/care-hub" className="flex items-center gap-1.5 hover:text-slate-600 transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Care Hub
+                {t('care_hub.title')}
               </Link>
               <span>/</span>
-              <span className="text-slate-600 font-medium">Care Plan</span>
+              <span className="text-slate-600 font-medium">{t('care_plan.title')}</span>
             </nav>
 
             <div className="flex items-start gap-4">
@@ -194,14 +198,11 @@ export default function CarePlanBuilderPage() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
-                  Care Plan
+                  {t('care_plan.title')}
                 </h1>
-                <p className="text-base text-blue-700 font-semibold mb-3">Coordinate the team</p>
+                <p className="text-base text-blue-700 font-semibold mb-3">{t('care_plan.subtitle')}</p>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xl">
-                  The Care Plan is the care team&apos;s big-picture operating plan. It covers who is
-                  responsible for what, what authority exists, how care will be arranged, and when
-                  the plan should be reviewed. It is not a daily note system — that is what
-                  Observations is for.
+                  {t('care_plan.description')}
                 </p>
               </div>
             </div>
@@ -218,7 +219,7 @@ export default function CarePlanBuilderPage() {
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Care plan for</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('care_plan.care_plan_for')}</span>
                   <p className="text-sm font-semibold text-slate-800 truncate">
                     {resident.preferred_name ? `${resident.full_name} ("${resident.preferred_name}")` : resident.full_name}
                     {resident.date_of_birth && (() => {
@@ -243,8 +244,8 @@ export default function CarePlanBuilderPage() {
               >
                 <BookOpen className="w-5 h-5 text-teal-600 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-teal-900">Memory Book</p>
-                  <p className="text-xs text-teal-700">Know the person — identity, health, preferences</p>
+                  <p className="text-sm font-semibold text-teal-900">{t('care_plan.memory_book_label')}</p>
+                  <p className="text-xs text-teal-700">{t('care_plan.memory_book_desc')}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-teal-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
               </Link>
@@ -254,8 +255,8 @@ export default function CarePlanBuilderPage() {
               >
                 <Activity className="w-5 h-5 text-amber-600 shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-900">Observations</p>
-                  <p className="text-xs text-amber-700">Track change — day-to-day functional notes</p>
+                  <p className="text-sm font-semibold text-amber-900">{t('care_plan.observations_label')}</p>
+                  <p className="text-xs text-amber-700">{t('care_plan.observations_desc')}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-amber-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
               </Link>
@@ -271,14 +272,16 @@ export default function CarePlanBuilderPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-slate-700">
-                  {completedCount} of {totalCount} sections complete
+                  {t('care_plan.progress_label')
+                    .replace('{completed}', String(completedCount))
+                    .replace('{total}', String(totalCount))}
                 </p>
                 {completedCount === totalCount && (
                   <Link
                     to="/care-hub/care-plan/summary"
                     className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
                   >
-                    View summary →
+                    {t('care_plan.view_summary')} →
                   </Link>
                 )}
               </div>
@@ -305,7 +308,7 @@ export default function CarePlanBuilderPage() {
           {/* Error */}
           {planError && !isLoading && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-800">
-              Unable to load Care Plan. Please refresh the page.
+              {t('care_plan.load_error')}
             </div>
           )}
 
@@ -317,23 +320,23 @@ export default function CarePlanBuilderPage() {
               </div>
               {isOwner ? (
                 <>
-                  <h2 className="text-xl font-semibold text-slate-800 mb-2">Start your Care Plan</h2>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-2">{t('care_plan.start_title')}</h2>
                   <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
-                    Your team doesn&apos;t have a Care Plan yet. Create one to coordinate responsibilities, authority, and living arrangements.
+                    {t('care_plan.start_body')}
                   </p>
                   <button
                     onClick={handleCreatePlan}
                     disabled={creating}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition-colors"
                   >
-                    {creating ? 'Creating…' : 'Create Care Plan'}
+                    {creating ? t('care_plan.creating') : t('care_plan.create_button')}
                   </button>
                 </>
               ) : (
                 <>
-                  <h2 className="text-xl font-semibold text-slate-800 mb-2">No Care Plan yet</h2>
+                  <h2 className="text-xl font-semibold text-slate-800 mb-2">{t('care_plan.no_plan_title')}</h2>
                   <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-                    The care team owner has not created a Care Plan yet. Check back later.
+                    {t('care_plan.no_plan_body')}
                   </p>
                 </>
               )}
@@ -351,6 +354,7 @@ export default function CarePlanBuilderPage() {
                   index={i}
                   isOwner={isOwner}
                   onOpen={setOpenSection}
+                  t={t}
                 />
               ))}
             </div>
@@ -364,7 +368,7 @@ export default function CarePlanBuilderPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 <ClipboardList className="w-4 h-4" />
-                {completedCount === totalCount ? 'View Care Plan Summary' : 'View partial summary'}
+                {completedCount === totalCount ? t('care_plan.view_summary_full') : t('care_plan.view_summary_partial')}
               </Link>
             </div>
           )}
