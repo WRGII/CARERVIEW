@@ -121,10 +121,6 @@ export default function MemoryBookTab({
             <div className="w-px h-5 bg-slate-200 rounded-full mx-1" />
           </div>
 
-          {/* Inline household label + chips */}
-          <span className="self-center text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none mr-0.5">
-            Household
-          </span>
           {renderChips(householdSections)}
         </div>
       </div>
