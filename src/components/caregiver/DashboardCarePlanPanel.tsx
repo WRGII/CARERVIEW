@@ -17,6 +17,7 @@ import {
   type SectionKey,
 } from '../../hooks/useCarePlan'
 import { detectGaps, countBySeverity } from '../../lib/carePlanGaps'
+import { useLocale } from '../../i18n/LocaleContext'
 
 function SectionDot({ status }: { status: string }) {
   if (status === 'complete') return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
@@ -25,6 +26,7 @@ function SectionDot({ status }: { status: string }) {
 }
 
 export default function DashboardCarePlanPanel() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { data: carePlan, isLoading: planLoading } = useCarePlanReadOnly(teamId)
   const { data: sections = [], isLoading: sectionsLoading } = useCarePlanSections(carePlan?.id)
@@ -35,7 +37,7 @@ export default function DashboardCarePlanPanel() {
   const total = SECTION_KEYS.length
   const progressPct = Math.round((completedCount / total) * 100)
   const sectionMap = new Map(sections.map((s) => [s.section_key, s]))
-  const gaps = carePlan ? detectGaps(sections) : []
+  const gaps = carePlan ? detectGaps(sections, t) : []
   const counts = countBySeverity(gaps)
   const allDone = completedCount === total && gaps.length === 0
   const hasStarted = !!carePlan && completedCount > 0

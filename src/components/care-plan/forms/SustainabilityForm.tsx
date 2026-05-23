@@ -1,6 +1,7 @@
 import type { SectionFormProps } from '../SectionFormModal'
 import { TriangleAlert as AlertTriangle } from 'lucide-react'
 import { getSustainabilityFlags } from '../../../lib/carePlanGaps'
+import { useLocale } from '../../../i18n/LocaleContext'
 
 const STRESS_FACTORS = [
   'Time — caring expands to fill all available hours',
@@ -38,6 +39,8 @@ function Field({
 }
 
 export default function SustainabilityForm({ data, onChange, readOnly }: SectionFormProps) {
+  const { t } = useLocale()
+
   function set(key: string, value: unknown) {
     // Normalise empty strings to empty string (never undefined/null) for consistency
     const normalised = typeof value === 'string' ? value : value
@@ -59,7 +62,7 @@ export default function SustainabilityForm({ data, onChange, readOnly }: Section
   const availableHours = (data.available_hours as string) ?? ''
   const stressLevel = (data.stress_level as string) ?? ''
 
-  const flags = getSustainabilityFlags(data)
+  const flags = getSustainabilityFlags(data, t)
 
   return (
     <div className="space-y-7">

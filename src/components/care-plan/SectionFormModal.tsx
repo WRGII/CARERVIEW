@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, ChevronLeft, ChevronRight, Save, CircleCheck as CheckCircle2, Lock, CircleAlert as AlertCircle } from 'lucide-react'
+import { useLocale } from '../../i18n/LocaleContext'
 import {
   useUpsertCarePlanSection,
   SECTION_KEYS,
@@ -50,6 +51,7 @@ export default function SectionFormModal({
   onClose,
   onNavigate,
 }: Props) {
+  const { t } = useLocale()
   const upsert = useUpsertCarePlanSection()
   const overlayRef = useRef<HTMLDivElement>(null)
 
@@ -76,14 +78,14 @@ export default function SectionFormModal({
 
   function handleClose() {
     if (isDirty && isOwner) {
-      if (!window.confirm('You have unsaved changes. Leave without saving?')) return
+      if (!window.confirm(t('care_plan.modal_unsaved_changes'))) return
     }
     onClose()
   }
 
   function handleNavigate(key: SectionKey) {
     if (isDirty && isOwner) {
-      if (!window.confirm('You have unsaved changes. Leave without saving?')) return
+      if (!window.confirm(t('care_plan.modal_unsaved_changes'))) return
     }
     onNavigate(key)
   }
@@ -148,7 +150,7 @@ export default function SectionFormModal({
       setIsDirty(false)
       setTimeout(() => setSaved(false), 2000)
     } catch {
-      setSaveError('Save failed. Please check your connection and try again.')
+      setSaveError(t('care_plan.modal_save_error'))
     } finally {
       setSaving(false)
     }
@@ -186,7 +188,7 @@ export default function SectionFormModal({
           <button
             onClick={handleClose}
             className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0 -mt-1 -mr-1"
-            aria-label="Close"
+            aria-label={t('care_plan.modal_close')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -196,7 +198,7 @@ export default function SectionFormModal({
         {!isOwner && (
           <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2 text-sm text-slate-500 shrink-0">
             <Lock className="w-4 h-4 shrink-0" />
-            <span>You can view this section but only the team owner can make changes.</span>
+            <span>{t('care_plan.modal_read_only_notice')}</span>
           </div>
         )}
 
@@ -242,12 +244,12 @@ export default function SectionFormModal({
                   {saved ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      Saved
+                      {t('care_plan.modal_saved')}
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      {saving ? 'Saving…' : 'Save'}
+                      {saving ? t('care_plan.modal_saving') : t('care_plan.modal_save')}
                     </>
                   )}
                 </button>
@@ -258,7 +260,7 @@ export default function SectionFormModal({
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Mark complete
+                  {t('care_plan.modal_mark_complete')}
                 </button>
               </>
             )}

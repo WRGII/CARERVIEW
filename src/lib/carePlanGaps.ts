@@ -10,34 +10,34 @@ export interface GapItem {
   sectionKey: string
 }
 
-// ── Authority field metadata ──────────────────────────────────────────────────
+// ── Auth field keys mapped to i18n keys ───────────────────────────────────────
 
-const AUTH_FIELD_LABELS: Record<string, string> = {
-  health_decisions: 'Health decision authority',
-  financial_authority: 'Financial authority',
-  legal_documents: 'Legal documents',
-  document_location: 'Organised records',
+const AUTH_FIELD_I18N: Record<string, string> = {
+  health_decisions: 'care_plan_gaps.auth_health_decisions',
+  financial_authority: 'care_plan_gaps.auth_financial_authority',
+  legal_documents: 'care_plan_gaps.auth_legal_documents',
+  document_location: 'care_plan_gaps.auth_document_location',
 }
 
-const AUTH_FIELDS_CHECKED = Object.keys(AUTH_FIELD_LABELS)
+const AUTH_FIELDS_CHECKED = Object.keys(AUTH_FIELD_I18N)
 
-// ── Responsibility area metadata ──────────────────────────────────────────────
+// ── Responsibility area keys mapped to i18n keys ──────────────────────────────
 
-const RESP_AREA_LABELS: Record<string, string> = {
-  household: 'Household support',
-  personal_care: 'Personal care and mobility',
-  emotional: 'Emotional support',
-  health: 'Health coordination',
-  scheduling: 'Appointments and transport',
-  admin: 'Financial and administration',
-  respite: 'Backup and respite',
+const RESP_AREA_I18N: Record<string, string> = {
+  household: 'care_plan_gaps.resp_household',
+  personal_care: 'care_plan_gaps.resp_personal_care',
+  emotional: 'care_plan_gaps.resp_emotional',
+  health: 'care_plan_gaps.resp_health',
+  scheduling: 'care_plan_gaps.resp_scheduling',
+  admin: 'care_plan_gaps.resp_admin',
+  respite: 'care_plan_gaps.resp_respite',
 }
 
-const RESP_AREAS_CHECKED = Object.keys(RESP_AREA_LABELS)
+const RESP_AREAS_CHECKED = Object.keys(RESP_AREA_I18N)
 
 // ── Core detection ────────────────────────────────────────────────────────────
 
-export function detectGaps(sections: CarePlanSection[]): GapItem[] {
+export function detectGaps(sections: CarePlanSection[], t: (key: string) => string): GapItem[] {
   const gaps: GapItem[] = []
 
   // Situation
@@ -46,8 +46,8 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     const d = situation.content_json as Record<string, unknown>
     if (d.urgent_decisions && String(d.urgent_decisions).trim().length > 0 && !d.current_situation) {
       gaps.push({
-        label: 'Urgent decisions recorded with no situation context',
-        action: 'Describe the current situation in the Situation section to give the urgent decisions context.',
+        label: t('care_plan_gaps.situation_no_context_label'),
+        action: t('care_plan_gaps.situation_no_context_action'),
         severity: 'important',
         sectionKey: 'situation',
       })
@@ -58,25 +58,26 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
   const auth = getSectionByKey(sections, 'authority')
   if (!auth || auth.completion_status === 'not_started') {
     gaps.push({
-      label: 'Authority section not completed',
-      action: 'Complete the Authority section to identify who can make key decisions.',
+      label: t('care_plan_gaps.authority_not_completed_label'),
+      action: t('care_plan_gaps.authority_not_completed_action'),
       severity: 'critical',
       sectionKey: 'authority',
     })
   } else {
     const d = auth.content_json as Record<string, string>
     for (const f of AUTH_FIELDS_CHECKED) {
+      const fieldName = t(AUTH_FIELD_I18N[f])
       if (d[f] === 'missing') {
         gaps.push({
-          label: `${AUTH_FIELD_LABELS[f]} is missing`,
-          action: `Resolve the "${AUTH_FIELD_LABELS[f]}" gap in the Authority section.`,
+          label: t('care_plan_gaps.authority_field_missing_label').replace('{field}', fieldName),
+          action: t('care_plan_gaps.authority_field_missing_action').replace('{field}', fieldName),
           severity: 'critical',
           sectionKey: 'authority',
         })
       } else if (d[f] === 'unclear') {
         gaps.push({
-          label: `${AUTH_FIELD_LABELS[f]} is unclear`,
-          action: `Clarify the "${AUTH_FIELD_LABELS[f]}" in the Authority section.`,
+          label: t('care_plan_gaps.authority_field_unclear_label').replace('{field}', fieldName),
+          action: t('care_plan_gaps.authority_field_unclear_action').replace('{field}', fieldName),
           severity: 'important',
           sectionKey: 'authority',
         })
@@ -89,17 +90,18 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
   if (resp && resp.completion_status !== 'not_started') {
     const d = resp.content_json as Record<string, Record<string, string>>
     for (const k of RESP_AREAS_CHECKED) {
+      const areaName = t(RESP_AREA_I18N[k])
       if (d[k]?.status === 'gap') {
         gaps.push({
-          label: `${RESP_AREA_LABELS[k]} has no owner`,
-          action: `Assign a responsible person for "${RESP_AREA_LABELS[k]}" in the Responsibilities section.`,
+          label: t('care_plan_gaps.resp_no_owner_label').replace('{area}', areaName),
+          action: t('care_plan_gaps.resp_no_owner_action').replace('{area}', areaName),
           severity: 'important',
           sectionKey: 'responsibilities',
         })
       } else if (d[k]?.status === 'unclear') {
         gaps.push({
-          label: `${RESP_AREA_LABELS[k]} responsibility is unclear`,
-          action: `Clarify ownership of "${RESP_AREA_LABELS[k]}" in the Responsibilities section.`,
+          label: t('care_plan_gaps.resp_unclear_label').replace('{area}', areaName),
+          action: t('care_plan_gaps.resp_unclear_action').replace('{area}', areaName),
           severity: 'monitor',
           sectionKey: 'responsibilities',
         })
@@ -113,15 +115,15 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     const d = living.content_json as Record<string, string>
     if (d.currently_working === 'No') {
       gaps.push({
-        label: 'Current living arrangement is not working',
-        action: 'Review the Living Arrangement section — consider alternatives urgently.',
+        label: t('care_plan_gaps.living_not_working_label'),
+        action: t('care_plan_gaps.living_not_working_action'),
         severity: 'critical',
         sectionKey: 'living_arrangement',
       })
     } else if (d.currently_working === 'Struggling') {
       gaps.push({
-        label: 'Current living arrangement is under strain',
-        action: 'Review the Living Arrangement section — consider alternatives before a crisis.',
+        label: t('care_plan_gaps.living_struggling_label'),
+        action: t('care_plan_gaps.living_struggling_action'),
         severity: 'important',
         sectionKey: 'living_arrangement',
       })
@@ -134,21 +136,20 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     const d = sustain.content_json as Record<string, unknown>
     if (d.stress_level === 'Very high') {
       gaps.push({
-        label: 'Primary caregiver reports very high stress',
-        action: 'Review sustainability and backup arrangements urgently.',
+        label: t('care_plan_gaps.sustain_very_high_stress_label'),
+        action: t('care_plan_gaps.sustain_very_high_stress_action'),
         severity: 'critical',
         sectionKey: 'sustainability',
       })
     } else if (d.stress_level === 'High') {
       gaps.push({
-        label: 'Primary caregiver reports high stress',
-        action: 'Review sustainability and backup arrangements.',
+        label: t('care_plan_gaps.sustain_high_stress_label'),
+        action: t('care_plan_gaps.sustain_high_stress_action'),
         severity: 'important',
         sectionKey: 'sustainability',
       })
     }
 
-    // Check if "No backup" is a selected stress factor but backup_person is also empty
     const stressFactors = (d.stress_factors as string[]) ?? []
     const noBackupSelected = stressFactors.some((f) => f.startsWith('No backup'))
 
@@ -156,9 +157,9 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     if (backupMissing) {
       gaps.push({
         label: noBackupSelected
-          ? 'No backup caregiver identified — caregiver acknowledges this gap'
-          : 'No backup caregiver identified',
-        action: 'Identify a backup caregiver in the Sustainability section.',
+          ? t('care_plan_gaps.sustain_no_backup_acknowledged_label')
+          : t('care_plan_gaps.sustain_no_backup_label'),
+        action: t('care_plan_gaps.sustain_no_backup_action'),
         severity: noBackupSelected ? 'critical' : 'important',
         sectionKey: 'sustainability',
       })
@@ -167,8 +168,8 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     const respiteMissing = !d.respite_plan || String(d.respite_plan).trim() === ''
     if (respiteMissing) {
       gaps.push({
-        label: 'No respite plan in place',
-        action: 'Add a respite plan in the Sustainability section.',
+        label: t('care_plan_gaps.sustain_no_respite_label'),
+        action: t('care_plan_gaps.sustain_no_respite_action'),
         severity: 'monitor',
         sectionKey: 'sustainability',
       })
@@ -179,8 +180,8 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
   const review = getSectionByKey(sections, 'review')
   if (!review || review.completion_status === 'not_started') {
     gaps.push({
-      label: 'No review schedule set',
-      action: 'Complete the Review section and set a next review date.',
+      label: t('care_plan_gaps.review_not_set_label'),
+      action: t('care_plan_gaps.review_not_set_action'),
       severity: 'monitor',
       sectionKey: 'review',
     })
@@ -188,16 +189,16 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
     const d = review.content_json as Record<string, string>
     if (!d.next_review_date) {
       gaps.push({
-        label: 'No next review date set',
-        action: 'Set a next review date in the Review section.',
+        label: t('care_plan_gaps.review_no_date_label'),
+        action: t('care_plan_gaps.review_no_date_action'),
         severity: 'monitor',
         sectionKey: 'review',
       })
     }
     if (!d.review_owner) {
       gaps.push({
-        label: 'No review owner named',
-        action: 'Identify who is responsible for leading reviews.',
+        label: t('care_plan_gaps.review_no_owner_label'),
+        action: t('care_plan_gaps.review_no_owner_action'),
         severity: 'monitor',
         sectionKey: 'review',
       })
@@ -229,7 +230,7 @@ export function countBySeverity(gaps: GapItem[]): Record<GapSeverity, number> {
 }
 
 // Derives the inline risk flags shown in SustainabilityForm
-export function getSustainabilityFlags(data: Record<string, unknown>): string[] {
+export function getSustainabilityFlags(data: Record<string, unknown>, t: (key: string) => string): string[] {
   const flags: string[] = []
 
   const backupPerson = String(data.backup_person ?? '').trim()
@@ -238,17 +239,17 @@ export function getSustainabilityFlags(data: Record<string, unknown>): string[] 
     const noBackupSelected = stressFactors.some((f) => f.startsWith('No backup'))
     flags.push(
       noBackupSelected
-        ? 'No backup caregiver identified — you have acknowledged this gap'
-        : 'No backup caregiver identified'
+        ? t('care_plan_gaps.flag_no_backup_acknowledged')
+        : t('care_plan_gaps.flag_no_backup')
     )
   }
 
   const respitePlan = String(data.respite_plan ?? '').trim()
-  if (!respitePlan) flags.push('No respite plan in place')
+  if (!respitePlan) flags.push(t('care_plan_gaps.flag_no_respite'))
 
   const stress = data.stress_level as string
-  if (stress === 'Very high') flags.push('Primary caregiver reports very high stress')
-  else if (stress === 'High') flags.push('Primary caregiver reports high stress')
+  if (stress === 'Very high') flags.push(t('care_plan_gaps.flag_very_high_stress'))
+  else if (stress === 'High') flags.push(t('care_plan_gaps.flag_high_stress'))
 
   return flags
 }

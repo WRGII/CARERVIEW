@@ -6,6 +6,7 @@ import { useOnboarding } from '../../hooks/useOnboarding'
 import { useCarePlanReadOnly, useCarePlanSections, SECTION_KEYS, SECTION_LABELS, countCompletedSections, type SectionKey } from '../../hooks/useCarePlan'
 import { detectGaps, getTopPriorities, countBySeverity, getNextStep } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
+import { useLocale } from '../../i18n/LocaleContext'
 
 // ── Tool card definitions ─────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ function SectionDot({ status }: { status: string }) {
 // ── Care Plan live panel ──────────────────────────────────────────────────────
 
 function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
+  const { t } = useLocale()
   const { data: sections = [], isLoading } = useCarePlanSections(carePlanId)
 
   if (isLoading) return (
@@ -87,7 +89,7 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
   const completedCount = countCompletedSections(sections)
   const total = SECTION_KEYS.length
   const progressPct = Math.round((completedCount / total) * 100)
-  const gaps = detectGaps(sections)
+  const gaps = detectGaps(sections, t)
   const topGaps = getTopPriorities(gaps, 3)
   const counts = countBySeverity(gaps)
   const nextStep = getNextStep(gaps)

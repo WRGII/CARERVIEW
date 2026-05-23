@@ -3,6 +3,7 @@ import { ClipboardList, ChevronRight, TriangleAlert as AlertTriangle, CircleChec
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useCarePlanReadOnly, useCarePlanSections, SECTION_KEYS, countCompletedSections } from '../../hooks/useCarePlan'
 import { detectGaps, getTopPriorities, countBySeverity } from '../../lib/carePlanGaps'
+import { useLocale } from '../../i18n/LocaleContext'
 
 const SEVERITY_DOT: Record<string, string> = {
   critical: 'bg-red-500',
@@ -17,6 +18,7 @@ const SEVERITY_TEXT: Record<string, string> = {
 }
 
 export default function CarePlanStatusPanel() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { data: carePlan, isLoading: planLoading } = useCarePlanReadOnly(teamId)
   const { data: sections = [], isLoading: sectionsLoading } = useCarePlanSections(carePlan?.id)
@@ -29,7 +31,7 @@ export default function CarePlanStatusPanel() {
   const completedCount = countCompletedSections(sections)
   const total = SECTION_KEYS.length
   const progressPct = Math.round((completedCount / total) * 100)
-  const gaps = detectGaps(sections)
+  const gaps = detectGaps(sections, t)
   const topGaps = getTopPriorities(gaps, 3)
   const counts = countBySeverity(gaps)
   const allDone = completedCount === total && gaps.length === 0

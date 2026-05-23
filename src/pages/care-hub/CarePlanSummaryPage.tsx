@@ -14,6 +14,7 @@ import {
 } from '../../hooks/useCarePlan'
 import { detectGaps, type GapItem } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
+import { useLocale } from '../../i18n/LocaleContext'
 
 // ── Section summary blocks ────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ function TagList({ label, values }: { label: string; values: string[] }) {
 }
 
 export default function CarePlanSummaryPage() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: resident } = useTeamResident(teamId)
@@ -75,7 +77,7 @@ export default function CarePlanSummaryPage() {
   const printRef = useRef<HTMLDivElement>(null)
 
   const isLoading = planLoading || sectionsLoading
-  const gaps = detectGaps(sections)
+  const gaps = detectGaps(sections, t)
   const completedCount = sections.filter((s) => s.completion_status === 'complete').length
 
   if (!teamId) {
