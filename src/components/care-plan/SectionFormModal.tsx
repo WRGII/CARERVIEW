@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ChevronLeft, ChevronRight, Save, CircleCheck as CheckCircle2, Lock } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Save, CircleCheck as CheckCircle2, Lock, CircleAlert as AlertCircle } from 'lucide-react'
 import {
   useUpsertCarePlanSection,
   SECTION_KEYS,
@@ -57,48 +57,87 @@ export default function SectionFormModal({
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
 
   // Reset form data when section changes
   useEffect(() => {
     setFormData((section?.content_json ?? {}) as Record<string, unknown>)
     setSaved(false)
+    setSaveError(null)
+    setIsDirty(false)
   }, [sectionKey, section?.content_json])
+
+  function handleFormChange(data: Record<string, unknown>) {
+    setFormData(data)
+    setIsDirty(true)
+    setSaveError(null)
+  }
+
+  function handleClose() {
+    if (isDirty && isOwner) {
+      if (!window.confirm('You have unsaved changes. Leave without saving?')) return
+    }
+    onClose()
+  }
+
+  function handleNavigate(key: SectionKey) {
+    if (isDirty && isOwner) {
+      if (!window.confirm('You have unsaved changes. Leave without saving?')) return
+    }
+    onNavigate(key)
+  }
 
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') handleClose()
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [onClose])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, isDirty, isOwner])
 
   const currentIndex = SECTION_KEYS.indexOf(sectionKey)
   const prevKey = currentIndex > 0 ? SECTION_KEYS[currentIndex - 1] : null
   const nextKey = currentIndex < SECTION_KEYS.length - 1 ? SECTION_KEYS[currentIndex + 1] : null
 
-  function detectCompletionStatus(data: Record<string, unknown>): CompletionStatus {
-    const values = Object.values(data).filter(
-      (v) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)
-    )
-    if (values.length === 0) return 'not_started'
-    // Check if all required keys have values — simple heuristic
+  // Minimum fields required per section before auto-detecting as 'complete'
+  const SECTION_REQUIRED_KEYS: Partial<Record<SectionKey, string[]>> = {
+    sustainability: ['stress_level', 'backup_person'],
+  }
+
+  function isFilled(v: unknown): boolean {
+    return v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)
+  }
+
+  function detectCompletionStatus(key: SectionKey, data: Record<string, unknown>): CompletionStatus {
+    const allValues = Object.values(data)
+    const anyFilled = allValues.some(isFilled)
+    if (!anyFilled) return 'not_started'
+
+    // Check section-specific required fields first
+    const requiredKeys = SECTION_REQUIRED_KEYS[key]
+    if (requiredKeys) {
+      const allRequiredFilled = requiredKeys.every((k) => isFilled(data[k]))
+      if (!allRequiredFilled) return 'in_progress'
+    }
+
+    // General heuristic: 80% of fields filled
     const keys = Object.keys(data)
-    const filledKeys = keys.filter((k) => {
-      const v = data[k]
-      return v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0)
-    })
-    if (filledKeys.length >= Math.ceil(keys.length * 0.8)) return 'complete'
+    const filledCount = keys.filter((k) => isFilled(data[k])).length
+    if (filledCount >= Math.ceil(keys.length * 0.8)) return 'complete'
     return 'in_progress'
   }
 
   async function handleSave(markComplete = false) {
     if (!isOwner) return
     setSaving(true)
+    setSaveError(null)
     try {
       const status: CompletionStatus = markComplete
         ? 'complete'
-        : detectCompletionStatus(formData)
+        : detectCompletionStatus(sectionKey, formData)
       await upsert.mutateAsync({
         carePlanId: carePlan.id,
         sectionKey,
@@ -106,7 +145,10 @@ export default function SectionFormModal({
         completionStatus: status,
       })
       setSaved(true)
+      setIsDirty(false)
       setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaveError('Save failed. Please check your connection and try again.')
     } finally {
       setSaving(false)
     }
@@ -119,7 +161,7 @@ export default function SectionFormModal({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose()
+        if (e.target === overlayRef.current) handleClose()
       }}
     >
       {/* Backdrop */}
@@ -142,7 +184,7 @@ export default function SectionFormModal({
             <p className="text-sm text-slate-500 mt-0.5">{SECTION_SUBTITLES[sectionKey]}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0 -mt-1 -mr-1"
             aria-label="Close"
           >
@@ -158,11 +200,19 @@ export default function SectionFormModal({
           </div>
         )}
 
+        {/* Save error */}
+        {saveError && (
+          <div className="px-6 py-3 bg-red-50 border-b border-red-100 flex items-center gap-2 text-sm text-red-700 shrink-0">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {saveError}
+          </div>
+        )}
+
         {/* Form body */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <FormComponent
             data={formData}
-            onChange={setFormData}
+            onChange={handleFormChange}
             isOwner={isOwner}
             readOnly={!isOwner}
           />
@@ -172,7 +222,7 @@ export default function SectionFormModal({
         <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
           {/* Prev */}
           <button
-            onClick={() => prevKey && onNavigate(prevKey)}
+            onClick={() => prevKey && handleNavigate(prevKey)}
             disabled={!prevKey}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
@@ -215,7 +265,7 @@ export default function SectionFormModal({
 
             {nextKey && (
               <button
-                onClick={() => onNavigate(nextKey)}
+                onClick={() => handleNavigate(nextKey)}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors ml-1"
               >
                 {SECTION_LABELS[nextKey]}

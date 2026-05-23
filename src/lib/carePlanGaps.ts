@@ -147,15 +147,25 @@ export function detectGaps(sections: CarePlanSection[]): GapItem[] {
         sectionKey: 'sustainability',
       })
     }
-    if (!d.backup_person) {
+
+    // Check if "No backup" is a selected stress factor but backup_person is also empty
+    const stressFactors = (d.stress_factors as string[]) ?? []
+    const noBackupSelected = stressFactors.some((f) => f.startsWith('No backup'))
+
+    const backupMissing = !d.backup_person || String(d.backup_person).trim() === ''
+    if (backupMissing) {
       gaps.push({
-        label: 'No backup caregiver identified',
+        label: noBackupSelected
+          ? 'No backup caregiver identified — caregiver acknowledges this gap'
+          : 'No backup caregiver identified',
         action: 'Identify a backup caregiver in the Sustainability section.',
-        severity: 'important',
+        severity: noBackupSelected ? 'critical' : 'important',
         sectionKey: 'sustainability',
       })
     }
-    if (!d.respite_plan) {
+
+    const respiteMissing = !d.respite_plan || String(d.respite_plan).trim() === ''
+    if (respiteMissing) {
       gaps.push({
         label: 'No respite plan in place',
         action: 'Add a respite plan in the Sustainability section.',
@@ -221,9 +231,24 @@ export function countBySeverity(gaps: GapItem[]): Record<GapSeverity, number> {
 // Derives the inline risk flags shown in SustainabilityForm
 export function getSustainabilityFlags(data: Record<string, unknown>): string[] {
   const flags: string[] = []
-  if (!(data.backup_person as string)) flags.push('No backup caregiver identified')
-  if (!(data.respite_plan as string)) flags.push('No respite plan in place')
+
+  const backupPerson = String(data.backup_person ?? '').trim()
+  if (!backupPerson) {
+    const stressFactors = (data.stress_factors as string[]) ?? []
+    const noBackupSelected = stressFactors.some((f) => f.startsWith('No backup'))
+    flags.push(
+      noBackupSelected
+        ? 'No backup caregiver identified — you have acknowledged this gap'
+        : 'No backup caregiver identified'
+    )
+  }
+
+  const respitePlan = String(data.respite_plan ?? '').trim()
+  if (!respitePlan) flags.push('No respite plan in place')
+
   const stress = data.stress_level as string
-  if (stress === 'High' || stress === 'Very high') flags.push('Primary caregiver reports high stress')
+  if (stress === 'Very high') flags.push('Primary caregiver reports very high stress')
+  else if (stress === 'High') flags.push('Primary caregiver reports high stress')
+
   return flags
 }

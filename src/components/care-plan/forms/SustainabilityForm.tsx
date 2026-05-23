@@ -39,19 +39,23 @@ function Field({
 
 export default function SustainabilityForm({ data, onChange, readOnly }: SectionFormProps) {
   function set(key: string, value: unknown) {
-    onChange({ ...data, [key]: value })
+    // Normalise empty strings to empty string (never undefined/null) for consistency
+    const normalised = typeof value === 'string' ? value : value
+    onChange({ ...data, [key]: normalised })
   }
 
   function toggleFactor(label: string) {
     if (readOnly) return
-    const current = (data.stress_factors as string[]) ?? []
+    // Always guarantee stress_factors is a proper array from persisted data
+    const current = Array.isArray(data.stress_factors) ? (data.stress_factors as string[]) : []
     const next = current.includes(label)
       ? current.filter((f) => f !== label)
       : [...current, label]
     set('stress_factors', next)
   }
 
-  const stressFactors = (data.stress_factors as string[]) ?? []
+  // Guarantee arrays are always arrays even after a JSON round-trip
+  const stressFactors = Array.isArray(data.stress_factors) ? (data.stress_factors as string[]) : []
   const availableHours = (data.available_hours as string) ?? ''
   const stressLevel = (data.stress_level as string) ?? ''
 
