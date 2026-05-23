@@ -1,24 +1,5 @@
 import type { SectionFormProps } from '../SectionFormModal'
-
-const REVIEW_FREQUENCIES = [
-  'Monthly',
-  'Every 3 months',
-  'Every 6 months',
-  'Annually',
-  'Only when triggered',
-]
-
-const REVIEW_TRIGGERS = [
-  'Health decline or new diagnosis',
-  'Hospitalisation or major medical event',
-  'Fall or safety incident',
-  'Change in living arrangement',
-  'Change in care provider or service',
-  'Family capacity changes significantly',
-  'Primary caregiver shows signs of overload',
-  'Family conflict about care decisions',
-  'Significant financial change',
-]
+import { useLocale } from '../../../i18n/LocaleContext'
 
 function Field({
   label,
@@ -39,6 +20,35 @@ function Field({
 }
 
 export default function ReviewForm({ data, onChange, readOnly }: SectionFormProps) {
+  const { t } = useLocale()
+
+  const REVIEW_FREQUENCIES = [
+    t('care_plan.review_freq_monthly'),
+    t('care_plan.review_freq_3months'),
+    t('care_plan.review_freq_6months'),
+    t('care_plan.review_freq_annually'),
+    t('care_plan.review_freq_triggered'),
+  ]
+
+  const REVIEW_TRIGGERS = [
+    t('care_plan.review_trigger_health'),
+    t('care_plan.review_trigger_hospital'),
+    t('care_plan.review_trigger_fall'),
+    t('care_plan.review_trigger_living'),
+    t('care_plan.review_trigger_provider'),
+    t('care_plan.review_trigger_family_capacity'),
+    t('care_plan.review_trigger_carer_overload'),
+    t('care_plan.review_trigger_conflict'),
+    t('care_plan.review_trigger_financial'),
+  ]
+
+  const FAMILY_INCLUDED_OPTIONS = [
+    t('care_plan.review_family_yes'),
+    t('care_plan.review_family_planned'),
+    t('care_plan.review_family_not_yet'),
+    t('care_plan.review_family_not_applicable'),
+  ]
+
   function set(key: string, value: unknown) {
     onChange({ ...data, [key]: value })
   }
@@ -47,7 +57,7 @@ export default function ReviewForm({ data, onChange, readOnly }: SectionFormProp
     if (readOnly) return
     const current = (data.review_triggers as string[]) ?? []
     const next = current.includes(label)
-      ? current.filter((t) => t !== label)
+      ? current.filter((trig) => trig !== label)
       : [...current, label]
     set('review_triggers', next)
   }
@@ -58,12 +68,10 @@ export default function ReviewForm({ data, onChange, readOnly }: SectionFormProp
   return (
     <div className="space-y-7">
       <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-        A care plan is not a static document. Building a review process in from the beginning
-        prevents small changes from becoming crises. The goal is not perfection — it is a
-        workable plan that is honest, shared, and regularly reviewed.
+        {t('care_plan.review_preamble')}
       </div>
 
-      <Field label="How often should this Care Plan be formally reviewed?">
+      <Field label={t('care_plan.review_field_frequency_label')}>
         <div className="flex flex-wrap gap-2 mt-1">
           {REVIEW_FREQUENCIES.map((opt) => (
             <button
@@ -84,22 +92,22 @@ export default function ReviewForm({ data, onChange, readOnly }: SectionFormProp
       </Field>
 
       <Field
-        label="Who is responsible for leading the review?"
-        hint="Name the person who is responsible for calling and running each review."
+        label={t('care_plan.review_field_owner_label')}
+        hint={t('care_plan.review_field_owner_hint')}
       >
         <input
           type="text"
           readOnly={readOnly}
           value={(data.review_owner as string) ?? ''}
           onChange={(e) => set('review_owner', e.target.value)}
-          placeholder="Name and relationship"
+          placeholder={t('care_plan.review_field_owner_placeholder')}
           className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300 read-only:bg-slate-50 read-only:cursor-default"
         />
       </Field>
 
       <Field
-        label="Next scheduled review date"
-        hint="Even a rough target is better than no date at all."
+        label={t('care_plan.review_field_date_label')}
+        hint={t('care_plan.review_field_date_hint')}
       >
         <input
           type="date"
@@ -111,8 +119,8 @@ export default function ReviewForm({ data, onChange, readOnly }: SectionFormProp
       </Field>
 
       <Field
-        label="What changes should trigger an unscheduled review?"
-        hint="Select all that apply."
+        label={t('care_plan.review_field_triggers_label')}
+        hint={t('care_plan.review_field_triggers_hint')}
       >
         <div className="flex flex-wrap gap-2 mt-1">
           {REVIEW_TRIGGERS.map((trigger) => (
@@ -134,24 +142,22 @@ export default function ReviewForm({ data, onChange, readOnly }: SectionFormProp
       </Field>
 
       <Field
-        label="What decisions or issues need to be revisited soon?"
-        hint="Anything that is unresolved, has been deferred, or needs to be discussed at the next review."
+        label={t('care_plan.review_field_decisions_label')}
+        hint={t('care_plan.review_field_decisions_hint')}
       >
         <textarea
           rows={3}
           readOnly={readOnly}
           value={(data.decisions_to_revisit as string) ?? ''}
           onChange={(e) => set('decisions_to_revisit', e.target.value)}
-          placeholder="e.g. Need to confirm financial authority before next specialist visit. Respite arrangement needs to be formalised…"
+          placeholder={t('care_plan.review_field_decisions_placeholder')}
           className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none read-only:bg-slate-50 read-only:cursor-default leading-relaxed"
         />
       </Field>
 
-      <Field
-        label="Are family members who are not the primary caregiver included in reviews?"
-      >
+      <Field label={t('care_plan.review_field_family_label')}>
         <div className="flex gap-2 mt-1">
-          {['Yes', 'Planned', 'Not yet', 'Not applicable'].map((opt) => (
+          {FAMILY_INCLUDED_OPTIONS.map((opt) => (
             <button
               key={opt}
               type="button"

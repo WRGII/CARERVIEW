@@ -1,44 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import type { SectionFormProps } from '../SectionFormModal'
-
-const LIVING_OPTIONS = [
-  {
-    value: 'resident_home',
-    label: "Resident stays in their own home",
-    description: 'Often preferred for independence and familiarity. Requires honest safety assessment.',
-  },
-  {
-    value: 'family_home',
-    label: 'Resident moves into a family home',
-    description: 'Requires clear thinking about space, supervision, impact on household, and long-term viability.',
-  },
-  {
-    value: 'paid_in_home',
-    label: 'Paid in-home support',
-    description: 'Professional carers visiting. Costs and availability vary significantly by area.',
-  },
-  {
-    value: 'assisted_living',
-    label: 'Assisted living or residential care',
-    description: 'Appropriate when care needs exceed what can be safely managed at home.',
-  },
-  {
-    value: 'undecided',
-    label: 'Undecided / still assessing',
-    description: '',
-  },
-]
-
-const CHANGE_TRIGGERS = [
-  'Safety incident or fall',
-  'Significant health decline',
-  'Caregiver burnout or unavailability',
-  'Care needs exceed current capacity',
-  'Financial constraints',
-  'Family agreement breaks down',
-  'Provider or service change',
-]
+import { useLocale } from '../../../i18n/LocaleContext'
 
 function Field({
   label,
@@ -59,6 +22,33 @@ function Field({
 }
 
 export default function LivingArrangementForm({ data, onChange, readOnly }: SectionFormProps) {
+  const { t } = useLocale()
+
+  const LIVING_OPTIONS = [
+    { value: 'resident_home',  label: t('care_plan.living_opt_resident_home_label'),  description: t('care_plan.living_opt_resident_home_desc') },
+    { value: 'family_home',    label: t('care_plan.living_opt_family_home_label'),    description: t('care_plan.living_opt_family_home_desc') },
+    { value: 'paid_in_home',   label: t('care_plan.living_opt_paid_in_home_label'),   description: t('care_plan.living_opt_paid_in_home_desc') },
+    { value: 'assisted_living',label: t('care_plan.living_opt_assisted_label'),       description: t('care_plan.living_opt_assisted_desc') },
+    { value: 'undecided',      label: t('care_plan.living_opt_undecided_label'),      description: '' },
+  ]
+
+  const CHANGE_TRIGGERS = [
+    t('care_plan.living_trigger_safety'),
+    t('care_plan.living_trigger_health'),
+    t('care_plan.living_trigger_burnout'),
+    t('care_plan.living_trigger_capacity'),
+    t('care_plan.living_trigger_financial'),
+    t('care_plan.living_trigger_family'),
+    t('care_plan.living_trigger_provider'),
+  ]
+
+  const WORKING_OPTIONS = [
+    t('care_plan.living_working_yes'),
+    t('care_plan.living_working_mostly'),
+    t('care_plan.living_working_struggling'),
+    t('care_plan.living_working_no'),
+  ]
+
   function set(key: string, value: unknown) {
     onChange({ ...data, [key]: value })
   }
@@ -79,11 +69,10 @@ export default function LivingArrangementForm({ data, onChange, readOnly }: Sect
   return (
     <div className="space-y-7">
       <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100">
-        Where care happens is one of the most consequential decisions in the caring role. Think
-        strategically, not just about what feels right in the moment.
+        {t('care_plan.living_preamble')}
       </div>
 
-      <Field label="What is the current living arrangement?">
+      <Field label={t('care_plan.living_field_arrangement_label')}>
         <div className="space-y-2 mt-1">
           {LIVING_OPTIONS.map((opt) => (
             <button
@@ -107,11 +96,11 @@ export default function LivingArrangementForm({ data, onChange, readOnly }: Sect
       </Field>
 
       <Field
-        label="Is this arrangement currently working?"
-        hint="Be honest — what is actually happening vs. what the plan assumes."
+        label={t('care_plan.living_field_working_label')}
+        hint={t('care_plan.living_field_working_hint')}
       >
         <div className="flex gap-2 mt-1">
-          {['Yes', 'Mostly', 'Struggling', 'No'].map((opt) => (
+          {WORKING_OPTIONS.map((opt) => (
             <button
               key={opt}
               type="button"
@@ -130,36 +119,36 @@ export default function LivingArrangementForm({ data, onChange, readOnly }: Sect
       </Field>
 
       <Field
-        label="What are the main safety or supervision concerns?"
-        hint="Fall risks, medication risks, unsupervised overnight, mobility issues, etc."
+        label={t('care_plan.living_field_safety_label')}
+        hint={t('care_plan.living_field_safety_hint')}
       >
         <textarea
           rows={3}
           readOnly={readOnly}
           value={(data.safety_concerns as string) ?? ''}
           onChange={(e) => set('safety_concerns', e.target.value)}
-          placeholder="e.g. Unsteady on stairs, cannot manage medications independently, needs overnight check…"
+          placeholder={t('care_plan.living_field_safety_placeholder')}
           className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none read-only:bg-slate-50 read-only:cursor-default leading-relaxed"
         />
       </Field>
 
       <Field
-        label="What alternatives are being considered?"
-        hint="Other options that have been discussed or may need to be evaluated."
+        label={t('care_plan.living_field_alternatives_label')}
+        hint={t('care_plan.living_field_alternatives_hint')}
       >
         <textarea
           rows={3}
           readOnly={readOnly}
           value={(data.alternatives_considered as string) ?? ''}
           onChange={(e) => set('alternatives_considered', e.target.value)}
-          placeholder="e.g. Assessing a nearby residential facility, exploring daily home care visits…"
+          placeholder={t('care_plan.living_field_alternatives_placeholder')}
           className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none read-only:bg-slate-50 read-only:cursor-default leading-relaxed"
         />
       </Field>
 
       <Field
-        label="What would trigger a change in living arrangement?"
-        hint="Select any that apply."
+        label={t('care_plan.living_field_triggers_label')}
+        hint={t('care_plan.living_field_triggers_hint')}
       >
         <div className="flex flex-wrap gap-2 mt-1">
           {CHANGE_TRIGGERS.map((trigger) => (
@@ -181,15 +170,15 @@ export default function LivingArrangementForm({ data, onChange, readOnly }: Sect
       </Field>
 
       <Field
-        label="Financial or family constraints affecting this decision"
-        hint="Cost limits, family capacity, willingness, or practical constraints."
+        label={t('care_plan.living_field_constraints_label')}
+        hint={t('care_plan.living_field_constraints_hint')}
       >
         <textarea
           rows={3}
           readOnly={readOnly}
           value={(data.constraints as string) ?? ''}
           onChange={(e) => set('constraints', e.target.value)}
-          placeholder="e.g. Residential care is financially out of reach without selling the family home. One sibling disagrees with moving Mum…"
+          placeholder={t('care_plan.living_field_constraints_placeholder')}
           className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none read-only:bg-slate-50 read-only:cursor-default leading-relaxed"
         />
       </Field>
@@ -197,12 +186,12 @@ export default function LivingArrangementForm({ data, onChange, readOnly }: Sect
       <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex items-start gap-3 text-sm">
         <ExternalLink className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
         <div>
-          <p className="font-semibold text-teal-900 mb-1">Supporting worksheet</p>
+          <p className="font-semibold text-teal-900 mb-1">{t('care_plan.living_worksheet_title')}</p>
           <Link
             to="/new-carer/living-arrangements"
             className="text-xs font-semibold text-teal-700 hover:text-teal-900 underline underline-offset-2 transition-colors"
           >
-            Read the Home, Housing and Care Setting guide →
+            {t('care_plan.living_worksheet_link')}
           </Link>
         </div>
       </div>
