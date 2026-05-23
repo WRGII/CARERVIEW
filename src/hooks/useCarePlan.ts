@@ -58,6 +58,28 @@ export const SECTION_SUBTITLES: Record<SectionKey, string> = {
   review: 'Keeping the plan current over time',
 }
 
+export function getSectionLabels(t: (k: string) => string): Record<SectionKey, string> {
+  return {
+    situation: t('care_plan.section_situation'),
+    authority: t('care_plan.section_authority'),
+    responsibilities: t('care_plan.section_responsibilities'),
+    living_arrangement: t('care_plan.section_living_arrangement'),
+    sustainability: t('care_plan.section_sustainability'),
+    review: t('care_plan.section_review'),
+  }
+}
+
+export function getSectionSubtitles(t: (k: string) => string): Record<SectionKey, string> {
+  return {
+    situation: t('care_plan.section_subtitle_situation'),
+    authority: t('care_plan.section_subtitle_authority'),
+    responsibilities: t('care_plan.section_subtitle_responsibilities'),
+    living_arrangement: t('care_plan.section_subtitle_living_arrangement'),
+    sustainability: t('care_plan.section_subtitle_sustainability'),
+    review: t('care_plan.section_subtitle_review'),
+  }
+}
+
 // ── Get or create the care plan for a team ──────────────────────────────────
 
 export function useCarePlan(teamId: string | null) {

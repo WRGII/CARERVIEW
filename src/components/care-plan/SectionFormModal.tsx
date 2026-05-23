@@ -4,8 +4,8 @@ import { useLocale } from '../../i18n/LocaleContext'
 import {
   useUpsertCarePlanSection,
   SECTION_KEYS,
-  SECTION_LABELS,
-  SECTION_SUBTITLES,
+  getSectionLabels,
+  getSectionSubtitles,
   type SectionKey,
   type CarePlan,
   type CarePlanSection,
@@ -100,6 +100,8 @@ export default function SectionFormModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose, isDirty, isOwner])
 
+  const sectionLabels = getSectionLabels(t)
+  const sectionSubtitles = getSectionSubtitles(t)
   const currentIndex = SECTION_KEYS.indexOf(sectionKey)
   const prevKey = currentIndex > 0 ? SECTION_KEYS[currentIndex - 1] : null
   const nextKey = currentIndex < SECTION_KEYS.length - 1 ? SECTION_KEYS[currentIndex + 1] : null
@@ -177,13 +179,13 @@ export default function SectionFormModal({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                Section {currentIndex + 1} of {SECTION_KEYS.length}
+                {t('care_plan.section_counter', { current: currentIndex + 1, total: SECTION_KEYS.length })}
               </p>
             </div>
             <h2 className="text-xl font-extrabold text-slate-900">
-              {SECTION_LABELS[sectionKey]}
+              {sectionLabels[sectionKey]}
             </h2>
-            <p className="text-sm text-slate-500 mt-0.5">{SECTION_SUBTITLES[sectionKey]}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{sectionSubtitles[sectionKey]}</p>
           </div>
           <button
             onClick={handleClose}
@@ -229,7 +231,7 @@ export default function SectionFormModal({
             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
-            {prevKey ? SECTION_LABELS[prevKey] : 'Back'}
+            {prevKey ? sectionLabels[prevKey] : t('care_plan.modal_back')}
           </button>
 
           {/* Save + Next */}
@@ -270,7 +272,7 @@ export default function SectionFormModal({
                 onClick={() => handleNavigate(nextKey)}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors ml-1"
               >
-                {SECTION_LABELS[nextKey]}
+                {sectionLabels[nextKey]}
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}

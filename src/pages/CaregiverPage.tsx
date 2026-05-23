@@ -32,33 +32,34 @@ type ExportFormat = 'docx' | 'csv';
 
 // ── How the tools work together panel ────────────────────────────────────────
 
-function HowToolsWorkPanel() {
+function HowToolsWorkPanel({ t }: { t: (k: string, v?: Record<string, string | number>) => string }) {
+  const items = [
+    {
+      label: t('care_hub.mental_model_mb_label'),
+      tag: t('care_hub.mental_model_mb_tag'),
+      body: t('care_hub.mental_model_mb_body'),
+      dot: 'bg-teal-400',
+    },
+    {
+      label: t('care_hub.mental_model_cp_label'),
+      tag: t('care_hub.mental_model_cp_tag'),
+      body: t('care_hub.mental_model_cp_body'),
+      dot: 'bg-blue-400',
+    },
+    {
+      label: t('care_hub.mental_model_obs_label'),
+      tag: t('care_hub.mental_model_obs_tag'),
+      body: t('care_hub.mental_model_obs_body'),
+      dot: 'bg-amber-400',
+    },
+  ]
   return (
     <div className="bg-slate-900 rounded-2xl p-6 md:p-8">
       <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-5">
-        How the tools work together
+        {t('care_hub.mental_model_heading')}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        {[
-          {
-            label: 'Memory Book',
-            tag: 'Know the person',
-            body: 'Built with and about the resident. A reference covering identity, health, preferences, contacts, and practical details.',
-            dot: 'bg-teal-400',
-          },
-          {
-            label: 'Care Plan',
-            tag: 'Coordinate the team',
-            body: 'Built by the care team. Covers the big-picture operating plan: who does what, authority, risks, living arrangements, and when to review.',
-            dot: 'bg-blue-400',
-          },
-          {
-            label: 'Observations',
-            tag: 'Track change',
-            body: 'Periodic functional tracking. Helps the team see how the resident is changing and make better decisions as needs evolve.',
-            dot: 'bg-amber-400',
-          },
-        ].map((item) => (
+        {items.map((item) => (
           <div key={item.label}>
             <div className="flex items-center gap-2 mb-1.5">
               <span className={`w-2 h-2 rounded-full shrink-0 ${item.dot}`} />
@@ -209,11 +210,11 @@ export default function CaregiverPage() {
   }
 
   function getContextSubtitle(): string {
-    if (!isPaid) return t('caregiver.subtitle_free') || 'Track care, log observations, and access community resources.';
-    if (lastModule === 'care_plan') return 'Your care plan progress is shown below.';
-    if (lastModule === 'memory_book') return 'Your care plan, memory book and observations progress is shown below.';
-    if (lastModule === 'observations') return 'Your recent observations are shown below.';
-    return 'Here is a summary of your current care activities.';
+    if (!isPaid) return t('caregiver.subtitle_free');
+    if (lastModule === 'care_plan') return t('caregiver.subtitle_care_plan');
+    if (lastModule === 'memory_book') return t('caregiver.subtitle_memory_book');
+    if (lastModule === 'observations') return t('caregiver.subtitle_observations');
+    return t('caregiver.subtitle_default');
   }
 
   // ── Observations section (used in paid layout) ─────────────────────────────
@@ -225,9 +226,9 @@ export default function CaregiverPage() {
           <div>
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Activity className="w-4 h-4 text-amber-500" />
-              Observations
+              {t('caregiver.observations_title')}
             </h2>
-            <p className="text-xs font-semibold text-amber-700 mt-0.5">Track change</p>
+            <p className="text-xs font-semibold text-amber-700 mt-0.5">{t('care_hub.mental_model_obs_tag')}</p>
           </div>
           <Button data-tutorial="new-observation" variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
             <Plus className="w-3.5 h-3.5" />
@@ -238,12 +239,12 @@ export default function CaregiverPage() {
         {observations.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
             <Activity className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm text-slate-500">No observations recorded yet.</p>
+            <p className="text-sm text-slate-500">{t('caregiver.obs_empty')}</p>
             <button
               onClick={() => navigate('/caregiver/observations/new')}
               className="mt-3 text-xs font-semibold text-amber-600 hover:text-amber-800 transition-colors"
             >
-              Record your first observation →
+              {t('caregiver.obs_empty_cta')}
             </button>
           </div>
         ) : (
@@ -267,7 +268,7 @@ export default function CaregiverPage() {
             {observations.length > 4 && (
               <div className="px-5 py-3">
                 <Link to="/caregiver/observations/new" className="text-xs font-semibold text-amber-600 hover:text-amber-800">
-                  View all {observations.length} observations →
+                  {t('caregiver.obs_view_all', { count: observations.length })}
                 </Link>
               </div>
             )}
@@ -326,7 +327,7 @@ export default function CaregiverPage() {
           {renderObservationsSection()}
 
           {/* How the tools work together */}
-          <HowToolsWorkPanel />
+          <HowToolsWorkPanel t={t} />
         </div>
       ) : (
         /* ── Free user layout ── */
@@ -349,7 +350,7 @@ export default function CaregiverPage() {
 
           {/* Upsell quick access for free users */}
           <section>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Subscriber tools</h2>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">{t('caregiver.subscriber_tools_heading')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link
                 to="/pricing"
@@ -359,11 +360,11 @@ export default function CaregiverPage() {
                   <BookOpen className="w-4 h-4 text-teal-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Memory Book</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Know the person — identity, health, preferences, contacts</p>
+                  <p className="text-sm font-semibold text-slate-800">{t('dashboard.mb_title')}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t('caregiver.upsell_mb_desc')}</p>
                 </div>
                 <div className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 group-hover:gap-2 transition-all">
-                  Upgrade to access
+                  {t('caregiver.upsell_upgrade_cta')}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </Link>
@@ -375,11 +376,11 @@ export default function CaregiverPage() {
                   <ClipboardList className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Care Plan</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">Coordinate the team — roles, authority, sustainability</p>
+                  <p className="text-sm font-semibold text-slate-800">{t('care_plan.title')}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{t('caregiver.upsell_cp_desc')}</p>
                 </div>
                 <div className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 group-hover:gap-2 transition-all">
-                  Upgrade to access
+                  {t('caregiver.upsell_upgrade_cta')}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </Link>

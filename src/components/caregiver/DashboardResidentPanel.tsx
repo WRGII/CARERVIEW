@@ -3,6 +3,7 @@ import { CircleUser as UserCircle, ChevronRight, Calendar, CircleCheck as CheckC
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamResident, useTeamRole } from '../../hooks/useMemoryBook'
+import { useLocale } from '../../i18n/LocaleContext'
 
 function profileScore(resident: any): { filled: number; total: number } {
   const fields = [
@@ -19,6 +20,7 @@ function profileScore(resident: any): { filled: number; total: number } {
 }
 
 export default function DashboardResidentPanel() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: resident, isLoading: residentLoading } = useTeamResident(teamId)
@@ -52,15 +54,15 @@ export default function DashboardResidentPanel() {
             <UserCircle className="w-4 h-4 text-slate-600" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">Resident</p>
-            <p className="text-xs font-semibold text-slate-500">Person at the centre of care</p>
+            <p className="text-sm font-bold text-slate-900">{t('dashboard.resident_title')}</p>
+            <p className="text-xs font-semibold text-slate-500">{t('dashboard.resident_subtitle')}</p>
           </div>
         </div>
         <Link
           to="/caregiver/resident"
           className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
         >
-          View
+          {t('common.view')}
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -71,24 +73,24 @@ export default function DashboardResidentPanel() {
           <div>
             <p className="text-base font-bold text-slate-900">{resident.full_name}</p>
             {resident.preferred_name && (
-              <p className="text-xs text-slate-500 mt-0.5">Known as "{resident.preferred_name}"</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('dashboard.resident_known_as', { name: resident.preferred_name })}</p>
             )}
             {residentAge !== null && (
               <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                 <Calendar className="w-3 h-3" />
-                Age {residentAge}
+                {t('dashboard.resident_age', { age: residentAge })}
               </p>
             )}
           </div>
           {isComplete ? (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-1 rounded-full shrink-0">
               <CheckCircle className="w-3 h-3" />
-              Complete
+              {t('common.complete')}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-full shrink-0">
               <AlertCircle className="w-3 h-3" />
-              Incomplete
+              {t('common.incomplete')}
             </span>
           )}
         </div>
@@ -97,7 +99,7 @@ export default function DashboardResidentPanel() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs text-slate-400">
-              Profile <span className="font-semibold text-slate-600">{pct}%</span> complete
+              {t('dashboard.resident_profile_pct', { pct })}
             </p>
           </div>
           <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -114,7 +116,7 @@ export default function DashboardResidentPanel() {
             to="/caregiver/resident"
             className="block w-full text-center text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg px-3 py-2 transition-colors"
           >
-            Complete the resident profile →
+            {t('dashboard.resident_complete_cta')}
           </Link>
         )}
       </div>

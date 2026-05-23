@@ -7,8 +7,10 @@ import {
   useTeamRole,
   useMemoryBookMedicalEntries,
 } from "../../hooks/useMemoryBook";
+import { useLocale } from "../../i18n/LocaleContext";
 
 export default function MedicalSummaryCard() {
+  const { t } = useLocale();
   const { user } = useAuth();
   const { teamId } = useActiveTeam();
 
@@ -53,15 +55,15 @@ export default function MedicalSummaryCard() {
             <Stethoscope className="w-4 h-4 text-rose-500" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-800">Medical Summary</h3>
-            <p className="text-xs text-slate-500">From the Memory Book</p>
+            <h3 className="text-sm font-semibold text-slate-800">{t('dashboard.medical_title')}</h3>
+            <p className="text-xs text-slate-500">{t('dashboard.medical_subtitle')}</p>
           </div>
         </div>
         <Link
           to="/caregiver/memory-schedule"
           className="flex items-center gap-1 text-xs font-medium text-cyan-600 hover:text-cyan-700 transition-colors group"
         >
-          View Memory Book
+          {t('dashboard.medical_view_link')}
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
@@ -70,7 +72,7 @@ export default function MedicalSummaryCard() {
         <div className="grid sm:grid-cols-3 gap-3">
           {conditions.length > 0 && (
             <MedicalGroup
-              label="Conditions"
+              label={t('dashboard.medical_conditions')}
               items={conditions.map(e => e.label)}
               badgeColor="bg-rose-50 border-rose-200 text-rose-700"
               dotColor="bg-rose-400"
@@ -79,7 +81,7 @@ export default function MedicalSummaryCard() {
           )}
           {medications.length > 0 && (
             <MedicalGroup
-              label="Medications"
+              label={t('dashboard.medical_medications')}
               items={medications.map(e => e.label)}
               badgeColor="bg-cyan-50 border-cyan-200 text-cyan-700"
               dotColor="bg-cyan-400"
@@ -88,7 +90,7 @@ export default function MedicalSummaryCard() {
           )}
           {allergies.length > 0 && (
             <MedicalGroup
-              label="Allergies"
+              label={t('dashboard.medical_allergies')}
               items={allergies.map(e => e.label)}
               badgeColor="bg-orange-50 border-orange-200 text-orange-700"
               dotColor="bg-orange-400"
@@ -102,13 +104,13 @@ export default function MedicalSummaryCard() {
             {hearing.length > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                Hearing: {hearing[0].label}{hearing.length > 1 ? ` +${hearing.length - 1}` : ""}
+                {t('dashboard.medical_hearing')}: {hearing[0].label}{hearing.length > 1 ? ` +${hearing.length - 1}` : ""}
               </span>
             )}
             {vision.length > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                Vision: {vision[0].label}{vision.length > 1 ? ` +${vision.length - 1}` : ""}
+                {t('dashboard.medical_vision')}: {vision[0].label}{vision.length > 1 ? ` +${vision.length - 1}` : ""}
               </span>
             )}
           </div>

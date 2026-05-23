@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { BookOpen, ClipboardList, Activity, ArrowRight, ChevronRight, CircleCheck as CheckCircle2, Circle, Clock, TriangleAlert as AlertTriangle } from 'lucide-react'
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useOnboarding } from '../../hooks/useOnboarding'
-import { useCarePlanReadOnly, useCarePlanSections, SECTION_KEYS, SECTION_LABELS, countCompletedSections, type SectionKey } from '../../hooks/useCarePlan'
+import { useCarePlanReadOnly, useCarePlanSections, SECTION_KEYS, getSectionLabels, countCompletedSections, type SectionKey } from '../../hooks/useCarePlan'
 import { detectGaps, getTopPriorities, countBySeverity, getNextStep } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -51,6 +51,7 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
   const total = SECTION_KEYS.length
   const progressPct = Math.round((completedCount / total) * 100)
   const gaps = detectGaps(sections, t)
+  const sectionLabels = getSectionLabels(t)
   const topGaps = getTopPriorities(gaps, 3)
   const counts = countBySeverity(gaps)
   const nextStep = getNextStep(gaps)
@@ -63,9 +64,7 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
       <div>
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-slate-700">
-            {t('care_hub.progress_sections_complete')
-              .replace('{completed}', String(completedCount))
-              .replace('{total}', String(total))}
+            {t('care_hub.progress_sections_complete', { completed: completedCount, total })}
           </p>
           {completedCount > 0 && (
             <Link to="/care-hub/care-plan/summary" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
@@ -88,7 +87,7 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
           return (
             <div key={key} className="flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
               <SectionDot status={status} />
-              <span className="text-xs font-medium text-slate-700 truncate">{SECTION_LABELS[key]}</span>
+              <span className="text-xs font-medium text-slate-700 truncate">{sectionLabels[key]}</span>
             </div>
           )
         })}
@@ -105,26 +104,24 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-semibold text-slate-700">
-              {t('care_hub.gaps_identified')
-                .replace('{count}', String(gaps.length))
-                .replace('{plural}', gaps.length !== 1 ? 's' : '')}
+              {t('care_hub.gaps_identified', { count: gaps.length, plural: gaps.length !== 1 ? 's' : '' })}
             </span>
             {counts.critical > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-100 text-xs font-medium text-red-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                {t('care_hub.gap_critical').replace('{count}', String(counts.critical))}
+                {t('care_hub.gap_critical', { count: counts.critical })}
               </span>
             )}
             {counts.important > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-xs font-medium text-amber-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                {t('care_hub.gap_important').replace('{count}', String(counts.important))}
+                {t('care_hub.gap_important', { count: counts.important })}
               </span>
             )}
             {counts.monitor > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                {t('care_hub.gap_to_monitor').replace('{count}', String(counts.monitor))}
+                {t('care_hub.gap_to_monitor', { count: counts.monitor })}
               </span>
             )}
           </div>
@@ -145,7 +142,7 @@ function CarePlanLivePanel({ carePlanId }: { carePlanId: string }) {
             ))}
             {gaps.length > 3 && (
               <p className="text-xs text-slate-400 pl-1">
-                {t('care_hub.more_gaps').replace('{count}', String(gaps.length - 3))}{' '}
+                {t('care_hub.more_gaps', { count: gaps.length - 3 })}{' '}
                 <Link to="/care-hub/care-plan/summary" className="text-blue-600 hover:underline">{t('care_hub.view_all_link')}</Link>
               </p>
             )}

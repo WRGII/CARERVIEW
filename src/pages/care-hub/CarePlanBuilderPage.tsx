@@ -9,8 +9,8 @@ import {
   useCarePlanReadOnly,
   useCarePlanSections,
   SECTION_KEYS,
-  SECTION_LABELS,
-  SECTION_SUBTITLES,
+  getSectionLabels,
+  getSectionSubtitles,
   getSectionByKey,
   countCompletedSections,
   type SectionKey,
@@ -92,6 +92,8 @@ function SectionCard({
   isOwner,
   onOpen,
   t,
+  sectionLabels,
+  sectionSubtitles,
 }: {
   sectionKey: SectionKey
   section: CarePlanSection | undefined
@@ -99,6 +101,8 @@ function SectionCard({
   isOwner: boolean
   onOpen: (key: SectionKey) => void
   t: (k: string) => string
+  sectionLabels: Record<SectionKey, string>
+  sectionSubtitles: Record<SectionKey, string>
 }) {
   const status = section?.completion_status ?? 'not_started'
 
@@ -117,12 +121,12 @@ function SectionCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h3 className="text-base font-bold text-slate-900">
-              {SECTION_LABELS[sectionKey]}
+              {sectionLabels[sectionKey]}
             </h3>
             <StatusBadge status={status} t={t} />
           </div>
           <p className="text-sm text-slate-500 leading-relaxed">
-            {SECTION_SUBTITLES[sectionKey]}
+            {sectionSubtitles[sectionKey]}
           </p>
         </div>
 
@@ -167,6 +171,8 @@ export default function CarePlanBuilderPage() {
   const isLoading = planLoading || sectionsLoading || teamRoleLoading
   const completedCount = countCompletedSections(sections)
   const totalCount = SECTION_KEYS.length
+  const sectionLabels = getSectionLabels(t)
+  const sectionSubtitles = getSectionSubtitles(t)
 
   if (!teamId) return <NoTeamState t={t} />
 
@@ -272,9 +278,7 @@ export default function CarePlanBuilderPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-slate-700">
-                  {t('care_plan.progress_label')
-                    .replace('{completed}', String(completedCount))
-                    .replace('{total}', String(totalCount))}
+                  {t('care_plan.progress_label', { completed: completedCount, total: totalCount })}
                 </p>
                 {completedCount === totalCount && (
                   <Link
@@ -355,6 +359,8 @@ export default function CarePlanBuilderPage() {
                   isOwner={isOwner}
                   onOpen={setOpenSection}
                   t={t}
+                  sectionLabels={sectionLabels}
+                  sectionSubtitles={sectionSubtitles}
                 />
               ))}
             </div>

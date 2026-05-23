@@ -12,7 +12,7 @@ import {
   useCarePlanReadOnly,
   useCarePlanSections,
   SECTION_KEYS,
-  SECTION_LABELS,
+  getSectionLabels,
   countCompletedSections,
   type SectionKey,
 } from '../../hooks/useCarePlan'
@@ -37,6 +37,7 @@ export default function DashboardCarePlanPanel() {
   const total = SECTION_KEYS.length
   const progressPct = Math.round((completedCount / total) * 100)
   const sectionMap = new Map(sections.map((s) => [s.section_key, s]))
+  const sectionLabels = getSectionLabels(t)
   const gaps = carePlan ? detectGaps(sections, t) : []
   const counts = countBySeverity(gaps)
   const allDone = completedCount === total && gaps.length === 0
@@ -69,8 +70,7 @@ export default function DashboardCarePlanPanel() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">{completedCount}</span> {t('care_plan.of_total_sections')
-                .replace('{total}', String(total))}
+              <span className="font-semibold text-slate-700">{completedCount}</span> {t('care_plan.of_total_sections', { total })}
             </p>
             {hasStarted && (
               <Link
@@ -97,7 +97,7 @@ export default function DashboardCarePlanPanel() {
             return (
               <div key={key} className="flex items-center gap-2 py-1.5 px-2.5 rounded-lg bg-slate-50">
                 <SectionDot status={status} />
-                <span className="text-xs font-medium text-slate-700 truncate">{SECTION_LABELS[key]}</span>
+                <span className="text-xs font-medium text-slate-700 truncate">{sectionLabels[key]}</span>
               </div>
             )
           })}
@@ -117,21 +117,19 @@ export default function DashboardCarePlanPanel() {
             {counts.critical > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-100 text-xs font-medium text-red-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                {t('care_plan.gap_critical')
-                  .replace('{count}', String(counts.critical))
-                  .replace('{plural}', counts.critical !== 1 ? 's' : '')}
+                {t('care_plan.gap_critical', { count: counts.critical, plural: counts.critical !== 1 ? 's' : '' })}
               </span>
             )}
             {counts.important > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-xs font-medium text-amber-700">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                {t('care_plan.gap_important').replace('{count}', String(counts.important))}
+                {t('care_plan.gap_important', { count: counts.important })}
               </span>
             )}
             {counts.monitor > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-slate-600">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                {t('care_plan.gap_monitor').replace('{count}', String(counts.monitor))}
+                {t('care_plan.gap_monitor', { count: counts.monitor })}
               </span>
             )}
           </div>
@@ -143,9 +141,7 @@ export default function DashboardCarePlanPanel() {
         <div className="flex items-center gap-2 bg-red-50 border-t border-red-100 px-5 py-2.5">
           <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
           <p className="text-xs text-red-800 font-medium">
-            {t('care_plan.critical_alert')
-              .replace('{count}', String(counts.critical))
-              .replace('{plural}', counts.critical !== 1 ? 's' : '')}
+            {t('care_plan.critical_alert', { count: counts.critical, plural: counts.critical !== 1 ? 's' : '' })}
           </p>
         </div>
       )}

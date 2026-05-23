@@ -8,7 +8,7 @@ import {
   useCarePlan,
   useCarePlanSections,
   getSectionByKey,
-  SECTION_LABELS,
+  getSectionLabels,
   SECTION_KEYS,
   type SectionKey,
 } from '../../hooks/useCarePlan'
@@ -27,11 +27,11 @@ function SectionStatus({ section, t }: { section: CarePlanSection | undefined; t
   return <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400"><Circle className="w-3.5 h-3.5" />{t('care_plan.status_not_started')}</span>
 }
 
-function SectionBlock({ sectionKey, section, t, children }: { sectionKey: SectionKey; section: CarePlanSection | undefined; t: (k: string) => string; children: React.ReactNode }) {
+function SectionBlock({ label, section, t, children }: { label: string; section: CarePlanSection | undefined; t: (k: string) => string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold text-slate-900">{SECTION_LABELS[sectionKey]}</h2>
+        <h2 className="text-base font-bold text-slate-900">{label}</h2>
         <SectionStatus section={section} t={t} />
       </div>
       {children}
@@ -79,6 +79,7 @@ export default function CarePlanSummaryPage() {
   const isLoading = planLoading || sectionsLoading
   const gaps = detectGaps(sections, t)
   const completedCount = sections.filter((s) => s.completion_status === 'complete').length
+  const sectionLabels = getSectionLabels(t)
 
   if (!teamId) {
     return (
@@ -117,10 +118,11 @@ export default function CarePlanSummaryPage() {
                 <h1 className="text-3xl font-extrabold text-slate-900 mb-1">{t('care_plan.summary_title')}</h1>
                 {resident && (
                   <p className="text-sm text-slate-500">
-                    {t('care_plan.summary_for_resident')
-                      .replace('{name}', resident.resident_name ?? t('care_plan.resident_fallback'))
-                      .replace('{completed}', String(completedCount))
-                      .replace('{total}', String(SECTION_KEYS.length))}
+                    {t('care_plan.summary_for_resident', {
+                      name: resident.resident_name ?? t('care_plan.resident_fallback'),
+                      completed: completedCount,
+                      total: SECTION_KEYS.length,
+                    })}
                   </p>
                 )}
               </div>
@@ -138,7 +140,7 @@ export default function CarePlanSummaryPage() {
         {/* ── Print header ── */}
         <div className="hidden print:block max-w-4xl mx-auto px-8 pt-8 pb-4">
           <h1 className="text-2xl font-bold text-slate-900 mb-1">{t('care_plan.summary_title')}</h1>
-          <p className="text-sm text-slate-500">{t('care_plan.generated_on').replace('{date}', new Date().toLocaleDateString())}</p>
+          <p className="text-sm text-slate-500">{t('care_plan.generated_on', { date: new Date().toLocaleDateString() })}</p>
           <hr className="mt-4 border-slate-200" />
         </div>
 
@@ -163,9 +165,7 @@ export default function CarePlanSummaryPage() {
                   <div className="flex items-center gap-2 mb-4">
                     <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
                     <h2 className="text-base font-bold text-amber-900">
-                      {t('care_plan.gaps_identified')
-                        .replace('{count}', String(gaps.length))
-                        .replace('{plural}', gaps.length !== 1 ? 's' : '')}
+                      {t('care_plan.gaps_identified', { count: gaps.length, plural: gaps.length !== 1 ? 's' : '' })}
                     </h2>
                   </div>
                   <div className="space-y-3">
@@ -202,7 +202,7 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'situation')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="situation" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.situation} section={s} t={t}>
                     <TextRow label={t('care_plan.situation_current')} value={d.current_situation as string} emptyLabel={t('care_plan.not_filled_in')} />
                     <TextRow label={t('care_plan.situation_trigger')} value={d.trigger as string} emptyLabel={t('care_plan.not_filled_in')} />
                     <TagList label={t('care_plan.situation_concerns')} values={(d.concerns as string[]) ?? []} />
@@ -231,7 +231,7 @@ export default function CarePlanSummaryPage() {
                   not_applicable: 'bg-slate-50 text-slate-500 border-slate-100',
                 }
                 return (
-                  <SectionBlock sectionKey="authority" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.authority} section={s} t={t}>
                     <div className="space-y-2">
                       {authFields.map((f) => {
                         const status = d[f.key]
@@ -271,7 +271,7 @@ export default function CarePlanSummaryPage() {
                   gap: 'bg-red-50 text-red-700 border-red-100',
                 }
                 return (
-                  <SectionBlock sectionKey="responsibilities" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.responsibilities} section={s} t={t}>
                     <div className="space-y-2">
                       {areas.map((a) => {
                         const areaData = d[a.key]
@@ -311,7 +311,7 @@ export default function CarePlanSummaryPage() {
                   undecided: t('care_plan.living_undecided'),
                 }
                 return (
-                  <SectionBlock sectionKey="living_arrangement" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.living_arrangement} section={s} t={t}>
                     {d.current_arrangement && (
                       <div className="flex items-center gap-3">
                         <span className="text-xs font-semibold text-slate-500">{t('care_plan.living_arrangement_label')}</span>
@@ -342,7 +342,7 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'sustainability')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="sustainability" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.sustainability} section={s} t={t}>
                     {d.primary_caregiver && (
                       <TextRow label={t('care_plan.sust_primary')} value={d.primary_caregiver as string} emptyLabel={t('care_plan.not_filled_in')} />
                     )}
@@ -377,7 +377,7 @@ export default function CarePlanSummaryPage() {
                 const s = getSectionByKey(sections, 'review')
                 const d = (s?.content_json ?? {}) as Record<string, unknown>
                 return (
-                  <SectionBlock sectionKey="review" section={s} t={t}>
+                  <SectionBlock label={sectionLabels.review} section={s} t={t}>
                     <div className="flex flex-wrap gap-4">
                       {d.review_frequency && (
                         <div>

@@ -11,15 +11,9 @@ import {
   useMemoryBookDailyLivingEntries,
   useMemoryBookPreferenceEntries,
 } from '../../hooks/useMemoryBook'
+import { useLocale } from '../../i18n/LocaleContext'
 
-const SECTIONS = [
-  { key: 'identity', label: 'Identity' },
-  { key: 'contacts', label: 'Contacts' },
-  { key: 'medical', label: 'Medical' },
-  { key: 'daily_living', label: 'Daily Living & Preferences' },
-] as const
-
-type SectionKey = (typeof SECTIONS)[number]['key']
+type SectionKey = 'identity' | 'contacts' | 'medical' | 'daily_living'
 
 function SectionRow({ label, filled }: { label: string; filled: boolean }) {
   return (
@@ -34,6 +28,7 @@ function SectionRow({ label, filled }: { label: string; filled: boolean }) {
 }
 
 export default function DashboardMemoryBookPanel() {
+  const { t } = useLocale()
   const { teamId } = useActiveTeam()
   const { user } = useAuth()
   const { data: role, isLoading: roleLoading } = useTeamRole(teamId, user?.id)
@@ -57,6 +52,13 @@ export default function DashboardMemoryBookPanel() {
 
   if (!book) return null
 
+  const SECTIONS: { key: SectionKey; label: string }[] = [
+    { key: 'identity', label: t('dashboard.mb_section_identity') },
+    { key: 'contacts', label: t('dashboard.mb_section_contacts') },
+    { key: 'medical', label: t('dashboard.mb_section_medical') },
+    { key: 'daily_living', label: t('dashboard.mb_section_daily_living') },
+  ]
+
   const filledMap: Record<SectionKey, boolean> = {
     identity: !!identity,
     contacts: contacts.length > 0,
@@ -76,15 +78,15 @@ export default function DashboardMemoryBookPanel() {
             <BookOpen className="w-4 h-4 text-teal-600" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">Memory Book</p>
-            <p className="text-xs font-semibold text-teal-700">Know the person</p>
+            <p className="text-sm font-bold text-slate-900">{t('dashboard.mb_title')}</p>
+            <p className="text-xs font-semibold text-teal-700">{t('dashboard.mb_subtitle')}</p>
           </div>
         </div>
         <Link
           to="/caregiver/memory-schedule"
           className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors"
         >
-          Open
+          {t('common.open')}
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -94,10 +96,10 @@ export default function DashboardMemoryBookPanel() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-xs text-slate-500">
-              <span className="font-semibold text-slate-700">{filledCount}</span> of {total} sections have content
+              <span className="font-semibold text-slate-700">{filledCount}</span> {t('dashboard.mb_sections_have_content', { total })}
             </p>
             {filledCount === total && (
-              <span className="text-xs font-semibold text-teal-700">Complete</span>
+              <span className="text-xs font-semibold text-teal-700">{t('common.complete')}</span>
             )}
           </div>
           <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
