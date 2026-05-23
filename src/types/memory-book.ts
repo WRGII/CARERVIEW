@@ -297,7 +297,47 @@ export type MemoryBookSection =
   | "finances"
   | "subscriptions"
   | "vehicle"
-  | "social_accounts";
+  | "social_accounts"
+  | "household_providers";
+
+export type HouseholdProviderCategory = "utility" | "maintenance";
+
+export type UtilitySubCategory =
+  | "electricity"
+  | "water"
+  | "gas"
+  | "internet"
+  | "phone_home"
+  | "mobile"
+  | "waste_removal"
+  | "other";
+
+export type MaintenanceSubCategory =
+  | "plumber"
+  | "electrician"
+  | "lawn_care"
+  | "hvac"
+  | "pest_control"
+  | "handyman"
+  | "other";
+
+export type MemoryBookHouseholdProvider = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  category: HouseholdProviderCategory;
+  sub_category: string;
+  provider_name: string;
+  account_number: string;
+  phone: string;
+  website: string;
+  notes: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
 
 export type HouseholdSection =
   | "providers"

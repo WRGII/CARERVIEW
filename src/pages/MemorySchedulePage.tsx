@@ -23,6 +23,7 @@ import {
   useMemoryBookMedicalEntries,
   useMemoryBookPreferenceEntries,
   useMemoryBookDailyLivingEntries,
+  useMemoryBookHouseholdProviders,
 } from "../hooks/useMemoryBook";
 import type { MemoryBookTab as MemoryBookTabKey } from "../types/memory-book";
 import OverviewTab from "../components/memory-book/OverviewTab";
@@ -81,6 +82,7 @@ export default function MemorySchedulePage() {
   const { data: medicalEntries = [] } = useMemoryBookMedicalEntries(bookId);
   const { data: preferenceEntries = [] } = useMemoryBookPreferenceEntries(bookId);
   const { data: dailyLivingEntries = [] } = useMemoryBookDailyLivingEntries(bookId);
+  const { data: householdProviders = [] } = useMemoryBookHouseholdProviders(bookId);
 
   const hasIdentity = !!identity;
   const hasContacts = contacts.length > 0;
@@ -90,6 +92,7 @@ export default function MemorySchedulePage() {
   const hasSubscriptions = subscriptions.length > 0;
   const hasVehicles = vehicles.length > 0;
   const hasSocialAccounts = socialAccounts.length > 0;
+  const hasHouseholdProviders = householdProviders.length > 0;
   const hasDailyLiving = dailyLivingEntries.length > 0 || !!preferences || preferenceEntries.length > 0;
 
   const handlePrint = () => window.print();
@@ -275,6 +278,7 @@ export default function MemorySchedulePage() {
               hasSubscriptions={hasSubscriptions}
               hasVehicles={hasVehicles}
               hasSocialAccounts={hasSocialAccounts}
+              hasHouseholdProviders={hasHouseholdProviders}
             />
           )}
 
