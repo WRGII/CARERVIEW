@@ -25,7 +25,7 @@ const NAMESPACES = [
   "team", "accept_invite", "create_account", "reset_pw", "not_found",
   "admin", "policy", "family_setup", "inactive", "billing", "delete_acct",
   "subscription", "plan_pill", "dementia", "active_cg", "lang", "memory_book",
-  "community_banner",
+  "community_banner", "care_plan", "care_plan_gaps", "care_hub", "resident_profile",
 ];
 
 function getNamespace(key: string): string {
