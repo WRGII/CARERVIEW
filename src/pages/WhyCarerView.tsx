@@ -121,11 +121,11 @@ export default function WhyCarerView() {
 
         {/* HERO */}
         <div className="pt-6 pb-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
             <span className="block text-slate-gray">{t('why.hero_title')}</span>
             <span className="block text-cyan-700">{t('why.hero_title_line2')}</span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t('why.hero_body')}
           </p>
         </div>
@@ -136,8 +136,8 @@ export default function WhyCarerView() {
             <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest mb-2">
               {t('why.careplan_eyebrow')}
             </p>
-            <h2 className="text-4xl font-bold text-slate-gray mb-5">{t('why.careplan_title')}</h2>
-            <p className="text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-5">{t('why.careplan_title')}</h2>
+            <p className="text-lg sm:text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
               {t('why.careplan_body')}
             </p>
           </div>
@@ -242,7 +242,7 @@ export default function WhyCarerView() {
         {/* FOUR PILLARS — HOW IT WORKS */}
         <div className="py-16 sm:py-20">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-bold text-slate-gray mb-6">{t('why.shared_lang_title')}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-6">{t('why.shared_lang_title')}</h2>
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {howCards.map(({ icon: Icon, bg, ic, titleKey, bodyKey }) => (
@@ -262,8 +262,8 @@ export default function WhyCarerView() {
         {/* WHAT YOU'LL OBSERVE */}
         <div className="py-16 sm:py-20">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-bold text-slate-gray mb-6">{t('why.track_title')}</h2>
-            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">{t('why.track_body')}</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-6">{t('why.track_title')}</h2>
+            <p className="text-lg sm:text-xl text-slate-gray/80 max-w-3xl mx-auto">{t('why.track_body')}</p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-2">
@@ -333,7 +333,7 @@ export default function WhyCarerView() {
         <section className="pb-20">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-slate-gray mb-4">Frequently Asked Questions</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">Frequently Asked Questions</h2>
               <p className="text-lg text-slate-gray/70">Common questions about CarerView, care planning, and coordination.</p>
             </div>
             <div className="space-y-3">
@@ -353,7 +353,7 @@ export default function WhyCarerView() {
         {/* Tutorial Callout */}
         <section className="pb-12">
           <div className="max-w-3xl mx-auto">
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
                 <GraduationCap className="w-7 h-7 text-white" />
               </div>
@@ -377,7 +377,7 @@ export default function WhyCarerView() {
         <section className="pb-24">
           <div className="max-w-xl mx-auto">
             <div className="text-center mb-10">
-              <h2 className="text-4xl font-bold text-slate-gray mb-4">{t('why.cta_trend_title')}</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">{t('why.cta_trend_title')}</h2>
               <p className="text-lg text-slate-gray/75 leading-relaxed">{t('why.cta_trend_body')}</p>
             </div>
             <AuthForm initialMode="signup" showToggle={true} />

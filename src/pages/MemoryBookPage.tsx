@@ -224,11 +224,11 @@ export default function MemoryBookPage() {
             <BookOpen className="w-4 h-4" />
             {t("mb_page.eyebrow")}
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
             <span className="block text-slate-gray">{t("mb_page.hero_title")}</span>
             <span className="block text-cyan-700">{t("mb_page.hero_title_line2")}</span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t("mb_page.hero_body")}
           </p>
         </div>
@@ -236,7 +236,7 @@ export default function MemoryBookPage() {
         {/* VISUAL MOCK-UP */}
         <div className="py-14">
           <div className="text-center mb-10">
-            <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.mock_title")}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.mock_title")}</h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">{t("mb_page.mock_subtitle")}</p>
           </div>
           <MemoryBookMockup t={t} />
@@ -245,10 +245,10 @@ export default function MemoryBookPage() {
         {/* BENEFITS */}
         <div className="py-14">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.benefits_title")}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.benefits_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.benefits_subtitle")}</p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {benefits.map((b) => (
               <Card key={b.title} className="border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-warm-white">
                 <CardContent className="p-6 text-center">
@@ -263,7 +263,7 @@ export default function MemoryBookPage() {
         {/* TWO-PILLAR FEATURES */}
         <div className="py-14">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.features_title")}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.features_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.features_subtitle")}</p>
           </div>
 
@@ -317,7 +317,7 @@ export default function MemoryBookPage() {
         {/* WHO IT HELPS */}
         <section className="pb-14">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.personas_title")}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.personas_title")}</h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">{t("mb_page.personas_subtitle")}</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 items-stretch">
@@ -348,7 +348,7 @@ export default function MemoryBookPage() {
         <section className="pb-16">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.faq_title")}</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.faq_title")}</h2>
               <p className="text-lg text-slate-600">{t("mb_page.faq_subtitle")}</p>
             </div>
             <div className="space-y-3">
@@ -392,7 +392,7 @@ export default function MemoryBookPage() {
         <section className="pb-24">
           <div className="max-w-xl mx-auto">
             <div className="text-center mb-10">
-              <h2 className="text-4xl font-bold text-slate-800 mb-4">{t("mb_page.cta_title")}</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-4">{t("mb_page.cta_title")}</h2>
               <p className="text-lg text-slate-600 leading-relaxed">{t("mb_page.cta_body")}</p>
             </div>
             <AuthForm initialMode="signup" showToggle={true} />

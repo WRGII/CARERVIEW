@@ -65,10 +65,10 @@ export default function NewCarerPage() {
             <p className="text-xs font-semibold text-cyan-primary uppercase tracking-widest mb-4">
               {t('new_carer.hero_eyebrow')}
             </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-warm-white mb-4 leading-tight max-w-4xl mx-auto">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight text-warm-white mb-4 leading-tight max-w-4xl mx-auto">
               {t('new_carer.hero_title')}
             </h1>
-            <p className="text-xl md:text-2xl font-semibold text-cyan-primary mb-6 leading-snug max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-2xl font-semibold text-cyan-primary mb-6 leading-snug max-w-3xl mx-auto">
               {t('new_carer.hero_subtitle')}
             </p>
             <div className="max-w-3xl mx-auto space-y-3">
@@ -89,7 +89,7 @@ export default function NewCarerPage() {
 
         {/* ── Summary blocks ── */}
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 gap-6">
             {/* Helps you */}
             <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm">
               <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function NewCarerPage() {
           />
 
           {/* Tutorial Callout */}
-          <div className="mt-8 rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="mt-8 rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>

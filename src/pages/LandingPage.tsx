@@ -148,7 +148,7 @@ export default function LandingPage() {
         {/* Hero */}
         <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-10 sm:py-14 text-center">
           <div className="flex flex-col items-center justify-center mb-4">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
               {t('common.app_name')}
             </h1>
             <p className="text-base font-semibold tracking-widest text-cyan-primary uppercase">
@@ -156,11 +156,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 leading-tight max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 leading-tight max-w-4xl mx-auto">
             {t('landing.hero_title')}
           </h2>
 
-          <p className="mt-4 text-xl md:text-2xl text-slate-100 max-w-4xl mx-auto leading-relaxed">
+          <p className="mt-4 text-lg sm:text-xl md:text-2xl text-slate-100 max-w-4xl mx-auto leading-relaxed">
             {t('landing.hero_body')}
           </p>
         </div>
@@ -171,8 +171,8 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.pillars_eyebrow')}
             </p>
-            <h2 className="text-4xl font-bold text-slate-gray mb-5">{t('landing.pillars_title')}</h2>
-            <p className="text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-5">{t('landing.pillars_title')}</h2>
+            <p className="text-lg sm:text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
               {t('landing.pillars_body')}
             </p>
           </div>
@@ -213,8 +213,8 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest mb-2">
               {t('landing.careplan_eyebrow')}
             </p>
-            <h2 className="text-4xl font-bold text-slate-gray mb-5">{t('landing.careplan_title')}</h2>
-            <p className="text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-5">{t('landing.careplan_title')}</h2>
+            <p className="text-lg sm:text-xl text-slate-gray/70 max-w-3xl mx-auto leading-relaxed">
               {t('landing.careplan_body')}
             </p>
           </div>
@@ -341,7 +341,7 @@ export default function LandingPage() {
                   {t('landing.mb_eyebrow')}
                 </p>
               </div>
-              <h2 className="text-4xl font-bold text-slate-gray mb-5 leading-tight max-w-3xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-5 leading-tight max-w-3xl mx-auto">
                 {t('landing.mb_title')}
               </h2>
               <p className="text-xl text-slate-gray/70 max-w-2xl mx-auto leading-relaxed">
@@ -394,18 +394,18 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.scale_eyebrow')}
             </p>
-            <h2 className="text-4xl font-bold text-slate-800 mb-5">{t('landing.vital_note')}</h2>
-            <p className="text-xl text-slate-gray/80 max-w-3xl mx-auto">{t('landing.scale_body')}</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 mb-5">{t('landing.vital_note')}</h2>
+            <p className="text-lg sm:text-xl text-slate-gray/80 max-w-3xl mx-auto">{t('landing.scale_body')}</p>
           </div>
 
           <div className="mb-8">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
               {[
-                { num: 1, bg: 'bg-mint-green', rounding: 'sm:rounded-l-xl' },
+                { num: 1, bg: 'bg-mint-green', rounding: 'rounded-l-xl' },
                 { num: 2, bg: 'bg-mint-green/70', rounding: '' },
-                { num: 3, bg: 'bg-cyan-primary/40', rounding: 'col-span-2 sm:col-span-1' },
-                { num: 4, bg: 'bg-peach-blush/70', rounding: '' },
-                { num: 5, bg: 'bg-peach-blush', rounding: 'sm:rounded-r-xl' },
+                { num: 3, bg: 'bg-cyan-primary/40', rounding: '' },
+                { num: 4, bg: 'bg-peach-blush/70', rounding: 'hidden sm:flex' },
+                { num: 5, bg: 'bg-peach-blush', rounding: 'rounded-r-xl hidden sm:flex' },
               ].map(({ num, bg, rounding }) => (
                 <div key={num} className={`${bg} ${rounding} py-6 px-3 flex flex-col items-center justify-center text-slate-700`}>
                   <span className="text-3xl font-bold mb-1">{num}</span>
@@ -447,7 +447,7 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-2">
               {t('landing.scenarios_eyebrow')}
             </p>
-            <h2 className="text-4xl font-bold text-slate-gray mb-4">{t('landing.scenarios_title')}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">{t('landing.scenarios_title')}</h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
             {scenarios.map(({ titleKey, bodyKey, icon: Icon, color, iconColor }) => (
@@ -496,7 +496,7 @@ export default function LandingPage() {
         {/* Trust & Privacy */}
         <div className="py-10 sm:py-14 bg-gradient-to-r from-mint-green/20 to-cyan-primary/10 rounded-3xl">
           <div className="max-w-4xl mx-auto px-8 text-center">
-            <h2 className="text-4xl font-bold text-slate-gray mb-8">{t('landing.trust_title')}</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-8">{t('landing.trust_title')}</h2>
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 { icon: Shield, bg: 'bg-cyan-primary/20', ic: 'text-cyan-primary', k: '1' },
@@ -571,7 +571,7 @@ export default function LandingPage() {
         <div id="get-started" className="py-12">
           <div className="max-w-xl mx-auto">
             <div className="text-center mb-7">
-              <h2 className="text-4xl font-bold text-slate-gray mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">
                 {t('landing.getstarted_title')}
               </h2>
               <p className="text-lg text-slate-gray/75 leading-relaxed">

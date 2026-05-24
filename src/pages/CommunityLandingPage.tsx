@@ -190,18 +190,18 @@ export default function CommunityLandingPage() {
           )}
 
           {/* Community info strip */}
-          <div className="grid grid-cols-3 gap-3 pb-2">
-            <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <p className="text-xs font-semibold text-slate-700">Real caregivers</p>
-              <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Family &amp; professional</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-2">
+            <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-slate-700">Real caregivers</p>
+              <p className="text-xs text-slate-400 mt-0.5">Family &amp; professional</p>
             </div>
-            <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <p className="text-xs font-semibold text-slate-700">Peer support</p>
-              <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Not medical advice</p>
+            <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-slate-700">Peer support</p>
+              <p className="text-xs text-slate-400 mt-0.5">Not medical advice</p>
             </div>
-            <div className="bg-white border border-slate-100 rounded-xl px-3 py-3 text-center">
-              <p className="text-xs font-semibold text-slate-700">Post anon</p>
-              <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">Your handle is hidden</p>
+            <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-slate-700">Post anon</p>
+              <p className="text-xs text-slate-400 mt-0.5">Your handle is hidden</p>
             </div>
           </div>
 

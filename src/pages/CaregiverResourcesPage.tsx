@@ -103,10 +103,10 @@ export default function CaregiverResourcesPage() {
               {t('public.caregiver_resources.hero_heading')}
             </h1>
             <div className="max-w-2xl mx-auto space-y-3">
-              <p className="text-lg text-slate-100 leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-100 leading-relaxed">
                 {t('public.caregiver_resources.hero_intro_1')}
               </p>
-              <p className="text-lg text-slate-100 leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-100 leading-relaxed">
                 {t('public.caregiver_resources.hero_intro_2')}
               </p>
             </div>
@@ -280,7 +280,7 @@ export default function CaregiverResourcesPage() {
 
         {/* Tutorial Callout */}
         <section className="py-10 px-4 max-w-3xl mx-auto">
-          <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="rounded-2xl bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-primary flex items-center justify-center shadow-md">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>

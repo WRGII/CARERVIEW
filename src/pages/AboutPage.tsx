@@ -45,7 +45,7 @@ export default function AboutPage() {
 
         {/* Page title */}
         <div className="pt-6 pb-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
             <span className="block text-slate-gray">{t('about.page_title')}</span>
             <span className="block text-cyan-700">{t('about.origin_heading')}</span>
           </h1>
@@ -71,7 +71,7 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {FEATURES.map(({ icon: Icon, color, iconColor, titleKey, bodyKey }) => (
               <div
                 key={titleKey}
@@ -114,7 +114,7 @@ export default function AboutPage() {
             <div className="flex-shrink-0">
               <Link
                 to="/create-account"
-                className="inline-flex items-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-xl bg-cyan-primary px-8 py-4 text-lg font-semibold text-warm-white shadow-lg hover:bg-cyan-hover transition-all duration-200 hover:shadow-xl"
               >
                 {t('about.cta_button')} <ArrowRight className="w-5 h-5" />
               </Link>
