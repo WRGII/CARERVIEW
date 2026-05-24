@@ -121,8 +121,9 @@ export default function WhyCarerView() {
 
         {/* HERO */}
         <div className="pt-6 pb-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-6 leading-tight max-w-4xl mx-auto">
-            {t('why.hero_title')}
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+            <span className="block text-slate-gray">{t('why.hero_title')}</span>
+            <span className="block text-cyan-700">{t('why.hero_title_line2')}</span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t('why.hero_body')}
