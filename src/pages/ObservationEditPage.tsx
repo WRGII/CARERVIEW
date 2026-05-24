@@ -12,6 +12,7 @@ import { ErrorBoundary } from "../components/util/ErrorBoundary";
 import { useMemberFrozen } from "../hooks/useMemberFrozen";
 import Breadcrumbs from "../components/common/Breadcrumbs";
 import { Button } from "../components/ui/Button";
+import { useUserTeamsResidents } from "../hooks/useMemoryBook";
 
 type FormType = "ADL" | "IADL" | "COMPREHENSIVE";
 
@@ -23,6 +24,7 @@ export default function ObservationEditPage() {
   const { user, profile, loading: authLoading, error: authError } = useAuth();
   const { data: obs, isLoading: obsLoading, error: obsError } = useObservationById(id);
   const frozen = useMemberFrozen(obs?.team_id ?? null);
+  const { data: residentOptions = [] } = useUserTeamsResidents(user?.id);
 
   if (!id) return <ErrorMessage message={t('obs_edit.missing_id')} />;
 
@@ -83,6 +85,16 @@ export default function ObservationEditPage() {
           observationId={obs.id}
           formType={formType}
           onComplete={() => navigate("/caregiver", { replace: true })}
+          residentOptions={residentOptions}
+          initialResidentName={obs.resident_name ?? undefined}
+          initialDate={obs.observation_date
+            ? (() => {
+                const [y, m, d] = obs.observation_date.split('-');
+                return `${m}/${d}/${y}`;
+              })()
+            : undefined}
+          initialMode={obs.mode_of_observation as 'In Person' | 'Voice Call' | 'Video Call' | undefined}
+          initialNotes={obs.notes ?? undefined}
         />
       </ErrorBoundary>
     </PageLayout>

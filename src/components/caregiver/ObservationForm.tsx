@@ -1,5 +1,6 @@
 // src/components/caregiver/ObservationForm.tsx
 import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../../hooks/useAuth'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -7,11 +8,17 @@ import { useLegend } from '../../hooks/useLegend'
 import { useUpsertObservationAndResponses } from '../../hooks/useObservations'
 import { useCategoryQuestions } from '../../hooks/useCategoryQuestions'
 import ScorePicker from '../ui/ScorePicker'
+import type { ResidentOption } from '../../hooks/useMemoryBook'
 
 interface ObservationFormProps {
   observationId?: string
   formType: 'ADL' | 'IADL' | 'COMPREHENSIVE'
   onComplete: () => void
+  residentOptions?: ResidentOption[]
+  initialResidentName?: string | null
+  initialDate?: string
+  initialMode?: 'In Person' | 'Voice Call' | 'Video Call'
+  initialNotes?: string
 }
 
 type CategoryQuestionRow = {
@@ -40,6 +47,11 @@ export default function ObservationForm({
   observationId,
   formType,
   onComplete,
+  residentOptions,
+  initialResidentName,
+  initialDate,
+  initialMode,
+  initialNotes,
 }: ObservationFormProps) {
   const { t } = useLocale()
   const { user, profile, loading: authLoading } = useAuth()
@@ -56,11 +68,11 @@ export default function ObservationForm({
     }
   }, [observationId])
 
-  const [residentName, setResidentName] = useState('')
-  const [dateOfObservation, setDateOfObservation] = useState('')
+  const [residentName, setResidentName] = useState(() => initialResidentName ?? '')
+  const [dateOfObservation, setDateOfObservation] = useState(initialDate ?? '')
   const [modeOfObservation, setModeOfObservation] =
-    useState<'In Person' | 'Voice Call' | 'Video Call'>('In Person')
-  const [notes, setNotes] = useState('')
+    useState<'In Person' | 'Voice Call' | 'Video Call'>(initialMode ?? 'In Person')
+  const [notes, setNotes] = useState(initialNotes ?? '')
   const [answers, setAnswers] = useState<Record<string, number | undefined>>({})
   const [categoryNotes, setCategoryNotes] = useState<Record<string, string>>({})
   const [dateError, setDateError] = useState('')
@@ -81,14 +93,14 @@ export default function ObservationForm({
   }, [hasUnsavedChanges])
 
   useEffect(() => {
-    if (!dateOfObservation) {
-      const t = new Date()
-      const mm = String(t.getMonth() + 1).padStart(2, '0')
-      const dd = String(t.getDate()).padStart(2, '0')
-      const yyyy = t.getFullYear()
+    if (!dateOfObservation && !initialDate) {
+      const now = new Date()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const dd = String(now.getDate()).padStart(2, '0')
+      const yyyy = now.getFullYear()
       setDateOfObservation(`${mm}/${dd}/${yyyy}`)
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasFormContent = residentName.trim() !== '' || notes.trim() !== '' || Object.keys(answers).length > 0
 
@@ -391,12 +403,52 @@ export default function ObservationForm({
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 {t('obs_form.resident_label')}
               </label>
-              <input
-                value={residentName}
-                onChange={(e) => setResidentName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors placeholder:text-slate-400"
-                placeholder={t('obs_form.resident_placeholder')}
-              />
+              {residentOptions && residentOptions.length > 1 ? (
+                /* Multiple teams: show a dropdown so user can pick the right resident */
+                <select
+                  value={residentName}
+                  onChange={(e) => setResidentName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors"
+                >
+                  {residentOptions.map((opt) => (
+                    <option key={opt.teamId} value={opt.residentName}>
+                      {opt.preferredName ? `${opt.residentName} ("${opt.preferredName}")` : opt.residentName}
+                    </option>
+                  ))}
+                </select>
+              ) : residentOptions && residentOptions.length === 1 ? (
+                /* Single resident: display locked field with profile link */
+                <div className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-base flex items-center justify-between gap-2">
+                  <span className="font-medium truncate">
+                    {residentOptions[0].preferredName
+                      ? `${residentOptions[0].residentName} ("${residentOptions[0].preferredName}")`
+                      : residentOptions[0].residentName}
+                  </span>
+                  <Link
+                    to="/caregiver/resident"
+                    className="text-xs font-medium text-cyan-primary hover:text-cyan-hover shrink-0 transition-colors"
+                    tabIndex={-1}
+                  >
+                    {t('obs_form.resident_edit_link')}
+                  </Link>
+                </div>
+              ) : (
+                /* No resident profile yet: free-text with a prompt */
+                <div>
+                  <input
+                    value={residentName}
+                    onChange={(e) => setResidentName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-primary focus:outline-none focus:ring-2 focus:ring-cyan-primary/20 bg-white text-slate-800 text-base transition-colors placeholder:text-slate-400"
+                    placeholder={t('obs_form.resident_placeholder')}
+                  />
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    {t('obs_form.resident_no_profile_hint')}{' '}
+                    <Link to="/caregiver/resident" className="text-cyan-primary hover:underline font-medium">
+                      {t('obs_form.resident_no_profile_link')}
+                    </Link>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Date */}

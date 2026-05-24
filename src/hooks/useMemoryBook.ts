@@ -121,6 +121,60 @@ export function useTeamResident(teamId: string | null) {
 /** @deprecated Use useTeamResident */
 export const useTeamPatient = useTeamResident;
 
+export type ResidentOption = {
+  teamId: string;
+  teamName: string;
+  residentName: string;
+  preferredName: string | null;
+};
+
+export function useUserTeamsResidents(userId?: string | null) {
+  return useQuery({
+    queryKey: ["user-teams-residents", userId],
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<ResidentOption[]> => {
+      if (!userId) return [];
+
+      const { data: memberships, error: memberErr } = await supabase
+        .from("cv_team_members")
+        .select("team_id, cv_team:team_id(id, name)")
+        .eq("user_id", userId)
+        .eq("state", "active");
+
+      if (memberErr) throw memberErr;
+      if (!memberships || memberships.length === 0) return [];
+
+      const teamIds = memberships.map((m) => m.team_id);
+
+      const { data: residents, error: resErr } = await supabase
+        .from("cv_team_patient")
+        .select("team_id, full_name, preferred_name")
+        .in("team_id", teamIds);
+
+      if (resErr) throw resErr;
+
+      const residentMap = new Map(
+        (residents ?? []).map((r) => [r.team_id, r])
+      );
+
+      return memberships
+        .map((m) => {
+          const res = residentMap.get(m.team_id);
+          if (!res) return null;
+          const team = Array.isArray(m.cv_team) ? m.cv_team[0] : (m.cv_team as any);
+          return {
+            teamId: m.team_id,
+            teamName: team?.name ?? "",
+            residentName: res.full_name,
+            preferredName: res.preferred_name ?? null,
+          } as ResidentOption;
+        })
+        .filter((o): o is ResidentOption => o !== null);
+    },
+  });
+}
+
 export function useUpsertResident() {
   const queryClient = useQueryClient();
   return useMutation({
