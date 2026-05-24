@@ -100,6 +100,11 @@ export default function GuestInviteModal({ residentOptions, onClose }: GuestInvi
         }
       )
 
+      if (!resp.ok) {
+        const errBody = await resp.json().catch(() => ({}))
+        throw new Error(errBody?.error || t('guest_invite.err_generic'))
+      }
+
       const result = await resp.json()
       setEmailSent(result.sent === true)
       setStep('sent')
