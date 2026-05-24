@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList } from 'lucide-react';
+import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList, UserPlus } from 'lucide-react';
 import GuidedTutorial from '../components/caregiver/GuidedTutorial';
+import GuestInviteModal from '../components/caregiver/GuestInviteModal';
 
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
@@ -26,6 +27,7 @@ import { localeToIntl } from '../lib/utils';
 import { getLastModule, type LastModule } from '../lib/lastModule';
 import { ObservationList } from '../components/caregiver/ObservationList';
 import { ViewObservation } from '../components/caregiver/ViewObservation';
+import { useUserTeamsResidents } from '../hooks/useMemoryBook';
 
 type ViewMode = 'list' | 'view';
 type ExportFormat = 'docx' | 'csv';
@@ -95,6 +97,9 @@ export default function CaregiverPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [lastModule, setLastModule] = useState<LastModule>(null);
+  const [showGuestInvite, setShowGuestInvite] = useState(false);
+
+  const { data: residentOptions = [] } = useUserTeamsResidents(user?.id);
 
   useEffect(() => {
     setLastModule(getLastModule());
@@ -230,10 +235,20 @@ export default function CaregiverPage() {
             </h2>
             <p className="text-xs font-semibold text-amber-700 mt-0.5">{t('care_hub.mental_model_obs_tag')}</p>
           </div>
-          <Button data-tutorial="new-observation" variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
-            <Plus className="w-3.5 h-3.5" />
-            {t('caregiver.new_obs_btn')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowGuestInvite(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 transition-colors"
+              title={t('guest_invite.button_tooltip')}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              {t('guest_invite.button_label')}
+            </button>
+            <Button data-tutorial="new-observation" variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+              <Plus className="w-3.5 h-3.5" />
+              {t('caregiver.new_obs_btn')}
+            </Button>
+          </div>
         </div>
 
         {observations.length === 0 ? (
@@ -335,10 +350,19 @@ export default function CaregiverPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-800">{t('caregiver.observations_title')}</h2>
-              <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5" />
-                {t('caregiver.new_obs_btn')}
-              </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowGuestInvite(true)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {t('guest_invite.button_label')}
+                </button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" />
+                  {t('caregiver.new_obs_btn')}
+                </Button>
+              </div>
             </div>
             <ObservationList
               onViewObservation={handleViewObservation}
@@ -387,6 +411,12 @@ export default function CaregiverPage() {
             </div>
           </section>
         </div>
+      )}
+      {showGuestInvite && (
+        <GuestInviteModal
+          residentOptions={residentOptions}
+          onClose={() => setShowGuestInvite(false)}
+        />
       )}
     </PageLayout>
   );

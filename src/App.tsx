@@ -138,6 +138,7 @@ import DementiaScalePage from "./pages/DementiaScalePage";
 
 import AcceptInvite from "./pages/AcceptInvite";
 import InviteSetupPage from "./pages/InviteSetupPage";
+const GuestObservationPage = lazy(() => import("./pages/GuestObservationPage"));
 import TeamSettings from "./pages/TeamSettings";
 const MemorySchedulePage = lazy(() => import("./pages/MemorySchedulePage"));
 
@@ -207,6 +208,9 @@ export default function App() {
                   {/* Invite accept */}
                   <Route path="/join" element={<AcceptInvite />} />
                   <Route path="/invite-setup" element={<InviteSetupPage />} />
+
+                  {/* Guest observation — public, no auth required */}
+                  <Route path="/guest-observation" element={<GuestObservationPage />} />
 
                   {/* Admin */}
                   <Route

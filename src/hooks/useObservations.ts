@@ -29,7 +29,8 @@ export function useObservations() {
           caregiver_email,
           created_at,
           updated_at,
-          form_type
+          form_type,
+          is_guest_submission
         `
         )
         .eq('user_id', user.id)

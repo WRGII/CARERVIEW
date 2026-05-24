@@ -8,7 +8,7 @@ import { Loading } from '../ui/Loading'
 import { Dropdown } from '../ui/Dropdown'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { useFormatDate } from '../../hooks/useFormatDate'
-import { Eye, FileText, Download, Trash2, File, Table } from 'lucide-react'
+import { Eye, FileText, Download, Trash2, File, Table, UserCheck } from 'lucide-react'
 
 interface ObservationListProps {
   onViewObservation: (id: string) => void
@@ -28,6 +28,7 @@ type ObservationRow = {
   updated_at: string
   /** DB value written by the form: ADL | IADL | BOTH */
   form_type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null
+  is_guest_submission?: boolean | null
 }
 
 const FormTypeChip: React.FC<{ type?: 'ADL' | 'IADL' | 'COMPREHENSIVE' | null }> = ({ type }) => {
@@ -99,11 +100,17 @@ export const ObservationList: React.FC<ObservationListProps> = ({
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-lg font-semibold text-slate-gray truncate">
                         {o.resident_name || t('obs_list.unnamed_resident')}
                       </h3>
                       <FormTypeChip type={o.form_type ?? null} />
+                      {o.is_guest_submission && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border bg-amber-50 border-amber-200 text-amber-700">
+                          <UserCheck className="w-3 h-3" />
+                          {t('obs_list.guest_badge')}
+                        </span>
+                      )}
                     </div>
                     <p className="text-slate-gray/80">{t('obs_list.observed_on') + ' '}{formatDate(o.observation_date)}</p>
                     {o.notes && <p className="text-sm text-slate-gray/60 mt-1 line-clamp-2">{o.notes}</p>}
