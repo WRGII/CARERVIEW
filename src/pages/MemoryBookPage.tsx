@@ -219,13 +219,14 @@ export default function MemoryBookPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <div className="pt-6 pb-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-4">
+        <div className="pt-6 pb-8 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
             {t("mb_page.eyebrow")}
           </div>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-gray mb-4 max-w-4xl mx-auto">
-            {t("mb_page.hero_title")}
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+            <span className="block text-slate-gray">{t("mb_page.hero_title")}</span>
+            <span className="block text-cyan-700">{t("mb_page.hero_title_line2")}</span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
             {t("mb_page.hero_body")}

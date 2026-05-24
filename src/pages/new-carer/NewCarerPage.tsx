@@ -60,27 +60,27 @@ export default function NewCarerPage() {
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         {/* ── Hero ── */}
-        <section className="bg-gradient-to-br from-slate-800 to-slate-900 text-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-            <p className="text-xs font-semibold text-teal-400 uppercase tracking-widest mb-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2">
+          <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-10 sm:py-14 text-center">
+            <p className="text-xs font-semibold text-cyan-primary uppercase tracking-widest mb-4">
               {t('new_carer.hero_eyebrow')}
             </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-warm-white mb-4 leading-tight max-w-4xl mx-auto">
               {t('new_carer.hero_title')}
             </h1>
-            <p className="text-2xl md:text-3xl font-semibold text-teal-300 mb-6 leading-snug">
+            <p className="text-xl md:text-2xl font-semibold text-cyan-primary mb-6 leading-snug max-w-3xl mx-auto">
               {t('new_carer.hero_subtitle')}
             </p>
-            <div className="max-w-3xl space-y-3">
-              <p className="text-lg text-slate-300 leading-relaxed">
+            <div className="max-w-3xl mx-auto space-y-3">
+              <p className="text-lg text-slate-100 leading-relaxed">
                 {t('new_carer.hero_intro')}
               </p>
-              <p className="text-lg text-slate-300 leading-relaxed">
+              <p className="text-lg text-slate-100 leading-relaxed">
                 {t('new_carer.hero_intro_2')}
               </p>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* ── Breadcrumb (below hero) ── */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">

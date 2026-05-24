@@ -44,13 +44,11 @@ export default function AboutPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
         {/* Page title */}
-        <div className="text-center mb-14">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-gray mb-4">
-            {t('about.page_title')}
+        <div className="pt-6 pb-8 text-center">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+            <span className="block text-slate-gray">{t('about.page_title')}</span>
+            <span className="block text-cyan-700">{t('about.origin_heading')}</span>
           </h1>
-          <p className="text-lg text-slate-gray/60 font-medium uppercase tracking-widest">
-            {t('about.origin_heading')}
-          </p>
         </div>
 
         {/* Origin story */}

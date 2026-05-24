@@ -95,22 +95,21 @@ export default function CaregiverResourcesPage() {
 
         {/* SECTION A — Hero */}
         <section>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Dementia Care</span>
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Memory Loss</span>
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">New Caregiver</span>
-            <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 text-slate-600">Alzheimer's Support</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight mb-4">
-            {t('public.caregiver_resources.hero_heading')}
-          </h1>
-          <div className="bg-white rounded-2xl border border-slate-200 px-6 py-6 space-y-3">
-            <p className="text-base text-slate-600 leading-relaxed">
-              {t('public.caregiver_resources.hero_intro_1')}
+          <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-10 sm:py-14 text-center mb-6">
+            <p className="text-xs font-semibold text-cyan-primary uppercase tracking-widest mb-4">
+              Dementia Care &middot; Memory Loss &middot; New Caregiver &middot; Alzheimer's Support
             </p>
-            <p className="text-base text-slate-600 leading-relaxed">
-              {t('public.caregiver_resources.hero_intro_2')}
-            </p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 leading-tight max-w-3xl mx-auto">
+              {t('public.caregiver_resources.hero_heading')}
+            </h1>
+            <div className="max-w-2xl mx-auto space-y-3">
+              <p className="text-lg text-slate-100 leading-relaxed">
+                {t('public.caregiver_resources.hero_intro_1')}
+              </p>
+              <p className="text-lg text-slate-100 leading-relaxed">
+                {t('public.caregiver_resources.hero_intro_2')}
+              </p>
+            </div>
           </div>
         </section>
 
