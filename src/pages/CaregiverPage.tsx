@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList, UserPlus } from 'lucide-react';
+import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList } from 'lucide-react';
 import GuidedTutorial from '../components/caregiver/GuidedTutorial';
 import GuestInviteModal from '../components/caregiver/GuestInviteModal';
 
@@ -238,10 +238,9 @@ export default function CaregiverPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowGuestInvite(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 transition-colors"
+              className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-1.5 transition-colors"
               title={t('guest_invite.button_tooltip')}
             >
-              <UserPlus className="w-3.5 h-3.5" />
               {t('guest_invite.button_label')}
             </button>
             <Button data-tutorial="new-observation" variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
@@ -353,9 +352,8 @@ export default function CaregiverPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowGuestInvite(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 transition-colors"
+                  className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-1.5 transition-colors"
                 >
-                  <UserPlus className="w-3.5 h-3.5" />
                   {t('guest_invite.button_label')}
                 </button>
                 <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
