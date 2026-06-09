@@ -243,6 +243,363 @@ export function buildMemberJoinedEmail(params: {
   });
 }
 
+// ── Welcome email (first sign-in) ─────────────────────────────────────────────
+
+export function buildWelcomeEmail(params: {
+  displayName: string;
+  dashboardLink: string;
+}): string {
+  const { displayName, dashboardLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const body = `
+    <h1 class="title">Welcome to CarerView — you're all set</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      Thank you for creating your CarerView account. You now have access to tools that help families
+      and in-home caregivers track observations clearly and communicate more effectively.
+    </p>
+    <div class="highlight-box">
+      <p>
+        <strong>Get started:</strong> Set up your first care team, invite collaborators,
+        and start logging observations from your dashboard.
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(dashboardLink)}" class="cta-btn">Go to Your Dashboard</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(dashboardLink)}">${escHtml(dashboardLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      If you have any questions, reply to this email or reach us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: "Your CarerView account is ready — head to your dashboard to get started",
+    headerBadge: "Welcome",
+    title: "Welcome to CarerView",
+    bodyHtml: body,
+  });
+}
+
+// ── Subscription confirmed ─────────────────────────────────────────────────────
+
+export function buildSubscriptionConfirmedEmail(params: {
+  displayName: string;
+  planName: string;
+  periodEnd: string;
+  dashboardLink: string;
+}): string {
+  const { displayName, planName, periodEnd, dashboardLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const body = `
+    <h1 class="title">Your ${escHtml(planName)} subscription is active</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      Your <strong>${escHtml(planName)}</strong> subscription is now active. You have full access
+      to all included features until <strong>${escHtml(periodEnd)}</strong>.
+    </p>
+    <div class="highlight-box">
+      <p>
+        <strong>What's included:</strong> Unlimited observations, full care team collaboration,
+        and access to all CarerView tools for your plan.
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(dashboardLink)}" class="cta-btn">Go to Your Dashboard</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(dashboardLink)}">${escHtml(dashboardLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      To manage your subscription, visit your account billing settings. Questions?
+      Contact us at <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `Your CarerView ${planName} subscription is now active`,
+    headerBadge: "Subscription",
+    title: `${planName} subscription confirmed`,
+    bodyHtml: body,
+  });
+}
+
+// ── Payment receipt ────────────────────────────────────────────────────────────
+
+export function buildPaymentReceiptEmail(params: {
+  displayName: string;
+  planName: string;
+  amountFormatted: string;
+  invoiceDate: string;
+  invoiceUrl?: string;
+  dashboardLink: string;
+}): string {
+  const { displayName, planName, amountFormatted, invoiceDate, invoiceUrl, dashboardLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const invoiceSection = invoiceUrl
+    ? `<div class="cta-wrap"><a href="${escHtml(invoiceUrl)}" class="cta-btn">View Invoice</a></div>
+       <p class="link-fallback"><a href="${escHtml(invoiceUrl)}">${escHtml(invoiceUrl)}</a></p>`
+    : `<div class="cta-wrap"><a href="${escHtml(dashboardLink)}" class="cta-btn">View Dashboard</a></div>`;
+
+  const body = `
+    <h1 class="title">Payment receipt — ${escHtml(amountFormatted)}</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      Thank you for your payment. Here is your receipt for the
+      <strong>${escHtml(planName)}</strong> subscription.
+    </p>
+    <div class="highlight-box">
+      <p>
+        <strong>Date:</strong> ${escHtml(invoiceDate)}<br />
+        <strong>Plan:</strong> ${escHtml(planName)}<br />
+        <strong>Amount:</strong> ${escHtml(amountFormatted)}
+      </p>
+    </div>
+    ${invoiceSection}
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      Questions about your billing? Contact us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `CarerView payment receipt — ${amountFormatted} for ${planName}`,
+    headerBadge: "Payment Receipt",
+    title: `Payment receipt — ${amountFormatted}`,
+    bodyHtml: body,
+  });
+}
+
+// ── Payment failed ─────────────────────────────────────────────────────────────
+
+export function buildPaymentFailedEmail(params: {
+  displayName: string;
+  planName: string;
+  amountFormatted: string;
+  nextAttemptDate?: string;
+  billingLink: string;
+}): string {
+  const { displayName, planName, amountFormatted, nextAttemptDate, billingLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const retryNote = nextAttemptDate
+    ? `Stripe will automatically retry the payment on <strong>${escHtml(nextAttemptDate)}</strong>.`
+    : "Stripe will automatically retry the payment shortly.";
+
+  const body = `
+    <h1 class="title">Action required: payment failed</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      We were unable to process your payment of <strong>${escHtml(amountFormatted)}</strong>
+      for your <strong>${escHtml(planName)}</strong> subscription.
+    </p>
+    <div class="warning-box">
+      <p>
+        To keep your subscription active, please update your payment method.
+        ${retryNote}
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(billingLink)}" class="cta-btn">Update Payment Method</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(billingLink)}">${escHtml(billingLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      Need help? Contact us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `Action required: CarerView payment of ${amountFormatted} failed`,
+    headerBadge: "Payment Alert",
+    title: "Payment failed",
+    bodyHtml: body,
+  });
+}
+
+// ── Subscription cancelled ─────────────────────────────────────────────────────
+
+export function buildSubscriptionCancelledEmail(params: {
+  displayName: string;
+  planName: string;
+  accessUntil: string;
+  dashboardLink: string;
+}): string {
+  const { displayName, planName, accessUntil, dashboardLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const body = `
+    <h1 class="title">Your ${escHtml(planName)} subscription has been cancelled</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      Your <strong>${escHtml(planName)}</strong> subscription has been cancelled. You will retain
+      access to your paid features until <strong>${escHtml(accessUntil)}</strong>.
+    </p>
+    <div class="highlight-box">
+      <p>
+        After ${escHtml(accessUntil)}, your account will revert to the free plan. Your data
+        is retained and you can resubscribe at any time.
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(dashboardLink)}" class="cta-btn">Go to Your Dashboard</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(dashboardLink)}">${escHtml(dashboardLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      We're sorry to see you go. If you have feedback or need help, contact us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `Your CarerView ${planName} subscription has been cancelled`,
+    headerBadge: "Subscription",
+    title: `${planName} subscription cancelled`,
+    bodyHtml: body,
+  });
+}
+
+// ── Trial ending reminder ──────────────────────────────────────────────────────
+
+export function buildTrialEndingEmail(params: {
+  displayName: string;
+  planName: string;
+  trialEndDate: string;
+  upgradeLink: string;
+}): string {
+  const { displayName, planName, trialEndDate, upgradeLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const body = `
+    <h1 class="title">Your CarerView trial ends ${escHtml(trialEndDate)}</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      Your <strong>${escHtml(planName)}</strong> trial is ending on <strong>${escHtml(trialEndDate)}</strong>.
+      After that date, your account will revert to the free plan unless you add a payment method.
+    </p>
+    <div class="highlight-box">
+      <p>
+        Add your payment details before ${escHtml(trialEndDate)} to keep uninterrupted
+        access to all ${escHtml(planName)} features.
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(upgradeLink)}" class="cta-btn">Continue My Subscription</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(upgradeLink)}">${escHtml(upgradeLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      Questions about plans? Contact us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `Your CarerView trial ends ${trialEndDate} — keep access by adding a payment method`,
+    headerBadge: "Trial Reminder",
+    title: "Trial ending soon",
+    bodyHtml: body,
+  });
+}
+
+// ── Admin report alert (community moderation) ──────────────────────────────────
+
+export function buildAdminReportAlertEmail(params: {
+  reporterDisplayName: string;
+  contentType: "post" | "reply";
+  contentExcerpt: string;
+  reason: string;
+  moderationLink: string;
+}): string {
+  const { reporterDisplayName, contentType, contentExcerpt, reason, moderationLink } = params;
+
+  const body = `
+    <h1 class="title">New community report requires review</h1>
+    <p class="text">
+      A community ${escHtml(contentType)} has been reported and requires moderation review.
+    </p>
+    <div class="highlight-box">
+      <p>
+        <strong>Reported by:</strong> ${escHtml(reporterDisplayName)}<br />
+        <strong>Content type:</strong> ${escHtml(contentType)}<br />
+        <strong>Reason:</strong> ${escHtml(reason)}<br />
+        <strong>Excerpt:</strong> "${escHtml(contentExcerpt)}"
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(moderationLink)}" class="cta-btn">Review in Moderation Queue</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(moderationLink)}">${escHtml(moderationLink)}</a>
+    </p>`;
+
+  return wrapEmail({
+    previewText: `New community report: ${reason} — review required`,
+    headerBadge: "Moderation Alert",
+    title: "Community report requires review",
+    bodyHtml: body,
+  });
+}
+
+// ── Member removed from team ───────────────────────────────────────────────────
+
+export function buildMemberRemovedEmail(params: {
+  displayName: string;
+  teamName: string;
+  removedByName: string;
+  signupLink: string;
+}): string {
+  const { displayName, teamName, removedByName, signupLink } = params;
+  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
+
+  const body = `
+    <h1 class="title">You have been removed from a care team</h1>
+    <p class="text">${greeting}</p>
+    <p class="text">
+      <strong>${escHtml(removedByName)}</strong> has removed you from the
+      <strong>${escHtml(teamName)}</strong> care team on CarerView.
+    </p>
+    <p class="text">
+      You no longer have access to this team's observations or care data.
+      If you believe this was done in error, please contact the team owner directly.
+    </p>
+    <div class="highlight-box">
+      <p>
+        Your personal CarerView account remains active. You can join or create another care team
+        at any time.
+      </p>
+    </div>
+    <div class="cta-wrap">
+      <a href="${escHtml(signupLink)}" class="cta-btn">Visit CarerView</a>
+    </div>
+    <p class="link-fallback">
+      <a href="${escHtml(signupLink)}">${escHtml(signupLink)}</a>
+    </p>
+    <hr class="divider" />
+    <p class="text" style="font-size:13px;color:#718096;">
+      Questions? Contact us at
+      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+    </p>`;
+
+  return wrapEmail({
+    previewText: `You have been removed from ${teamName} on CarerView`,
+    headerBadge: "Team Update",
+    title: "Removed from care team",
+    bodyHtml: body,
+  });
+}
+
 // ── Guest observation submitted notification (to team owner) ───────────────────
 
 export function buildGuestObservationSubmittedEmail(params: {

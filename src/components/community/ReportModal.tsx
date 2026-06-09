@@ -4,6 +4,23 @@ import { useSubmitReport } from '../../hooks/useCommunityReports'
 import type { ReportReason } from '../../lib/community'
 import { Button } from '../ui/Button'
 import { useLocale } from '../../i18n/LocaleContext'
+import { supabase } from '../../lib/supabaseClient'
+
+function fireAdminReportAlert(contentType: 'post' | 'reply', reason: string, details: string): void {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.access_token) return;
+    const excerpt = details.trim() ? details.trim().slice(0, 120) : reason;
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-admin-report`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+        Apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ contentType, contentExcerpt: excerpt, reason }),
+    }).catch(() => {/* fire-and-forget */});
+  });
+}
 
 interface Props {
   postId?: string
@@ -42,6 +59,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
       reason,
       details: details.trim() || undefined,
     })
+    fireAdminReportAlert(replyId ? 'reply' : 'post', reason, details)
     setSubmitted(true)
   }
 

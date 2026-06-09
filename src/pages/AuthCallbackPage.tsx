@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useLocale } from '../i18n/LocaleContext';
 
+async function fireWelcomeEmail(accessToken: string): Promise<void> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-welcome`;
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      Apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+  }).catch(() => {/* fire-and-forget */});
+}
+
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const processed = useRef(false);
@@ -39,6 +51,10 @@ export default function AuthCallbackPage() {
       if (event === 'SIGNED_IN') {
         clearTimeout(timeout);
         subscription.unsubscribe();
+        // Fire welcome email idempotently — the function skips if already sent.
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.access_token) fireWelcomeEmail(session.access_token);
+        });
         const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
         if (hasPendingCheckout) {
           navigate('/create-account', { replace: true });

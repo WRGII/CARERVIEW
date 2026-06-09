@@ -35,6 +35,30 @@ const WEBHOOK_SECRETS = parseSecrets()
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
+// Fire-and-forget helper: calls notify-payment without blocking the webhook response.
+function fireNotifyPayment(payload: Record<string, unknown>): void {
+  const url = `${SUPABASE_URL}/functions/v1/notify-payment`
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+    },
+    body: JSON.stringify(payload),
+  }).catch((e) => console.warn('[stripe-webhook] notify-payment fire-and-forget failed:', e?.message))
+}
+
+function formatAmount(amount: number | null, currency: string): string {
+  if (amount == null) return ''
+  const dollars = (amount / 100).toFixed(2)
+  return `${currency.toUpperCase() === 'USD' ? '$' : currency.toUpperCase() + ' '}${dollars}`
+}
+
+function isoDate(ts: number | null | undefined): string {
+  if (!ts) return ''
+  return new Date(ts * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Methods': 'POST',
@@ -338,6 +362,16 @@ Deno.serve(async (req) => {
 
         await enforceSeats(db, userId, effectivePlanId)
 
+        // Send email notification based on what changed.
+        if (mappedPlanId) {
+          const planName = mappedPlanId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+          if (event.type === 'customer.subscription.created' && sub.status === 'active' && !src?.trial_end) {
+            fireNotifyPayment({ type: 'subscription_confirmed', userId, planName, periodEnd: pEndIso ? isoDate(src?.current_period_end) : '' })
+          } else if (event.type === 'customer.subscription.deleted') {
+            fireNotifyPayment({ type: 'subscription_cancelled', userId, planName, accessUntil: pEndIso ? isoDate(src?.current_period_end) : '' })
+          }
+        }
+
         // Mark event as completed
         await db.rpc('record_webhook_event', {
           p_event_id: event.id,
@@ -345,6 +379,54 @@ Deno.serve(async (req) => {
           p_status: 'completed'
         })
 
+        return resp({ received: true })
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice
+        const customerId = invoice.customer as string | null
+        if (!customerId) {
+          await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
+          return resp({ received: true })
+        }
+        const userId = await lookupUserIdFromCustomer(db, customerId)
+        if (userId) {
+          const sub = invoice.subscription ? await stripe.subscriptions.retrieve(invoice.subscription as string, { expand: ['items.data'] }).catch(() => null) : null
+          const item: any = sub?.items?.data?.[0]
+          const priceId: string | null = item?.price?.id ?? null
+          const mappedPlanId = priceId ? await planIdFromPrice(db, priceId).catch(() => undefined) : undefined
+          const planName = mappedPlanId ? mappedPlanId.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'CarerView'
+          const amountFormatted = formatAmount(invoice.amount_paid, invoice.currency)
+          const invoiceDate = isoDate(invoice.created)
+          const invoiceUrl = invoice.hosted_invoice_url ?? undefined
+          // Skip receipt on the very first invoice that triggered subscription_confirmed
+          if ((invoice as any).billing_reason !== 'subscription_create') {
+            fireNotifyPayment({ type: 'payment_receipt', userId, planName, amountFormatted, invoiceDate, invoiceUrl })
+          }
+        }
+        await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
+        return resp({ received: true })
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice
+        const customerId = invoice.customer as string | null
+        if (!customerId) {
+          await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
+          return resp({ received: true })
+        }
+        const userId = await lookupUserIdFromCustomer(db, customerId)
+        if (userId) {
+          const sub = invoice.subscription ? await stripe.subscriptions.retrieve(invoice.subscription as string, { expand: ['items.data'] }).catch(() => null) : null
+          const item: any = sub?.items?.data?.[0]
+          const priceId: string | null = item?.price?.id ?? null
+          const mappedPlanId = priceId ? await planIdFromPrice(db, priceId).catch(() => undefined) : undefined
+          const planName = mappedPlanId ? mappedPlanId.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'CarerView'
+          const amountFormatted = formatAmount(invoice.amount_due, invoice.currency)
+          const nextAttemptDate = invoice.next_payment_attempt ? isoDate(invoice.next_payment_attempt) : undefined
+          fireNotifyPayment({ type: 'payment_failed', userId, planName, amountFormatted, nextAttemptDate })
+        }
+        await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
         return resp({ received: true })
       }
 
