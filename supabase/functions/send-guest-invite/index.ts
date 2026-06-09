@@ -1,10 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { sendEmail } from "../_shared/emailService.ts";
+import { buildGuestInviteEmail } from "../_shared/emailTemplates.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://carerview.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,26 +17,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-}
-
-/** Returns the auth user record for a given email, or null if not found. */
-async function lookupUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
-  const res = await fetch(
-    `${SUPABASE_URL}/auth/v1/admin/users?filter=email%3Aeq%3A${encodeURIComponent(email)}&page=1&per_page=1`,
-    {
-      headers: {
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-      },
-    }
-  );
-  if (!res.ok) {
-    console.warn("lookupUserByEmail failed:", res.status, await res.text());
-    return null;
-  }
-  const body = await res.json();
-  const users: { id: string; email: string }[] = body?.users ?? body ?? [];
-  return Array.isArray(users) && users.length > 0 ? users[0] : null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -55,82 +35,36 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Not authenticated" }, 401);
     }
 
-    const {
-      guest_email,
-      guest_name,
-      guest_link,
-      inviter_name,
-      resident_name,
-      form_type,
-    } = await req.json();
+    const { guest_email, guest_name, guest_link, inviter_name, resident_name, form_type } = await req.json();
 
     if (!guest_email || !guest_link || !resident_name || !form_type) {
-      return jsonResponse({ error: "Missing required fields: guest_email, guest_link, resident_name, form_type" }, 400);
-    }
-
-    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const inviterName = inviter_name || "Your care team";
-
-    // Check whether the guest email already has a Supabase auth account
-    const existingUser = await lookupUserByEmail(guest_email);
-
-    if (!existingUser) {
-      // New user — inviteUserByEmail creates the account and dispatches
-      // Supabase's native invite email. redirectTo carries the guest token URL
-      // so the guest lands directly on the observation form.
-      const { error: inviteErr } = await adminClient.auth.admin.inviteUserByEmail(
-        guest_email,
-        {
-          redirectTo: guest_link,
-          data: {
-            guest_name: guest_name || null,
-            invited_by: inviterName,
-            resident_name,
-            form_type,
-          },
-        }
+      return jsonResponse(
+        { error: "Missing required fields: guest_email, guest_link, resident_name, form_type" },
+        400
       );
-
-      if (inviteErr) {
-        console.error("inviteUserByEmail error:", inviteErr);
-        return jsonResponse({
-          sent: false,
-          method: "invite_failed",
-          guest_link,
-          error: inviteErr.message,
-        });
-      }
-
-      return jsonResponse({
-        sent: true,
-        method: "supabase_invite",
-        guest_link,
-      });
     }
 
-    // Existing user — use generateLink (magiclink) which works for confirmed accounts
-    // and redirects them to the guest observation form after clicking the link.
-    const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
-      type: "magiclink",
-      email: guest_email,
-      options: { redirectTo: guest_link },
+    const html = buildGuestInviteEmail({
+      guestName: guest_name || "",
+      inviterName: inviter_name || "Your care team",
+      residentName: resident_name,
+      formType: form_type,
+      guestLink: guest_link,
     });
 
-    if (linkErr) {
-      console.error("generateLink error:", linkErr);
-      return jsonResponse({
-        sent: false,
-        method: "magiclink_failed",
-        guest_link,
-        error: linkErr.message,
-      });
-    }
+    const result = await sendEmail({
+      to: guest_email,
+      subject: `You've been invited to complete a guest observation for ${resident_name}`,
+      html,
+      edgeFunction: "send-guest-invite",
+      templateName: "guest_invite",
+    });
 
     return jsonResponse({
-      sent: true,
-      method: "magiclink",
+      sent: result.sent,
       guest_link,
-      action_link: linkData?.properties?.action_link ?? null,
+      messageId: result.messageId ?? null,
+      error: result.error ?? null,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";

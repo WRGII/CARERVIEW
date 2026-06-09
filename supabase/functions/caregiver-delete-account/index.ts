@@ -2,25 +2,8 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 import Stripe from 'npm:stripe@17.7.0'
-
-/**
- * Caregiver Self-Service Account Deletion
- *
- * Requires Function secrets:
- * - SUPABASE_URL
- * - SUPABASE_ANON_KEY
- * - SUPABASE_SERVICE_ROLE_KEY
- * - STRIPE_SECRET_KEY
- *
- * Behavior:
- * - Authenticates the caller (must be signed in)
- * - Verifies user is deleting their own account
- * - Validates team ownership (prevents deletion if owner with active members)
- * - Cancels active Stripe subscriptions
- * - Deletes all user data (observations, responses, subscriptions, teams, etc.)
- * - Deletes the auth user
- * - Inserts audit row in public.admin_events
- */
+import { sendEmail } from '../_shared/emailService.ts'
+import { buildAccountDeletionEmail } from '../_shared/emailTemplates.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
@@ -58,7 +41,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req)
 
-  // Rate limiting check (5 requests per minute for account deletion)
   const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
   const srvForRateLimit = createClient(SUPABASE_URL, SERVICE_ROLE)
   const { data: rateLimitCheck } = await srvForRateLimit.rpc('check_rate_limit', {
@@ -122,14 +104,18 @@ Deno.serve(async (req) => {
 
     const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
 
+    // Capture display name before deletion for the confirmation email
+    const { data: profile } = await srv
+      .from('profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .maybeSingle()
+    const displayName = profile?.display_name || ''
+
     // 1. Check if user is a team owner with active members
     const { data: ownedTeams, error: teamsErr } = await srv
       .from('cv_team')
-      .select(`
-        id,
-        name,
-        cv_team_members!inner(user_id, state)
-      `)
+      .select(`id, name, cv_team_members!inner(user_id, state)`)
       .eq('owner_user_id', userId)
 
     if (teamsErr) throw teamsErr
@@ -139,7 +125,6 @@ Deno.serve(async (req) => {
         const activeMembers = (team.cv_team_members as any[]).filter(
           (m: any) => m.state === 'active' && m.user_id !== userId
         )
-
         if (activeMembers.length > 0) {
           audit.details = {
             reason: 'Team owner with active members',
@@ -149,7 +134,6 @@ Deno.serve(async (req) => {
           }
           audit.success = false
           await insertAudit(srv, audit)
-
           return json({
             error: 'TEAM_OWNER_HAS_MEMBERS',
             message: 'You must remove all team members before deleting your account',
@@ -175,13 +159,9 @@ Deno.serve(async (req) => {
           customer: stripeCustomer.customer_id,
           status: 'active',
         })
-
         for (const subscription of subscriptions.data) {
           try {
-            await stripe.subscriptions.cancel(subscription.id, {
-              invoice_now: false,
-              prorate: false,
-            })
+            await stripe.subscriptions.cancel(subscription.id, { invoice_now: false, prorate: false })
             stripeCancellationResult.subscriptionsCancelled++
           } catch (subErr: any) {
             console.error(`Failed to cancel subscription ${subscription.id}:`, subErr?.message)
@@ -198,21 +178,15 @@ Deno.serve(async (req) => {
     audit.details.stripe_cancellation = stripeCancellationResult
 
     // 3. Delete user data in proper order
-
-    // Delete team invitations created by user
     await srv.from('cv_team_invites').delete().eq('created_by', userId)
-
-    // Remove user from all team memberships
     await srv.from('cv_team_members').delete().eq('user_id', userId)
 
-    // Delete teams owned by user (no other members at this point)
     if (ownedTeams && ownedTeams.length > 0) {
       for (const team of ownedTeams) {
         await srv.from('cv_team').delete().eq('id', team.id)
       }
     }
 
-    // Delete observations (cascades to responses)
     const { count: obsCount } = await srv
       .from('observations')
       .delete()
@@ -221,14 +195,9 @@ Deno.serve(async (req) => {
 
     audit.details.observations_deleted = obsCount ?? 0
 
-    // Delete subscription records
     await srv.from('user_subscriptions').delete().eq('user_id', userId)
-
-    // Delete Stripe records
     await srv.from('stripe_subscriptions').delete().eq('customer_id', stripeCustomer?.customer_id || '')
     await srv.from('stripe_customers').delete().eq('user_id', userId)
-
-    // Delete profile
     await srv.from('profiles').delete().eq('id', userId)
 
     // 4. Delete auth user
@@ -240,21 +209,29 @@ Deno.serve(async (req) => {
       throw authDelErr
     }
 
-    audit.details = {
-      ...audit.details,
-      step: 'complete',
-    }
+    audit.details = { ...audit.details, step: 'complete' }
     audit.success = true
     await insertAudit(srv, audit)
 
-    return json({
-      ok: true,
-      deleted: true,
-      email: userEmail,
-    }, 200, req)
+    // 5. Send deletion confirmation email (fire-and-forget — never fail the response)
+    if (userEmail) {
+      try {
+        const html = buildAccountDeletionEmail({ displayName })
+        await sendEmail({
+          to: userEmail,
+          subject: 'Your CarerView account has been deleted',
+          html,
+          edgeFunction: 'caregiver-delete-account',
+          templateName: 'account_deletion',
+        })
+      } catch (emailErr: any) {
+        console.error('Deletion confirmation email failed (non-fatal):', emailErr?.message)
+      }
+    }
+
+    return json({ ok: true, deleted: true, email: userEmail }, 200, req)
   } catch (err: any) {
     console.error('[caregiver-delete-account] error:', err?.message || err)
-
     try {
       const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
       await insertAudit(srv, {
@@ -265,7 +242,6 @@ Deno.serve(async (req) => {
     } catch {
       // ignore audit failure
     }
-
     return json({ error: err?.message || 'Account deletion failed' }, 500, req)
   }
 })
@@ -281,7 +257,7 @@ async function insertAudit(
     details: Record<string, unknown>
   }
 ) {
-  const row = {
+  await srv.from('admin_events').insert({
     actor_id: a.actor_id,
     actor_email: a.actor_email,
     action: 'caregiver_delete_account',
@@ -289,8 +265,7 @@ async function insertAudit(
     target_user_id: a.target_user_id,
     success: a.success,
     details: a.details ?? {},
-  }
-  await srv.from('admin_events').insert(row)
+  })
 }
 
 function json(body: unknown, status = 200, req: Request) {

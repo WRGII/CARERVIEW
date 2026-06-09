@@ -54,6 +54,9 @@ export default function AcceptInvite() {
         const { error: setErr } = await supabase.rpc("cv_set_active_team", { p_team: teamId });
         if (setErr) throw setErr;
 
+        // Fire-and-forget: notify team owner that a new member joined
+        supabase.functions.invoke("notify-member-joined", { body: { team_id: teamId } }).catch(() => {});
+
         localStorage.removeItem("cv_join_token");
         setStatus("ok");
         navigate("/caregiver", { replace: true });

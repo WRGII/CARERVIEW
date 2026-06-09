@@ -184,6 +184,22 @@ export default function GuestObservationPage() {
       })
 
       if (error) throw error
+
+      // Fire-and-forget: notify the team owner that a guest observation was submitted
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-guest-submitted`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          token,
+          guest_name: guestName.trim(),
+          guest_email: guestEmail.trim().toLowerCase(),
+          observation_date: toDBDate(obsDate),
+        }),
+      }).catch(() => {})
+
       setPageState('done')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'An error occurred. Please try again.'
