@@ -178,6 +178,14 @@ Deno.serve(async (req) => {
     audit.details.stripe_cancellation = stripeCancellationResult
 
     // 3. Delete user data in proper order
+
+    // Community data must be removed before profile/auth deletion (no CASCADE on these FKs)
+    await srv.from('community_reports').delete().eq('reporter_user_id', userId)
+    await srv.from('community_reactions').delete().eq('user_id', userId)
+    await srv.from('community_replies').delete().eq('author_user_id', userId)
+    await srv.from('community_posts').delete().eq('author_user_id', userId)
+    await srv.from('community_profiles').delete().eq('user_id', userId)
+
     await srv.from('cv_team_invites').delete().eq('created_by', userId)
     await srv.from('cv_team_members').delete().eq('user_id', userId)
 
