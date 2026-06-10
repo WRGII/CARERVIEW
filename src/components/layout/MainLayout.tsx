@@ -17,7 +17,7 @@ import CommunityBanner from "./CommunityBanner";
 
 export default function MainLayout() {
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh bg-white flex flex-col">
       <CommunityBanner />
       <Header />
       <main className="flex-1">

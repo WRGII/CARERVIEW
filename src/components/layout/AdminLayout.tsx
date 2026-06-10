@@ -59,7 +59,7 @@ export default function AdminLayout() {
             <ShieldCheck className="w-5 h-5 text-slate-400" />
             <span className="text-sm font-semibold text-slate-200 tracking-tight">CareView Admin</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
             {showWarning && secondsLeft !== null && (
               <div className="flex items-center gap-1.5 rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-400 border border-amber-500/30">
                 <Clock className="w-3 h-3" />

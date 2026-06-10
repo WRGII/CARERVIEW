@@ -31,8 +31,8 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
 
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg border-2 p-8 ${
-      isCurrentPlan ? 'border-teal-500 scale-105' :
-      isPopular ? 'border-cyan-primary scale-105' : 'border-slate-gray/20'
+      isCurrentPlan ? 'border-teal-500 md:scale-105' :
+      isPopular ? 'border-cyan-primary md:scale-105' : 'border-slate-gray/20'
     }`}>
       {isCurrentPlan && (
         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">

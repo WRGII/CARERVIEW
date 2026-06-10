@@ -185,7 +185,7 @@ export default function Header() {
                   <LanguageSwitcher />
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500"
+                    className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 min-h-[44px] min-w-[44px]"
                     aria-expanded={mobileMenuOpen}
                     aria-label={t('nav.toggle_menu')}
                   >
@@ -229,28 +229,28 @@ export default function Header() {
                         onClick={closeMobileMenu}
                         className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                       >
-                        Care Hub
+                        {t('nav.care_hub')}
                       </Link>
                       <Link
                         to="/caregiver/memory-schedule"
                         onClick={closeMobileMenu}
                         className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                       >
-                        Memory Book
+                        {t('nav.memory_book_short')}
                       </Link>
                       <Link
                         to="/care-hub/care-plan"
                         onClick={closeMobileMenu}
                         className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                       >
-                        Care Plan
+                        {t('nav.care_plan')}
                       </Link>
                       <Link
                         to="/caregiver/observations/new"
                         onClick={closeMobileMenu}
                         className="block w-full text-left px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors min-h-[44px]"
                       >
-                        Observations
+                        {t('nav.observations')}
                       </Link>
                       <Link
                         to="/new-carer"

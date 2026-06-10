@@ -421,17 +421,17 @@ export default function LandingPage() {
           </div>
 
           <div className="mb-8">
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-5 gap-0 rounded-xl overflow-hidden shadow-sm">
               {[
                 { num: 1, bg: 'bg-mint-green', rounding: 'rounded-l-xl' },
                 { num: 2, bg: 'bg-mint-green/70', rounding: '' },
                 { num: 3, bg: 'bg-cyan-primary/40', rounding: '' },
-                { num: 4, bg: 'bg-peach-blush/70', rounding: 'hidden sm:flex' },
-                { num: 5, bg: 'bg-peach-blush', rounding: 'rounded-r-xl hidden sm:flex' },
+                { num: 4, bg: 'bg-peach-blush/70', rounding: '' },
+                { num: 5, bg: 'bg-peach-blush', rounding: 'rounded-r-xl' },
               ].map(({ num, bg, rounding }) => (
-                <div key={num} className={`${bg} ${rounding} py-6 px-3 flex flex-col items-center justify-center text-slate-700`}>
-                  <span className="text-3xl font-bold mb-1">{num}</span>
-                  <span className="text-xs font-semibold text-center leading-snug">{t(`scale.${num}`)}</span>
+                <div key={num} className={`${bg} ${rounding} py-4 sm:py-6 px-1.5 sm:px-3 flex flex-col items-center justify-center text-slate-700 min-w-0`}>
+                  <span className="text-xl sm:text-3xl font-bold mb-1">{num}</span>
+                  <span className="text-[10px] sm:text-xs font-semibold text-center leading-snug">{t(`scale.${num}`)}</span>
                 </div>
               ))}
             </div>

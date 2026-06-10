@@ -64,7 +64,7 @@ export default function ScorePicker({
       aria-label={ariaLabel || "Score"}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="flex gap-1.5"
+      className="flex gap-1.5 min-w-0"
     >
       {[1, 2, 3, 4, 5].map((n) => {
         const active = value === n;

@@ -146,7 +146,7 @@ export default function AuthForm({ initialMode = "signin", showToggle = true }: 
         <img
           src="/CareView_logo_icon_only.png"
           alt={t('nav.logo_aria')}
-          className="w-24 h-24 md:w-28 md:h-28 object-contain flex-shrink-0 drop-shadow-md"
+          className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain flex-shrink-0 drop-shadow-md"
         />
         <div>
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">{t('auth.welcome_to')}</p>
