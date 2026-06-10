@@ -69,7 +69,7 @@ function wrapEmail(params: {
         &nbsp;&middot;&nbsp;
         <a href="${PRIVACY_URL}">Privacy Policy</a>
         &nbsp;&middot;&nbsp;
-        <a href="mailto:support@carerview.com">support@carerview.com</a>
+        <a href="mailto:CarerView@grifdigi.com">CarerView@grifdigi.com</a>
       </p>
     </div>
   </div>
@@ -195,7 +195,7 @@ export function buildAccountDeletionEmail(params: {
     </div>
     <p class="text">
       If you did not request this deletion, or if you have any questions, please contact us
-      immediately at <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      immediately at <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>
     <p class="text">
       We're sorry to see you go. Thank you for using CarerView.
@@ -274,7 +274,7 @@ export function buildWelcomeEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       If you have any questions, reply to this email or reach us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -318,7 +318,7 @@ export function buildSubscriptionConfirmedEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       To manage your subscription, visit your account billing settings. Questions?
-      Contact us at <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      Contact us at <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -365,7 +365,7 @@ export function buildPaymentReceiptEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       Questions about your billing? Contact us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -414,7 +414,7 @@ export function buildPaymentFailedEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       Need help? Contact us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -458,7 +458,7 @@ export function buildSubscriptionCancelledEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       We're sorry to see you go. If you have feedback or need help, contact us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -502,7 +502,7 @@ export function buildTrialEndingEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       Questions about plans? Contact us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
@@ -589,7 +589,7 @@ export function buildMemberRemovedEmail(params: {
     <hr class="divider" />
     <p class="text" style="font-size:13px;color:#718096;">
       Questions? Contact us at
-      <a href="mailto:support@carerview.com" style="color:#0d9488;">support@carerview.com</a>.
+      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
     </p>`;
 
   return wrapEmail({
