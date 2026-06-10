@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader as Loader2, ShieldCheck } from "lucide-react";
-import { setAdminToken } from "../hooks/useAdminSession";
+import { setAdminToken, getAdminToken, clearAdminToken } from "../hooks/useAdminSession";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;
@@ -40,6 +40,17 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // If there's a stored token that is now invalid (expired or bad signature after
+  // a redeployment), clear it and show a helpful notice so the admin knows to sign
+  // in again rather than puzzling over "Access Error" on interior pages.
+  const [sessionExpired] = useState(() => {
+    const stored = sessionStorage.getItem('admin_token');
+    if (!stored) return false;
+    const isValid = getAdminToken() !== null;
+    if (!isValid) { clearAdminToken(); return true; }
+    return false;
+  });
 
   const initialState = readLockoutState();
   const [attempts, setAttempts] = useState(initialState.attempts);
@@ -140,6 +151,13 @@ export default function AdminLoginPage() {
           <h1 className="text-xl font-semibold text-slate-100 tracking-tight">Admin Access</h1>
           <p className="text-sm text-slate-500 mt-1">Restricted area. Authorised personnel only.</p>
         </div>
+
+        {sessionExpired && (
+          <div role="alert" className="mb-5 rounded-xl bg-amber-950/60 border border-amber-800/60 px-4 py-3">
+            <p className="text-amber-300 text-sm font-medium">Session expired</p>
+            <p className="text-amber-400/80 text-xs mt-0.5">Your previous session has expired or is no longer valid. Please sign in again.</p>
+          </div>
+        )}
 
         <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>

@@ -96,12 +96,12 @@ Deno.serve(async (req) => {
         const [
           { count: totalCaregivers },
           { count: totalObservations },
-          { count: familyCircleSubscribers },
+          { count: paidSubscribers },
           { data: recentData },
         ] = await Promise.all([
           srv.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'caregiver').eq('disabled', false),
           srv.from('observations').select('*', { count: 'exact', head: true }),
-          srv.from('user_subscriptions').select('*', { count: 'exact', head: true }).eq('plan_id', 'family_qtr').eq('status', 'active'),
+          srv.from('user_subscriptions').select('*', { count: 'exact', head: true }).neq('plan_id', 'free').eq('status', 'active'),
           srv.from('observations').select('observation_date').gte('observation_date', sevenDaysAgo),
         ])
         const activityMap = new Map<string, number>()
@@ -114,10 +114,40 @@ Deno.serve(async (req) => {
           data: {
             totalCaregivers: totalCaregivers ?? 0,
             totalObservations: totalObservations ?? 0,
-            familyCircleSubscribers: familyCircleSubscribers ?? 0,
+            paidSubscribers: paidSubscribers ?? 0,
             thisWeek,
           },
         }, 200, req)
+      }
+
+      // ── Subscribers ──────────────────────────────────────────────────────────
+
+      case 'list_subscribers': {
+        const { data, error } = await srv
+          .from('user_subscriptions')
+          .select(`
+            user_id,
+            status,
+            current_period_end,
+            cancel_at_period_end,
+            profiles!inner ( display_name, email ),
+            subscription_plans!inner ( name, price_cents, interval )
+          `)
+          .neq('plan_id', 'free')
+          .order('current_period_end', { ascending: false })
+        if (error) throw error
+        const rows = (data ?? []).map((row: any) => ({
+          user_id: row.user_id,
+          display_name: row.profiles?.display_name ?? null,
+          email: row.profiles?.email ?? null,
+          plan_name: row.subscription_plans?.name ?? row.plan_id,
+          price_cents: row.subscription_plans?.price_cents ?? 0,
+          interval: row.subscription_plans?.interval ?? '',
+          status: row.status,
+          current_period_end: row.current_period_end ?? null,
+          cancel_at_period_end: row.cancel_at_period_end ?? false,
+        }))
+        return json({ ok: true, data: rows }, 200, req)
       }
 
       // ── Caregivers ──────────────────────────────────────────────────────────

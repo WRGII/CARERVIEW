@@ -10,7 +10,7 @@ import { getAdminToken } from '../../hooks/useAdminSession'
 interface AggregateStats {
   totalObservations: number
   totalCaregivers: number
-  familyCircleSubscribers: number
+  paidSubscribers: number
   thisWeek: number
 }
 
@@ -96,7 +96,7 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
           caregiversCard
         )}
 
-        {/* Family Circle Subscribers */}
+        {/* Paid Subscribers */}
         <Card className="bg-warm-white">
           <CardContent>
             <div className="flex items-center space-x-3">
@@ -104,8 +104,8 @@ export const AggregateData: React.FC<AggregateDataProps> = ({ caregiversLink }) 
                 <CreditCard className="w-6 h-6 text-slate-gray" />
               </div>
               <div>
-                <p className="text-sm text-slate-gray/70">{t('admin.family_circle_subscribers')}</p>
-                <p className="text-2xl font-bold text-slate-gray">{stats.familyCircleSubscribers}</p>
+                <p className="text-sm text-slate-gray/70">Paid Subscribers</p>
+                <p className="text-2xl font-bold text-slate-gray">{stats.paidSubscribers}</p>
               </div>
             </div>
           </CardContent>
