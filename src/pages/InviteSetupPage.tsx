@@ -421,7 +421,7 @@ export default function InviteSetupPage() {
             {!isSignup && (
               <p className="text-center text-xs text-slate-500">
                 Not your account?{" "}
-                <a href="mailto:support@carerview.com" className="underline hover:text-slate-700">
+                <a href="mailto:CarerView@grifdigi.com" className="underline hover:text-slate-700">
                   Contact support
                 </a>
               </p>

@@ -16,8 +16,8 @@ type PlanKey = 'free' | 'primary_qtr' | 'family_qtr';
 const PENDING_KEY = "cv_pending_checkout";
 
 const RETURN_URLS = {
-  success: `${window.location.origin}/checkout/success`,
-  cancel: `${window.location.origin}/create-account?canceled=1`,
+  success: `${SITE_URL}/checkout/success`,
+  cancel: `${SITE_URL}/create-account?canceled=1`,
 };
 
 function upsertFreeSubscription(userId: string) {
@@ -77,11 +77,18 @@ export default function CreateAccountPage() {
   const [authedUserLoading, setAuthedUserLoading] = React.useState(true);
 
   React.useEffect(() => {
+    // Handle initial session — populate form fields and check for pending join token.
     supabase.auth.getUser().then(({ data }) => {
-      setAuthedUser(data.user ?? null);
-      if (data.user) {
-        setName(data.user.user_metadata?.display_name ?? "");
-        setEmail(data.user.email ?? "");
+      const u = data.user ?? null;
+      setAuthedUser(u);
+      if (u) {
+        setName(u.user_metadata?.display_name ?? "");
+        setEmail(u.email ?? "");
+        const tok = localStorage.getItem("cv_join_token");
+        if (tok) {
+          localStorage.removeItem("cv_join_token");
+          navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
+        }
       }
       setAuthedUserLoading(false);
     });
@@ -92,31 +99,15 @@ export default function CreateAccountPage() {
       if (u) {
         setName((prev) => prev || u.user_metadata?.display_name || "");
         setEmail((prev) => prev || u.email || "");
+        const tok = localStorage.getItem("cv_join_token");
+        if (tok) {
+          localStorage.removeItem("cv_join_token");
+          navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
+        }
       }
       setAuthedUserLoading(false);
     });
     return () => authSub.subscription.unsubscribe();
-  }, []);
-
-  React.useEffect(() => {
-    (async () => {
-      const tok = localStorage.getItem("cv_join_token");
-      if (!tok) return;
-      const { data: sess } = await supabase.auth.getSession();
-      if (sess?.session) {
-        localStorage.removeItem("cv_join_token");
-        navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
-      }
-    })();
-
-    const sub = supabase.auth.onAuthStateChange((_evt, session) => {
-      const tok = localStorage.getItem("cv_join_token");
-      if (tok && session) {
-        localStorage.removeItem("cv_join_token");
-        navigate(`/join?t=${encodeURIComponent(tok)}`, { replace: true });
-      }
-    });
-    return () => sub.data.subscription.unsubscribe();
   }, [navigate]);
 
   React.useEffect(() => {
@@ -309,6 +300,20 @@ export default function CreateAccountPage() {
         throw new Error("Invalid plan selected");
       }
 
+      // Check if this email already has an account before attempting signUp.
+      // cv_email_registered is callable by the anon role via security definer.
+      try {
+        const { data: alreadyRegistered } = await supabase.rpc('cv_email_registered', { p_email: email });
+        if (alreadyRegistered === true) {
+          setError(null);
+          setInfo(t('create_account.already_registered_info') || 'It looks like you already have a CarerView account. Please sign in instead.');
+          setBusy(false);
+          return;
+        }
+      } catch {
+        // RPC failure is non-fatal — proceed and let signUp handle it
+      }
+
       const { data, error: signErr } = await supabase.auth.signUp({
         email,
         password,
@@ -381,16 +386,7 @@ export default function CreateAccountPage() {
       localStorage.setItem(PENDING_KEY, JSON.stringify({ planKey: selectedPlanKey, promoCode, displayName: name || null }));
       setInfo(t('create_account.confirm_email_info'));
     } catch (err: any) {
-      const msg: string = err?.message ?? '';
-      if (
-        msg === 'User already registered' ||
-        msg.toLowerCase().includes('already registered') ||
-        msg.toLowerCase().includes('email address is already')
-      ) {
-        setInfo(t('create_account.confirm_email_info'));
-      } else {
-        setError(msg || t('create_account.signup_failed'));
-      }
+      setError((err as any)?.message || t('create_account.signup_failed'));
     } finally {
       setBusy(false);
     }
