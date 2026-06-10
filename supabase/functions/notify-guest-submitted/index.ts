@@ -33,15 +33,26 @@ Deno.serve(async (req: Request) => {
 
     const srv = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Look up the guest token to find team and resident details
+    // Hash the token to look it up — the raw token is never stored
+    const encoder = new TextEncoder();
+    const tokenBytes = encoder.encode(token);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", tokenBytes);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const tokenHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+    // Verify token exists and was actually consumed (reject spam calls for unconsumed tokens)
     const { data: guestToken, error: tokenErr } = await srv
       .from("cv_guest_tokens")
-      .select("team_id, resident_name, form_type")
-      .eq("token", token)
+      .select("team_id, resident_name, form_type, consumed_at")
+      .eq("token_hash", tokenHash)
       .maybeSingle();
 
     if (tokenErr || !guestToken) {
       return jsonResponse({ error: "Token not found" }, 404);
+    }
+
+    if (!guestToken.consumed_at) {
+      return jsonResponse({ error: "Observation not yet submitted" }, 400);
     }
 
     // Look up team owner

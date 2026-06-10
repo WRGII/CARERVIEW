@@ -166,11 +166,17 @@ export default function GuestObservationPage() {
 
     setPageState('submitting')
 
-    // Build answers payload — combine answers + category notes into the jsonb param
+    // Build answers payload
     const answersPayload: Record<string, number> = {}
     Object.entries(answers).forEach(([qid, score]) => {
       if (typeof score === 'number') answersPayload[qid] = score
     })
+
+    // Append non-empty category notes to the general notes field
+    const categoryNoteLines = categories
+      .filter(cat => categoryNotes[cat.id]?.trim())
+      .map(cat => `${cat.name}: ${categoryNotes[cat.id].trim()}`)
+    const combinedNotes = [notes.trim(), ...categoryNoteLines].filter(Boolean).join('\n\n') || null
 
     try {
       const { error } = await supabase.rpc('cv_submit_guest_observation', {
@@ -179,7 +185,7 @@ export default function GuestObservationPage() {
         p_guest_email: guestEmail.trim().toLowerCase(),
         p_observation_date: toDBDate(obsDate),
         p_mode: mode,
-        p_notes: notes.trim() || null,
+        p_notes: combinedNotes,
         p_answers: answersPayload,
       })
 
