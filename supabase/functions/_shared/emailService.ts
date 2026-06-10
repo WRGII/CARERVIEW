@@ -20,8 +20,8 @@ export interface SendEmailResult {
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "CarerView <noreply@carerview.com>";
-const EMAIL_REPLY_TO = Deno.env.get("EMAIL_REPLY_TO") || "support@carerview.com";
+const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "CarerView <CarerView@grifdigi.com>";
+const EMAIL_REPLY_TO = Deno.env.get("EMAIL_REPLY_TO") || "CarerView@grifdigi.com";
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
   if (!RESEND_API_KEY) {
