@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useLocale } from '../i18n/LocaleContext';
+
+const TIMEOUT_MS = 30_000;
 
 async function fireWelcomeEmail(accessToken: string): Promise<void> {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-welcome`;
@@ -19,6 +21,14 @@ export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const processed = useRef(false);
   const { t } = useLocale();
+  const [timedOut, setTimedOut] = useState(false);
+
+  function retry() {
+    processed.current = false;
+    setTimedOut(false);
+    // Re-trigger the effect by navigating to the same URL
+    window.location.reload();
+  }
 
   useEffect(() => {
     if (processed.current) return;
@@ -36,9 +46,8 @@ export default function AuthCallbackPage() {
     }
 
     const timeout = setTimeout(() => {
-      const errorType = type === 'recovery' ? 'recovery' : 'generic';
-      navigate(`/auth/error?reason=link_expired&type=${errorType}`, { replace: true });
-    }, 10000);
+      setTimedOut(true);
+    }, TIMEOUT_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && type === 'recovery')) {
@@ -75,6 +84,31 @@ export default function AuthCallbackPage() {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  if (timedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-warm-white">
+        <div className="flex flex-col items-center gap-4 max-w-sm text-center px-4">
+          <p className="text-slate-700 font-medium">Taking longer than expected</p>
+          <p className="text-sm text-slate-500">
+            The link may have expired or the connection timed out. Try clicking the link in your email again, or retry below.
+          </p>
+          <button
+            onClick={retry}
+            className="rounded-md bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
+          >
+            Retry
+          </button>
+          <button
+            onClick={() => navigate('/login', { replace: true })}
+            className="text-sm text-slate-500 hover:text-slate-700 underline transition-colors"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-warm-white">

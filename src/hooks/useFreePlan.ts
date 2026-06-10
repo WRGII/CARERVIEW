@@ -19,6 +19,21 @@ export const useActivateFreePlan = () => {
       if (userError) throw new Error(`Authentication error: ${userError.message}`)
       if (!user) throw new Error('You must be signed in to activate free plan')
 
+      // Server-side guard: check for any active paid subscription first
+      const { data: activePaid, error: paidErr } = await supabase
+        .from('user_subscriptions')
+        .select('plan_id, status')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .neq('plan_id', 'free')
+        .limit(1)
+        .maybeSingle()
+
+      if (paidErr) throw new Error(`Failed to check subscription status: ${paidErr.message}`)
+      if (activePaid) {
+        return { alreadyActive: true, plan: activePaid, reason: 'paid_plan_active' }
+      }
+
       const { data: existing, error: checkErr } = await supabase
         .from('user_subscriptions')
         .select('user_id, plan_id, status, current_period_end')

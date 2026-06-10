@@ -417,7 +417,8 @@ Deno.serve(async (req) => {
         }
         const userId = await lookupUserIdFromCustomer(db, customerId)
         if (userId) {
-          const sub = invoice.subscription ? await stripe.subscriptions.retrieve(invoice.subscription as string, { expand: ['items.data'] }).catch(() => null) : null
+          const subId = typeof invoice.subscription === 'string' ? invoice.subscription : null
+          const sub = subId ? await stripe.subscriptions.retrieve(subId, { expand: ['items.data'] }).catch(() => null) : null
           const item: any = sub?.items?.data?.[0]
           const priceId: string | null = item?.price?.id ?? null
           const mappedPlanId = priceId ? await planIdFromPrice(db, priceId).catch(() => undefined) : undefined
@@ -425,7 +426,46 @@ Deno.serve(async (req) => {
           const amountFormatted = formatAmount(invoice.amount_due, invoice.currency)
           const nextAttemptDate = invoice.next_payment_attempt ? isoDate(invoice.next_payment_attempt) : undefined
           fireNotifyPayment({ type: 'payment_failed', userId, planName, amountFormatted, nextAttemptDate })
+
+          // Dunning: retries exhausted — downgrade to free immediately
+          if (!invoice.next_payment_attempt && subId) {
+            const { error: dunningErr } = await db.from('user_subscriptions')
+              .update({ plan_id: 'free', status: 'past_due', updated_at: new Date().toISOString() })
+              .eq('user_id', userId)
+              .eq('subscription_id', subId)
+            if (dunningErr) {
+              console.warn('[stripe-webhook] dunning downgrade failed:', dunningErr.message)
+            } else {
+              await enforceSeats(db, userId, 'free')
+              console.log(`[stripe-webhook] dunning: downgraded user ${userId} to free (retries exhausted)`)
+            }
+          }
         }
+        await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
+        return resp({ received: true })
+      }
+
+      case 'customer.deleted': {
+        const customer = event.data.object as Stripe.Customer
+        const customerId = customer.id
+        const { data: sc } = await db
+          .from('stripe_customers')
+          .select('user_id')
+          .eq('customer_id', customerId)
+          .maybeSingle()
+        if (sc?.user_id) {
+          // Remove stripe_customers mapping; subscription row already cleaned by subscription.deleted
+          await db.from('stripe_customers').delete().eq('customer_id', customerId)
+          console.log(`[stripe-webhook] customer.deleted: removed mapping for user ${sc.user_id}`)
+        }
+        await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
+        return resp({ received: true })
+      }
+
+      case 'charge.failed': {
+        const charge = event.data.object as Stripe.Charge
+        // Log for audit trail; no user-facing action needed (invoice.payment_failed handles notifications)
+        console.log(`[stripe-webhook] charge.failed: charge=${charge.id} customer=${charge.customer} amount=${charge.amount} currency=${charge.currency} failure_code=${charge.failure_code}`)
         await db.rpc('record_webhook_event', { p_event_id: event.id, p_event_type: event.type, p_status: 'completed' })
         return resp({ received: true })
       }

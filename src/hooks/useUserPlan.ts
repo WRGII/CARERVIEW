@@ -40,17 +40,32 @@ export function hasActivePlan(plan?: UserPlan | null): boolean {
   return start <= now && now < end
 }
 
-/** Optional helper for UI hints only */
-export function getPlanLimits(planId: PlanId | null | undefined) {
+export interface PlanLimits {
+  obs_limit: number
+  usage_window: string
+}
+
+/** Fetch plan limits from DB. Falls back to zero on error. */
+export async function getPlanLimits(planId: PlanId | null | undefined): Promise<PlanLimits> {
+  if (!planId) return { obs_limit: 0, usage_window: 'unknown' }
+  const { data } = await supabase
+    .from('subscription_plans')
+    .select('obs_limit, usage_window')
+    .eq('id', planId)
+    .maybeSingle()
+  return {
+    obs_limit: data?.obs_limit ?? 0,
+    usage_window: data?.usage_window ?? 'unknown',
+  }
+}
+
+/** Synchronous fallback limits for places that can't await. */
+export function getPlanLimitsSync(planId: PlanId | null | undefined): PlanLimits {
   switch (planId) {
-    case 'primary_qtr':
-      return { obs_limit: 30, usage_window: 'year' as const }
-    case 'family_qtr':
-      return { obs_limit: 100, usage_window: 'year' as const }
-    case 'free':
-      return { obs_limit: 3, usage_window: 'year' as const }
-    default:
-      return { obs_limit: 0, usage_window: 'unknown' as const }
+    case 'primary_qtr': return { obs_limit: 100, usage_window: 'year' }
+    case 'family_qtr':  return { obs_limit: 200, usage_window: 'year' }
+    case 'free':        return { obs_limit: 3,   usage_window: 'year' }
+    default:            return { obs_limit: 0,   usage_window: 'unknown' }
   }
 }
 

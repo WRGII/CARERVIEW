@@ -1,49 +1,30 @@
-// Sends a welcome email to a user after their first confirmed sign-in.
-// Call this from the frontend once on first authenticated session.
-// The function is idempotent: it checks the email_audit_log and skips
-// if a welcome email was already sent for this recipient hash.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { sendEmail } from "../_shared/emailService.ts";
 import { buildWelcomeEmail } from "../_shared/emailTemplates.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
+import { json, preflight } from "../_shared/cors.ts";
 
 const SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://carerview.com";
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
+  if (req.method === "OPTIONS") return preflight(req);
 
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (!authHeader) return json({ error: "Unauthorized" }, 401, req);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const srv = createClient(supabaseUrl, serviceRoleKey);
 
-  // Verify the caller is a valid authenticated user.
   const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: authHeader } },
   });
   const { data: { user }, error: authErr } = await userClient.auth.getUser();
-  if (authErr || !user?.email) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (authErr || !user?.email) return json({ error: "Unauthorized" }, 401, req);
 
   const email = user.email;
   const recipientHash = await hashEmail(email);
 
-  // Idempotency: skip if a welcome email was already logged for this address.
   const { data: existing } = await srv
     .from("email_audit_log")
     .select("id")
@@ -52,13 +33,8 @@ Deno.serve(async (req: Request) => {
     .eq("status", "sent")
     .maybeSingle();
 
-  if (existing) {
-    return new Response(JSON.stringify({ sent: false, reason: "already_sent" }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  if (existing) return json({ sent: false, reason: "already_sent" }, 200, req);
 
-  // Look up display name from profiles.
   const { data: profile } = await srv
     .from("profiles")
     .select("display_name")
@@ -78,9 +54,7 @@ Deno.serve(async (req: Request) => {
     tags: [{ name: "type", value: "welcome" }],
   });
 
-  return new Response(JSON.stringify(result), {
-    status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return json(result, 200, req);
 });
 
 async function hashEmail(email: string): Promise<string> {

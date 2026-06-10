@@ -2,69 +2,41 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 import { sendEmail } from "../_shared/emailService.ts";
 import { buildGuestObservationSubmittedEmail } from "../_shared/emailTemplates.ts";
+import { json, preflight } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://carerview.com";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
-
-function jsonResponse(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return preflight(req, "GET, POST, PUT, DELETE, OPTIONS");
 
   try {
     const { token, guest_name, guest_email, observation_date } = await req.json();
-    if (!token) {
-      return jsonResponse({ error: "Missing token" }, 400);
-    }
+    if (!token) return json({ error: "Missing token" }, 400, req);
 
     const srv = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Hash the token to look it up — the raw token is never stored
     const encoder = new TextEncoder();
-    const tokenBytes = encoder.encode(token);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", tokenBytes);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const tokenHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(token));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
 
-    // Verify token exists and was actually consumed (reject spam calls for unconsumed tokens)
     const { data: guestToken, error: tokenErr } = await srv
       .from("cv_guest_tokens")
       .select("team_id, resident_name, form_type, consumed_at")
       .eq("token_hash", tokenHash)
       .maybeSingle();
 
-    if (tokenErr || !guestToken) {
-      return jsonResponse({ error: "Token not found" }, 404);
-    }
+    if (tokenErr || !guestToken) return json({ error: "Token not found" }, 404, req);
+    if (!guestToken.consumed_at) return json({ error: "Observation not yet submitted" }, 400, req);
 
-    if (!guestToken.consumed_at) {
-      return jsonResponse({ error: "Observation not yet submitted" }, 400);
-    }
-
-    // Look up team owner
     const { data: team } = await srv
       .from("cv_team")
       .select("name, owner_user_id")
       .eq("id", guestToken.team_id)
       .maybeSingle();
 
-    if (!team) {
-      return jsonResponse({ error: "Team not found" }, 404);
-    }
+    if (!team) return json({ error: "Team not found" }, 404, req);
 
     const { data: ownerProfile } = await srv
       .from("profiles")
@@ -72,16 +44,10 @@ Deno.serve(async (req: Request) => {
       .eq("id", team.owner_user_id)
       .maybeSingle();
 
-    if (!ownerProfile?.email) {
-      return jsonResponse({ sent: false, reason: "owner_email_unavailable" });
-    }
+    if (!ownerProfile?.email) return json({ sent: false, reason: "owner_email_unavailable" }, 200, req);
 
     const formattedDate = observation_date
-      ? new Date(observation_date).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })
+      ? new Date(observation_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
     const html = buildGuestObservationSubmittedEmail({
@@ -102,10 +68,10 @@ Deno.serve(async (req: Request) => {
       templateName: "guest_observation_submitted",
     });
 
-    return jsonResponse({ sent: result.sent, error: result.error ?? null });
+    return json({ sent: result.sent, error: result.error ?? null }, 200, req);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("notify-guest-submitted error:", message);
-    return jsonResponse({ error: message, sent: false }, 500);
+    return json({ error: "Internal server error", sent: false }, 500, req);
   }
 });

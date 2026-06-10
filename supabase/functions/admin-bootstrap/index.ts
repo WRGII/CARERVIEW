@@ -1,25 +1,43 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1'
 
-const CORS_HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-  'Access-Control-Max-Age': '86400',
-} as const
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') || ''
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: CORS_HEADERS })
+function getAllowedOrigin(req: Request): string {
+  const incoming = req.headers.get('origin') || ''
+  if (!PUBLIC_SITE_URL) return incoming || '*'
+  if (incoming === PUBLIC_SITE_URL) return incoming
+  const host = incoming.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
+  const bare = siteHost.replace(/^www\./, '')
+  if (host === bare || host === `www.${bare}`) return incoming
+  return PUBLIC_SITE_URL
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-  const maxLen = Math.max(a.length, b.length)
-  let diff = a.length !== b.length ? 1 : 0
-  for (let i = 0; i < maxLen; i++) {
-    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0)
+function corsHeaders(req: Request): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': getAllowedOrigin(req),
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Access-Control-Max-Age': '86400',
   }
-  return diff === 0
+}
+
+function json(body: unknown, status = 200, req: Request) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(req) })
+}
+
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder()
+  const aBytes = encoder.encode(a)
+  const bBytes = encoder.encode(b)
+  if (aBytes.length !== bBytes.length) {
+    // Still do a comparison to avoid length-based timing leak; result will always be false
+    await crypto.subtle.timingSafeEqual(aBytes, aBytes)
+    return false
+  }
+  return crypto.subtle.timingSafeEqual(aBytes, bBytes)
 }
 
 async function signAdminToken(email: string, secret: string): Promise<string> {
@@ -37,8 +55,8 @@ async function signAdminToken(email: string, secret: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(req) })
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, req)
 
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')?.trim()
@@ -49,7 +67,7 @@ Deno.serve(async (req) => {
 
     if (!SUPABASE_URL || !SERVICE_ROLE || !ADMIN_EMAIL || !ADMIN_PASSWORD || !ADMIN_SECRET) {
       console.error('[admin-bootstrap] one or more required environment variables are missing')
-      return json({ error: 'Server configuration error' }, 500)
+      return json({ error: 'Server configuration error' }, 500, req)
     }
 
     const srv = createClient(SUPABASE_URL, SERVICE_ROLE)
@@ -61,21 +79,26 @@ Deno.serve(async (req) => {
       p_window_minutes: 1,
     })
     if (rateLimitCheck && !rateLimitCheck.allowed) {
-      return json({ error: 'Too many attempts. Please wait before trying again.' }, 429)
+      return json({ error: 'Too many attempts. Please wait before trying again.' }, 429, req)
     }
 
     const body = await req.json().catch(() => ({}))
     const submittedEmail = (body?.email as string | undefined)?.trim() ?? ''
     const submittedPassword = (body?.password as string | undefined) ?? ''
 
-    if (!timingSafeEqual(submittedEmail, ADMIN_EMAIL) || !timingSafeEqual(submittedPassword, ADMIN_PASSWORD)) {
-      return json({ error: 'Invalid credentials' }, 403)
+    const [emailMatch, passwordMatch] = await Promise.all([
+      timingSafeEqual(submittedEmail, ADMIN_EMAIL),
+      timingSafeEqual(submittedPassword, ADMIN_PASSWORD),
+    ])
+
+    if (!emailMatch || !passwordMatch) {
+      return json({ error: 'Invalid credentials' }, 403, req)
     }
 
     const token = await signAdminToken(ADMIN_EMAIL, ADMIN_SECRET)
-    return json({ ok: true, token })
+    return json({ ok: true, token }, 200, req)
   } catch (err: any) {
     console.error('[admin-bootstrap] error:', err?.message || err)
-    return json({ error: 'Internal server error' }, 500)
+    return json({ error: 'Internal server error' }, 500, req)
   }
 })
