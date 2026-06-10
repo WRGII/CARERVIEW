@@ -180,7 +180,7 @@ export default function LandingPage() {
               {heroBodyPart1}
             </p>
             {heroBodyPart2 && (
-              <p className="text-lg sm:text-xl md:text-2xl text-slate-200 leading-relaxed font-medium">
+              <p className="text-lg sm:text-xl md:text-2xl text-cyan-primary leading-relaxed font-medium">
                 {heroBodyPart2}
               </p>
             )}
