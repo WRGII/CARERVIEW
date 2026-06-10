@@ -135,6 +135,20 @@ export default function LandingPage() {
     { titleKey: 'landing.scenario3_title', bodyKey: 'landing.scenario3_body', icon: RotateCcw, color: 'bg-mint-green/40', iconColor: 'text-slate-600' },
   ]
 
+  // Split hero title at the ". CarerView" boundary so the two sentences
+  // always appear on separate lines regardless of viewport width.
+  const heroTitleRaw = t('landing.hero_title')
+  const heroTitleIdx = heroTitleRaw.indexOf('. CarerView')
+  const heroTitleLine1 = heroTitleIdx !== -1 ? heroTitleRaw.slice(0, heroTitleIdx + 1) : heroTitleRaw
+  const heroTitleLine2 = heroTitleIdx !== -1 ? heroTitleRaw.slice(heroTitleIdx + 2) : ''
+
+  // Split hero body at the ". CarerView" boundary so the problem statement
+  // and the CarerView pitch read as two distinct paragraphs.
+  const heroBodyRaw = t('landing.hero_body')
+  const heroBodyIdx = heroBodyRaw.indexOf('. CarerView')
+  const heroBodyPart1 = heroBodyIdx !== -1 ? heroBodyRaw.slice(0, heroBodyIdx + 1) : heroBodyRaw
+  const heroBodyPart2 = heroBodyIdx !== -1 ? heroBodyRaw.slice(heroBodyIdx + 2) : ''
+
   return (
     <div className="min-h-screen bg-white">
       <PageSEO
@@ -156,13 +170,21 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 leading-tight max-w-4xl mx-auto">
-            {t('landing.hero_title')}
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 max-w-4xl mx-auto">
+            <span className="block leading-tight">{heroTitleLine1}</span>
+            {heroTitleLine2 && <span className="block leading-tight">{heroTitleLine2}</span>}
           </h2>
 
-          <p className="mt-4 text-lg sm:text-xl md:text-2xl text-slate-100 max-w-4xl mx-auto leading-relaxed">
-            {t('landing.hero_body')}
-          </p>
+          <div className="mt-4 max-w-4xl mx-auto space-y-3">
+            <p className="text-lg sm:text-xl md:text-2xl text-slate-100 leading-relaxed">
+              {heroBodyPart1}
+            </p>
+            {heroBodyPart2 && (
+              <p className="text-lg sm:text-xl md:text-2xl text-slate-200 leading-relaxed font-medium">
+                {heroBodyPart2}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Four-Pillar System */}
