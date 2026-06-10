@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import MainLayout from "./components/layout/MainLayout";
+import AdminLayout from "./components/layout/AdminLayout";
 import AuthLayout from "./components/layout/AuthLayout";
 import HashScroll from "./components/util/HashScroll";
 import { ErrorBoundary } from "./components/util/ErrorBoundary";
@@ -212,52 +213,6 @@ export default function App() {
                   {/* Guest observation — public, no auth required */}
                   <Route path="/guest-observation" element={<GuestObservationPage />} />
 
-                  {/* Admin */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <AdminGuard>
-                        <AdminPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/caregivers"
-                    element={
-                      <AdminGuard>
-                        <ActiveCaregiversPage />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/delete-user"
-                    element={
-                      <AdminGuard>
-                        <AdminDeleteUser />
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/translations"
-                    element={
-                      <AdminGuard>
-                        <ErrorBoundary fallback={<AdminErrorFallback />}>
-                          <AdminTranslationsPage />
-                        </ErrorBoundary>
-                      </AdminGuard>
-                    }
-                  />
-                  <Route
-                    path="/admin/community-moderation"
-                    element={
-                      <AdminGuard>
-                        <ErrorBoundary fallback={<AdminErrorFallback />}>
-                          <AdminCommunityModerationPage />
-                        </ErrorBoundary>
-                      </AdminGuard>
-                    }
-                  />
-
                   {/* Authenticated caregiver routes — all share the persistent side nav */}
                   <Route
                     element={
@@ -402,6 +357,35 @@ export default function App() {
                     }
                   />
 
+                </Route>
+
+                {/* Admin — dark shell layout, custom JWT auth */}
+                <Route
+                  element={
+                    <AdminGuard>
+                      <AdminLayout />
+                    </AdminGuard>
+                  }
+                >
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin/caregivers" element={<ActiveCaregiversPage />} />
+                  <Route path="/admin/delete-user" element={<AdminDeleteUser />} />
+                  <Route
+                    path="/admin/translations"
+                    element={
+                      <ErrorBoundary fallback={<AdminErrorFallback />}>
+                        <AdminTranslationsPage />
+                      </ErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/admin/community-moderation"
+                    element={
+                      <ErrorBoundary fallback={<AdminErrorFallback />}>
+                        <AdminCommunityModerationPage />
+                      </ErrorBoundary>
+                    }
+                  />
                 </Route>
 
                 {/* Admin Login — full-screen, no header/footer */}
