@@ -170,15 +170,19 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 max-w-4xl mx-auto">
-            <span className="block leading-tight">{heroTitleLine1}</span>
-            {heroTitleLine2 && <span className="block leading-tight">{heroTitleLine2}</span>}
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 max-w-4xl mx-auto leading-tight">
+            {heroTitleLine1}
           </h2>
 
-          <div className="mt-4 max-w-4xl mx-auto space-y-3">
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-100 leading-relaxed">
-              {heroBodyPart1}
+          <div className="mt-4 max-w-3xl mx-auto space-y-4">
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed">
+              {t('landing.hero_intro')}
             </p>
+            {heroTitleLine2 && (
+              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-warm-white leading-tight">
+                {heroTitleLine2}
+              </p>
+            )}
             {heroBodyPart2 && (
               <p className="text-lg sm:text-xl md:text-2xl text-cyan-primary leading-relaxed font-medium">
                 {heroBodyPart2}
