@@ -27,7 +27,7 @@ function writeLsCache(locale: Locale, map: Record<string, string>): void {
 }
 
 const DEFAULT_LOCALE: Locale = 'en'
-const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi']
+const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi', 'ja']
 
 function isValidLocale(v: string | null | undefined): v is Locale {
   return VALID_LOCALES.includes(v as Locale)

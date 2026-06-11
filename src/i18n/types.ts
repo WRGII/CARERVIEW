@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'es' | 'it' | 'fr' | 'de' | 'sv' | 'fi'
+export type Locale = 'en' | 'es' | 'it' | 'fr' | 'de' | 'sv' | 'fi' | 'ja'
 
 export interface SupportedLocale {
   code: Locale

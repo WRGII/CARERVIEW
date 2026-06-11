@@ -4,7 +4,7 @@ import LocaleProvider from './LocaleProvider'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 import type { Locale } from './types'
 
-const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi']
+const VALID_LOCALES: readonly Locale[] = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi', 'ja']
 
 function getStoredLocale(): Locale {
   try {

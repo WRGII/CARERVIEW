@@ -7,7 +7,7 @@ import { queryClient } from './lib/queryClient'
 import { supabase } from './lib/supabaseClient'
 
 const LOCALE_STORAGE_KEY = 'careview-locale'
-const VALID_LOCALES = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi'] as const
+const VALID_LOCALES = ['en', 'es', 'it', 'fr', 'de', 'sv', 'fi', 'ja'] as const
 type Locale = typeof VALID_LOCALES[number]
 
 function getBootstrapLocale(): Locale {
