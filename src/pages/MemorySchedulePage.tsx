@@ -33,15 +33,15 @@ import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
 import PrintView from "../components/memory-book/PrintView";
 
-const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType }[] = [
+const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType; comingSoon?: boolean }[] = [
   { key: "overview",     label: "Overview",     Icon: LayoutDashboard },
   { key: "memory-book",  label: "Memory Book",  Icon: BookOpen },
   { key: "daily-living", label: "Daily Living", Icon: Activity },
-  { key: "routines",     label: "Routines",     Icon: ClipboardList },
-  { key: "calendar",     label: "Calendar",     Icon: CalendarDays },
-  { key: "tasks",        label: "Tasks",        Icon: CheckSquare },
+  { key: "routines",     label: "Routines",     Icon: ClipboardList,  comingSoon: true },
+  { key: "calendar",     label: "Calendar",     Icon: CalendarDays,   comingSoon: true },
+  { key: "tasks",        label: "Tasks",        Icon: CheckSquare,    comingSoon: true },
   { key: "observations", label: "Observations", Icon: FileText },
-  { key: "changes",      label: "Change Log",   Icon: History },
+  { key: "changes",      label: "Change Log",   Icon: History,        comingSoon: true },
 ];
 
 export default function MemorySchedulePage() {
@@ -210,21 +210,32 @@ export default function MemorySchedulePage() {
       <div className="space-y-6 print:hidden">
         <div className="flex items-center gap-3">
           <nav className="flex-1 flex flex-wrap gap-1.5 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">
-            {TABS.map(({ key, label, Icon }) => {
+            {TABS.map(({ key, label, Icon, comingSoon }) => {
               const isActive = activeTab === key;
+              let cls = "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors";
+              if (comingSoon) {
+                cls += isActive
+                  ? " bg-slate-100 text-slate-400 border border-dashed border-slate-300"
+                  : " text-slate-400 hover:bg-slate-50 hover:text-slate-500";
+              } else {
+                cls += isActive
+                  ? " bg-cyan-600 text-white shadow-sm"
+                  : " text-slate-600 hover:text-slate-800 hover:bg-slate-100";
+              }
               return (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={[
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-cyan-600 text-white shadow-sm"
-                      : "text-slate-600 hover:text-slate-800 hover:bg-slate-100",
-                  ].join(" ")}
+                  title={comingSoon ? "Coming soon" : undefined}
+                  className={cls}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="hidden sm:inline">{label}</span>
+                  {comingSoon && (
+                    <span className="hidden sm:inline text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full border border-slate-200 leading-none">
+                      Soon
+                    </span>
+                  )}
                 </button>
               );
             })}
