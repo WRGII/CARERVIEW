@@ -36,34 +36,13 @@ export default function WhyCarerView() {
   ];
 
   const faqs = [
-    {
-      q: 'What is an Activities of Daily Living (ADL) assessment?',
-      a: 'An Activities of Daily Living (ADL) assessment measures how well a person can perform basic self-care tasks such as bathing, dressing, eating, and moving around. CarerView uses a simple 1-5 scale so family caregivers can track these changes consistently over time and share meaningful reports with healthcare providers.',
-    },
-    {
-      q: 'How does CarerView help family caregivers track changes in a loved one?',
-      a: "CarerView provides structured observation forms covering ADL and IADL activities. You record a quick 1-5 score and optional notes for each check-in. Over time, these build into a clear picture of what's changing — so you can spot trends, adjust care plans, and arrive at doctor appointments with specific, documented observations rather than vague impressions.",
-    },
-    {
-      q: 'Can multiple family members use CarerView together?',
-      a: 'Yes. The Family Circle plan allows you to invite siblings, spouses, or professional in-home carers to a shared care view. Everyone sees the same observations and can add their own. This eliminates the friction that commonly causes stress in families sharing caregiving responsibilities.',
-    },
-    {
-      q: 'Can I share CarerView observation reports with doctors or care professionals?',
-      a: "Yes. CarerView can export your observation history as a DOCX or CSV file that you can bring to GP appointments, specialist consultations, or care reviews. Having a written record of changes over weeks and months is far more useful to healthcare providers than trying to recall how things were three months ago.",
-    },
-    {
-      q: 'How is CarerView different from a general care notes app?',
-      a: "CarerView is a full care coordination system — not just a notes app. It includes a structured Care Plan with six sections, a Decision Engine that flags missing pieces by severity, a Memory Book that gives every team member instant context, and an observation framework based on the ADL and IADL scales used by healthcare professionals.",
-    },
-    {
-      q: t('why.faq6_q'),
-      a: t('why.faq6_a'),
-    },
-    {
-      q: t('why.faq7_q'),
-      a: t('why.faq7_a'),
-    },
+    { q: t('why.faq1_q'), a: t('why.faq1_a') },
+    { q: t('why.faq2_q'), a: t('why.faq2_a') },
+    { q: t('why.faq3_q'), a: t('why.faq3_a') },
+    { q: t('why.faq4_q'), a: t('why.faq4_a') },
+    { q: t('why.faq5_q'), a: t('why.faq5_a') },
+    { q: t('why.faq6_q'), a: t('why.faq6_a') },
+    { q: t('why.faq7_q'), a: t('why.faq7_a') },
   ];
 
   const faqStructuredData = {
@@ -333,8 +312,8 @@ export default function WhyCarerView() {
         <section className="pb-20">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">Frequently Asked Questions</h2>
-              <p className="text-lg text-slate-gray/70">Common questions about CarerView, care planning, and coordination.</p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">{t('why.faq_section_title')}</h2>
+              <p className="text-lg text-slate-gray/70">{t('why.faq_section_subtitle')}</p>
             </div>
             <div className="space-y-3">
               {faqs.map((f, i) => (

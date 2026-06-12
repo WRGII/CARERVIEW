@@ -1,0 +1,32 @@
+-- Add why.faq1-5 and FAQ section heading keys that were hardcoded in WhyCarerView.tsx
+-- English rows (canonical source text)
+INSERT INTO ui_translations (locale, key, value) VALUES
+  ('en', 'why.faq_section_title', 'Frequently Asked Questions'),
+  ('en', 'why.faq_section_subtitle', 'Common questions about CarerView, care planning, and coordination.'),
+  ('en', 'why.faq1_q', 'What is an Activities of Daily Living (ADL) assessment?'),
+  ('en', 'why.faq1_a', 'An Activities of Daily Living (ADL) assessment measures how well a person can perform basic self-care tasks such as bathing, dressing, eating, and moving around. CarerView uses a simple 1-5 scale so family caregivers can track these changes consistently over time and share meaningful reports with healthcare providers.'),
+  ('en', 'why.faq2_q', 'How does CarerView help family caregivers track changes in a loved one?'),
+  ('en', 'why.faq2_a', 'CarerView provides structured observation forms covering ADL and IADL activities. You record a quick 1-5 score and optional notes for each check-in. Over time, these build into a clear picture of what''s changing — so you can spot trends, adjust care plans, and arrive at doctor appointments with specific, documented observations rather than vague impressions.'),
+  ('en', 'why.faq3_q', 'Can multiple family members use CarerView together?'),
+  ('en', 'why.faq3_a', 'Yes. The Family Circle plan allows you to invite siblings, spouses, or professional in-home carers to a shared care view. Everyone sees the same observations and can add their own. This eliminates the friction that commonly causes stress in families sharing caregiving responsibilities.'),
+  ('en', 'why.faq4_q', 'Can I share CarerView observation reports with doctors or care professionals?'),
+  ('en', 'why.faq4_a', 'Yes. CarerView can export your observation history as a DOCX or CSV file that you can bring to GP appointments, specialist consultations, or care reviews. Having a written record of changes over weeks and months is far more useful to healthcare providers than trying to recall how things were three months ago.'),
+  ('en', 'why.faq5_q', 'How is CarerView different from a general care notes app?'),
+  ('en', 'why.faq5_a', 'CarerView is a full care coordination system — not just a notes app. It includes a structured Care Plan with six sections, a Decision Engine that flags missing pieces by severity, a Memory Book that gives every team member instant context, and an observation framework based on the ADL and IADL scales used by healthcare professionals.')
+ON CONFLICT (locale, key) DO NOTHING;
+
+-- Japanese translations
+INSERT INTO ui_translations (locale, key, value) VALUES
+  ('ja', 'why.faq_section_title', 'よくある質問'),
+  ('ja', 'why.faq_section_subtitle', 'CarerView、ケアプランニング、コーディネーションに関するよくある質問。'),
+  ('ja', 'why.faq1_q', '日常生活動作（ADL）評価とは何ですか？'),
+  ('ja', 'why.faq1_a', '日常生活動作（ADL）評価は、入浴・着替え・食事・移動などの基本的なセルフケア動作をどの程度できるかを測定するものです。CarerViewでは1〜5のシンプルなスケールを使い、家族介護者が経時的に変化を一貫して記録し、医療従事者に意味のある報告書を共有できます。'),
+  ('ja', 'why.faq2_q', 'CarerViewは、家族介護者が愛する人の変化を追跡するのにどのように役立ちますか？'),
+  ('ja', 'why.faq2_a', 'CarerViewは、ADLとIADL活動を対象とした構造化された観察フォームを提供します。チェックインごとに1〜5のスコアと任意のメモを記録します。時間の経過とともに何が変化しているかの明確な全体像が形成され、傾向の把握、ケアプランの調整、そして漠然とした印象ではなく具体的な記録を持って医師の予約に臨むことができます。'),
+  ('ja', 'why.faq3_q', '複数の家族がCarerViewを一緒に使用できますか？'),
+  ('ja', 'why.faq3_a', 'はい。ファミリーサークルプランでは、兄弟姉妹、配偶者、または専門の在宅介護者を共有のケアビューに招待できます。全員が同じ観察記録を見て、それぞれが追加することもできます。これにより、介護の責任を分担する家族間でよく起こる摩擦をなくすことができます。'),
+  ('ja', 'why.faq4_q', 'CarerViewの観察レポートを医師や介護専門家と共有できますか？'),
+  ('ja', 'why.faq4_a', 'はい。CarerViewは観察履歴をDOCXまたはCSVファイルとしてエクスポートでき、かかりつけ医の予約、専門医の診察、またはケアレビューに持参できます。数週間から数ヶ月にわたる変化の書面記録は、3ヶ月前の状態を思い出そうとするよりも、医療従事者にとってはるかに役立ちます。'),
+  ('ja', 'why.faq5_q', 'CarerViewは一般的なケアメモアプリとどう違うのですか？'),
+  ('ja', 'why.faq5_a', 'CarerViewは単なるメモアプリではなく、総合的なケアコーディネーションシステムです。6つのセクションからなる構造化されたケアプラン、欠けている部分を重要度別にフラグ立てするデシジョンエンジン、チームメンバー全員に即座にコンテキストを提供するメモリーブック、そして医療専門家が使用するADLおよびIADLスケールに基づいた観察フレームワークが含まれています。')
+ON CONFLICT (locale, key) DO NOTHING;
