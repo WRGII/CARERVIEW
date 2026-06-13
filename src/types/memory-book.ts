@@ -365,7 +365,28 @@ export type MemoryBookVehicleCare = {
   updated_by: string | null;
 };
 
+export type MemoryBookHomeAddress = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  street_number: string | null;
+  street_name: string | null;
+  apt_unit: string | null;
+  building_name: string | null;
+  city: string | null;
+  county_township: string | null;
+  state_province: string | null;
+  country: string | null;
+  postal_code: string | null;
+  history_description: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
 export type HouseholdSection =
+  | "home_address"
   | "providers"
   | "insurance"
   | "finances"

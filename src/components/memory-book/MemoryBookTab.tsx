@@ -25,6 +25,7 @@ type Props = {
   hasVehicles: boolean;
   hasSocialAccounts: boolean;
   hasHouseholdProviders: boolean;
+  hasHomeAddress: boolean;
 };
 
 type SectionConfig = {
@@ -37,6 +38,7 @@ type SectionConfig = {
 
 const SECTIONS: SectionConfig[] = [
   { key: "identity",            label: "Identity",        Icon: User,        group: "personal" },
+  { key: "household_providers", label: "Household",       Icon: Home,        group: "personal" },
   { key: "contacts",            label: "Contacts",        Icon: Users,       group: "personal" },
   { key: "medical",             label: "Medical",         Icon: Stethoscope, group: "personal" },
   { key: "social_accounts",     label: "Online Accounts", Icon: Share2,      group: "personal" },
@@ -44,7 +46,6 @@ const SECTIONS: SectionConfig[] = [
   { key: "finances",            label: "Finances",        Icon: Landmark,    group: "household", ownerOnly: true },
   { key: "subscriptions",       label: "Subscriptions",   Icon: Tv,          group: "household" },
   { key: "vehicle",             label: "Vehicle",         Icon: Car,         group: "household" },
-  { key: "household_providers", label: "Household",       Icon: Home,        group: "household" },
 ];
 
 export default function MemoryBookTab({
@@ -61,6 +62,7 @@ export default function MemoryBookTab({
   hasVehicles,
   hasSocialAccounts,
   hasHouseholdProviders,
+  hasHomeAddress,
 }: Props) {
   const [activeSection, setActiveSection] = useState<MemoryBookSection>("identity");
 
@@ -73,7 +75,7 @@ export default function MemoryBookTab({
     finances:             hasFinances,
     subscriptions:        hasSubscriptions,
     vehicle:              hasVehicles,
-    household_providers:  hasHouseholdProviders,
+    household_providers:  hasHouseholdProviders || hasHomeAddress,
   };
 
   const visibleSections = SECTIONS.filter(s => isOwner || !s.ownerOnly);
@@ -189,6 +191,7 @@ export default function MemoryBookTab({
             memoryBookId={memoryBookId}
             teamId={teamId}
             isOwner={isOwner}
+            hasHomeAddress={hasHomeAddress}
           />
         )}
       </div>

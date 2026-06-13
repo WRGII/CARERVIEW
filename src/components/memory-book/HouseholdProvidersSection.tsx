@@ -19,11 +19,13 @@ import type {
 } from "../../types/memory-book";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
+import HomeAddressSection from "./HomeAddressSection";
 
 type Props = {
   memoryBookId: string;
   teamId: string;
   isOwner: boolean;
+  hasHomeAddress?: boolean;
 };
 
 type SubCategoryMeta = {
@@ -71,7 +73,7 @@ const EMPTY_FORM = {
 
 type FormState = typeof EMPTY_FORM;
 
-export default function HouseholdProvidersSection({ memoryBookId, teamId, isOwner }: Props) {
+export default function HouseholdProvidersSection({ memoryBookId, teamId, isOwner, hasHomeAddress = false }: Props) {
   const { data: providers = [], isLoading } = useMemoryBookHouseholdProviders(memoryBookId);
   const upsert = useUpsertMemoryBookHouseholdProvider();
   const remove = useDeleteMemoryBookHouseholdProvider();
@@ -171,6 +173,9 @@ export default function HouseholdProvidersSection({ memoryBookId, teamId, isOwne
 
   return (
     <div className="space-y-6">
+      {/* Home Address — primary sub-section */}
+      <HomeAddressSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+
       {!isOwner && <ReadOnlyBanner />}
 
       {/* Header */}

@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { ShieldCheck, Landmark, Tv, Car } from "lucide-react";
+import { MapPin, ShieldCheck, Landmark, Tv, Car } from "lucide-react";
+import HomeAddressSection from "./HomeAddressSection";
 import InsuranceSection from "./InsuranceSection";
 import FinancesSection from "./FinancesSection";
 import SubscriptionsSection from "./SubscriptionsSection";
 import VehicleSection from "./VehicleSection";
 import type { HouseholdSection } from "../../types/memory-book";
-import { useLocale } from "../../i18n/LocaleContext";
 
 type Props = {
   memoryBookId: string;
   teamId: string;
   isOwner: boolean;
+  hasHomeAddress: boolean;
   hasInsurance: boolean;
   hasFinances: boolean;
   hasSubscriptions: boolean;
@@ -21,24 +22,26 @@ export default function HouseholdTab({
   memoryBookId,
   teamId,
   isOwner,
+  hasHomeAddress,
   hasInsurance,
   hasFinances,
   hasSubscriptions,
   hasVehicles,
 }: Props) {
-  const { t } = useLocale();
-  const [activeSection, setActiveSection] = useState<HouseholdSection>("insurance");
+  const [activeSection, setActiveSection] = useState<HouseholdSection>("home_address");
 
   const SECTIONS: { key: HouseholdSection; label: string; Icon: React.ElementType; ownerOnly?: boolean }[] = [
-    { key: "insurance",     label: t("memory_book.household_section_insurance"),     Icon: ShieldCheck },
-    { key: "finances",      label: t("memory_book.household_section_finances"),      Icon: Landmark,   ownerOnly: true },
-    { key: "subscriptions", label: t("memory_book.household_section_subscriptions"), Icon: Tv },
-    { key: "vehicle",       label: t("memory_book.household_section_vehicle"),       Icon: Car },
+    { key: "home_address",  label: "Home Address",  Icon: MapPin },
+    { key: "insurance",     label: "Insurance",     Icon: ShieldCheck },
+    { key: "finances",      label: "Finances",      Icon: Landmark,  ownerOnly: true },
+    { key: "subscriptions", label: "Subscriptions", Icon: Tv },
+    { key: "vehicle",       label: "Vehicle",       Icon: Car },
   ];
 
   const visibleSections = SECTIONS.filter(s => isOwner || !s.ownerOnly);
 
   const completionMap: Record<HouseholdSection, boolean> = {
+    home_address:  hasHomeAddress,
     providers:     false,
     insurance:     hasInsurance,
     finances:      hasFinances,
@@ -79,6 +82,9 @@ export default function HouseholdTab({
       </div>
 
       <div>
+        {activeSection === "home_address" && (
+          <HomeAddressSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+        )}
         {activeSection === "insurance" && (
           <InsuranceSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
         )}

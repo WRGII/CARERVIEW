@@ -18,6 +18,7 @@ import type {
   MemoryBookPreferenceEntry,
   MemoryBookDailyLivingEntry,
   MemoryBookHouseholdProvider,
+  MemoryBookHomeAddress,
   TeamMemberRole,
 } from "../types/memory-book";
 
@@ -1431,6 +1432,68 @@ export function useDeleteMemoryBookVehicleCare() {
     },
     onSuccess: (_data, params) => {
       queryClient.invalidateQueries({ queryKey: ["memory-book-vehicle-care", params.memoryBookId] });
+    },
+  });
+}
+
+export function useMemoryBookHomeAddress(memoryBookId: string | null) {
+  return useQuery({
+    queryKey: ["memory-book-home-address", memoryBookId],
+    queryFn: async () => {
+      if (!memoryBookId) return null;
+      const { data, error } = await supabase
+        .from("memory_book_home_address")
+        .select("*")
+        .eq("memory_book_id", memoryBookId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MemoryBookHomeAddress | null;
+    },
+    enabled: !!memoryBookId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpsertMemoryBookHomeAddress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      memoryBookId: string;
+      teamId: string;
+      values: Partial<Omit<MemoryBookHomeAddress, "id" | "memory_book_id" | "team_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: existing } = await supabase
+        .from("memory_book_home_address")
+        .select("id")
+        .eq("memory_book_id", params.memoryBookId)
+        .eq("team_id", params.teamId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("memory_book_home_address")
+          .update({ ...params.values, updated_at: new Date().toISOString(), updated_by: user.id })
+          .eq("id", existing.id)
+          .eq("team_id", params.teamId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("memory_book_home_address")
+          .insert({
+            memory_book_id: params.memoryBookId,
+            team_id: params.teamId,
+            ...params.values,
+            created_by: user.id,
+            updated_by: user.id,
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_data, params) => {
+      queryClient.invalidateQueries({ queryKey: ["memory-book-home-address", params.memoryBookId] });
     },
   });
 }
