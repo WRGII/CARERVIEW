@@ -26,17 +26,17 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     planId: 'primary_qtr',
     name: 'Primary Caregiver',
     description: 'One caregiver, one clear record. 30 Observations a year keep trends visible and care plans on track.',
-    price: 12.50,
+    price: 25.50,
     currency: 'usd',
     mode: 'subscription'
   },
   {
     id: 'prod_TW2RHuPJHLfg1L',
-    priceId: 'price_1SZ0MsGiCMwtCdgyT6uihjXf',
+    priceId: 'price_1ThwvbGiCMwtCdgyyRZr2FME',
     planId: 'family_qtr',
     name: 'Family Circle',
     description: 'Everyone\'s notes, one shared story. Up to 3 caregivers collaborate without friction.',
-    price: 25.50,
+    price: 45.50,
     currency: 'usd',
     mode: 'subscription'
   }
