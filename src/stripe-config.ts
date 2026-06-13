@@ -15,7 +15,7 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     priceId: '',
     planId: 'free',
     name: 'Free Community Member',
-    description: 'Three free observations per year. Join the community and stay connected—free forever.',
+    description: 'Access all 6 caregiver support rooms. Post, reply, and react with other caregivers. Post anonymously when you need privacy. No invite required — join instantly.',
     price: 0,
     currency: 'usd',
     mode: 'subscription'
