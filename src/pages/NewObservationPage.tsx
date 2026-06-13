@@ -1,18 +1,18 @@
 // src/pages/NewObservationPage.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { SquareActivity as ActivitySquare, ClipboardList, Layers } from 'lucide-react';
+import { SquareActivity as ActivitySquare, ClipboardList, Layers, ArrowRight } from 'lucide-react';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Loading } from '../components/ui/Loading';
 
 import { useActiveTeam } from '../context/ActiveTeam';
-import { cvGetRemaining } from '../lib/cv';
+import { cvGetRemaining, cvGetSoloRemaining } from '../lib/cv';
 import { useMemberFrozen } from '../hooks/useMemberFrozen';
 import { setLastModule } from '../lib/lastModule';
 import { useTeamResident } from '../hooks/useMemoryBook';
@@ -34,12 +34,18 @@ export default function NewObservationPage() {
 
   React.useEffect(() => { setLastModule('observations'); }, []);
 
-  // Load remaining team quota
+  // Load remaining quota — team-based or solo
   React.useEffect(() => {
     (async () => {
-      if (!teamId) { setRemaining(null); return; }
-      try { setRemaining(await cvGetRemaining(teamId)); }
-      catch { setRemaining(null); }
+      try {
+        if (teamId) {
+          setRemaining(await cvGetRemaining(teamId));
+        } else {
+          setRemaining(await cvGetSoloRemaining());
+        }
+      } catch {
+        setRemaining(null);
+      }
     })();
   }, [teamId]);
 
@@ -49,15 +55,15 @@ export default function NewObservationPage() {
   if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
   if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
+  const quotaExhausted = remaining !== null && remaining <= 0;
+
   async function createAndStart(mode: FormType) {
     try {
       setBusy(true); setErr(null);
 
-      if (!teamId) throw new Error(t('new_obs.no_team'));
       if (frozen) throw new Error(t('new_obs.seat_frozen'));
-      if (remaining !== null && remaining <= 0) throw new Error(t('new_obs.quota_reached'));
+      if (quotaExhausted) throw new Error(t('new_obs.quota_reached'));
 
-      // Build required fields
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -77,18 +83,23 @@ export default function NewObservationPage() {
         throw new Error(t('new_obs.email_missing'));
       }
 
+      const insertPayload: Record<string, unknown> = {
+        user_id: user!.id,
+        form_type: mode,
+        observation_date,
+        caregiver_name,
+        caregiver_email,
+        author_user_id: user!.id,
+        resident_name: resident?.full_name ?? null,
+      };
+
+      if (teamId) {
+        insertPayload.team_id = teamId;
+      }
+
       const { data, error: insErr } = await supabase
         .from('observations')
-        .insert({
-          user_id: user!.id,
-          form_type: mode,
-          observation_date,
-          caregiver_name,
-          caregiver_email,
-          team_id: teamId,
-          author_user_id: user!.id,
-          resident_name: resident?.full_name ?? null,
-        })
+        .insert(insertPayload)
         .select('id')
         .single();
 
@@ -97,13 +108,19 @@ export default function NewObservationPage() {
       // optimistic decrement
       if (remaining !== null) setRemaining(Math.max(remaining - 1, 0));
 
-      window.plausible('Observation Created', { props: { type: mode } });
+      window.plausible?.('Observation Created', { props: { type: mode } });
       navigate(`/caregiver/observations/${data.id}`);
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     } finally {
       setBusy(false);
     }
+  }
+
+  function getRemainingLabel(): string | null {
+    if (remaining === null) return null;
+    if (remaining === 1) return t('new_obs.solo_remaining_one');
+    return t('new_obs.solo_remaining_other').replace('{{count}}', String(remaining));
   }
 
   const Tile = ({
@@ -124,7 +141,7 @@ export default function NewObservationPage() {
       onClick={onClick}
       className="w-full text-left focus:outline-none"
       aria-label={title}
-      disabled={busy || frozen || !teamId || (remaining !== null && remaining <= 0)}
+      disabled={busy || frozen || quotaExhausted}
     >
       <Card className="bg-warm-white hover:shadow-lg transition-shadow duration-200 h-full disabled:opacity-60">
         <CardContent className="p-6">
@@ -166,38 +183,65 @@ export default function NewObservationPage() {
           <h1 className="text-3xl font-bold text-slate-gray">{t('new_obs.create_title')}</h1>
           <p className="text-slate-gray/70">{t('new_obs.choose_type')}</p>
           {/* Status line */}
-          {!teamId && <p className="mt-2 text-sm text-amber-700">{t('new_obs.no_team')}</p>}
           {teamId && remaining !== null && (
             <p className="mt-2 text-sm text-slate-600">{t('new_obs.remaining_prefix')} {remaining}</p>
+          )}
+          {!teamId && remaining !== null && !quotaExhausted && (
+            <p className="mt-2 text-sm text-slate-600">{getRemainingLabel()}</p>
           )}
           {frozen && <p className="mt-2 text-sm text-red-600">{t('new_obs.seat_frozen')}</p>}
         </div>
 
-        {err && <div className="text-red-600">{err}</div>}
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <Tile
-            title={t('new_obs.adl_title')}
-            desc={t('new_obs.adl_desc')}
-            icon={<ActivitySquare className="w-6 h-6 text-cyan-primary" />}
-            onClick={() => createAndStart('ADL')}
-          />
-          <Tile
-            title={t('new_obs.iadl_title')}
-            desc={t('new_obs.iadl_desc')}
-            icon={<ClipboardList className="w-6 h-6 text-cyan-primary" />}
-            onClick={() => createAndStart('IADL')}
-          />
-          <div className="md:col-span-2">
-            <Tile
-              title={t('new_obs.comprehensive_title')}
-              desc={t('new_obs.comprehensive_desc')}
-              icon={<Layers className="w-6 h-6 text-cyan-primary" />}
-              badge={t('pricing.recommended')}
-              onClick={() => createAndStart('COMPREHENSIVE')}
-            />
+        {/* Upgrade prompt when quota is exhausted */}
+        {quotaExhausted ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <Layers className="w-6 h-6 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-semibold text-slate-800">
+                {t('new_obs.solo_quota_reached_title')}
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                {t('new_obs.solo_quota_reached_body')}
+              </p>
+            </div>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center gap-1.5 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2.5 transition-colors"
+            >
+              {t('new_obs.solo_quota_reached_cta')}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-        </div>
+        ) : (
+          <>
+            {err && <div className="text-red-600 text-sm">{err}</div>}
+            <div className="grid gap-6 md:grid-cols-2">
+              <Tile
+                title={t('new_obs.adl_title')}
+                desc={t('new_obs.adl_desc')}
+                icon={<ActivitySquare className="w-6 h-6 text-cyan-primary" />}
+                onClick={() => createAndStart('ADL')}
+              />
+              <Tile
+                title={t('new_obs.iadl_title')}
+                desc={t('new_obs.iadl_desc')}
+                icon={<ClipboardList className="w-6 h-6 text-cyan-primary" />}
+                onClick={() => createAndStart('IADL')}
+              />
+              <div className="md:col-span-2">
+                <Tile
+                  title={t('new_obs.comprehensive_title')}
+                  desc={t('new_obs.comprehensive_desc')}
+                  icon={<Layers className="w-6 h-6 text-cyan-primary" />}
+                  badge={t('pricing.recommended')}
+                  onClick={() => createAndStart('COMPREHENSIVE')}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         <div>
           <Button variant="outline" onClick={() => navigate('/caregiver')} disabled={busy}>

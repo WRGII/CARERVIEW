@@ -110,6 +110,12 @@ export async function cvGetRemaining(teamId: string) {
   return (data?.remaining ?? 0) as number;
 }
 
+export async function cvGetSoloRemaining(): Promise<number> {
+  const { data, error } = await supabase.rpc("cv_get_solo_remaining");
+  if (error) throw error;
+  return (data ?? 0) as number;
+}
+
 export async function cvSendInviteEmail(params: {
   email: string;
   invite_link: string;

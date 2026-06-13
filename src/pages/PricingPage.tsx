@@ -121,6 +121,7 @@ export default function PricingPage() {
               <Feature>{t('pricing.plan_free_f2')}</Feature>
               <Feature>{t('pricing.plan_free_f3')}</Feature>
               <Feature>{t('pricing.plan_free_f4')}</Feature>
+              <Feature>{t('pricing.plan_free_f5')}</Feature>
             </ul>
             <div className="mt-6">
               <Link
