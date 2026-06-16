@@ -134,7 +134,6 @@ export default function AdminLoginPage() {
       setAdminToken(data.token);
       navigate("/admin", { replace: true });
     } catch (err) {
-      console.error('[admin-login] fetch error:', err);
       setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);

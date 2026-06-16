@@ -72,11 +72,9 @@ async function bootstrapOne(locale: Locale): Promise<void> {
     ])
     if (data && typeof data === 'object' && Object.keys(data).length > 0) {
       writeCache(locale, data)
-    } else {
-      console.error('[bootstrap] empty translations for locale', locale)
     }
-  } catch (err) {
-    console.error('[bootstrap] translations failed for locale', locale, err)
+  } catch {
+    // bootstrap failure is non-fatal; LocaleProvider will fetch lazily
   }
 }
 

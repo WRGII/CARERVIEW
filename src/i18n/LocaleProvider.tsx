@@ -128,18 +128,6 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
   })
 
   useEffect(() => {
-    if (translationsError) {
-      console.error('[i18n] Failed to fetch translations for locale', locale, translationsError)
-    }
-  }, [translationsError, locale])
-
-  useEffect(() => {
-    if (enError) {
-      console.error('[i18n] Failed to fetch English fallback translations', enError)
-    }
-  }, [enError])
-
-  useEffect(() => {
     if (translationsMap && Object.keys(translationsMap).length > 0) {
       writeLsCache(locale, translationsMap)
     }

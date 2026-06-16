@@ -187,7 +187,6 @@ export default function CreateAccountPage() {
           localStorage.removeItem(PENDING_KEY);
           setPendingPlanName(null);
         }
-        console.warn("Failed to resume pending checkout:", e);
         setError(msg || t('create_account.signup_failed'));
       }
     })();
@@ -218,7 +217,7 @@ export default function CreateAccountPage() {
 
       if (selectedPlanKey === 'free') {
         const { error: subErr } = await upsertFreeSubscription(authedUser.id);
-        if (subErr) console.warn('Failed to create free subscription record:', subErr);
+        if (subErr) throw subErr;
         const joinToken = localStorage.getItem("cv_join_token");
         if (joinToken) {
           localStorage.removeItem("cv_join_token");
@@ -244,7 +243,6 @@ export default function CreateAccountPage() {
       });
 
       if (fnErr) {
-        console.error('[stripe-checkout] edge function error:', fnErr);
         if (fnErr.name === 'FunctionsHttpError' && fnErr.context) {
           try {
             const body = await fnErr.context.json();
@@ -339,7 +337,7 @@ export default function CreateAccountPage() {
 
         if (selectedPlanKey === 'free') {
           const { error: subErr } = await upsertFreeSubscription(user.id);
-          if (subErr) console.warn('Failed to create free subscription record:', subErr);
+          if (subErr) throw subErr;
           const joinToken = localStorage.getItem("cv_join_token");
           if (joinToken) {
             localStorage.removeItem("cv_join_token");
@@ -364,7 +362,6 @@ export default function CreateAccountPage() {
           },
         });
         if (fnErr) {
-          console.error('[stripe-checkout] edge function error:', fnErr);
           if (fnErr.name === 'FunctionsHttpError' && fnErr.context) {
             try {
               const body = await fnErr.context.json();

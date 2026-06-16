@@ -126,12 +126,10 @@ export async function cvSendInviteEmail(params: {
     body: params,
   });
   if (error) {
-    console.error("send-invite-email edge fn error:", error);
     return { sent: false, error: error.message ?? "Edge function error" };
   }
   if (!data?.sent) {
     const reason = data?.error ?? data?.method ?? "Unknown reason";
-    console.warn("send-invite-email returned sent:false —", reason);
     return { sent: false, error: reason };
   }
   return { sent: true };

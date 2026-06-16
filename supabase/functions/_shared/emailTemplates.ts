@@ -552,54 +552,6 @@ export function buildAdminReportAlertEmail(params: {
   });
 }
 
-// ── Member removed from team ───────────────────────────────────────────────────
-
-export function buildMemberRemovedEmail(params: {
-  displayName: string;
-  teamName: string;
-  removedByName: string;
-  signupLink: string;
-}): string {
-  const { displayName, teamName, removedByName, signupLink } = params;
-  const greeting = displayName ? `Hi ${escHtml(displayName)},` : "Hello,";
-
-  const body = `
-    <h1 class="title">You have been removed from a care team</h1>
-    <p class="text">${greeting}</p>
-    <p class="text">
-      <strong>${escHtml(removedByName)}</strong> has removed you from the
-      <strong>${escHtml(teamName)}</strong> care team on CarerView.
-    </p>
-    <p class="text">
-      You no longer have access to this team's observations or care data.
-      If you believe this was done in error, please contact the team owner directly.
-    </p>
-    <div class="highlight-box">
-      <p>
-        Your personal CarerView account remains active. You can join or create another care team
-        at any time.
-      </p>
-    </div>
-    <div class="cta-wrap">
-      <a href="${escHtml(signupLink)}" class="cta-btn">Visit CarerView</a>
-    </div>
-    <p class="link-fallback">
-      <a href="${escHtml(signupLink)}">${escHtml(signupLink)}</a>
-    </p>
-    <hr class="divider" />
-    <p class="text" style="font-size:13px;color:#718096;">
-      Questions? Contact us at
-      <a href="mailto:CarerView@grifdigi.com" style="color:#0d9488;">CarerView@grifdigi.com</a>.
-    </p>`;
-
-  return wrapEmail({
-    previewText: `You have been removed from ${teamName} on CarerView`,
-    headerBadge: "Team Update",
-    title: "Removed from care team",
-    bodyHtml: body,
-  });
-}
-
 // ── Guest observation submitted notification (to team owner) ───────────────────
 
 export function buildGuestObservationSubmittedEmail(params: {

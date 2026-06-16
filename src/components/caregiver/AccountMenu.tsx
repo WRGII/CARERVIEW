@@ -26,8 +26,8 @@ export default function AccountMenu() {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Sign out error:", error);
+    } catch {
+      // sign-out failure is non-fatal; redirect regardless
     } finally {
       window.location.assign("/");
     }

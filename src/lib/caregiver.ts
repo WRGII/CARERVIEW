@@ -63,7 +63,6 @@ export async function deleteOwnAccount(): Promise<DeleteAccountResponse> {
       emailSent: data.emailSent,
     };
   } catch (error: any) {
-    console.error('Delete account error:', error);
     throw error;
   }
 }

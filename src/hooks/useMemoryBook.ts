@@ -201,11 +201,9 @@ export function useUpsertResident() {
         .eq("team_id", teamId);
       if (error) throw error;
       // Sync to memory_book_identity so Memory Book stays current
-      const { error: syncErr } = await supabase.rpc("cv_sync_resident_to_memory_book_identity", {
+      await supabase.rpc("cv_sync_resident_to_memory_book_identity", {
         p_team_id: teamId,
       });
-      // Sync failure is non-fatal — memory book may not exist yet
-      if (syncErr) console.warn("cv_sync_resident_to_memory_book_identity:", syncErr.message);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["team-resident", variables.teamId] });

@@ -109,9 +109,7 @@ export default function CaregiverPage() {
 
   useEffect(() => {
     if (user?.id) {
-      prefetchObservationFormAssets(queryClient, user.id).catch((err) => {
-        console.warn('Failed to prefetch observation form assets:', err);
-      });
+      prefetchObservationFormAssets(queryClient, user.id).catch(() => {});
     }
   }, [user?.id, queryClient]);
 

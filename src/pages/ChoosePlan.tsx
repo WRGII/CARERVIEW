@@ -50,7 +50,6 @@ export default function ChoosePlan() {
       if (!url) throw new Error('No portal URL returned');
       window.location.assign(url);
     } catch (error: any) {
-      console.error('Error opening billing portal:', error);
       setStatusMessage({
         type: 'error',
         message: t('billing.portal_failed')
@@ -82,7 +81,6 @@ export default function ChoosePlan() {
         await refetchPlan();
         setTimeout(() => navigate('/caregiver'), 1000);
       } catch (error: any) {
-        console.error('Error activating free plan:', error);
         setStatusMessage({
           type: 'error',
           message: error.message || t('choose_plan.activate_failed')
@@ -105,7 +103,6 @@ export default function ChoosePlan() {
       });
 
       if (error) {
-        console.error('Checkout error:', error);
         throw new Error(error.message || 'Failed to create checkout session');
       }
 
@@ -118,7 +115,6 @@ export default function ChoosePlan() {
       }
       window.location.href = data.url;
     } catch (error) {
-      console.error('Error creating checkout session:', error);
       setStatusMessage({
         type: 'error',
         message: t('choose_plan.checkout_failed')

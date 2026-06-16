@@ -41,7 +41,6 @@ export default function DeleteAccount() {
 
       window.location.href = '/?deleted=true';
     } catch (err: any) {
-      console.error('Delete account error:', err);
       setError(err?.message || t('common.unexpected_error'));
       setIsDeleting(false);
     }

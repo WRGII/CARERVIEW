@@ -61,8 +61,7 @@ export function useAuth() {
 
       return data as Profile
     } catch (e: any) {
-      console.error('[useAuth] upsertProfile unexpected error:', e)
-      return null
+      return null;
     }
   }
 
@@ -103,8 +102,6 @@ export function useAuth() {
       setProfile(prof)
       setIsAdmin(prof.role === 'admin')
     } catch (e: any) {
-      console.error('[useAuth] load error:', e)
-      // Transient error — surface it without destroying the session
       setError(e.message)
     }
   }
@@ -115,7 +112,6 @@ export function useAuth() {
 
     const loadingTimeout = setTimeout(() => {
       if (active) {
-        console.warn('[useAuth] Loading timeout reached, forcing unauthenticated state')
         setLoading(false)
         setUser(null)
         setProfile(null)

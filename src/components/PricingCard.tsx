@@ -20,8 +20,8 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
     setIsLoading(true);
     try {
       await onSelectPlan(product.priceId, product.planId);
-    } catch (error) {
-      console.error('Error selecting plan:', error);
+    } catch {
+      // error is surfaced by the parent via setStatusMessage
     } finally {
       setIsLoading(false);
     }

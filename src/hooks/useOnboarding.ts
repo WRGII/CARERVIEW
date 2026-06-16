@@ -46,10 +46,7 @@ export function useOnboarding() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding', user?.id] });
     },
-    onError: (error: unknown) => {
-      // Log silently — mutation failures must not crash the UI but should be observable
-      console.warn('[useOnboarding] upsert failed:', error);
-      // Refetch so the cache reflects actual DB state, preventing stale-flag loops
+    onError: () => {
       queryClient.invalidateQueries({ queryKey: ['onboarding', user?.id] });
     },
   });

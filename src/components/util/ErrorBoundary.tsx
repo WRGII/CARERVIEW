@@ -13,8 +13,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(error: any, info: any) {
-    console.error("App crashed:", error, info);
+  componentDidCatch(_error: any, _info: any) {
   }
 
   reset = () => {
