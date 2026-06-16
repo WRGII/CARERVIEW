@@ -118,7 +118,7 @@ export default function CareHubSideNav() {
     <>
       {/* Mobile horizontal tab bar */}
       <nav
-        className="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 gap-1 -mx-px scrollbar-none"
+        className="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 gap-1 -mx-px scrollbar-none sticky top-16 z-20"
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
