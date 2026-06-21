@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Activity, ArrowRight, Clock, BookOpen, ClipboardList, Lock } from 'lucide-react';
+import { Plus, Activity, ArrowRight, BookOpen, ClipboardList, Lock } from 'lucide-react';
 import GuidedTutorial from '../components/caregiver/GuidedTutorial';
 import GuestInviteModal from '../components/caregiver/GuestInviteModal';
 
@@ -228,28 +228,30 @@ export default function CaregiverPage() {
     return t('caregiver.subtitle_default');
   }
 
-  // ── Observations section (hero feature in paid layout) ────────────────────
+  // ── Observations section (dashboard quick-action card) ────────────────────
 
   function renderObservationsSection() {
-    const recentObs = (observations as any[]).slice(0, 5)
-
     return (
       <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden" data-tutorial="new-observation">
-        {/* Section header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+        <div className="px-6 py-6 flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
               <Activity className="w-5 h-5 text-amber-500" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 className="text-sm font-bold text-slate-900">{t('caregiver.observations_title')}</h2>
               <p className="text-xs font-semibold text-amber-600 mt-0.5">{t('care_hub.mental_model_obs_tag')}</p>
+              {observations.length > 0 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  {observations.length} {observations.length === 1 ? t('caregiver.obs_count_one') : t('caregiver.obs_count_other')}
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               onClick={() => setShowGuestInvite(true)}
-              className="hidden sm:flex text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-1.5 transition-colors items-center gap-1.5"
+              className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-2 transition-colors"
               title={t('guest_invite.button_tooltip')}
             >
               {t('guest_invite.button_label')}
@@ -265,69 +267,14 @@ export default function CaregiverPage() {
             </Button>
           </div>
         </div>
-
-        {observations.length === 0 ? (
-          /* Empty state */
-          <div className="px-6 py-12 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-              <Activity className="w-7 h-7 text-amber-300" />
-            </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">{t('caregiver.obs_empty')}</p>
-            <p className="text-xs text-slate-400 mb-5 max-w-xs leading-relaxed">
-              {t('care_hub.mental_model_obs_body')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => navigate('/caregiver/observations/new')}
-                className="flex items-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {t('caregiver.obs_empty_cta')}
-              </Button>
-              <button
-                onClick={() => setShowGuestInvite(true)}
-                className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 rounded-lg px-4 py-2 transition-colors"
-              >
-                {t('guest_invite.button_label')}
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Observation list */
-          <div className="divide-y divide-slate-100">
-            {recentObs.map((obs) => (
-              <button
-                key={obs.id}
-                onClick={() => handleViewObservation(obs.id)}
-                className="w-full flex items-center gap-4 px-6 py-4 hover:bg-amber-50/40 transition-colors text-left group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 group-hover:bg-amber-100 transition-colors">
-                  <Activity className="w-3.5 h-3.5 text-amber-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate">
-                    {obs.resident_name || t('caregiver.observations_title')}
-                  </p>
-                  <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                    <Clock className="w-3 h-3 shrink-0" />
-                    {obs.observation_date}
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0" />
-              </button>
-            ))}
-            {observations.length > 5 && (
-              <div className="px-6 py-3.5 bg-slate-50">
-                <button
-                  onClick={() => navigate('/caregiver/observations/new')}
-                  className="text-xs font-semibold text-amber-600 hover:text-amber-800 transition-colors"
-                >
-                  {t('caregiver.obs_view_all', { count: observations.length })} →
-                </button>
-              </div>
-            )}
+        {observations.length > 0 && (
+          <div className="border-t border-slate-100 px-6 py-3">
+            <button
+              onClick={() => navigate('/caregiver/observations/new')}
+              className="text-xs font-semibold text-amber-600 hover:text-amber-800 transition-colors"
+            >
+              {t('caregiver.obs_view_all', { count: observations.length })} →
+            </button>
           </div>
         )}
       </section>

@@ -56,6 +56,16 @@ export default function CareHubSideNav() {
     },
     ...(isPaidCarer ? [
       {
+        to: '/caregiver/observations/new',
+        matchPrefix: '/caregiver/observations',
+        icon: Activity,
+        label: t('nav.observations'),
+        iconColor: 'text-amber-500',
+        activeIconColor: 'text-amber-700',
+        activeBg: 'bg-amber-50 text-amber-900',
+        paidOnly: true,
+      },
+      {
         to: '/caregiver/resident',
         matchPrefix: '/caregiver/resident',
         icon: UserCircle,
@@ -83,16 +93,6 @@ export default function CareHubSideNav() {
         iconColor: 'text-blue-500',
         activeIconColor: 'text-blue-700',
         activeBg: 'bg-blue-50 text-blue-900',
-        paidOnly: true,
-      },
-      {
-        to: '/caregiver/observations/new',
-        matchPrefix: '/caregiver/observations',
-        icon: Activity,
-        label: t('nav.observations'),
-        iconColor: 'text-amber-500',
-        activeIconColor: 'text-amber-700',
-        activeBg: 'bg-amber-50 text-amber-900',
         paidOnly: true,
       },
       {

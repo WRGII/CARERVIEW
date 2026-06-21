@@ -1,5 +1,5 @@
 // src/pages/NewObservationPage.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
@@ -7,7 +7,7 @@ import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { SquareActivity as ActivitySquare, ClipboardList, Layers, ArrowRight } from 'lucide-react';
+import { SquareActivity as ActivitySquare, ClipboardList, Layers, ArrowRight, Activity } from 'lucide-react';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import { Loading } from '../components/ui/Loading';
 
@@ -16,13 +16,22 @@ import { cvGetRemaining, cvGetSoloRemaining } from '../lib/cv';
 import { useMemberFrozen } from '../hooks/useMemberFrozen';
 import { setLastModule } from '../lib/lastModule';
 import { useTeamResident } from '../hooks/useMemoryBook';
+import { useDeleteObservation, useObservations } from '../hooks/useObservations';
+import { useToast } from '../components/ui/ToastProvider';
+import { exportToDOCX, exportToCSV } from '../lib/exports';
+import { localeToIntl } from '../lib/utils';
+import { ObservationList } from '../components/caregiver/ObservationList';
+import { ViewObservation } from '../components/caregiver/ViewObservation';
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
+type ViewMode = 'list' | 'view';
+type ExportFormat = 'docx' | 'csv';
 
 export default function NewObservationPage() {
   const navigate = useNavigate();
   const { user, profile, loading, error } = useAuth();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { showToast } = useToast();
 
   const { teamId } = useActiveTeam();
   const { data: resident } = useTeamResident(teamId ?? null);
@@ -31,6 +40,15 @@ export default function NewObservationPage() {
 
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
+
+  const { data: observations = [] } = useObservations();
+  const deleteObservationMutation = useDeleteObservation();
+  const intlLocale = localeToIntl(locale);
+
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [currentObservationId, setCurrentObservationId] = useState<string | null>(null);
+  const [exportingFor, setExportingFor] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   React.useEffect(() => { setLastModule('observations'); }, []);
 
@@ -56,6 +74,43 @@ export default function NewObservationPage() {
   if (profile.disabled) return <ErrorMessage message={t('common.account_disabled')} />;
 
   const quotaExhausted = remaining !== null && remaining <= 0;
+
+  function handleViewObservation(id: string) {
+    setCurrentObservationId(id);
+    setViewMode('view');
+  }
+
+  async function handleDeleteObservation(observationId: string) {
+    if (deletingId) return;
+    setDeletingId(observationId);
+    try {
+      await deleteObservationMutation.mutateAsync(observationId);
+      showToast(t('obs_list.delete_success'), 'success');
+    } catch (e: any) {
+      showToast(e?.message ?? t('obs_list.delete_error'), 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleExportObservation(observationId: string, format: ExportFormat) {
+    if (exportingFor) return;
+    setExportingFor(observationId);
+    try {
+      const { data: obs } = await supabase.from('observations').select('*').eq('id', observationId).single();
+      const { data: categories } = await supabase.from('observation_categories').select('*').eq('observation_id', observationId);
+      const { data: legend } = await supabase.from('rating_legend').select('*');
+      if (format === 'docx') {
+        await exportToDOCX(obs as any, categories as any, legend as any, t, intlLocale);
+      } else {
+        await exportToCSV(obs as any, categories as any, legend as any, t, intlLocale);
+      }
+    } catch (e: any) {
+      showToast(e?.message ?? t('export.error'), 'error');
+    } finally {
+      setExportingFor(null);
+    }
+  }
 
   async function createAndStart(mode: FormType) {
     try {
@@ -171,6 +226,26 @@ export default function NewObservationPage() {
     </button>
   );
 
+  if (viewMode === 'view' && currentObservationId) {
+    return (
+      <PageLayout
+        title={t('new_obs.page_title')}
+        user={{ ...user, profile }}
+        hideSignOut={true}
+        headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>{t('common.back_dashboard')}</Button>}
+      >
+        <ViewObservation
+          observationId={currentObservationId}
+          onBack={() => { setCurrentObservationId(null); setViewMode('list'); }}
+          onExport={handleExportObservation}
+          onDelete={async (id) => { await handleDeleteObservation(id); setCurrentObservationId(null); setViewMode('list'); }}
+          isExporting={exportingFor === currentObservationId}
+          isDeleting={deletingId === currentObservationId}
+        />
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout
       title={t('new_obs.page_title')}
@@ -241,6 +316,23 @@ export default function NewObservationPage() {
               </div>
             </div>
           </>
+        )}
+
+        {/* Past observations */}
+        {observations.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+              <Activity className="w-4 h-4 text-amber-500 shrink-0" />
+              <h2 className="text-base font-semibold text-slate-800">{t('caregiver.observations_title')}</h2>
+              <span className="ml-auto text-xs font-medium text-slate-400">{observations.length}</span>
+            </div>
+            <ObservationList
+              onViewObservation={handleViewObservation}
+              onExportObservation={handleExportObservation}
+              onDeleteObservation={handleDeleteObservation}
+              deletingId={deletingId}
+            />
+          </div>
         )}
 
         <div>
