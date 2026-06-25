@@ -1,54 +1,63 @@
 export interface StripeProduct {
   id: string;
   priceId: string;
-  planId: string;
   name: string;
-  description: string;
+  shortName: string;
+  tagline: string;
   price: number;
   currency: string;
+  currencySymbol: string;
+  billingPeriod: string;
+  monthlyEquivalent: string;
   mode: 'subscription' | 'payment';
+  features: string[];
+  isPopular?: boolean;
 }
 
 export const STRIPE_PRODUCTS: StripeProduct[] = [
   {
-    id: 'free',
-    priceId: '',
-    planId: 'free',
-    name: 'Free Community Member',
-    description: 'Access all 6 caregiver support rooms. Post, reply, and react with other caregivers. Post anonymously when you need privacy. No invite required — join instantly.',
-    price: 0,
-    currency: 'usd',
-    mode: 'subscription'
-  },
-  {
     id: 'prod_TW2OREgJTTCsLC',
     priceId: 'price_1SZ0JMGiCMwtCdgydBnTnX4a',
-    planId: 'primary_qtr',
-    name: 'Primary Caregiver',
-    description: 'One caregiver, one clear record. 30 Observations a year keep trends visible and care plans on track.',
-    price: 25.50,
+    name: 'CarerView - Primary Caregiver Plan',
+    shortName: 'Primary Caregiver',
+    tagline: 'Perfect for solo caregivers',
+    price: 12.50,
     currency: 'usd',
-    mode: 'subscription'
+    currencySymbol: '$',
+    billingPeriod: 'per 3 months',
+    monthlyEquivalent: 'Less than $1/week',
+    mode: 'subscription',
+    features: [
+      '30 observations per year',
+      'Approximately 1 check-in per week',
+      'Trend reports & PDF summaries',
+      'Secure caregiver dashboard',
+      'Billed quarterly',
+    ],
   },
   {
     id: 'prod_TW2RHuPJHLfg1L',
     priceId: 'price_1ThwvbGiCMwtCdgyyRZr2FME',
-    planId: 'family_qtr',
-    name: 'Family Circle',
-    description: 'Everyone\'s notes, one shared story. Up to 3 caregivers collaborate without friction.',
-    price: 45.50,
+    name: 'CarerView - Family Circle Plan',
+    shortName: 'Family Circle',
+    tagline: 'Best for coordinated family care',
+    price: 25.50,
     currency: 'usd',
-    mode: 'subscription'
-  }
+    currencySymbol: '$',
+    billingPeriod: 'per 3 months',
+    monthlyEquivalent: 'Under $9/month — save 33%',
+    mode: 'subscription',
+    isPopular: true,
+    features: [
+      'Up to 3 caregivers included',
+      'Up to 100 shared observations per year',
+      'Shared family timeline & notes',
+      'Trend reports & PDF summaries',
+      'Billed quarterly — 33% savings',
+    ],
+  },
 ];
 
-export const getProductByPriceId = (priceId: string): StripeProduct | undefined => {
-  return STRIPE_PRODUCTS.find(product => product.priceId === priceId);
-};
-
-export const formatPrice = (price: number, currency: string): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency.toUpperCase(),
-  }).format(price);
-};
+export function getProductByPriceId(priceId: string): StripeProduct | undefined {
+  return STRIPE_PRODUCTS.find((p) => p.priceId === priceId);
+}
