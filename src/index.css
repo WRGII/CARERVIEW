@@ -2,158 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS Variables for Brand Colors */
-:root {
-  --warm-white: #FAFAF5;
-  --cyan-primary: #00BCD4;
-  --slate-gray: #5C6F77;
-  --peach-blush: #FAD4C0;
-  --mint-green: #C8E6C9;
-  --cyan-hover: #00ACC1;
-  --cyan-dark: #0097A7;
-}
-
-/* Base styles with new color palette */
-body {
-  background-color: var(--warm-white);
-  color: var(--slate-gray);
-}
-
-/* Print Styles */
-@media print {
-  .print\:hidden {
-    display: none !important;
-  }
-
-  .print\:block {
-    display: block !important;
-  }
-
-  @page {
-    margin: 0.75in;
-    size: letter;
-  }
-
+@layer base {
   body {
-    font-size: 11pt !important;
-    line-height: 1.5 !important;
-    color: #0f172a !important;
-    background: white !important;
-  }
-
-  * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
-  nav,
-  header,
-  footer,
-  [data-print-hide] {
-    display: none !important;
-  }
-
-  #print-view {
-    display: block !important;
-  }
-
-  h1, h2, h3 {
-    page-break-after: avoid;
-    color: #0f172a !important;
-  }
-
-  .break-inside-avoid-page {
-    break-inside: avoid;
-  }
-
-  a {
-    color: inherit !important;
-    text-decoration: none !important;
-  }
-
-  .bg-green-100,
-  .bg-yellow-100,
-  .bg-red-100 {
-    border: 1px solid #374151 !important;
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
-/* Toast animations */
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
   }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
-}
-
-/* Dropdown animations */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .animate-check {
+    animation: checkDraw 0.6s ease-out forwards;
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.15s ease-out;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Dialog animations */
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-scale-in {
-  animation: scale-in 0.2s ease-out;
-}
-
-html, body, #root { height: 100%; }
-
-@keyframes gentle-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.animate-gentle-pulse {
-  animation: gentle-pulse 2s ease-in-out infinite;
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up {
-  animation: slide-up 0.35s ease-out;
-}
-
-@layer components {
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
-  }
+@keyframes checkDraw {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
 }
