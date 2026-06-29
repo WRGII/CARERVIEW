@@ -1,0 +1,107 @@
+
+INSERT INTO ui_translations (locale, key, value) VALUES
+-- account_menu
+('ja','account_menu.billing','請求を管理する'),
+('ja','account_menu.delete_acct','アカウントを削除'),
+('ja','account_menu.manage','アカウントを管理する'),
+('ja','account_menu.manage_account','アカウントを管理する'),
+('ja','account_menu.restart_tutorial','チュートリアルを再スタート'),
+('ja','account_menu.sign_out','サインアウト'),
+('ja','account_menu.tutorial','チュートリアルを再スタート'),
+-- active_cg
+('ja','active_cg.loading','管理者ビューを読み込んでいます…'),
+-- auth_callback
+('ja','auth_callback.verifying','リンクを確認しています…'),
+-- community_banner
+('ja','community_banner.tagline_after','経験を共有し、質問をして、実践的な知恵を見つけましょう。'),
+('ja','community_banner.tagline_before','家族と在宅ケアラーのために。'),
+-- community
+('ja','community.help_type_desc.emotional_support','聞いてもらったり、気持ちを認めてもらいたい'),
+('ja','community.help_type_desc.practical_tips','うまくいくアドバイスや戦略を探している'),
+('ja','community.help_type_desc.question','助けが必要な具体的な質問がある'),
+('ja','community.help_type_desc.resource','役立つものを見つけたので共有したい'),
+('ja','community.help_type_desc.similar_experiences','同じような経験をした人はいますか？'),
+('ja','community.join.benefit.anonymous','プライバシーが必要なときに匿名で投稿'),
+('ja','community.join.benefit.connect','本当に理解してくれるケアラーとつながる'),
+('ja','community.join.benefit.share','経験を共有してピアサポートを得る'),
+('ja','community.join.inline.description','コミュニティに参加して投稿し、他のケアラーとつながりましょう。'),
+('ja','community.loading','コミュニティを読み込んでいます…'),
+('ja','community.new_post.anonymous_active_desc','ハンドルは他のユーザーに表示されません。モデレーションのためにアイデンティティは内部で記録されます。'),
+('ja','community.new_post.anonymous_desc','コミュニティハンドルが表示されます。他のユーザーから隠すにはトグルしてください。'),
+('ja','community.profile.avatar_preview','アバターのプレビュー'),
+('ja','community.reply_anon_active_title','匿名モードがオン'),
+('ja','community.reply_anon_inactive_title','匿名で投稿'),
+-- export
+('ja','export.csv_resident_name','入居者名'),
+('ja','export.unnamed_resident','名前のない入居者'),
+-- family_setup
+('ja','family_setup.body','ファミリーサークルプランには最大3名のケアラーが含まれます。共有チームを作成して始めましょう。'),
+('ja','family_setup.create_btn','ファミリーサークルを作成'),
+('ja','family_setup.creating','作成中…'),
+('ja','family_setup.loading','読み込み中…'),
+('ja','family_setup.resident_label','誰のケアをしていますか？'),
+('ja','family_setup.resident_placeholder','例：お母さん、お父さん、田中さん'),
+('ja','family_setup.resident_required','ケアをする方の名前を入力してください。'),
+('ja','family_setup.team_name_ph','家族チーム名'),
+('ja','family_setup.title','ファミリーサークルを設定する'),
+-- footer
+('ja','footer.about_link','CarerViewについて'),
+('ja','footer.copyright','© {year} CarerView.com | 全著作権所有 | GrifDigi社'),
+('ja','footer.location_nz','ニュージーランド、クライストチャーチ'),
+('ja','footer.location_us','コロラド州デンバー、USA'),
+('ja','footer.locations','所在地：'),
+('ja','footer.policies','ポリシー'),
+('ja','footer.pricing_link','料金プラン'),
+('ja','footer.resources_heading','リソース'),
+('ja','footer.suggestions','ご提案・ご質問？'),
+('ja','footer.tutorial_link','CarerViewチュートリアル'),
+-- lang
+('ja','lang.current','言語'),
+('ja','lang.switch_aria','言語を切り替える'),
+-- nav
+('ja','nav.family_circle','ファミリーサークル'),
+('ja','nav.home_aria','CarerViewホーム'),
+('ja','nav.logo_aria','CarerViewロゴ'),
+('ja','nav.manage_billing','請求を管理する'),
+('ja','nav.memory_book_short','メモリーブック'),
+('ja','nav.toggle_menu','ナビゲーションメニューを切り替える'),
+('ja','nav.tutorial_short','チュートリアル'),
+('ja','nav.welcome','ようこそ'),
+('ja','nav.why_carerview','CarerViewについて'),
+-- plan_pill
+('ja','plan_pill.family','ファミリーサークル'),
+('ja','plan_pill.primary','プライマリ'),
+-- reset_pw
+('ja','reset_pw.confirm_ph','新しいパスワードを再入力'),
+('ja','reset_pw.err_mismatch','パスワードが一致しません。もう一度お試しください。'),
+('ja','reset_pw.err_too_short','パスワードは8文字以上である必要があります。'),
+('ja','reset_pw.new_pw_label','新しいパスワード'),
+('ja','reset_pw.new_pw_ph','新しいパスワードを入力'),
+('ja','reset_pw.no_token','リカバリートークンが見つかりませんでした。新しいパスワードリセットを要求してください。'),
+('ja','reset_pw.submit_btn','パスワードを更新'),
+('ja','reset_pw.submitting','更新中…'),
+('ja','reset_pw.success','パスワードが正常に更新されました！サインインにリダイレクトしています...'),
+-- scale
+('ja','scale.1','完全自立'),
+('ja','scale.2','困難だが自立'),
+('ja','scale.3','サポートありで自立'),
+('ja','scale.4','常時共同作業'),
+('ja','scale.5','全介助'),
+-- team_guard
+('ja','team_guard.upgrade_body_default','ファミリーサークルプランでは、共有ケアチームを構築し、家族を招待し、全員を同じページに保つことができます。'),
+('ja','team_guard.upgrade_body_primary','プライマリケアラープランはソロケアラーに最適です。ファミリーサークルプランにアップグレードして、家族を招待し、介護の旅を共に分かち合いましょう。'),
+('ja','team_guard.upgrade_cta','ファミリーサークルにアップグレード'),
+('ja','team_guard.upgrade_title','ファミリーサークルはチーム機能です'),
+-- team
+('ja','team.caregivers_title','ケアラー'),
+('ja','team.copy_link_note','今すぐメールにコピーしてください。'),
+('ja','team.invite_email_ph','caregiver@email'),
+('ja','team.invite_expires_on','このリンクは{date}に失効します。その後、新しい招待を生成する必要があります。'),
+('ja','team.invite_link_label','招待リンク：'),
+('ja','team.loading','読み込み中…'),
+('ja','team.no_members','メンバーがまだいません。'),
+('ja','team.no_team','最初にファミリーサークルを作成してください。'),
+('ja','team.title','ファミリーサークル'),
+-- welcome
+('ja','welcome.dismiss_aria','ウェルカムメッセージを閉じる')
+ON CONFLICT (locale, namespace, key) DO NOTHING;
