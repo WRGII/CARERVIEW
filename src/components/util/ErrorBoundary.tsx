@@ -13,7 +13,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(_error: any, _info: any) {
+  componentDidCatch(error: any, info: any) {
+    console.error('[CarerView] ErrorBoundary caught:', error, info?.componentStack)
   }
 
   reset = () => {
