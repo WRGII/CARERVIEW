@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
@@ -7,6 +7,7 @@ import { getProductByPriceId } from '../../stripe-config'
 import { useLocale } from '../../i18n/LocaleContext'
 import LanguageSwitcher from '../common/LanguageSwitcher'
 import AccountMenu from '../caregiver/AccountMenu'
+import { supabase } from '../../lib/supabaseClient'
 
 const PUBLIC_NAV_LINKS = [
   { key: 'nav.about', to: '/about' },
@@ -21,6 +22,26 @@ export function Header() {
   const { data: userPlan } = useUserPlan()
   const { t } = useLocale()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string>('/CareView_logo_icon_only.png')
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('logo_url')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (!mounted) return
+        if (data?.logo_url) setLogoUrl(data.logo_url)
+      } catch {
+        // keep fallback
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const activeProduct = userPlan?.price_id ? getProductByPriceId(userPlan.price_id) : null
   const isActivePlan = hasActivePlan(userPlan)
@@ -40,7 +61,7 @@ export function Header() {
           className="flex items-center gap-2 shrink-0 group"
         >
           <img
-            src="/logo-icon-only.svg"
+            src={logoUrl}
             alt=""
             aria-hidden="true"
             className="h-8 w-8 object-contain"
