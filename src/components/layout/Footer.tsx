@@ -61,7 +61,7 @@ export function Footer() {
               </div>
               <div>
                 <Link
-                  to="/memory-book"
+                  to="/caregiver/memory-book"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.memory_book')}
@@ -94,7 +94,7 @@ export function Footer() {
             <div className="space-y-2">
               <div>
                 <Link
-                  to="/caregiver-resources"
+                  to="/caregiver/resources"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.caregiver_resources')}
@@ -110,7 +110,7 @@ export function Footer() {
               </div>
               <div>
                 <Link
-                  to="/caregiver-forum"
+                  to="/community"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.caregiver_forum')}
@@ -164,7 +164,7 @@ export function Footer() {
             <div className="space-y-3">
               <div>
                 <Link
-                  to="/privacy-policy"
+                  to="/privacy"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('footer.privacy_policy')}
