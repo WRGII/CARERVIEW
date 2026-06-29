@@ -5,7 +5,7 @@ import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 
-const LS_TRANS_VERSION = 'v5'
+const LS_TRANS_VERSION = 'v6'
 function lsTransKey(locale: Locale): string {
   return `cv_trans_${locale}_${LS_TRANS_VERSION}`
 }
@@ -113,7 +113,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     initialData: () => readBootstrapCache(locale),
-    initialDataUpdatedAt: () => (readBootstrapCache(locale) ? Date.now() : 0),
+    initialDataUpdatedAt: () => 0,
   })
 
   const { data: enMap, error: enError, refetch: refetchEn } = useQuery({
@@ -124,7 +124,7 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     initialData: () => readBootstrapCache('en'),
-    initialDataUpdatedAt: () => (readBootstrapCache('en') ? Date.now() : 0),
+    initialDataUpdatedAt: () => 0,
   })
 
   useEffect(() => {
