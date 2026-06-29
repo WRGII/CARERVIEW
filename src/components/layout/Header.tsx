@@ -111,7 +111,7 @@ export function Header() {
                 {t('nav.tutorial_short')}
               </Link>
               <Link
-                to="/create-account"
+                to="/sign-in"
                 className="inline-flex items-center px-4 py-1.5 rounded-lg bg-cyan-primary text-sm font-semibold text-white hover:bg-cyan-hover transition-colors duration-150 shadow-sm"
               >
                 {t('nav.sign_in')}
@@ -162,7 +162,7 @@ export function Header() {
               <AccountMenu />
             ) : (
               <Link
-                to="/create-account"
+                to="/sign-in"
                 onClick={() => setMobileOpen(false)}
                 className="inline-flex items-center px-4 py-2 rounded-lg bg-cyan-primary text-sm font-semibold text-white hover:bg-cyan-hover transition-colors"
               >

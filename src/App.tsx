@@ -13,6 +13,7 @@ import { PricingPage } from './pages/PricingPage';
 import ChoosePlan from './pages/ChoosePlan';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CreateAccountPage from './pages/CreateAccountPage';
+import SignInPage from './pages/SignInPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AuthErrorPage from './pages/AuthErrorPage';
 import ResetPassword from './pages/ResetPassword';
@@ -81,6 +82,7 @@ export default function App() {
               <Route path="/data-policy" element={<DataPolicyPage />} />
               <Route path="/dementia-scale" element={<DementiaScalePage />} />
               <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route path="/sign-in" element={<SignInPage />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/join" element={<AcceptInvite />} />
               <Route path="/invite-setup" element={<InviteSetupPage />} />

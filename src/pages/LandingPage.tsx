@@ -3,7 +3,6 @@ import React, { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Shield, ArrowRight, CircleCheck as CheckCircle, Clock, Lock, Stethoscope, TrendingUp, MessageCircle, HeartHandshake, ScanSearch, User, Users, Heart, BookOpen, FileText, TriangleAlert as AlertTriangle, CircleAlert as AlertCircle, Eye, RefreshCw, MapPin, ClipboardList, UserCheck, Chrome as Home, Leaf, RotateCcw, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '../components/ui/Card'
-import AuthForm from '../components/common/AuthForm'
 import { useLocale } from '../i18n/LocaleContext'
 import PageSEO from '../components/seo/PageSEO'
 import { SITE_URL } from '../lib/siteConfig'
@@ -590,21 +589,6 @@ export default function LandingPage() {
             >
               {t('tutorial.cta_start')} <ArrowRight className="w-4 h-4" />
             </Link>
-          </div>
-        </div>
-
-        {/* Auth form */}
-        <div id="get-started" className="py-12">
-          <div className="max-w-xl mx-auto">
-            <div className="text-center mb-7">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-4">
-                {t('landing.getstarted_title')}
-              </h2>
-              <p className="text-lg text-slate-gray/75 leading-relaxed">
-                {t('landing.getstarted_body')}
-              </p>
-            </div>
-            <AuthForm initialMode="signin" showToggle={true} />
           </div>
         </div>
 
