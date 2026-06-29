@@ -5,7 +5,7 @@ import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 
-const LS_TRANS_VERSION = 'v6'
+const LS_TRANS_VERSION = 'v7'
 function lsTransKey(locale: Locale): string {
   return `cv_trans_${locale}_${LS_TRANS_VERSION}`
 }
@@ -213,7 +213,10 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     [locale, setLocale, t, isLoading, supportedLocales]
   )
 
-  const hasAnyData = Boolean(activeMap || enMap)
+  const hasAnyData = Boolean(
+    (activeMap && Object.keys(activeMap).length > 0) ||
+    (enMap && Object.keys(enMap).length > 0)
+  )
   const hardError = Boolean(translationsError && enError)
 
   if (hardError && !hasAnyData) {
