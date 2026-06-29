@@ -97,9 +97,35 @@ export default function NewObservationPage() {
     if (exportingFor) return;
     setExportingFor(observationId);
     try {
-      const { data: obs } = await supabase.from('observations').select('*').eq('id', observationId).single();
-      const { data: categories } = await supabase.from('observation_categories').select('*').eq('observation_id', observationId);
-      const { data: legend } = await supabase.from('rating_legend').select('*');
+      const { data: obs, error: obsErr } = await supabase
+        .from('observations')
+        .select(`
+          id, user_id, resident_name, observation_date, notes, caregiver_name, caregiver_email, created_at, updated_at, form_type,
+          responses:responses (
+            id, observation_id, question_id, score, notes, created_at, updated_at,
+            question:questions (
+              id, question_text, sort_order,
+              category:categories ( id, name, type )
+            )
+          )
+        `)
+        .eq('id', observationId)
+        .single();
+      if (obsErr) throw obsErr;
+
+      const { data: legend } = await supabase.from('legend').select('*').order('score', { ascending: true });
+
+      const catMap = new Map<string, { id: string; name: string; type: string; questions: { id: string; category_id: string; question_text: string; sort_order: number }[] }>();
+      for (const r of (obs as any)?.responses ?? []) {
+        const q = Array.isArray(r.question) ? r.question[0] : r.question;
+        const c = q?.category ? (Array.isArray(q.category) ? q.category[0] : q.category) : null;
+        if (!q || !c) continue;
+        if (!catMap.has(c.id)) catMap.set(c.id, { id: c.id, name: c.name, type: c.type, questions: [] });
+        catMap.get(c.id)!.questions.push({ id: q.id, category_id: c.id, question_text: q.question_text, sort_order: q.sort_order });
+      }
+      const categories = Array.from(catMap.values());
+      categories.forEach((cat) => cat.questions.sort((a, b) => a.sort_order - b.sort_order));
+
       if (format === 'docx') {
         await exportToDOCX(obs as any, categories as any, legend as any, t, intlLocale);
       } else {
