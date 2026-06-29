@@ -15,7 +15,6 @@ export function Footer() {
     (async () => {
       try {
         const { data } = await supabase
-          .schema("app")
           .from("site_settings")
           .select("logo_url")
           .order("updated_at", { ascending: false })

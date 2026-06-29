@@ -252,12 +252,36 @@ No stale references requiring compatibility views were found. All frontend `.fro
 
 ## Frontend Compatibility Audit Summary
 
-All frontend `supabase.from()` table references verified against schema:
-- 45+ unique tables/views referenced
-- All exist in consolidated schema
-- All columns selected/inserted/updated exist
-- All RPCs exist with correct signatures
-- All edge function dependencies satisfied
+All frontend `supabase.from()` table references, `.rpc()` calls, and column names were audited against the consolidated schema.
 
-One finding requiring schema modification:
-- **admin_events**: Edge functions use different column names than base schema. Consolidated schema adopts the edge function column names.
+### Scope
+- 45+ unique tables/views referenced across `src/`
+- All community hooks: `useCommunityPosts`, `useCommunityProfile`, `useCommunityRooms`, `useCommunityReactions`, `useCommunityReplies`, `useCommunityReports`
+- All memory book hooks and components
+- All team management RPCs in `src/lib/cv.ts`
+- All edge function table dependencies
+
+### Findings
+
+#### FIXED — `src/components/layout/Footer.tsx` (line 18)
+**Bug:** `.schema("app").from("site_settings")` referenced the old `app.site_settings` table that was migrated to the `public` schema in migration `20260410162315`.
+**Fix applied:** Removed `.schema("app")` chain — now calls `.from("site_settings")` against `public` schema.
+
+#### FIXED — `src/components/layout/Header.tsx` (line 22)
+**Bug:** Same `.schema("app").from("site_settings")` pattern as Footer.tsx.
+**Fix applied:** Removed `.schema("app")` chain.
+
+#### VERIFIED OK — `src/lib/cv.ts` (line 47)
+The RPC call `cv_create_team_with_patient` passes `p_patient_name` as a parameter name. This was audited against the consolidated function definition in `consolidated_02a_functions_core_team.sql` — the function signature uses `p_patient_name` throughout. No change required.
+
+#### VERIFIED OK — `src/hooks/usePrefetchStatic.ts`
+Calls `.from("site_settings")` without a schema prefix — already correct.
+
+#### VERIFIED OK — Community tables
+All community hooks correctly use the renamed columns: `post_status`, `reply_status`, `author_user_id`, `reporter_user_id`, `report_status`. Column `user_id` used as PK on `community_profiles` matches trigger function expectations.
+
+### Schema modification applied during reconstruction
+- **admin_events**: Edge functions (`admin-delete-user`, `caregiver-delete-account`) INSERT with columns `actor_id, actor_email, action, target_email, target_user_id, success, details`. Consolidated schema adopted the edge function column names rather than the original base schema definition.
+
+### Result
+All frontend references are now compatible with the consolidated schema. Two bugs fixed (`.schema("app")` in Header and Footer). No other incompatibilities found.
