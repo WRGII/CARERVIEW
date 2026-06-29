@@ -23,24 +23,20 @@ export default function SignInPage() {
     <>
       <PageSEO
         title={`${t('nav.sign_in')} | CarerView`}
-        description={t('auth.signin_description') || 'Sign in to your CarerView account.'}
+        description={t('auth.signin_description')}
         canonical={`${SITE_URL}/sign-in`}
       />
       <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">
-              {t('auth.signin_heading') || 'Welcome back'}
+              {t('auth.signin_heading')}
             </h1>
             <p className="text-slate-500 text-sm">
-              {t('auth.signin_sub') || (
-                <>
-                  New to CarerView?{' '}
-                  <Link to="/create-account" className="text-cyan-primary hover:underline font-medium">
-                    Create an account
-                  </Link>
-                </>
-              )}
+              {t('auth.signin_sub')}{' '}
+              <Link to="/create-account" className="text-cyan-primary hover:underline font-medium">
+                {t('auth.create_account_link')}
+              </Link>
             </p>
           </div>
           <AuthForm initialMode="signin" showToggle={true} />

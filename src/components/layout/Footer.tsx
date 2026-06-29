@@ -2,10 +2,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useAuth } from "../../hooks/useAuth";
 import LanguageSwitcher from "../common/LanguageSwitcher";
 
 export function Footer() {
   const { t } = useLocale();
+  const { user } = useAuth();
   const [logoUrl, setLogoUrl] = React.useState<string>(
     "/CareView_logo_icon_only.png"
   );
@@ -162,6 +164,16 @@ export function Footer() {
               {t('footer.policies')}
             </h4>
             <div className="space-y-3">
+              {!user && (
+                <div>
+                  <Link
+                    to="/sign-in"
+                    className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                  >
+                    {t('footer.sign_in_link')}
+                  </Link>
+                </div>
+              )}
               <div>
                 <Link
                   to="/privacy"
