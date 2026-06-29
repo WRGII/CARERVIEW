@@ -129,7 +129,7 @@ function VehiclesTab({
   teamId,
   isOwner,
   t,
-}: Props & { t: (key: string, vars?: Record<string, unknown>) => string }) {
+}: Props & { t: (key: string, vars?: Record<string, string | number>) => string }) {
   const { data: vehicles = [], isLoading } = useMemoryBookVehicles(memoryBookId);
   const upsert = useUpsertMemoryBookVehicle();
   const deleteVehicle = useDeleteMemoryBookVehicle();

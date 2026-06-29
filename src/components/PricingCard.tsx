@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Check, Loader as Loader2 } from 'lucide-react';
 import { StripeProduct, formatPrice } from '../stripe-config';
 import { useLocale } from '../i18n/LocaleContext';
@@ -21,13 +21,11 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
     try {
       await onSelectPlan(product.priceId, product.planId);
     } catch {
-      // error is surfaced by the parent via setStatusMessage
+      // error is surfaced by the parent
     } finally {
       setIsLoading(false);
     }
   };
-
-  const features = extractFeatures(product.description);
 
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg border-2 p-8 ${
@@ -50,23 +48,23 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
       )}
 
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-gray mb-2">
-          {product.name}
+        <h3 className="text-xl font-bold text-slate-gray mb-1">
+          {product.shortName}
         </h3>
+        {product.tagline && (
+          <p className="text-sm text-slate-gray/60 mb-3">{product.tagline}</p>
+        )}
         <div className="text-3xl font-bold text-slate-gray">
-          {product.planId === 'free' ? (
-            <span>{t('pricing.plan_free_price')}</span>
-          ) : (
-            <>
-              {formatPrice(product.price, product.currency)}
-              <span className="text-lg font-normal text-slate-gray/60">{t('pricing.per_quarter')}</span>
-            </>
-          )}
+          {formatPrice(product.billingPrice, product.currency)}
+          <span className="text-lg font-normal text-slate-gray/60">/{product.billingInterval}</span>
         </div>
+        {product.billingNote && (
+          <p className="mt-1 text-xs text-slate-gray/50">{product.billingNote}</p>
+        )}
       </div>
 
       <ul className="space-y-3 mb-8">
-        {features.map((feature, index) => (
+        {product.features.map((feature, index) => (
           <li key={index} className="flex items-start space-x-3">
             <Check className="w-5 h-5 text-teal-500 mt-0.5 flex-shrink-0" />
             <span className="text-slate-gray/80">{feature}</span>
@@ -98,43 +96,4 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
       </button>
     </div>
   );
-}
-
-function extractFeatures(description: string): string[] {
-  const features: string[] = [];
-
-  if (description.includes('3 Observations per year')) {
-    features.push('3 Observations per year');
-  }
-  if (description.includes('Join by invite')) {
-    features.push('Join by invite from a caregiver');
-  }
-  if (description.includes('Read updates')) {
-    features.push('Read updates in the family timeline');
-  }
-
-  const caregiverMatch = description.match(/(\d+|Up to \d+) caregiver/i);
-  if (caregiverMatch) {
-    features.push(`${caregiverMatch[1]} caregiver${caregiverMatch[1] !== '1' ? 's' : ''}`);
-  }
-
-  const observationsMatch = description.match(/(\d+)\s+(shared\s+)?[Oo]bservations( a year| per year)/i);
-  if (observationsMatch) {
-    const shared = observationsMatch[2] ? 'shared ' : '';
-    features.push(`${observationsMatch[1]} ${shared}Observations per year`);
-  }
-
-  if (description.includes('clear record')) {
-    features.push('Trend reports & PDF summaries');
-  }
-
-  if (description.includes('collaborate')) {
-    features.push('Shared weekly digest & reminders');
-  }
-
-  if (description.includes('33%')) {
-    features.push('33% savings vs three Primary plans');
-  }
-
-  return features;
 }

@@ -44,3 +44,8 @@ export function localeToIntl(locale: Locale | string): string {
   }
   return map[locale] ?? 'en-US'
 }
+
+export function safeExternalRedirect(url: string): void {
+  if (!url.startsWith('https://')) return;
+  window.location.assign(url);
+}

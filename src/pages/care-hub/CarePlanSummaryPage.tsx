@@ -11,6 +11,7 @@ import {
   getSectionLabels,
   SECTION_KEYS,
   type SectionKey,
+  type CarePlanSection,
 } from '../../hooks/useCarePlan'
 import { detectGaps, type GapItem } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
@@ -119,7 +120,7 @@ export default function CarePlanSummaryPage() {
                 {resident && (
                   <p className="text-sm text-slate-500">
                     {t('care_plan.summary_for_resident', {
-                      name: resident.resident_name ?? t('care_plan.resident_fallback'),
+                      name: resident.full_name ?? t('care_plan.resident_fallback'),
                       completed: completedCount,
                       total: SECTION_KEYS.length,
                     })}
@@ -200,7 +201,7 @@ export default function CarePlanSummaryPage() {
               {/* ── Section 1: Situation ── */}
               {(() => {
                 const s = getSectionByKey(sections, 'situation')
-                const d = (s?.content_json ?? {}) as Record<string, unknown>
+                const d = (s?.content_json ?? {}) as Record<string, string | string[]>
                 return (
                   <SectionBlock label={sectionLabels.situation} section={s} t={t}>
                     <TextRow label={t('care_plan.situation_current')} value={d.current_situation as string} emptyLabel={t('care_plan.not_filled_in')} />
@@ -302,7 +303,7 @@ export default function CarePlanSummaryPage() {
               {/* ── Section 4: Living Arrangement ── */}
               {(() => {
                 const s = getSectionByKey(sections, 'living_arrangement')
-                const d = (s?.content_json ?? {}) as Record<string, unknown>
+                const d = (s?.content_json ?? {}) as Record<string, string | string[]>
                 const arrangementLabels: Record<string, string> = {
                   resident_home: t('care_plan.living_resident_home'),
                   family_home: t('care_plan.living_family_home'),
@@ -340,7 +341,7 @@ export default function CarePlanSummaryPage() {
               {/* ── Section 5: Sustainability ── */}
               {(() => {
                 const s = getSectionByKey(sections, 'sustainability')
-                const d = (s?.content_json ?? {}) as Record<string, unknown>
+                const d = (s?.content_json ?? {}) as Record<string, string | string[]>
                 return (
                   <SectionBlock label={sectionLabels.sustainability} section={s} t={t}>
                     {d.primary_caregiver && (
@@ -375,7 +376,7 @@ export default function CarePlanSummaryPage() {
               {/* ── Section 6: Review ── */}
               {(() => {
                 const s = getSectionByKey(sections, 'review')
-                const d = (s?.content_json ?? {}) as Record<string, unknown>
+                const d = (s?.content_json ?? {}) as Record<string, string | string[]>
                 return (
                   <SectionBlock label={sectionLabels.review} section={s} t={t}>
                     <div className="flex flex-wrap gap-4">

@@ -180,7 +180,7 @@ export async function getMyProfile(): Promise<CommunityProfile | null> {
 export async function getProfileByUserId(userId: string): Promise<CommunityProfile | null> {
   const { data, error } = await supabase
     .from('community_profiles')
-    .select('user_id, handle, bio, avatar_color, post_count, reply_count, created_at, updated_at')
+    .select('*')
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw error
@@ -190,7 +190,7 @@ export async function getProfileByUserId(userId: string): Promise<CommunityProfi
 export async function getProfileByHandle(handle: string): Promise<CommunityProfile | null> {
   const { data, error } = await supabase
     .from('community_profiles')
-    .select('user_id, handle, bio, avatar_color, post_count, reply_count, created_at, updated_at')
+    .select('*')
     .ilike('handle', handle)
     .maybeSingle()
   if (error) throw error
@@ -294,7 +294,7 @@ export async function listPostsForRoom(params: {
 
   const { data, error } = await query.range(offset, offset + limit - 1)
   if (error) throw error
-  return (data ?? []) as CommunityPost[]
+  return (data ?? []) as unknown as CommunityPost[]
 }
 
 export async function listRecentPosts(params: {
@@ -308,7 +308,7 @@ export async function listRecentPosts(params: {
     .order('last_activity_at', { ascending: false })
     .range(offset, offset + limit - 1)
   if (error) throw error
-  return (data ?? []) as CommunityPost[]
+  return (data ?? []) as unknown as CommunityPost[]
 }
 
 export async function getPostById(postId: string): Promise<CommunityPost | null> {
@@ -359,7 +359,7 @@ export async function createPost(params: {
     .select(POST_LIST_SELECT)
     .single()
   if (error) throw error
-  return data as CommunityPost
+  return data as unknown as CommunityPost
 }
 
 export async function updatePost(params: {
@@ -390,7 +390,7 @@ export async function updatePost(params: {
     .select(POST_LIST_SELECT)
     .single()
   if (error) throw error
-  return data as CommunityPost
+  return data as unknown as CommunityPost
 }
 
 // ============================================================
@@ -419,7 +419,7 @@ export async function listRepliesForPost(params: {
     .order('created_at', { ascending: true })
     .range(offset, offset + limit - 1)
   if (error) throw error
-  return (data ?? []) as CommunityReply[]
+  return (data ?? []) as unknown as CommunityReply[]
 }
 
 export async function createReply(params: {
@@ -443,7 +443,7 @@ export async function createReply(params: {
     .select(REPLY_SELECT)
     .single()
   if (error) throw error
-  return data as CommunityReply
+  return data as unknown as CommunityReply
 }
 
 // ============================================================
@@ -673,7 +673,7 @@ export async function listAllPosts(params: {
 
   const { data, error } = await query.range(offset, offset + limit - 1)
   if (error) throw error
-  return (data ?? []) as CommunityPost[]
+  return (data ?? []) as unknown as CommunityPost[]
 }
 
 export async function listAllCommunityMembers(params: {
@@ -775,7 +775,7 @@ export async function listPostsByUser(params: {
     .range(offset, offset + limit - 1)
 
   if (error) throw error
-  return (data ?? []) as CommunityPost[]
+  return (data ?? []) as unknown as CommunityPost[]
 }
 
 export async function deletePostPermanently(params: {

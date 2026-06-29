@@ -1,9 +1,12 @@
-import { useAuth } from '../../contexts/AuthContext';
-import { useSubscription } from '../../hooks/useSubscription';
+import { useAuth } from '../../hooks/useAuth';
+import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan';
+import { getProductByPriceId } from '../../stripe-config';
 
 export function Header() {
   const { user } = useAuth();
-  const { product, loading } = useSubscription();
+  const { data: userPlan } = useUserPlan();
+  const activeProduct = userPlan?.price_id ? getProductByPriceId(userPlan.price_id) : null;
+  const isActive = hasActivePlan(userPlan);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
@@ -18,10 +21,10 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          {user && !loading && product && (
+          {user && isActive && activeProduct && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-200">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-              {product.shortName}
+              {activeProduct.shortName}
             </span>
           )}
           {user ? (
@@ -36,3 +39,5 @@ export function Header() {
     </header>
   );
 }
+
+export default Header;

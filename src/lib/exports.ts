@@ -459,7 +459,7 @@ export const exportToDOCX = async (
   })
 
   const buffer = await Packer.toBuffer(doc)
-  const blob = new Blob([buffer], {
+  const blob = new Blob([buffer as unknown as ArrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   })
   const fileName = `observation-${safeFile(observation.resident_name || 'unnamed')}-${

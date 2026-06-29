@@ -1,28 +1,145 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { Header } from './components/layout/Header';
-import { PricingPage } from './pages/PricingPage';
-import { SuccessPage } from './pages/SuccessPage';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+import AppLocaleWrapper from './i18n/AppLocaleWrapper';
 
-function AppLayout() {
-  return (
-    <>
-      <Header />
-      <Routes>
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/success" element={<SuccessPage />} />
-        <Route path="*" element={<Navigate to="/pricing" replace />} />
-      </Routes>
-    </>
-  );
-}
+import MainLayout from './components/layout/MainLayout';
+import AdminLayout from './components/layout/AdminLayout';
+import AuthLayout from './components/layout/AuthLayout';
+
+import LandingPage from './pages/LandingPage';
+import { PricingPage } from './pages/PricingPage';
+import ChoosePlan from './pages/ChoosePlan';
+import CheckoutSuccess from './pages/CheckoutSuccess';
+import CreateAccountPage from './pages/CreateAccountPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
+import AuthErrorPage from './pages/AuthErrorPage';
+import ResetPassword from './pages/ResetPassword';
+import AcceptInvite from './pages/AcceptInvite';
+import InviteSetupPage from './pages/InviteSetupPage';
+import AboutPage from './pages/AboutPage';
+import WhyCarerView from './pages/WhyCarerView';
+import TutorialPage from './pages/TutorialPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import DataPolicyPage from './pages/DataPolicyPage';
+import DementiaScalePage from './pages/DementiaScalePage';
+import NotFoundPage from './pages/NotFoundPage';
+
+import CaregiverPage from './pages/CaregiverPage';
+import ResidentProfilePage from './pages/ResidentProfilePage';
+import NewObservationPage from './pages/NewObservationPage';
+import ObservationEditPage from './pages/ObservationEditPage';
+import GuestObservationPage from './pages/GuestObservationPage';
+import MemorySchedulePage from './pages/MemorySchedulePage';
+import MemoryBookPage from './pages/MemoryBookPage';
+import CaregiverResourcesPage from './pages/CaregiverResourcesPage';
+import TeamSettings from './pages/TeamSettings';
+
+import CarePlanBuilderPage from './pages/care-hub/CarePlanBuilderPage';
+import CarePlanSummaryPage from './pages/care-hub/CarePlanSummaryPage';
+
+import CommunityLandingPage from './pages/CommunityLandingPage';
+import CommunityRoomPage from './pages/CommunityRoomPage';
+import CommunityNewPostPage from './pages/CommunityNewPostPage';
+import CommunityPostPage from './pages/CommunityPostPage';
+import CommunityProfileEditPage from './pages/CommunityProfileEditPage';
+import CommunityPublicHubPage from './pages/CommunityPublicHubPage';
+
+import NewCarerPage from './pages/new-carer/NewCarerPage';
+import BigPicturePage from './pages/new-carer/BigPicturePage';
+import RolesPage from './pages/new-carer/RolesPage';
+import LivingArrangementsPage from './pages/new-carer/LivingArrangementsPage';
+import HealthCoordinationPage from './pages/new-carer/HealthCoordinationPage';
+import DocumentsAuthorityPage from './pages/new-carer/DocumentsAuthorityPage';
+import SustainabilityPage from './pages/new-carer/SustainabilityPage';
+import CarePlanPage from './pages/new-carer/CarePlanPage';
+import ReviewPlanPage from './pages/new-carer/ReviewPlanPage';
+
+import AdminPage from './pages/AdminPage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDeleteUser from './pages/AdminDeleteUser';
+import AdminTranslationsPage from './pages/AdminTranslationsPage';
+import AdminCommunityModerationPage from './pages/AdminCommunityModerationPage';
+import ActiveCaregiversPage from './pages/ActiveCaregiversPage';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppLayout />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AppLocaleWrapper>
+          <Routes>
+            {/* Public routes with main layout */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/why" element={<WhyCarerView />} />
+              <Route path="/tutorial" element={<TutorialPage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
+              <Route path="/data-policy" element={<DataPolicyPage />} />
+              <Route path="/dementia-scale" element={<DementiaScalePage />} />
+              <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/join" element={<AcceptInvite />} />
+              <Route path="/invite-setup" element={<InviteSetupPage />} />
+              <Route path="/choose-plan" element={<ChoosePlan />} />
+              <Route path="/checkout/success" element={<CheckoutSuccess />} />
+
+              {/* Caregiver dashboard */}
+              <Route path="/caregiver" element={<CaregiverPage />} />
+              <Route path="/caregiver/resident/:id" element={<ResidentProfilePage />} />
+              <Route path="/caregiver/observations/new" element={<NewObservationPage />} />
+              <Route path="/caregiver/observations/:id/edit" element={<ObservationEditPage />} />
+              <Route path="/caregiver/guest-observation/:token" element={<GuestObservationPage />} />
+              <Route path="/caregiver/memory-schedule" element={<MemorySchedulePage />} />
+              <Route path="/caregiver/memory-book" element={<MemoryBookPage />} />
+              <Route path="/caregiver/resources" element={<CaregiverResourcesPage />} />
+
+              {/* Care hub — authenticated layout with sidebar */}
+              <Route element={<AuthLayout />}>
+                <Route path="/caregiver/team-settings" element={<TeamSettings />} />
+                <Route path="/care-hub/care-plan" element={<CarePlanBuilderPage />} />
+                <Route path="/care-hub/care-plan/summary" element={<CarePlanSummaryPage />} />
+              </Route>
+
+              {/* Community */}
+              <Route path="/community" element={<CommunityLandingPage />} />
+              <Route path="/community/hub" element={<CommunityPublicHubPage />} />
+              <Route path="/community/rooms/:slug" element={<CommunityRoomPage />} />
+              <Route path="/community/rooms/:slug/new-post" element={<CommunityNewPostPage />} />
+              <Route path="/community/posts/:id" element={<CommunityPostPage />} />
+              <Route path="/community/profile/edit" element={<CommunityProfileEditPage />} />
+
+              {/* New carer onboarding */}
+              <Route path="/new-carer" element={<NewCarerPage />} />
+              <Route path="/new-carer/big-picture" element={<BigPicturePage />} />
+              <Route path="/new-carer/roles" element={<RolesPage />} />
+              <Route path="/new-carer/living-arrangements" element={<LivingArrangementsPage />} />
+              <Route path="/new-carer/health-coordination" element={<HealthCoordinationPage />} />
+              <Route path="/new-carer/documents-authority" element={<DocumentsAuthorityPage />} />
+              <Route path="/new-carer/sustainability" element={<SustainabilityPage />} />
+              <Route path="/new-carer/care-plan" element={<CarePlanPage />} />
+              <Route path="/new-carer/review" element={<ReviewPlanPage />} />
+            </Route>
+
+            {/* Auth callbacks (no layout) */}
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/auth/error" element={<AuthErrorPage />} />
+
+            {/* Admin routes */}
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/delete-user" element={<AdminDeleteUser />} />
+              <Route path="/admin/translations" element={<AdminTranslationsPage />} />
+              <Route path="/admin/community-moderation" element={<AdminCommunityModerationPage />} />
+              <Route path="/admin/caregivers" element={<ActiveCaregiversPage />} />
+            </Route>
+
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </AppLocaleWrapper>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }

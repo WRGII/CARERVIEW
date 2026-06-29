@@ -1,11 +1,49 @@
+import { useState } from 'react';
 import { STRIPE_PRODUCTS } from '../stripe-config';
-import { PricingCard } from '../components/pricing/PricingCard';
-import { useSubscription } from '../hooks/useSubscription';
-import { useAuth } from '../contexts/AuthContext';
+import { PricingCard } from '../components/PricingCard';
+import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabaseClient';
+import { getProductByPriceId } from '../stripe-config';
 
 export function PricingPage() {
   const { user } = useAuth();
-  const { product: activeProduct, loading } = useSubscription();
+  const { data: userPlan, isLoading } = useUserPlan();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const activeSubscription = hasActivePlan(userPlan);
+  const activeProduct = userPlan?.price_id ? getProductByPriceId(userPlan.price_id) : null;
+
+  const handleSelectPlan = async (priceId: string, planId: string) => {
+    if (!user) {
+      setError('Please sign in to choose a plan.');
+      return;
+    }
+    if (checkoutLoading) return;
+
+    setCheckoutLoading(planId);
+    setError(null);
+
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: priceId,
+          plan_id: planId,
+          success_url: `${window.location.origin}/checkout/success`,
+          cancel_url: `${window.location.origin}/pricing`,
+        },
+      });
+
+      if (fnErr) throw new Error(fnErr.message || 'Failed to create checkout session');
+      if (!data?.url) throw new Error('No checkout URL received');
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      setError(err.message || 'Unable to start checkout. Please try again.');
+      setCheckoutLoading(null);
+    }
+  };
 
   return (
     <main className="min-h-screen pt-16">
@@ -21,17 +59,28 @@ export function PricingPage() {
             Choose the plan that fits your family's needs. All plans include trend reports and PDF summaries — cancel any time.
           </p>
 
-          {!loading && user && activeProduct && (
+          {!isLoading && user && activeSubscription && activeProduct && (
             <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-teal-50 px-5 py-2 text-sm font-medium text-teal-800 ring-1 ring-teal-200">
               <span className="h-2 w-2 rounded-full bg-teal-500" />
               You're on the <strong>{activeProduct.shortName}</strong> plan
             </div>
           )}
+
+          {error && (
+            <p className="mt-4 text-sm text-red-600">{error}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:max-w-3xl lg:mx-auto animate-slide-up">
           {STRIPE_PRODUCTS.map((product) => (
-            <PricingCard key={product.id} product={product} />
+            <PricingCard
+              key={product.id}
+              product={product}
+              onSelectPlan={handleSelectPlan}
+              isPopular={product.highlighted}
+              isCurrentPlan={userPlan?.plan_id === product.planId}
+              isCheckoutLoading={!!checkoutLoading}
+            />
           ))}
         </div>
 
