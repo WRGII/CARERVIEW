@@ -185,22 +185,6 @@ CREATE TABLE IF NOT EXISTS public.stripe_customers (
   CONSTRAINT stripe_customers_customer_id_format CHECK (customer_id ~ '^cus_')
 );
 
-CREATE TABLE IF NOT EXISTS public.stripe_subscriptions (
-  id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  customer_id text NOT NULL UNIQUE,
-  subscription_id text DEFAULT NULL,
-  price_id text DEFAULT NULL,
-  current_period_start bigint DEFAULT NULL,
-  current_period_end bigint DEFAULT NULL,
-  cancel_at_period_end boolean DEFAULT false,
-  payment_method_brand text DEFAULT NULL,
-  payment_method_last4 text DEFAULT NULL,
-  status public.stripe_subscription_status NOT NULL,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now(),
-  deleted_at timestamptz DEFAULT NULL
-);
-
 -- ===== ADMIN / INFRASTRUCTURE TABLES =====
 
 CREATE TABLE IF NOT EXISTS public.admin_events (

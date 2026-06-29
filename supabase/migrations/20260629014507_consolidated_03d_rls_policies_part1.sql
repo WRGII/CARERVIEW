@@ -15,7 +15,6 @@ ALTER TABLE public.cv_team_invites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cv_team_patient ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stripe_customers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.stripe_subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.memory_books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.memory_book_identity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.memory_book_contacts ENABLE ROW LEVEL SECURITY;

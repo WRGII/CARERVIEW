@@ -204,7 +204,6 @@ Deno.serve(async (req) => {
     audit.details.observations_deleted = obsCount ?? 0
 
     await srv.from('user_subscriptions').delete().eq('user_id', userId)
-    await srv.from('stripe_subscriptions').delete().eq('customer_id', stripeCustomer?.customer_id || '')
     await srv.from('stripe_customers').delete().eq('user_id', userId)
     await srv.from('profiles').delete().eq('id', userId)
 
