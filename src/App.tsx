@@ -68,12 +68,14 @@ import CaregiverGuard from './components/common/CaregiverGuard';
 import { ErrorBoundary } from './components/util/ErrorBoundary';
 
 import { ActiveTeamProvider } from './context/ActiveTeam';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   return (
     <HelmetProvider>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
+        <AuthProvider>
         <AppLocaleWrapper>
           <ToastProvider>
           <ActiveTeamProvider>
@@ -152,6 +154,7 @@ export default function App() {
           </ActiveTeamProvider>
           </ToastProvider>
         </AppLocaleWrapper>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
     </HelmetProvider>
