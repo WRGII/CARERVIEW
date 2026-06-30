@@ -79,8 +79,8 @@ export function useUserPlan() {
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null
 
-      // Pick the most relevant, currently-active-ish row
-      const { data, error } = await supabase
+      // Pick the most relevant row: paid plans before free, then latest period end
+      const { data: rows, error } = await supabase
         .from('user_subscriptions')
         .select(
           'user_id, plan_id, status, current_period_start, current_period_end, updated_at, price_id'
@@ -88,11 +88,17 @@ export function useUserPlan() {
         .eq('user_id', user.id)
         .in('status', ['active', 'trialing', 'past_due'])
         .order('current_period_end', { ascending: false })
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+        .limit(5)
 
       if (error) throw error
+
+      // Prefer paid plan rows over the synthetic free row
+      const sorted = (rows ?? []).sort((a, b) => {
+        const aFree = a.plan_id === 'free' ? 0 : 1
+        const bFree = b.plan_id === 'free' ? 0 : 1
+        return bFree - aFree
+      })
+      const data = sorted[0] ?? null
 
       const normalizeIso = (v: unknown): string | null =>
         typeof v === 'string'

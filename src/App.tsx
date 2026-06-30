@@ -64,6 +64,7 @@ import AdminTranslationsPage from './pages/AdminTranslationsPage';
 import AdminCommunityModerationPage from './pages/AdminCommunityModerationPage';
 import ActiveCaregiversPage from './pages/ActiveCaregiversPage';
 import CaregiverGuard from './components/common/CaregiverGuard';
+import { ErrorBoundary } from './components/util/ErrorBoundary';
 
 export default function App() {
   return (
@@ -91,20 +92,20 @@ export default function App() {
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
 
               {/* Caregiver dashboard */}
-              <Route element={<CaregiverGuard><CaregiverPage /></CaregiverGuard>} path="/caregiver" />
-              <Route path="/caregiver/resident/:id" element={<CaregiverGuard><ResidentProfilePage /></CaregiverGuard>} />
-              <Route path="/caregiver/observations/new" element={<CaregiverGuard><NewObservationPage /></CaregiverGuard>} />
-              <Route path="/caregiver/observations/:id/edit" element={<CaregiverGuard><ObservationEditPage /></CaregiverGuard>} />
+              <Route element={<ErrorBoundary><CaregiverGuard><CaregiverPage /></CaregiverGuard></ErrorBoundary>} path="/caregiver" />
+              <Route path="/caregiver/resident/:id" element={<ErrorBoundary><CaregiverGuard><ResidentProfilePage /></CaregiverGuard></ErrorBoundary>} />
+              <Route path="/caregiver/observations/new" element={<ErrorBoundary><CaregiverGuard><NewObservationPage /></CaregiverGuard></ErrorBoundary>} />
+              <Route path="/caregiver/observations/:id/edit" element={<ErrorBoundary><CaregiverGuard><ObservationEditPage /></CaregiverGuard></ErrorBoundary>} />
               <Route path="/caregiver/guest-observation/:token" element={<GuestObservationPage />} />
-              <Route path="/caregiver/memory-schedule" element={<CaregiverGuard><MemorySchedulePage /></CaregiverGuard>} />
-              <Route path="/caregiver/memory-book" element={<CaregiverGuard><MemoryBookPage /></CaregiverGuard>} />
-              <Route path="/caregiver/resources" element={<CaregiverGuard><CaregiverResourcesPage /></CaregiverGuard>} />
+              <Route path="/caregiver/memory-schedule" element={<ErrorBoundary><CaregiverGuard><MemorySchedulePage /></CaregiverGuard></ErrorBoundary>} />
+              <Route path="/caregiver/memory-book" element={<ErrorBoundary><CaregiverGuard><MemoryBookPage /></CaregiverGuard></ErrorBoundary>} />
+              <Route path="/caregiver/resources" element={<ErrorBoundary><CaregiverGuard><CaregiverResourcesPage /></CaregiverGuard></ErrorBoundary>} />
 
               {/* Care hub — authenticated layout with sidebar */}
               <Route element={<AuthLayout />}>
-                <Route path="/caregiver/team-settings" element={<CaregiverGuard><TeamSettings /></CaregiverGuard>} />
-                <Route path="/care-hub/care-plan" element={<CaregiverGuard><CarePlanBuilderPage /></CaregiverGuard>} />
-                <Route path="/care-hub/care-plan/summary" element={<CaregiverGuard><CarePlanSummaryPage /></CaregiverGuard>} />
+                <Route path="/caregiver/team-settings" element={<ErrorBoundary><CaregiverGuard><TeamSettings /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/care-hub/care-plan" element={<ErrorBoundary><CaregiverGuard><CarePlanBuilderPage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/care-hub/care-plan/summary" element={<ErrorBoundary><CaregiverGuard><CarePlanSummaryPage /></CaregiverGuard></ErrorBoundary>} />
               </Route>
 
               {/* Community */}

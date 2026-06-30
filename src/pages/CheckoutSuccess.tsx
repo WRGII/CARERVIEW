@@ -50,6 +50,7 @@ export default function CheckoutSuccess() {
         )
         .eq("user_id", user.id)
         .in("status", ["active", "trialing"])
+        .neq("plan_id", "free")
         .order("current_period_end", { ascending: false })
         .limit(1)
         .maybeSingle();
