@@ -98,21 +98,30 @@ export default function App() {
               <Route path="/choose-plan" element={<ChoosePlan />} />
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
 
-              {/* Caregiver dashboard */}
-              <Route element={<ErrorBoundary><CaregiverGuard><CaregiverPage /></CaregiverGuard></ErrorBoundary>} path="/caregiver" />
-              <Route path="/caregiver/resident/:id" element={<ErrorBoundary><CaregiverGuard><ResidentProfilePage /></CaregiverGuard></ErrorBoundary>} />
-              <Route path="/caregiver/observations/new" element={<ErrorBoundary><CaregiverGuard><NewObservationPage /></CaregiverGuard></ErrorBoundary>} />
-              <Route path="/caregiver/observations/:id/edit" element={<ErrorBoundary><CaregiverGuard><ObservationEditPage /></CaregiverGuard></ErrorBoundary>} />
+              {/* Guest observation — public token-based route, no auth required */}
               <Route path="/caregiver/guest-observation/:token" element={<GuestObservationPage />} />
-              <Route path="/caregiver/memory-schedule" element={<ErrorBoundary><CaregiverGuard><MemorySchedulePage /></CaregiverGuard></ErrorBoundary>} />
-              <Route path="/caregiver/memory-book" element={<ErrorBoundary><CaregiverGuard><MemoryBookPage /></CaregiverGuard></ErrorBoundary>} />
-              <Route path="/caregiver/resources" element={<ErrorBoundary><CaregiverGuard><CaregiverResourcesPage /></CaregiverGuard></ErrorBoundary>} />
 
-              {/* Care hub — authenticated layout with sidebar */}
+              {/* All authenticated caregiver + care-hub + new-carer sub-pages share the sidebar */}
               <Route element={<AuthLayout />}>
+                <Route path="/caregiver" element={<ErrorBoundary><CaregiverGuard><CaregiverPage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/resident/:id" element={<ErrorBoundary><CaregiverGuard><ResidentProfilePage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/observations/new" element={<ErrorBoundary><CaregiverGuard><NewObservationPage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/observations/:id/edit" element={<ErrorBoundary><CaregiverGuard><ObservationEditPage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/memory-schedule" element={<ErrorBoundary><CaregiverGuard><MemorySchedulePage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/memory-book" element={<ErrorBoundary><CaregiverGuard><MemoryBookPage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/resources" element={<ErrorBoundary><CaregiverGuard><CaregiverResourcesPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/team-settings" element={<ErrorBoundary><CaregiverGuard><TeamSettings /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/care-hub/care-plan" element={<ErrorBoundary><CaregiverGuard><CarePlanBuilderPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/care-hub/care-plan/summary" element={<ErrorBoundary><CaregiverGuard><CarePlanSummaryPage /></CaregiverGuard></ErrorBoundary>} />
+                {/* New carer sub-pages show sidebar when accessed by authenticated users */}
+                <Route path="/new-carer/big-picture" element={<BigPicturePage />} />
+                <Route path="/new-carer/roles" element={<RolesPage />} />
+                <Route path="/new-carer/living-arrangements" element={<LivingArrangementsPage />} />
+                <Route path="/new-carer/health-coordination" element={<HealthCoordinationPage />} />
+                <Route path="/new-carer/documents-authority" element={<DocumentsAuthorityPage />} />
+                <Route path="/new-carer/sustainability" element={<SustainabilityPage />} />
+                <Route path="/new-carer/care-plan" element={<CarePlanPage />} />
+                <Route path="/new-carer/review" element={<ReviewPlanPage />} />
               </Route>
 
               {/* Community */}
@@ -123,16 +132,8 @@ export default function App() {
               <Route path="/community/posts/:id" element={<CommunityPostPage />} />
               <Route path="/community/profile/edit" element={<CommunityProfileEditPage />} />
 
-              {/* New carer onboarding */}
+              {/* New carer landing — public marketing page, no sidebar */}
               <Route path="/new-carer" element={<NewCarerPage />} />
-              <Route path="/new-carer/big-picture" element={<BigPicturePage />} />
-              <Route path="/new-carer/roles" element={<RolesPage />} />
-              <Route path="/new-carer/living-arrangements" element={<LivingArrangementsPage />} />
-              <Route path="/new-carer/health-coordination" element={<HealthCoordinationPage />} />
-              <Route path="/new-carer/documents-authority" element={<DocumentsAuthorityPage />} />
-              <Route path="/new-carer/sustainability" element={<SustainabilityPage />} />
-              <Route path="/new-carer/care-plan" element={<CarePlanPage />} />
-              <Route path="/new-carer/review" element={<ReviewPlanPage />} />
             </Route>
 
             {/* Auth callbacks (no layout) */}
