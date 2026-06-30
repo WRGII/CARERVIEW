@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { queryClient } from './lib/queryClient';
 import AppLocaleWrapper from './i18n/AppLocaleWrapper';
+import { ToastProvider } from './components/ui/ToastProvider';
 
 import MainLayout from './components/layout/MainLayout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -74,6 +75,7 @@ export default function App() {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AppLocaleWrapper>
+          <ToastProvider>
           <ActiveTeamProvider>
           <Routes>
             {/* Public routes with main layout */}
@@ -148,6 +150,7 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </ActiveTeamProvider>
+          </ToastProvider>
         </AppLocaleWrapper>
       </QueryClientProvider>
     </BrowserRouter>

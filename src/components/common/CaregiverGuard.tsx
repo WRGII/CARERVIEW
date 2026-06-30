@@ -68,7 +68,7 @@ export default function CaregiverGuard({ children }: Props) {
   const isOnDashboard = location.pathname === '/caregiver'
   const alreadyOnCareHub = location.pathname.startsWith('/care-hub')
 
-  if (
+  const shouldRedirectToCareHub =
     !loading &&
     !planLoading &&
     !onboardingLoading &&
@@ -77,8 +77,15 @@ export default function CaregiverGuard({ children }: Props) {
     !careHubVisited &&
     isOnDashboard &&
     !alreadyOnCareHub
-  ) {
-    markCareHubVisited();
+
+  React.useEffect(() => {
+    if (shouldRedirectToCareHub) {
+      markCareHubVisited();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldRedirectToCareHub]);
+
+  if (shouldRedirectToCareHub) {
     return <Navigate to="/care-hub/care-plan" replace />;
   }
 

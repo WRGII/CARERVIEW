@@ -45,7 +45,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 
 export default function FamilyCircleSetup() {
   const navigate = useNavigate();
-  const { teamId, refresh: refreshTeam } = useActiveTeam();
+  const { teamId, loading: teamLoading, refresh: refreshTeam } = useActiveTeam();
   const { t, isLoading: translationsLoading } = useLocale();
   const { data: plan } = useUserPlan();
   const [resident, setResident] = useState("");
@@ -58,7 +58,7 @@ export default function FamilyCircleSetup() {
   const [generatedLinks, setGeneratedLinks] = useState<GeneratedLink[]>([]);
   const [done, setDone] = useState(false);
 
-  const eligible = plan?.plan_id === "family_qtr" && hasActivePlan(plan) && !teamId;
+  const eligible = plan?.plan_id === "family_qtr" && hasActivePlan(plan) && !teamId && !teamLoading;
 
   if (!eligible) return null;
   if (translationsLoading) return <Loading />;
