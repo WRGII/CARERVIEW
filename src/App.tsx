@@ -104,7 +104,7 @@ export default function App() {
               {/* All authenticated caregiver + care-hub + new-carer sub-pages share the sidebar */}
               <Route element={<AuthLayout />}>
                 <Route path="/caregiver" element={<ErrorBoundary><CaregiverGuard><CaregiverPage /></CaregiverGuard></ErrorBoundary>} />
-                <Route path="/caregiver/resident/:id" element={<ErrorBoundary><CaregiverGuard><ResidentProfilePage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/resident" element={<ErrorBoundary><CaregiverGuard><ResidentProfilePage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/observations/new" element={<ErrorBoundary><CaregiverGuard><NewObservationPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/observations/:id/edit" element={<ErrorBoundary><CaregiverGuard><ObservationEditPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/memory-schedule" element={<ErrorBoundary><CaregiverGuard><MemorySchedulePage /></CaregiverGuard></ErrorBoundary>} />
