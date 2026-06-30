@@ -79,7 +79,7 @@ export default function CaregiverGuard({ children }: Props) {
     !alreadyOnCareHub
   ) {
     markCareHubVisited();
-    return <Navigate to="/care-hub" replace />;
+    return <Navigate to="/care-hub/care-plan" replace />;
   }
 
   return <>{children}</>;

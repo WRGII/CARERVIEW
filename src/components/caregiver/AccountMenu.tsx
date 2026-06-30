@@ -87,7 +87,7 @@ export default function AccountMenu() {
         >
           {canUseTeam && (
             <Link
-              to="/team"
+              to="/caregiver/team-settings"
               onClick={close}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
               role="menuitem"
