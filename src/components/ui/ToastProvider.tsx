@@ -8,10 +8,16 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
-export const useToast = () => {
+const noopToast: ToastContextType = {
+  showToast: () => {},
+  dismissToast: () => {},
+}
+
+export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext)
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider')
+    console.warn('[CarerView] useToast called outside ToastProvider — returning no-op')
+    return noopToast
   }
   return context
 }
