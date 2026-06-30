@@ -3,21 +3,27 @@ import { useNavigate, Link } from 'react-router-dom'
 import AuthForm from '../components/common/AuthForm'
 import PageSEO from '../components/seo/PageSEO'
 import { useAuth } from '../hooks/useAuth'
+import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan'
 import { useLocale } from '../i18n/LocaleContext'
 import { SITE_URL } from '../lib/siteConfig'
 
 export default function SignInPage() {
   const { user, loading } = useAuth()
+  const { data: plan, isLoading: planLoading } = useUserPlan()
   const navigate = useNavigate()
   const { t } = useLocale()
 
   useEffect(() => {
-    if (!loading && user) {
+    if (loading || planLoading) return
+    if (!user) return
+    if (hasActivePlan(plan)) {
       navigate('/caregiver', { replace: true })
+    } else {
+      navigate('/create-account?incomplete=1', { replace: true })
     }
-  }, [user, loading, navigate])
+  }, [user, loading, plan, planLoading, navigate])
 
-  if (loading || user) return null
+  if (loading || planLoading || user) return null
 
   return (
     <>

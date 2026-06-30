@@ -17,6 +17,19 @@ async function fireWelcomeEmail(accessToken: string): Promise<void> {
   }).catch(() => {/* fire-and-forget */});
 }
 
+async function hasActiveSubscription(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('user_subscriptions')
+    .select('status, current_period_end')
+    .eq('user_id', userId)
+    .in('status', ['active', 'trialing'])
+    .limit(1)
+    .maybeSingle();
+  if (!data) return false;
+  const end = data.current_period_end ? Date.parse(data.current_period_end) : NaN;
+  return !Number.isNaN(end) && Date.now() < end;
+}
+
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const processed = useRef(false);
@@ -49,7 +62,7 @@ export default function AuthCallbackPage() {
       setTimedOut(true);
     }, TIMEOUT_MS);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && type === 'recovery')) {
         clearTimeout(timeout);
         subscription.unsubscribe();
@@ -61,9 +74,8 @@ export default function AuthCallbackPage() {
         clearTimeout(timeout);
         subscription.unsubscribe();
         // Fire welcome email idempotently — the function skips if already sent.
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session?.access_token) fireWelcomeEmail(session.access_token);
-        });
+        if (session?.access_token) fireWelcomeEmail(session.access_token);
+
         const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
         if (hasPendingCheckout) {
           navigate('/create-account', { replace: true });
@@ -75,7 +87,18 @@ export default function AuthCallbackPage() {
           navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
           return;
         }
-        navigate(next, { replace: true });
+        // For non-recovery sign-ins, check whether the user has a subscription.
+        // New users confirming their email will have none — send them to choose a plan.
+        const userId = session?.user?.id;
+        if (userId) {
+          hasActiveSubscription(userId).then((active) => {
+            navigate(active ? next : '/create-account?incomplete=1', { replace: true });
+          }).catch(() => {
+            navigate('/create-account?incomplete=1', { replace: true });
+          });
+        } else {
+          navigate(next, { replace: true });
+        }
       }
     });
 
