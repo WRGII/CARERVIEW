@@ -118,7 +118,7 @@ export default function CareHubSideNav() {
     <>
       {/* Mobile horizontal tab bar */}
       <nav
-        className="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 gap-1 -mx-px scrollbar-none sticky top-16 z-20"
+        className="lg:hidden flex overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5 gap-1 -mx-px scrollbar-none sticky top-[96px] z-20"
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
@@ -144,10 +144,10 @@ export default function CareHubSideNav() {
       {/* Desktop sidebar */}
       <nav
         className="hidden lg:flex flex-col w-56 shrink-0 border-r border-slate-200 bg-white"
-        style={{ minHeight: 'calc(100vh - 64px)', position: 'sticky', top: '64px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 64px)', overflowY: 'auto' }}
+        style={{ minHeight: 'calc(100vh - 96px)', position: 'sticky', top: '96px', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 96px)', overflowY: 'auto' }}
         aria-label="Main navigation"
       >
-        <div className="px-3 py-4 space-y-1 flex flex-col" style={{ minHeight: 'calc(100vh - 64px - 2rem)' }}>
+        <div className="px-3 py-4 space-y-1 flex flex-col" style={{ minHeight: 'calc(100vh - 96px - 2rem)' }}>
           <div className="space-y-1">
             {navItems.map((item) => (
               <SideNavItem key={item.to} item={item} isActive={isActive(item)} />
