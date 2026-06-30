@@ -304,6 +304,26 @@ export default function CaregiverPage() {
 
       {!planActive && <InactivePlanNotice className="mb-6" />}
 
+      {planActive && plan?.plan_id === 'free' && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100">
+              <ArrowRight className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-900">{t('upgrade.banner_title')}</p>
+              <p className="text-xs text-amber-700 mt-0.5">{t('upgrade.banner_desc')}</p>
+            </div>
+          </div>
+          <Link
+            to="/choose-plan"
+            className="shrink-0 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 transition-colors"
+          >
+            {t('upgrade.banner_cta')}
+          </Link>
+        </div>
+      )}
+
       {/* Full observation view/detail when navigated to it */}
       {viewMode === 'view' && currentObservationId ? (
         <ViewObservation

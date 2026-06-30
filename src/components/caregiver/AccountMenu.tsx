@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { ChevronDown, LogOut, CreditCard, GraduationCap, Users } from "lucide-react";
+import { ChevronDown, LogOut, CreditCard, GraduationCap, Users, TrendingUp } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { useLocale } from '../../i18n/LocaleContext';
 import { useUserPlan } from "../../hooks/useUserPlan";
@@ -11,6 +11,7 @@ export default function AccountMenu() {
   const { t } = useLocale();
   const { data: plan } = useUserPlan();
   const canUseTeam = plan?.plan_id === "family_qtr";
+  const isFreePlan = plan?.plan_id === 'free';
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -93,6 +94,18 @@ export default function AccountMenu() {
             >
               <Users className="w-4 h-4 text-slate-500" aria-hidden="true" />
               {t('nav.family_circle')}
+            </Link>
+          )}
+
+          {isFreePlan && (
+            <Link
+              to="/choose-plan"
+              onClick={close}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50 transition-colors duration-150"
+              role="menuitem"
+            >
+              <TrendingUp className="w-4 h-4 text-amber-500" aria-hidden="true" />
+              {t('upgrade.menu_item')}
             </Link>
           )}
 

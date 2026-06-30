@@ -189,13 +189,22 @@ export default function ChoosePlan() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={handleManageBilling}
-                disabled={managingBilling}
-                className="ml-4 px-4 py-2 bg-slate-gray text-warm-white rounded-xl hover:bg-slate-gray/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                {managingBilling ? t('common.opening') : t('billing.manage_btn')}
-              </button>
+              {userPlan.plan_id === 'free' ? (
+                <a
+                  href="#plans"
+                  className="ml-4 px-4 py-2 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors text-sm font-semibold"
+                >
+                  {t('upgrade.banner_cta')}
+                </a>
+              ) : (
+                <button
+                  onClick={handleManageBilling}
+                  disabled={managingBilling}
+                  className="ml-4 px-4 py-2 bg-slate-gray text-warm-white rounded-xl hover:bg-slate-gray/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  {managingBilling ? t('common.opening') : t('billing.manage_btn')}
+                </button>
+              )}
             </div>
           </div>
         )}
