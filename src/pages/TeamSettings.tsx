@@ -59,6 +59,7 @@ function InviteStatusBadge({ invite, t }: { invite: CvInvite; t: (k: string) => 
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLocale();
 
   async function handleCopy() {
     try {
@@ -80,7 +81,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       {copied ? (
         <>
           <Check className="w-3.5 h-3.5" />
-          Copied
+          {t("common.copied")}
         </>
       ) : (
         <>
@@ -168,7 +169,8 @@ export default function TeamSettings() {
       const result = await cvCreateInvite(teamId, inviteEmail.trim());
       const link = `${window.location.origin}/join?t=${encodeURIComponent(result.token)}`;
 
-      const ownerName = members.find((m) => m.role === "owner")?.display_name;
+      const ownerMember = members.find((m) => m.role === "owner");
+      const ownerName = ownerMember?.name ?? ownerMember?.display_name;
       const { sent, error: emailErr } = await cvSendInviteEmail({
         email: inviteEmail.trim(),
         invite_link: link,
@@ -283,12 +285,14 @@ export default function TeamSettings() {
               {members.map((m) => (
                 <div key={m.user_id} className="flex items-center gap-3 px-4 py-3 bg-white">
                   <div className="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                    {initials(m.display_name)}
+                    {initials(m.name ?? m.display_name)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium text-slate-900 truncate">{m.display_name}</span>
+                      <span className="text-sm font-medium text-slate-900 truncate">
+                        {m.name ?? m.display_name}
+                      </span>
                       {m.role === "owner" && (
                         <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
                           <Crown className="w-2.5 h-2.5" />
@@ -376,7 +380,7 @@ export default function TeamSettings() {
                         <Check className="w-3 h-3 text-emerald-600" />
                       </div>
                       <p className="text-sm font-medium text-emerald-800">
-                        Invitation email sent! They'll receive it shortly.
+                        {t("team.invite_email_sent")}
                       </p>
                     </div>
                   ) : (
@@ -384,10 +388,10 @@ export default function TeamSettings() {
                       <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-semibold text-amber-800">
-                          Email could not be sent automatically.
+                          {t("team.invite_email_failed")}
                         </p>
                         <p className="text-xs text-amber-700 mt-0.5">
-                          Please share the invite link below directly with your team member.
+                          {t("team.invite_email_failed_sub")}
                           {inviteResult.emailError && (
                             <span className="block mt-1 text-amber-600 font-mono">{inviteResult.emailError}</span>
                           )}
@@ -398,8 +402,8 @@ export default function TeamSettings() {
                   <div>
                     <p className="text-xs text-slate-500 mb-1.5">
                       {inviteResult.emailSent
-                        ? "You can also share this link directly:"
-                        : "Send this link to your team member:"}
+                        ? t("team.invite_share_also")
+                        : t("team.invite_share_direct")}
                     </p>
                     <div className="flex items-start gap-2">
                       <code className={`flex-1 text-xs border rounded-lg px-3 py-2 break-all font-mono ${inviteResult.emailSent ? "bg-white border-emerald-200 text-slate-700" : "bg-white border-amber-200 text-slate-700"}`}>

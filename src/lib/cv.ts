@@ -9,6 +9,7 @@ export type CvMember = {
   state: "active" | "frozen";
   joined_at: string;
   display_name: string;
+  name: string | null;
   email: string;
 };
 
