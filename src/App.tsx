@@ -66,12 +66,15 @@ import ActiveCaregiversPage from './pages/ActiveCaregiversPage';
 import CaregiverGuard from './components/common/CaregiverGuard';
 import { ErrorBoundary } from './components/util/ErrorBoundary';
 
+import { ActiveTeamProvider } from './context/ActiveTeam';
+
 export default function App() {
   return (
     <HelmetProvider>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AppLocaleWrapper>
+          <ActiveTeamProvider>
           <Routes>
             {/* Public routes with main layout */}
             <Route element={<MainLayout />}>
@@ -144,6 +147,7 @@ export default function App() {
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </ActiveTeamProvider>
         </AppLocaleWrapper>
       </QueryClientProvider>
     </BrowserRouter>

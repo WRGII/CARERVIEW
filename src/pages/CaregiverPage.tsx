@@ -293,7 +293,9 @@ export default function CaregiverPage() {
         <GuidedTutorial />
       </ErrorBoundary>
       <div data-tutorial="family-circle">
-        <FamilyCircleSetup />
+        <ErrorBoundary>
+          <FamilyCircleSetup />
+        </ErrorBoundary>
       </div>
 
       {showSuccessMessage && (
