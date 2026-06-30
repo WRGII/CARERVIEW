@@ -13,7 +13,7 @@ export default function CaregiverGuard({ children }: Props) {
   const { user, profile, loading } = useAuth();
   const { data: userPlan, isLoading: planLoading } = useUserPlan();
   const { careHubVisited, isLoading: onboardingLoading, markCareHubVisited } = useOnboarding();
-  const { teamId } = useActiveTeam();
+  const { teamId, loading: teamLoading } = useActiveTeam();
   const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id);
   const { t } = useLocale();
   const location = useLocation();
@@ -28,7 +28,7 @@ export default function CaregiverGuard({ children }: Props) {
     return <Navigate to={{ pathname: "/", hash: "#get-started" }} replace />;
   }
 
-  if ((loading || planLoading || (!!teamId && teamRoleLoading)) && !expired) {
+  if ((loading || planLoading || teamLoading || (!!teamId && teamRoleLoading)) && !expired) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
         <p className="text-slate-gray mb-2">{t('guard.preparing_workspace')}</p>
