@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Activity, ArrowRight, BookOpen, ClipboardList, Lock } from 'lucide-react';
 import GuidedTutorial from '../components/caregiver/GuidedTutorial';
 import GuestInviteModal from '../components/caregiver/GuestInviteModal';
+import { ErrorBoundary } from '../components/util/ErrorBoundary';
 
 import { useAuth } from '../hooks/useAuth';
 import { useLocale } from '../i18n/LocaleContext';
@@ -288,7 +289,9 @@ export default function CaregiverPage() {
       user={{ ...user, profile }}
       hideSignOut={true}
     >
-      <GuidedTutorial />
+      <ErrorBoundary>
+        <GuidedTutorial />
+      </ErrorBoundary>
       <div data-tutorial="family-circle">
         <FamilyCircleSetup />
       </div>

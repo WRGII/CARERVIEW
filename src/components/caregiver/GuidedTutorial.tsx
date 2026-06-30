@@ -138,7 +138,7 @@ export default function GuidedTutorial() {
 
           {/* Step label */}
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-            {t('tutorial.step_label')
+            {String(t('tutorial.step_label') ?? '')
               .replace('{current}', String(currentStep + 1))
               .replace('{total}', String(STEPS.length))}
           </p>
