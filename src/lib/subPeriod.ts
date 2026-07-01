@@ -26,9 +26,10 @@ export function currentMonthWindowUtc(now = new Date()) {
   return { start: iso(start), end: iso(end) }
 }
 
-/** 30 days starting at profile.created_at (or now if missing) */
+/** 30 days starting at profile.created_at (or now if missing/invalid) */
 export function first30dWindowUtc(createdAtIso?: string | null) {
-  const start = createdAtIso ? new Date(createdAtIso) : new Date()
+  let start = createdAtIso ? new Date(createdAtIso) : new Date()
+  if (isNaN(start.getTime())) start = new Date()
   start.setMilliseconds(0)
   const end = new Date(start)
   end.setUTCDate(end.getUTCDate() + 30)

@@ -33,6 +33,28 @@ export function formatPrice(amount: number, currency: string): string {
 
 export const STRIPE_PRODUCTS: StripeProduct[] = [
   {
+    id: 'free',
+    priceId: '',
+    planId: 'free',
+    name: 'CarerView - Community Member',
+    shortName: 'Community Member',
+    tagline: 'Get started at no cost.',
+    billingPrice: 0,
+    price: 0,
+    pricePerUnit: 0,
+    currencySymbol: '$',
+    currency: 'usd',
+    mode: 'subscription',
+    billingInterval: 'year',
+    billingNote: 'Free forever',
+    description: 'Community member plan with basic access.',
+    features: [
+      'Community access',
+      'Basic observations',
+    ],
+    highlighted: false,
+  },
+  {
     id: 'prod_TW2OREgJTTCsLC',
     priceId: 'price_1SZ0JMGiCMwtCdgydBnTnX4a',
     planId: 'primary_qtr',
