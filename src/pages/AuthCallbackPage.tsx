@@ -123,7 +123,7 @@ export default function AuthCallbackPage() {
             Retry
           </button>
           <button
-            onClick={() => navigate('/login', { replace: true })}
+            onClick={() => navigate('/sign-in', { replace: true })}
             className="text-sm text-slate-500 hover:text-slate-700 underline transition-colors"
           >
             Back to sign in
