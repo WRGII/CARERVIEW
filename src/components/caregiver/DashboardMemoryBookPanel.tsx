@@ -8,7 +8,9 @@ import {
   useMemoryBookIdentity,
   useMemoryBookContacts,
   useMemoryBookMedical,
+  useMemoryBookMedicalEntries,
   useMemoryBookDailyLivingEntries,
+  useMemoryBookPreferences,
   useMemoryBookPreferenceEntries,
 } from '../../hooks/useMemoryBook'
 import { useLocale } from '../../i18n/LocaleContext'
@@ -41,12 +43,14 @@ export default function DashboardMemoryBookPanel() {
   const { data: identity, isLoading: identityLoading } = useMemoryBookIdentity(bookId)
   const { data: contacts = [], isLoading: contactsLoading } = useMemoryBookContacts(bookId)
   const { data: medical, isLoading: medicalLoading } = useMemoryBookMedical(bookId)
+  const { data: medicalEntries = [], isLoading: medicalEntriesLoading } = useMemoryBookMedicalEntries(bookId)
   const { data: dailyLiving = [], isLoading: dailyLoading } = useMemoryBookDailyLivingEntries(bookId)
+  const { data: legacyPreferences, isLoading: legacyPrefLoading } = useMemoryBookPreferences(bookId)
   const { data: preferences = [], isLoading: prefLoading } = useMemoryBookPreferenceEntries(bookId)
 
   if (!teamId) return null
 
-  const isLoading = roleLoading || bookLoading || identityLoading || contactsLoading || medicalLoading || dailyLoading || prefLoading
+  const isLoading = roleLoading || bookLoading || identityLoading || contactsLoading || medicalLoading || medicalEntriesLoading || dailyLoading || legacyPrefLoading || prefLoading
 
   if (isLoading) return null
 
@@ -62,8 +66,8 @@ export default function DashboardMemoryBookPanel() {
   const filledMap: Record<SectionKey, boolean> = {
     identity: !!identity,
     contacts: contacts.length > 0,
-    medical: !!medical,
-    daily_living: dailyLiving.length > 0 || preferences.length > 0,
+    medical: !!medical || medicalEntries.length > 0,
+    daily_living: dailyLiving.length > 0 || !!legacyPreferences || preferences.length > 0,
   }
 
   const filledCount = Object.values(filledMap).filter(Boolean).length
