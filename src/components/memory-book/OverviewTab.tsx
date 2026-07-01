@@ -107,19 +107,19 @@ export default function OverviewTab({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Stethoscope className="w-4 h-4 text-rose-500" />
-                    <h3 className="text-sm font-semibold text-slate-700">Medical Summary</h3>
+                    <h3 className="text-sm font-semibold text-slate-700">{t("memory_book.overview_medical_summary")}</h3>
                   </div>
                   <button
                     onClick={() => onNavigate("memory-book")}
                     className="text-xs text-cyan-600 hover:text-cyan-700 font-medium transition-colors"
                   >
-                    View all
+                    {t("memory_book.overview_view_all")}
                   </button>
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4">
                   {conditions.length > 0 && (
                     <MedicalSummaryGroup
-                      label="Conditions"
+                      label={t("memory_book.overview_conditions")}
                       color="bg-rose-50 text-rose-700 border-rose-200"
                       dotColor="bg-rose-400"
                       items={conditions.map(e => e.label)}
@@ -128,7 +128,7 @@ export default function OverviewTab({
                   )}
                   {medications.length > 0 && (
                     <MedicalSummaryGroup
-                      label="Medications"
+                      label={t("memory_book.overview_medications")}
                       color="bg-cyan-50 text-cyan-700 border-cyan-200"
                       dotColor="bg-cyan-400"
                       items={medications.map(e => e.label)}
@@ -137,7 +137,7 @@ export default function OverviewTab({
                   )}
                   {allergies.length > 0 && (
                     <MedicalSummaryGroup
-                      label="Allergies"
+                      label={t("memory_book.overview_allergies")}
                       color="bg-orange-50 text-orange-700 border-orange-200"
                       dotColor="bg-orange-400"
                       items={allergies.map(e => e.label)}
@@ -176,7 +176,7 @@ export default function OverviewTab({
             />
             <SectionCard
               icon={<Activity className="w-5 h-5" />}
-              label="Daily Living"
+              label={t("memory_book.tab_daily_living")}
               complete={hasDailyLiving}
               notStartedLabel={t("memory_book.overview_not_started")}
               onClick={() => onNavigate("daily-living")}
@@ -209,7 +209,7 @@ export default function OverviewTab({
                   { label: t("memory_book.section_identity"), done: hasIdentity },
                   { label: t("memory_book.section_contacts"), done: hasContacts },
                   { label: t("memory_book.section_medical"), done: hasMedical },
-                  { label: "Daily Living & Preferences", done: hasDailyLiving },
+                  { label: t("memory_book.section_daily_living"), done: hasDailyLiving },
                 ].map(({ label, done }) => (
                   <div key={label} className="flex items-center gap-2.5">
                     <div

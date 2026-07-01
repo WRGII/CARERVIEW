@@ -4,6 +4,7 @@ import { BookOpen, LayoutDashboard, Activity, ClipboardList, CalendarDays, Squar
 import PageLayout from "../components/layout/PageLayout";
 import { useActiveTeam } from "../context/ActiveTeam";
 import { useAuth } from "../hooks/useAuth";
+import { useLocale } from "../i18n/LocaleContext";
 import {
   useMemoryBook,
   useTeamRole,
@@ -34,20 +35,22 @@ import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
 import PrintView from "../components/memory-book/PrintView";
 
-const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType; comingSoon?: boolean }[] = [
-  { key: "overview",     label: "Overview",     Icon: LayoutDashboard },
-  { key: "memory-book",  label: "Memory Book",  Icon: BookOpen },
-  { key: "daily-living", label: "Daily Living", Icon: Activity },
-  { key: "routines",     label: "Routines",     Icon: ClipboardList,  comingSoon: true },
-  { key: "calendar",     label: "Calendar",     Icon: CalendarDays,   comingSoon: true },
-  { key: "tasks",        label: "Tasks",        Icon: CheckSquare,    comingSoon: true },
-  { key: "observations", label: "Observations", Icon: FileText },
-  { key: "changes",      label: "Change Log",   Icon: History,        comingSoon: true },
-];
-
 export default function MemorySchedulePage() {
   useEffect(() => { setLastModule('memory_book'); }, []);
+  const { t } = useLocale();
   const [activeTab, setActiveTab] = useState<MemoryBookTabKey>("overview");
+
+  const TABS: { key: MemoryBookTabKey; label: string; Icon: React.ElementType; comingSoon?: boolean }[] = [
+    { key: "overview",     label: t("memory_book.tab_overview"),     Icon: LayoutDashboard },
+    { key: "memory-book",  label: t("memory_book.tab_memory_book"),  Icon: BookOpen },
+    { key: "daily-living", label: t("memory_book.tab_daily_living"), Icon: Activity },
+    { key: "routines",     label: t("memory_book.tab_routines"),     Icon: ClipboardList,  comingSoon: true },
+    { key: "calendar",     label: t("memory_book.tab_calendar"),     Icon: CalendarDays,   comingSoon: true },
+    { key: "tasks",        label: t("memory_book.tab_tasks"),        Icon: CheckSquare,    comingSoon: true },
+    { key: "observations", label: t("memory_book.tab_observations"), Icon: FileText },
+    { key: "changes",      label: t("memory_book.tab_change_log"),   Icon: History,        comingSoon: true },
+  ];
+
   const { teamId, loading: teamLoading } = useActiveTeam();
   const { user, loading: authLoading } = useAuth();
 
@@ -236,7 +239,7 @@ export default function MemorySchedulePage() {
                   <span className="hidden sm:inline">{label}</span>
                   {comingSoon && (
                     <span className="hidden sm:inline text-xs font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full border border-slate-200 leading-none">
-                      Soon
+                      {t("memory_book.soon_label")}
                     </span>
                   )}
                 </button>
