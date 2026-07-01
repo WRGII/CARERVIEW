@@ -17,7 +17,7 @@ const SITE_URL = PUBLIC_SITE_URL || "https://carerview.com";
 
 function getAllowedOrigin(req: Request): string {
   const incoming = req.headers.get("origin") || "";
-  if (!PUBLIC_SITE_URL) return incoming || "*";
+  if (!PUBLIC_SITE_URL) return "";
   if (incoming === PUBLIC_SITE_URL) return incoming;
   const host = incoming.replace(/^https?:\/\//, "").replace(/\/$/, "");
   const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");

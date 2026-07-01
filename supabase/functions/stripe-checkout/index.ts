@@ -29,7 +29,7 @@ function getAllowedOrigin(req: Request): string {
   const siteHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, '')
   const bare = siteHost.replace(/^www\./, '')
   if (host === bare || host === `www.${bare}`) return incoming
-  return PUBLIC_SITE_URL || '*'
+  return PUBLIC_SITE_URL
 }
 
 function corsHeaders(req: Request): Record<string, string> {
