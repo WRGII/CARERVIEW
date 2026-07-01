@@ -268,10 +268,14 @@ async function insertAudit(
     actor_id: a.actor_id,
     actor_email: a.actor_email,
     action: 'caregiver_delete_account',
-    target_email: a.target_email,
-    target_user_id: a.target_user_id,
-    success: a.success,
-    details: a.details ?? {},
+    target_type: 'user',
+    target_id: a.target_user_id,
+    metadata: {
+      target_email: a.target_email,
+      target_user_id: a.target_user_id,
+      success: a.success,
+      ...(a.details ?? {}),
+    },
   })
 }
 

@@ -117,5 +117,5 @@ Deno.serve(async (req) => {
 })
 
 async function insertAudit(srv: ReturnType<typeof createClient>, a: { actor_email: string | null; target_email: string | null; target_user_id: string | null; success: boolean; details: Record<string, unknown> }) {
-  await srv.from('admin_events').insert({ actor_id: null, actor_email: a.actor_email, action: 'admin_delete_user', target_email: a.target_email, target_user_id: a.target_user_id, success: a.success, details: a.details ?? {} })
+  await srv.from('admin_events').insert({ actor_id: null, actor_email: a.actor_email, action: 'admin_delete_user', target_type: 'user', target_id: a.target_user_id, metadata: { target_email: a.target_email, target_user_id: a.target_user_id, success: a.success, ...(a.details ?? {}) } })
 }
