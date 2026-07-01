@@ -48,8 +48,7 @@ import CommunityPostPage from './pages/CommunityPostPage';
 import CommunityProfileEditPage from './pages/CommunityProfileEditPage';
 import CommunityPublicHubPage from './pages/CommunityPublicHubPage';
 
-import NewCarerPage from './pages/new-carer/NewCarerPage';
-import NewCarerAuthPage from './pages/new-carer/NewCarerAuthPage';
+import NewCarerIndexPage from './pages/new-carer/NewCarerIndexPage';
 import BigPicturePage from './pages/new-carer/BigPicturePage';
 import RolesPage from './pages/new-carer/RolesPage';
 import LivingArrangementsPage from './pages/new-carer/LivingArrangementsPage';
@@ -114,8 +113,7 @@ export default function App() {
                 <Route path="/caregiver/team-settings" element={<ErrorBoundary><CaregiverGuard><TeamSettings /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/care-hub/care-plan" element={<ErrorBoundary><CaregiverGuard><CarePlanBuilderPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/care-hub/care-plan/summary" element={<ErrorBoundary><CaregiverGuard><CarePlanSummaryPage /></CaregiverGuard></ErrorBoundary>} />
-                {/* New carer landing + sub-pages show sidebar when accessed by authenticated users */}
-                <Route path="/new-carer" element={<NewCarerAuthPage />} />
+                {/* New carer sub-pages show sidebar when accessed by authenticated users */}
                 <Route path="/new-carer/big-picture" element={<BigPicturePage />} />
                 <Route path="/new-carer/roles" element={<RolesPage />} />
                 <Route path="/new-carer/living-arrangements" element={<LivingArrangementsPage />} />
@@ -134,8 +132,8 @@ export default function App() {
               <Route path="/community/posts/:id" element={<CommunityPostPage />} />
               <Route path="/community/profile/edit" element={<CommunityProfileEditPage />} />
 
-              {/* New carer landing — public marketing page, no sidebar (unauthenticated only) */}
-              <Route path="/new-carer-public" element={<NewCarerPage />} />
+              {/* New carer landing — shows public page for unauthenticated users, auth layout for signed-in users */}
+              <Route path="/new-carer" element={<NewCarerIndexPage />} />
             </Route>
 
             {/* Auth callbacks (no layout) */}
