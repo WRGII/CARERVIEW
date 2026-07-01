@@ -248,6 +248,16 @@ Deno.serve(async (req) => {
                 console.warn(`[stripe-webhook] eager subscription upsert failed: ${subErr.message}`)
               } else {
                 await enforceSeats(db, userId, planId)
+                // Cancel the seeded free-plan row so it doesn't produce duplicate rows
+                // in cv_v_team_remaining and break quota display for the upgraded user.
+                if (planId !== 'free') {
+                  const { error: freeErr } = await db.from('user_subscriptions')
+                    .update({ status: 'canceled', updated_at: eventCreatedIso })
+                    .eq('user_id', userId)
+                    .eq('subscription_id', `free_${userId}`)
+                    .eq('status', 'active')
+                  if (freeErr) console.warn('[stripe-webhook] free-plan cancellation failed (non-fatal):', freeErr.message)
+                }
               }
             } catch (eagerErr: any) {
               console.warn('[stripe-webhook] eager subscription write failed (non-fatal):', eagerErr?.message)
@@ -361,6 +371,21 @@ Deno.serve(async (req) => {
           (mappedPlanId ?? 'free')
 
         await enforceSeats(db, userId, effectivePlanId)
+
+        // Cancel the seeded free-plan row when a paid subscription becomes active/trialing,
+        // preventing dual-active rows that break cv_v_team_remaining quota display.
+        if (
+          effectivePlanId !== 'free' &&
+          (sub.status === 'active' || sub.status === 'trialing') &&
+          event.type !== 'customer.subscription.deleted'
+        ) {
+          const { error: freeErr } = await db.from('user_subscriptions')
+            .update({ status: 'canceled', updated_at: eventCreatedIso })
+            .eq('user_id', userId)
+            .eq('subscription_id', `free_${userId}`)
+            .eq('status', 'active')
+          if (freeErr) console.warn('[stripe-webhook] free-plan cancellation failed (non-fatal):', freeErr.message)
+        }
 
         // Send email notification based on what changed.
         if (mappedPlanId) {
