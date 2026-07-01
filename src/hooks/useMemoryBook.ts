@@ -197,7 +197,7 @@ export function useUpsertResident() {
       const { teamId, ...rest } = values;
       const { error } = await supabase
         .from("cv_team_patient")
-        .update({ ...rest, updated_at: new Date().toISOString() })
+        .update(rest)
         .eq("team_id", teamId);
       if (error) throw error;
       // Sync to memory_book_identity so Memory Book stays current
