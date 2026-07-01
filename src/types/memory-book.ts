@@ -365,6 +365,23 @@ export type MemoryBookVehicleCare = {
   updated_by: string | null;
 };
 
+export type MemoryBookPharmacy = {
+  id: string;
+  memory_book_id: string;
+  team_id: string;
+  name: string;
+  phone: string | null;
+  fax: string | null;
+  address: string | null;
+  notes: string | null;
+  is_primary: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+};
+
 export type MemoryBookHomeAddress = {
   id: string;
   memory_book_id: string;

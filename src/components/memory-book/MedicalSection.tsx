@@ -12,6 +12,7 @@ import type { EntryField } from "./EntryCard";
 import ReadOnlyBanner from "./ReadOnlyBanner";
 import SectionEmptyState from "./SectionEmptyState";
 import ProvidersSection from "./ProvidersSection";
+import PharmacySection from "./PharmacySection";
 import type { MemoryBookMedicalEntry, MedicalEntryCategory } from "../../types/memory-book";
 
 type Props = {
@@ -235,6 +236,7 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
       <div className="space-y-6">
         <ReadOnlyBanner />
         <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+        <PharmacySection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
         <SectionEmptyState
           title="No medical information yet"
           description="The team owner hasn't added any medical details."
@@ -248,6 +250,7 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
     return (
       <div className="space-y-6">
         <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+        <PharmacySection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
         <SectionEmptyState
           title="No medical entries yet"
           description="Add conditions, allergies, medications, and care notes. Use the prompts below to get started quickly."
@@ -282,6 +285,8 @@ export default function MedicalSection({ memoryBookId, teamId, isOwner }: Props)
       {!isOwner && <ReadOnlyBanner />}
 
       <ProvidersSection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
+
+      <PharmacySection memoryBookId={memoryBookId} teamId={teamId} isOwner={isOwner} />
 
       <Card>
         <CardHeader>
