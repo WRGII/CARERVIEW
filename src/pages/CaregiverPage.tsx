@@ -20,9 +20,9 @@ import { useOnboarding } from '../hooks/useOnboarding';
 import { prefetchObservationFormAssets } from '../lib/prefetching';
 import FamilyCircleSetup from '../components/caregiver/FamilyCircleSetup';
 import DashboardCarePlanPanel from '../components/caregiver/DashboardCarePlanPanel';
-import DashboardMemoryBookPanel from '../components/caregiver/DashboardMemoryBookPanel';
+import DashboardCareBookPanel from '../components/caregiver/DashboardCareBookPanel';
 import DashboardResidentPanel from '../components/caregiver/DashboardResidentPanel';
-import { useDeleteObservation, useObservations } from '../hooks/useObservations';
+import { useDeleteObservation } from '../hooks/useObservations';
 import { useToast } from '../components/ui/ToastProvider';
 import { localeToIntl } from '../lib/utils';
 import { getLastModule, type LastModule } from '../lib/lastModule';
@@ -90,7 +90,6 @@ export default function CaregiverPage() {
   const deleteObservationMutation = useDeleteObservation();
   const { t, locale } = useLocale();
   const intlLocale = localeToIntl(locale);
-  const { data: observations = [] } = useObservations();
   const { restartTutorial } = useOnboarding();
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -229,58 +228,7 @@ export default function CaregiverPage() {
     return t('caregiver.subtitle_default');
   }
 
-  // ── Observations section (dashboard quick-action card) ────────────────────
-
-  function renderObservationsSection() {
-    return (
-      <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden" data-tutorial="new-observation">
-        <div className="px-6 py-6 flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-              <Activity className="w-5 h-5 text-amber-500" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-slate-900">{t('caregiver.observations_title')}</h2>
-              <p className="text-xs font-semibold text-amber-600 mt-0.5">{t('care_hub.mental_model_obs_tag')}</p>
-              {observations.length > 0 && (
-                <p className="text-xs text-slate-400 mt-1">
-                  {observations.length} {observations.length === 1 ? t('caregiver.obs_count_one') : t('caregiver.obs_count_other')}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowGuestInvite(true)}
-              className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-2 transition-colors"
-              title={t('guest_invite.button_tooltip')}
-            >
-              {t('guest_invite.button_label')}
-            </button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => navigate('/caregiver/observations/new')}
-              className="flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t('caregiver.new_obs_btn')}
-            </Button>
-          </div>
-        </div>
-        {observations.length > 0 && (
-          <div className="border-t border-slate-100 px-6 py-3">
-            <button
-              onClick={() => navigate('/caregiver/observations/new')}
-              className="text-xs font-semibold text-amber-600 hover:text-amber-800 transition-colors"
-            >
-              {t('caregiver.obs_view_all', { count: observations.length })} →
-            </button>
-          </div>
-        )}
-      </section>
-    )
-  }
+  // ── Observations section (free layout) ───────────────────────────────────
 
   return (
     <PageLayout
@@ -345,13 +293,10 @@ export default function CaregiverPage() {
           {/* Resident strip — minimal ID anchor at top */}
           <DashboardResidentPanel />
 
-          {/* Observations — visual hero, daily/weekly use */}
-          {renderObservationsSection()}
-
-          {/* Secondary tools: Care Plan + Memory Book */}
+          {/* Care Plan progress + Care Book explainer */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div data-tutorial="care-plan-panel"><DashboardCarePlanPanel /></div>
-            <div data-tutorial="memory-book-panel"><DashboardMemoryBookPanel /></div>
+            <DashboardCareBookPanel />
           </div>
 
           {/* How the tools work together */}
