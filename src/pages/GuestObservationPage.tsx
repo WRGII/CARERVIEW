@@ -4,7 +4,7 @@
 // Reached via /guest-observation?t={token}. No account required.
 //
 import React, { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ScorePicker from '../components/ui/ScorePicker'
 import { useCategoryQuestions } from '../hooks/useCategoryQuestions'
@@ -46,7 +46,8 @@ type Category = {
 
 export default function GuestObservationPage() {
   const [searchParams] = useSearchParams()
-  const token = searchParams.get('t') ?? ''
+  const { token: routeToken } = useParams<{ token?: string }>()
+  const token = searchParams.get('t') || routeToken || ''
 
   const [pageState, setPageState] = useState<PageState>('loading')
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)

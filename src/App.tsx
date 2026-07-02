@@ -99,6 +99,7 @@ export default function App() {
               <Route path="/checkout/success" element={<CheckoutSuccess />} />
 
               {/* Guest observation — public token-based route, no auth required */}
+              <Route path="/guest-observation" element={<GuestObservationPage />} />
               <Route path="/caregiver/guest-observation/:token" element={<GuestObservationPage />} />
 
               {/* All authenticated caregiver + care-hub + new-carer sub-pages share the sidebar */}

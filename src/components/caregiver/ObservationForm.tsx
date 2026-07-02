@@ -201,6 +201,7 @@ export default function ObservationForm({
   )
 
   const canSave = isValidDate && hasAnyScore
+  const handleSaveRef = useRef<(exitAfterSave: boolean, isAutoSave?: boolean) => Promise<void>>()
 
   const handleSave = useCallback(async (exitAfterSave: boolean, isAutoSave = false) => {
     setSaveError(null)
@@ -290,14 +291,17 @@ export default function ObservationForm({
     upsertObservation, queryClient, onComplete,
   ])
 
-  // Auto-save every 45 seconds if there's something to save
+  handleSaveRef.current = handleSave
+
+  // Auto-save every 45 seconds if there's something to save.
+  // Uses a ref so the interval does not reset on every state change.
   useEffect(() => {
     if (!canSave) return
     const timer = setInterval(() => {
-      handleSave(false, true)
+      handleSaveRef.current?.(false, true)
     }, AUTO_SAVE_INTERVAL_MS)
     return () => clearInterval(timer)
-  }, [canSave, handleSave])
+  }, [canSave])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -625,7 +629,10 @@ export default function ObservationForm({
         <div className="flex gap-3 flex-col sm:flex-row">
           <button
             type="button"
-            onClick={onComplete}
+            onClick={() => {
+              if (hasUnsavedChanges && !window.confirm(t('obs_form.discard_confirm'))) return
+              onComplete()
+            }}
             className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors"
           >
             {t('common.cancel')}
