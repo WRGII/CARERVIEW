@@ -99,18 +99,53 @@ export default function WhyCarerView() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* HERO */}
-        <div className="pt-6 pb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+        <div className="pt-10 pb-12 text-center">
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-primary/30 bg-cyan-primary/10 px-4 py-1.5 mb-8">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-primary" aria-hidden="true" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-cyan-700">
+              {t('why.hero_eyebrow')}
+            </span>
+          </div>
+
+          {/* Two-tone headline */}
+          <h1 className="text-3xl sm:text-4xl md:text-[3.25rem] font-extrabold tracking-tight mb-6 leading-[1.15] max-w-3xl mx-auto">
             <span className="block text-slate-gray">{t('why.hero_title')}</span>
-            <span className="block text-cyan-700">{t('why.hero_title_line2')}</span>
+            <span className="block text-cyan-primary">{t('why.hero_title_line2')}</span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-slate-gray/80 max-w-4xl mx-auto leading-relaxed">
+
+          {/* Body */}
+          <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-12">
             {t('why.hero_body')}
           </p>
+
+          {/* Challenge pillar anchor cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {[
+              { icon: ClipboardList, labelKey: 'why.challenge1_label', hintKey: 'why.challenge1_hint', href: '#care-plan' },
+              { icon: Users,         labelKey: 'why.challenge2_label', hintKey: 'why.challenge2_hint', href: '#shared-language' },
+              { icon: Clock,         labelKey: 'why.challenge3_label', hintKey: 'why.challenge3_hint', href: '#observations' },
+            ].map(({ icon: Icon, labelKey, hintKey, href }) => (
+              <a
+                key={href}
+                href={href}
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-6 text-center shadow-sm hover:border-cyan-primary/40 hover:shadow-md transition-all duration-200"
+              >
+                <div className="w-11 h-11 rounded-xl bg-cyan-primary/10 flex items-center justify-center group-hover:bg-cyan-primary/20 transition-colors">
+                  <Icon className="w-5 h-5 text-cyan-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-800 leading-snug mb-1">{t(labelKey)}</p>
+                  <p className="text-xs text-slate-500 leading-snug">{t(hintKey)}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-cyan-primary/50 group-hover:text-cyan-primary transition-colors mt-auto" aria-hidden="true" />
+              </a>
+            ))}
+          </div>
         </div>
 
         {/* CARE PLAN SECTION */}
-        <div className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-cyan-primary/5 rounded-3xl px-6 sm:px-12 mb-16">
+        <div id="care-plan" className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 to-cyan-primary/5 rounded-3xl px-6 sm:px-12 mb-16">
           <div className="text-center mb-14">
             <p className="text-sm font-semibold text-cyan-primary uppercase tracking-widest mb-2">
               {t('why.careplan_eyebrow')}
@@ -219,7 +254,7 @@ export default function WhyCarerView() {
         </div>
 
         {/* FOUR PILLARS — HOW IT WORKS */}
-        <div className="py-16 sm:py-20">
+        <div id="shared-language" className="py-16 sm:py-20">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-6">{t('why.shared_lang_title')}</h2>
           </div>
@@ -239,7 +274,7 @@ export default function WhyCarerView() {
         </div>
 
         {/* WHAT YOU'LL OBSERVE */}
-        <div className="py-16 sm:py-20">
+        <div id="observations" className="py-16 sm:py-20">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-gray mb-6">{t('why.track_title')}</h2>
             <p className="text-lg sm:text-xl text-slate-gray/80 max-w-3xl mx-auto">{t('why.track_body')}</p>
