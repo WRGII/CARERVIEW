@@ -190,7 +190,7 @@ export default function NewObservationPage() {
       if (remaining !== null) setRemaining(Math.max(remaining - 1, 0));
 
       window.plausible?.('Observation Created', { props: { type: mode } });
-      navigate(`/caregiver/observations/${data.id}`);
+      navigate(`/caregiver/observations/${data.id}/edit`);
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     } finally {
