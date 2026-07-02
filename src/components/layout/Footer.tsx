@@ -96,7 +96,7 @@ export function Footer() {
             <div className="space-y-2">
               <div>
                 <Link
-                  to="/caregiver/resources"
+                  to="/resources"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.caregiver_resources')}
