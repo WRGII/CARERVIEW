@@ -12,6 +12,7 @@ export default function AccountMenu() {
   const { data: plan } = useUserPlan();
   const canUseTeam = plan?.plan_id === "family_qtr";
   const isFreePlan = plan?.plan_id === 'free';
+  const isTeamMember = plan?.source === 'team' && plan?.team_role === 'member';
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -85,7 +86,7 @@ export default function AccountMenu() {
           role="menu"
           className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5"
         >
-          {canUseTeam && (
+          {canUseTeam && !isTeamMember && (
             <Link
               to="/caregiver/team-settings"
               onClick={close}
@@ -109,15 +110,17 @@ export default function AccountMenu() {
             </Link>
           )}
 
-          <button
-            type="button"
-            onClick={goManageBilling}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
-            role="menuitem"
-          >
-            <CreditCard className="w-4 h-4 text-slate-500" aria-hidden="true" />
-            {t('billing.manage_btn')}
-          </button>
+          {!isTeamMember && (
+            <button
+              type="button"
+              onClick={goManageBilling}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-150"
+              role="menuitem"
+            >
+              <CreditCard className="w-4 h-4 text-slate-500" aria-hidden="true" />
+              {t('billing.manage_btn')}
+            </button>
+          )}
 
           <button
             type="button"

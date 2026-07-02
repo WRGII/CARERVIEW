@@ -65,6 +65,8 @@ export default function CheckoutSuccess() {
             current_period_start: normalizeISO(data.current_period_start),
             current_period_end: normalizeISO(data.current_period_end),
             updated_at: normalizeISO(data.updated_at),
+            source: 'own' as const,
+            team_role: null,
           }
         : null;
     },

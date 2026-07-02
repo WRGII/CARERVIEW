@@ -15,6 +15,9 @@ export type PlanStatus =
   | 'incomplete'
   | 'incomplete_expired'
 
+export type PlanSource = 'own' | 'team'
+export type TeamRole = 'owner' | 'member' | null
+
 export interface UserPlan {
   user_id: string
   plan_id: PlanId | null
@@ -23,6 +26,8 @@ export interface UserPlan {
   current_period_end: string | null   // ISO
   updated_at?: string | null
   price_id?: string | null
+  source: PlanSource
+  team_role: TeamRole
 }
 
 /** Is the plan currently usable? Require status + within time window. */
@@ -69,55 +74,32 @@ export function getPlanLimitsSync(planId: PlanId | null | undefined): PlanLimits
   }
 }
 
-/** Read the user's current subscription row (public.user_subscriptions) */
+/** Read the user's effective plan via cv_get_effective_plan RPC */
 export function useUserPlan() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['public.user_subscriptions', 'user-plan', user?.id],
+    queryKey: ['effective-plan', user?.id],
     enabled: !!user?.id,
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null
 
-      // Pick the most relevant row: paid plans before free, then latest period end
-      const { data: rows, error } = await supabase
-        .from('user_subscriptions')
-        .select(
-          'user_id, plan_id, status, current_period_start, current_period_end, updated_at, price_id'
-        )
-        .eq('user_id', user.id)
-        .in('status', ['active', 'trialing', 'past_due'])
-        .order('current_period_end', { ascending: false })
-        .limit(5)
+      const { data, error } = await supabase
+        .rpc('cv_get_effective_plan', { p_user_id: user.id })
+        .maybeSingle() as { data: Record<string, any> | null; error: any }
 
       if (error) throw error
+      if (!data) return null
 
-      // Prefer paid plan rows over the synthetic free row
-      const sorted = (rows ?? []).sort((a, b) => {
-        const aFree = a.plan_id === 'free' ? 0 : 1
-        const bFree = b.plan_id === 'free' ? 0 : 1
-        return bFree - aFree
-      })
-      const data = sorted[0] ?? null
-
-      const normalizeIso = (v: unknown): string | null =>
-        typeof v === 'string'
-          ? v
-          : v
-          ? new Date(v as any).toISOString()
-          : null
-
-      return data
-        ? {
-            user_id: data.user_id,
-            plan_id: (data.plan_id ?? null) as PlanId | null,
-            status: (data.status ?? null) as PlanStatus | null,
-            current_period_start: normalizeIso(data.current_period_start),
-            current_period_end: normalizeIso(data.current_period_end),
-            updated_at: normalizeIso(data.updated_at),
-            price_id: (data as any).price_id ?? null,
-          }
-        : null
+      return {
+        user_id: user.id,
+        plan_id: (data.plan_id ?? null) as PlanId | null,
+        status: (data.status ?? null) as PlanStatus | null,
+        current_period_start: data.current_period_start ?? null,
+        current_period_end: data.current_period_end ?? null,
+        source: (data.source as PlanSource) ?? 'own',
+        team_role: (data.team_role as TeamRole) ?? null,
+      }
     },
     staleTime: 60_000,
     retry: 2,

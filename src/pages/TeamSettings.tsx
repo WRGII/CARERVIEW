@@ -116,6 +116,7 @@ export default function TeamSettings() {
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const isPlanAllowed = !planLoading && plan?.plan_id === "family_qtr";
+  const isTeamMember = plan?.source === 'team' && plan?.team_role === 'member';
 
   const loadData = useCallback(async () => {
     if (!teamId || !isPlanAllowed) return;
@@ -144,7 +145,7 @@ export default function TeamSettings() {
   }, [loadData]);
 
   if (authLoading || planLoading || teamLoading) return null;
-  if (!isPlanAllowed) return <Navigate to="/caregiver" replace />;
+  if (!isPlanAllowed || isTeamMember) return <Navigate to="/caregiver" replace />;
 
   if (!teamId) {
     return (

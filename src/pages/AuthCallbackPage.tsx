@@ -19,13 +19,11 @@ async function fireWelcomeEmail(accessToken: string): Promise<void> {
 
 async function hasActiveSubscription(userId: string): Promise<boolean> {
   const { data } = await supabase
-    .from('user_subscriptions')
-    .select('status, current_period_end')
-    .eq('user_id', userId)
-    .in('status', ['active', 'trialing'])
-    .limit(1)
-    .maybeSingle();
+    .rpc('cv_get_effective_plan', { p_user_id: userId })
+    .maybeSingle() as { data: Record<string, any> | null; error: any };
   if (!data) return false;
+  const okStatus = data.status === 'active' || data.status === 'trialing';
+  if (!okStatus) return false;
   const end = data.current_period_end ? Date.parse(data.current_period_end) : NaN;
   return !Number.isNaN(end) && Date.now() < end;
 }
