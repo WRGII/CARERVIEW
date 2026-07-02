@@ -74,7 +74,85 @@ export function getPlanLimitsSync(planId: PlanId | null | undefined): PlanLimits
   }
 }
 
-/** Read the user's effective plan via cv_get_effective_plan RPC */
+/** Fallback: read plan directly from user_subscriptions + team membership */
+async function fetchPlanDirect(userId: string): Promise<UserPlan | null> {
+  // Own subscription
+  const { data: own } = await supabase
+    .from('user_subscriptions')
+    .select('plan_id, status, current_period_start, current_period_end, updated_at')
+    .eq('user_id', userId)
+    .in('status', ['active', 'trialing'])
+    .order('current_period_end', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (own && own.plan_id !== 'free') {
+    return {
+      user_id: userId,
+      plan_id: own.plan_id as PlanId,
+      status: own.status as PlanStatus,
+      current_period_start: own.current_period_start ?? null,
+      current_period_end: own.current_period_end ?? null,
+      updated_at: own.updated_at ?? null,
+      source: 'own',
+      team_role: null,
+    }
+  }
+
+  // Team membership check
+  const { data: membership } = await supabase
+    .from('cv_team_members')
+    .select('team_id, cv_teams!inner(owner_id)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+
+  if (membership) {
+    const ownerId = (membership as any).cv_teams?.owner_id
+    if (ownerId) {
+      const { data: ownerSub } = await supabase
+        .from('user_subscriptions')
+        .select('plan_id, status, current_period_start, current_period_end, updated_at')
+        .eq('user_id', ownerId)
+        .in('status', ['active', 'trialing'])
+        .eq('plan_id', 'family_qtr')
+        .order('current_period_end', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (ownerSub) {
+        return {
+          user_id: userId,
+          plan_id: ownerSub.plan_id as PlanId,
+          status: ownerSub.status as PlanStatus,
+          current_period_start: ownerSub.current_period_start ?? null,
+          current_period_end: ownerSub.current_period_end ?? null,
+          updated_at: ownerSub.updated_at ?? null,
+          source: 'team',
+          team_role: 'member',
+        }
+      }
+    }
+  }
+
+  // Return own free plan if exists
+  if (own) {
+    return {
+      user_id: userId,
+      plan_id: own.plan_id as PlanId,
+      status: own.status as PlanStatus,
+      current_period_start: own.current_period_start ?? null,
+      current_period_end: own.current_period_end ?? null,
+      updated_at: own.updated_at ?? null,
+      source: 'own',
+      team_role: null,
+    }
+  }
+
+  return null
+}
+
+/** Read the user's effective plan via cv_get_effective_plan RPC, with fallback */
 export function useUserPlan() {
   const { user } = useAuth()
 
@@ -84,21 +162,25 @@ export function useUserPlan() {
     queryFn: async (): Promise<UserPlan | null> => {
       if (!user?.id) return null
 
-      const { data, error } = await supabase
-        .rpc('cv_get_effective_plan', { p_user_id: user.id })
-        .maybeSingle() as { data: Record<string, any> | null; error: any }
+      try {
+        const { data, error } = await supabase
+          .rpc('cv_get_effective_plan', { p_user_id: user.id })
+          .maybeSingle() as { data: Record<string, any> | null; error: any }
 
-      if (error) throw error
-      if (!data) return null
+        if (error) throw error
+        if (!data) return fetchPlanDirect(user.id)
 
-      return {
-        user_id: user.id,
-        plan_id: (data.plan_id ?? null) as PlanId | null,
-        status: (data.status ?? null) as PlanStatus | null,
-        current_period_start: data.current_period_start ?? null,
-        current_period_end: data.current_period_end ?? null,
-        source: (data.source as PlanSource) ?? 'own',
-        team_role: (data.team_role as TeamRole) ?? null,
+        return {
+          user_id: user.id,
+          plan_id: (data.plan_id ?? null) as PlanId | null,
+          status: (data.status ?? null) as PlanStatus | null,
+          current_period_start: data.current_period_start ?? null,
+          current_period_end: data.current_period_end ?? null,
+          source: (data.source as PlanSource) ?? 'own',
+          team_role: (data.team_role as TeamRole) ?? null,
+        }
+      } catch {
+        return fetchPlanDirect(user.id)
       }
     },
     staleTime: 60_000,

@@ -18,14 +18,51 @@ async function fireWelcomeEmail(accessToken: string): Promise<void> {
 }
 
 async function hasActiveSubscription(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .rpc('cv_get_effective_plan', { p_user_id: userId })
-    .maybeSingle() as { data: Record<string, any> | null; error: any };
-  if (!data) return false;
-  const okStatus = data.status === 'active' || data.status === 'trialing';
-  if (!okStatus) return false;
-  const end = data.current_period_end ? Date.parse(data.current_period_end) : NaN;
-  return !Number.isNaN(end) && Date.now() < end;
+  // Check own subscription directly (avoid RETURNS TABLE RPC during auth transition)
+  const { data: own } = await supabase
+    .from('user_subscriptions')
+    .select('current_period_end, status')
+    .eq('user_id', userId)
+    .in('status', ['active', 'trialing'])
+    .neq('plan_id', 'free')
+    .order('current_period_end', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (own) {
+    const end = own.current_period_end ? Date.parse(own.current_period_end) : NaN;
+    if (!Number.isNaN(end) && Date.now() < end) return true;
+  }
+
+  // Check team membership — owner must have active plan
+  const { data: membership } = await supabase
+    .from('cv_team_members')
+    .select('team_id, cv_teams!inner(owner_id)')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+
+  if (membership) {
+    const ownerId = (membership as any).cv_teams?.owner_id;
+    if (ownerId) {
+      const { data: ownerSub } = await supabase
+        .from('user_subscriptions')
+        .select('current_period_end, status')
+        .eq('user_id', ownerId)
+        .in('status', ['active', 'trialing'])
+        .eq('plan_id', 'family_qtr')
+        .order('current_period_end', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (ownerSub) {
+        const end = ownerSub.current_period_end ? Date.parse(ownerSub.current_period_end) : NaN;
+        if (!Number.isNaN(end) && Date.now() < end) return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 export default function AuthCallbackPage() {
@@ -71,32 +108,35 @@ export default function AuthCallbackPage() {
       if (event === 'SIGNED_IN') {
         clearTimeout(timeout);
         subscription.unsubscribe();
-        // Fire welcome email idempotently — the function skips if already sent.
         if (session?.access_token) fireWelcomeEmail(session.access_token);
 
-        const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
-        if (hasPendingCheckout) {
-          navigate('/create-account', { replace: true });
-          return;
-        }
-        const joinToken = localStorage.getItem('cv_join_token');
-        if (joinToken) {
-          localStorage.removeItem('cv_join_token');
-          navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
-          return;
-        }
-        // For non-recovery sign-ins, check whether the user has a subscription.
-        // New users confirming their email will have none — send them to choose a plan.
-        const userId = session?.user?.id;
-        if (userId) {
-          hasActiveSubscription(userId).then((active) => {
-            navigate(active ? next : '/create-account?incomplete=1', { replace: true });
-          }).catch(() => {
-            navigate('/create-account?incomplete=1', { replace: true });
-          });
-        } else {
-          navigate(next, { replace: true });
-        }
+        (async () => {
+          // Let all auth-state listeners settle before navigating
+          await new Promise(r => setTimeout(r, 0));
+
+          const hasPendingCheckout = !!localStorage.getItem('cv_pending_checkout');
+          if (hasPendingCheckout) {
+            navigate('/create-account', { replace: true });
+            return;
+          }
+          const joinToken = localStorage.getItem('cv_join_token');
+          if (joinToken) {
+            localStorage.removeItem('cv_join_token');
+            navigate(`/join?t=${encodeURIComponent(joinToken)}`, { replace: true });
+            return;
+          }
+          const userId = session?.user?.id;
+          if (userId) {
+            try {
+              const active = await hasActiveSubscription(userId);
+              navigate(active ? next : '/create-account?incomplete=1', { replace: true });
+            } catch {
+              navigate('/create-account?incomplete=1', { replace: true });
+            }
+          } else {
+            navigate(next, { replace: true });
+          }
+        })();
       }
     });
 

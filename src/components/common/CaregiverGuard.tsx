@@ -11,7 +11,7 @@ type Props = { children: React.ReactNode };
 
 export default function CaregiverGuard({ children }: Props) {
   const { user, profile, loading } = useAuth();
-  const { data: userPlan, isLoading: planLoading } = useUserPlan();
+  const { data: userPlan, isLoading: planLoading, isFetched: planFetched } = useUserPlan();
   const { careHubVisited, isLoading: onboardingLoading, markCareHubVisited } = useOnboarding();
   const { teamId, loading: teamLoading } = useActiveTeam();
   const { data: teamRole, isLoading: teamRoleLoading } = useTeamRole(teamId, user?.id);
@@ -52,7 +52,7 @@ export default function CaregiverGuard({ children }: Props) {
     );
   }
 
-  if (!loading && !planLoading && user && !hasActivePlan(userPlan)) {
+  if (!loading && !planLoading && planFetched && user && !hasActivePlan(userPlan)) {
     return <Navigate to="/create-account?incomplete=1" replace state={{ from: location }} />;
   }
 
