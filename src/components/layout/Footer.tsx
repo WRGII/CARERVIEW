@@ -63,7 +63,7 @@ export function Footer() {
               </div>
               <div>
                 <Link
-                  to="/caregiver/memory-book"
+                  to="/memory-book"
                   className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
                 >
                   {t('nav.memory_book')}

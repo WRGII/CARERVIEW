@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabaseClient'
 
 const PUBLIC_NAV_LINKS = [
   { key: 'nav.about', to: '/about' },
-  { key: 'nav.memory_book_short', to: '/caregiver/memory-book' },
+  { key: 'nav.memory_book_short', to: '/memory-book' },
   { key: 'nav.new_carer', to: '/new-carer' },
   { key: 'nav.caregiver_resources', to: '/caregiver/resources' },
 ] as const

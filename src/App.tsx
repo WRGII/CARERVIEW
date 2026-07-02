@@ -86,6 +86,7 @@ export default function App() {
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/why" element={<WhyCarerView />} />
+              <Route path="/memory-book" element={<MemoryBookPage />} />
               <Route path="/tutorial" element={<TutorialPage />} />
               <Route path="/privacy" element={<PrivacyPolicyPage />} />
               <Route path="/data-policy" element={<DataPolicyPage />} />
