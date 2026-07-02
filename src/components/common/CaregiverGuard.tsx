@@ -24,6 +24,32 @@ export default function CaregiverGuard({ children }: Props) {
     return () => clearTimeout(timer);
   }, []);
 
+  const isPaidCarer =
+    profile?.role === 'caregiver' &&
+    userPlan?.plan_id !== 'free' &&
+    hasActivePlan(userPlan) &&
+    (teamRole === 'owner' || !teamId);
+
+  const isOnDashboard = location.pathname === '/caregiver';
+  const alreadyOnCareHub = location.pathname.startsWith('/care-hub');
+
+  const shouldRedirectToCareHub =
+    !loading &&
+    !planLoading &&
+    !onboardingLoading &&
+    !(!!teamId && teamRoleLoading) &&
+    isPaidCarer &&
+    !careHubVisited &&
+    isOnDashboard &&
+    !alreadyOnCareHub;
+
+  React.useEffect(() => {
+    if (shouldRedirectToCareHub) {
+      markCareHubVisited();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldRedirectToCareHub]);
+
   if (profile?.disabled) {
     return <Navigate to={{ pathname: "/", hash: "#get-started" }} replace />;
   }
@@ -55,35 +81,6 @@ export default function CaregiverGuard({ children }: Props) {
   if (!loading && !planLoading && planFetched && user && !hasActivePlan(userPlan)) {
     return <Navigate to="/create-account?incomplete=1" replace state={{ from: location }} />;
   }
-
-  // First-visit redirect for paid caregiver users
-  // Only fires once (care_hub_visited flag), only from the dashboard root,
-  // and only when onboarding data is ready.
-  const isPaidCarer =
-    profile?.role === 'caregiver' &&
-    userPlan?.plan_id !== 'free' &&
-    hasActivePlan(userPlan) &&
-    (teamRole === 'owner' || !teamId)
-
-  const isOnDashboard = location.pathname === '/caregiver'
-  const alreadyOnCareHub = location.pathname.startsWith('/care-hub')
-
-  const shouldRedirectToCareHub =
-    !loading &&
-    !planLoading &&
-    !onboardingLoading &&
-    !(!!teamId && teamRoleLoading) &&
-    isPaidCarer &&
-    !careHubVisited &&
-    isOnDashboard &&
-    !alreadyOnCareHub
-
-  React.useEffect(() => {
-    if (shouldRedirectToCareHub) {
-      markCareHubVisited();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldRedirectToCareHub]);
 
   if (shouldRedirectToCareHub) {
     return <Navigate to="/care-hub/care-plan" replace />;
