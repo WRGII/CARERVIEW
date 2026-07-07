@@ -206,41 +206,9 @@ export default function CarePlanBuilderPage() {
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">
                   {t('care_plan.title')}
                 </h1>
-                <p className="text-base text-blue-700 font-semibold mb-3">{t('care_plan.subtitle')}</p>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-xl">
-                  {t('care_plan.description')}
-                </p>
+                <p className="text-base text-blue-700 font-semibold">{t('care_plan.subtitle')}</p>
               </div>
             </div>
-
-            {/* Resident context strip */}
-            {resident && (
-              <Link
-                to="/caregiver/resident"
-                className="mt-5 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:border-slate-300 hover:bg-slate-100 transition-colors group"
-              >
-                <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-slate-600">
-                    {resident.full_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('care_plan.care_plan_for')}</span>
-                  <p className="text-sm font-semibold text-slate-800 truncate">
-                    {resident.preferred_name ? `${resident.full_name} ("${resident.preferred_name}")` : resident.full_name}
-                    {resident.date_of_birth && (() => {
-                      const dob = new Date(resident.date_of_birth)
-                      const today = new Date()
-                      let age = today.getFullYear() - dob.getFullYear()
-                      const m = today.getMonth() - dob.getMonth()
-                      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--
-                      return <span className="font-normal text-slate-500"> · Age {age}</span>
-                    })()}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
-              </Link>
-            )}
 
             {/* Carebook synopsis */}
             <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5 sm:p-6">
@@ -272,6 +240,35 @@ export default function CarePlanBuilderPage() {
 
         {/* ── Body ── */}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+          {/* Resident context strip */}
+          {resident && (
+            <Link
+              to="/caregiver/resident"
+              className="mb-8 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 hover:border-slate-300 hover:bg-slate-100 transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                <span className="text-xs font-bold text-slate-600">
+                  {resident.full_name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t('care_plan.care_plan_for')}</span>
+                <p className="text-sm font-semibold text-slate-800 truncate">
+                  {resident.preferred_name ? `${resident.full_name} ("${resident.preferred_name}")` : resident.full_name}
+                  {resident.date_of_birth && (() => {
+                    const dob = new Date(resident.date_of_birth)
+                    const today = new Date()
+                    let age = today.getFullYear() - dob.getFullYear()
+                    const m = today.getMonth() - dob.getMonth()
+                    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--
+                    return <span className="font-normal text-slate-500"> · Age {age}</span>
+                  })()}
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+            </Link>
+          )}
 
           {/* Progress */}
           {!isLoading && (
