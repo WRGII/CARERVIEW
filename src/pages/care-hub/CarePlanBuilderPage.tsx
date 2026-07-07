@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense, useEffect } from 'react'
 import { setLastModule } from '../../lib/lastModule'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, BookOpen, Activity } from 'lucide-react'
+import { ArrowLeft, ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, Users, MapPin, RefreshCw, FileText, Shield } from 'lucide-react'
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamRole, useTeamResident } from '../../hooks/useMemoryBook'
@@ -242,30 +242,30 @@ export default function CarePlanBuilderPage() {
               </Link>
             )}
 
-            {/* How this differs callout */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                to="/caregiver/memory-schedule"
-                className="flex items-center gap-3 p-4 bg-teal-50 border border-teal-100 rounded-xl hover:border-teal-200 hover:bg-teal-100 transition-colors group"
-              >
-                <BookOpen className="w-5 h-5 text-teal-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-teal-900">{t('care_plan.memory_book_label')}</p>
-                  <p className="text-xs text-teal-700">{t('care_plan.memory_book_desc')}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-teal-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-              <Link
-                to="/caregiver/observations/new"
-                className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-100 rounded-xl hover:border-amber-200 hover:bg-amber-100 transition-colors group"
-              >
-                <Activity className="w-5 h-5 text-amber-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-900">{t('care_plan.observations_label')}</p>
-                  <p className="text-xs text-amber-700">{t('care_plan.observations_desc')}</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-amber-400 ml-auto group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+            {/* Carebook synopsis */}
+            <div className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-5 sm:p-6">
+              <p className="text-sm text-slate-700 leading-relaxed mb-4">
+                The Care Plan is your team's shared operating agreement — a single document that makes it clear who is caring for whom, who holds authority, and how care will be sustained over time. It is designed for families and care teams who need alignment, not just information.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  { icon: FileText,  text: 'Capture the full picture of your care situation — what is happening, what has changed, and what needs attention.' },
+                  { icon: Shield,    text: 'Document who holds legal or practical authority to make decisions and access critical information.' },
+                  { icon: Users,     text: 'Assign responsibilities clearly so every team member knows what they own.' },
+                  { icon: MapPin,    text: 'Record living arrangements and any planned transitions in care setting or support.' },
+                  { icon: RefreshCw, text: 'Plan for sustainability — what happens when a primary carer is unavailable — and schedule a date to review the plan.' },
+                ].map(({ icon: Icon, text }, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="mt-0.5 w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                      <Icon className="w-3.5 h-3.5 text-blue-600" />
+                    </span>
+                    <span className="text-sm text-slate-700 leading-relaxed">{text}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-xs text-blue-700 font-medium">
+                The end result is a printable, shareable summary your whole care team can reference — and revisit as needs evolve.
+              </p>
             </div>
           </div>
         </div>
