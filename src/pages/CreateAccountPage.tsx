@@ -4,6 +4,7 @@ import { CreditCard, UserPlus, ArrowRight, Eye, EyeOff, CircleCheck as CheckCirc
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { STRIPE_PRODUCTS } from "../stripe-config";
+import { trackGoogleAdsConversion, trackGoogleAdsEvent } from "../lib/analytics";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
 import { SITE_URL } from "../lib/siteConfig";
@@ -326,6 +327,8 @@ export default function CreateAccountPage() {
         if (typeof (window as any).plausible === 'function') {
           (window as any).plausible('Signup', { props: { plan: selectedPlanKey } });
         }
+        trackGoogleAdsConversion('signup');
+        trackGoogleAdsEvent('sign_up', { plan: selectedPlanKey });
         const { error: upErr } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email ?? email,

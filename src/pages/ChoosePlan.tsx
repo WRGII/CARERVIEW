@@ -6,6 +6,7 @@ import { useFormatDate } from '../hooks/useFormatDate';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
 import { PricingCard } from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
+import { trackGoogleAdsConversion, trackGoogleAdsEvent } from '../lib/analytics';
 import { CircleCheck as CheckCircle, Circle as XCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import DeleteAccount from '../components/caregiver/DeleteAccount';
@@ -76,6 +77,7 @@ export default function ChoosePlan() {
         if (typeof (window as any).plausible === 'function') {
           (window as any).plausible('Plan Selected', { props: { plan: 'free' } });
         }
+        trackGoogleAdsConversion('signup');
         setStatusMessage({ type: 'success', message: t('choose_plan.free_activated') });
 
         await refetchPlan();
@@ -113,6 +115,12 @@ export default function ChoosePlan() {
       if (typeof (window as any).plausible === 'function') {
         (window as any).plausible('Plan Selected', { props: { plan: planId } });
       }
+      const product = STRIPE_PRODUCTS.find((p) => p.planId === planId);
+      trackGoogleAdsConversion('beginCheckout', {
+        value: product?.billingPrice,
+        currency: product?.currency,
+      });
+      trackGoogleAdsEvent('begin_checkout', { plan_id: planId });
       window.location.href = data.url;
     } catch (error) {
       setStatusMessage({

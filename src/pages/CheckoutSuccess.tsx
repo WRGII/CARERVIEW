@@ -6,6 +6,8 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../hooks/useAuth";
 import { hasActivePlan, type UserPlan } from "../hooks/useUserPlan";
 import { useLocale } from "../i18n/LocaleContext";
+import { STRIPE_PRODUCTS } from "../stripe-config";
+import { trackGoogleAdsConversion } from "../lib/analytics";
 
 const MAX_POLLS = 30;
 
@@ -75,9 +77,15 @@ export default function CheckoutSuccess() {
   React.useEffect(() => {
     if (plan && hasActivePlan(plan)) {
       queryClient.invalidateQueries({ queryKey: ['public.user_subscriptions'] });
+      const product = STRIPE_PRODUCTS.find((p) => p.planId === plan.plan_id);
+      trackGoogleAdsConversion('purchase', {
+        value: product?.billingPrice,
+        currency: product?.currency,
+        transactionId: params.get('session_id') ?? undefined,
+      });
       navigate("/caregiver", { replace: true });
     }
-  }, [plan, navigate, queryClient]);
+  }, [plan, navigate, queryClient, params]);
 
   if (authLoading) {
     return (
