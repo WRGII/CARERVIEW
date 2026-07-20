@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen, Heart, Activity } from 'lucide-react'
 import { useLocale } from '../i18n/LocaleContext'
 import PageSEO from '../components/seo/PageSEO'
+import Breadcrumbs from '../components/common/Breadcrumbs'
 import { SITE_URL } from '../lib/siteConfig'
 
 const FEATURES = [
@@ -42,6 +43,7 @@ export default function AboutPage() {
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <Breadcrumbs items={[{ label: t('nav.about') }]} />
 
         {/* Page title */}
         <div className="pt-6 pb-8 text-center">
@@ -97,7 +99,13 @@ export default function AboutPage() {
         <div className="bg-warm-white rounded-2xl shadow-sm border border-slate-gray/10 p-8 md:p-12 mb-12">
           <div className="text-slate-gray leading-relaxed space-y-6 text-lg">
             <p>{t('about.body_p3')}</p>
-            <p>{t('about.body_p4')}</p>
+            <p>
+              {t('about.body_p4')}{' '}
+              <Link to="/why" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.why_carerview')}</Link>{' '}
+              <Link to="/memory-book" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.memory_book')}</Link>{' '}
+              <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>{' '}
+              <Link to="/community" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_forum')}</Link>
+            </p>
           </div>
         </div>
 

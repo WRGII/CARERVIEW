@@ -10,9 +10,30 @@ interface Props {
 export default function NewCarerBreadcrumb({ currentLabel }: Props) {
   const { t } = useLocale()
 
+  const crumbs = [
+    { label: t('nav.home'), to: '/' },
+    { label: t('nav.new_carer'), to: currentLabel ? '/new-carer' : undefined },
+    ...(currentLabel ? [{ label: currentLabel }] : []),
+  ]
+  const lastIdx = crumbs.length - 1
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.label,
+      ...(c.to && i < lastIdx ? { item: `https://carerview.com${c.to}` } : {}),
+    })),
+  }
+
   return (
-    <nav aria-label="Breadcrumb">
-      <ol className="flex items-center gap-1 text-sm text-slate-500">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ol className="flex items-center gap-1 text-sm text-slate-500" itemProp="breadcrumb">
         <li>
           <Link to="/" className="hover:text-teal-700 transition-colors">
             {t('nav.home')}
@@ -27,7 +48,7 @@ export default function NewCarerBreadcrumb({ currentLabel }: Props) {
               {t('nav.new_carer')}
             </Link>
           ) : (
-            <span className="text-slate-700 font-medium">{t('nav.new_carer')}</span>
+            <span className="text-slate-700 font-medium" aria-current="page">{t('nav.new_carer')}</span>
           )}
         </li>
         {currentLabel && (
@@ -36,7 +57,7 @@ export default function NewCarerBreadcrumb({ currentLabel }: Props) {
               <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
             </li>
             <li>
-              <span className="text-slate-700 font-medium">{currentLabel}</span>
+              <span className="text-slate-700 font-medium" aria-current="page">{currentLabel}</span>
             </li>
           </>
         )}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
 import {
-  MessageCircle, ArrowLeft, PenLine, Clock, TrendingUp, ShieldOff, type LucideIcon
+  MessageCircle, PenLine, Clock, TrendingUp, ShieldOff, type LucideIcon
 } from 'lucide-react'
 import { useCommunityRoom } from '../hooks/useCommunityRooms'
 import { useCommunityPosts } from '../hooks/useCommunityPosts'
@@ -9,6 +9,8 @@ import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import CommunityPostCard from '../components/community/CommunityPostCard'
 import CommunityEmptyState from '../components/community/CommunityEmptyState'
 import CommunityLoadingState from '../components/community/CommunityLoadingState'
+import Breadcrumbs from '../components/common/Breadcrumbs'
+import { useLocale } from '../i18n/LocaleContext'
 import { Button } from '../components/ui/Button'
 import type { PostSortMode } from '../lib/community'
 
@@ -21,6 +23,7 @@ const SORT_OPTIONS: { value: PostSortMode; label: string; icon: LucideIcon }[] =
 export default function CommunityRoomPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const { t } = useLocale()
   const { data: room, isLoading: roomLoading, error: roomError } = useCommunityRoom(slug)
   const [sort, setSort] = useState<PostSortMode>('activity')
   const { data: posts, isLoading: postsLoading, isError: postsError } = useCommunityPosts(room?.id, sort)
@@ -35,15 +38,7 @@ export default function CommunityRoomPage() {
     <>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-          {/* Back link */}
-          <Link
-            to="/community"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            All rooms
-          </Link>
+          <Breadcrumbs items={[{ label: t('nav.caregiver_forum'), to: '/community' }, { label: room?.name ?? '' }]} />
 
           {/* Room header */}
           {roomLoading ? (

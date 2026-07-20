@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Users, FileText, ArrowRight, CircleCheck as CheckCircle, Clock, ChevronDown, ClipboardList, MapPin, Shield, UserCheck, Chrome as Home, Leaf, RotateCcw, TriangleAlert as AlertTriangle, CircleAlert as AlertCircle, Heart, BookOpen, ChevronRight, GraduationCap } from "lucide-react";
 import ObservationPreview from "../components/ObservationPreview";
+import Breadcrumbs from "../components/common/Breadcrumbs";
 import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
 import { useLocale } from "../i18n/LocaleContext";
@@ -97,6 +98,7 @@ export default function WhyCarerView() {
         structuredData={[faqStructuredData, breadcrumbStructuredData]}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Breadcrumbs items={[{ label: t('nav.why_carerview') }]} />
 
         {/* HERO */}
         <div className="pt-10 pb-12 text-center">
@@ -361,6 +363,17 @@ export default function WhyCarerView() {
                 </details>
               ))}
             </div>
+            <p className="mt-8 text-center text-sm text-slate-gray/70">
+              <Link to="/about" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.about')}</Link>
+              {' · '}
+              <Link to="/memory-book" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.memory_book')}</Link>
+              {' · '}
+              <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>
+              {' · '}
+              <Link to="/community" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_forum')}</Link>
+              {' · '}
+              <Link to="/dementia-scale" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.dementia_scale')}</Link>
+            </p>
           </div>
         </section>
 

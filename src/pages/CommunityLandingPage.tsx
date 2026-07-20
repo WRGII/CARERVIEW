@@ -4,6 +4,7 @@ import { useCommunityRooms } from '../hooks/useCommunityRooms'
 import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import CommunityGuidelinesModal from '../components/community/CommunityGuidelinesModal'
 import CommunityRoomSection from '../components/community/CommunityRoomSection'
+import Breadcrumbs from '../components/common/Breadcrumbs'
 import { useLocale } from '../i18n/LocaleContext'
 
 const FORUM_URL = '/caregiver-forum'
@@ -83,6 +84,7 @@ function RoomSkeleton() {
 export default function CommunityLandingPage() {
   const { data: profile, isLoading: profileLoading } = useMyCommunityProfile()
   const { data: rooms, isLoading: roomsLoading } = useCommunityRooms()
+  const { t } = useLocale()
 
   const needsGuidelines = !profileLoading && !!profile && !profile.guidelines_accepted_at
   const showHandlePrompt = !profileLoading && !!profile && profile.handle_is_auto_generated
@@ -95,6 +97,7 @@ export default function CommunityLandingPage() {
 
       <div className="min-h-screen bg-gradient-to-br from-warm-white via-white to-peach-blush/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-4">
+          <Breadcrumbs items={[{ label: t('nav.caregiver_forum') }]} />
 
           {/* Slim hero banner */}
           <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl px-4 sm:px-5 py-3.5 shadow-sm">
@@ -203,6 +206,17 @@ export default function CommunityLandingPage() {
               <p className="text-sm font-semibold text-slate-700">Post anon</p>
               <p className="text-xs text-slate-400 mt-0.5">Your handle is hidden</p>
             </div>
+          </div>
+
+          {/* Cross-links to other CarerView pages */}
+          <div className="pt-2 pb-4 text-center text-xs text-slate-500">
+            <Link to="/new-carer" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.new_carer')}</Link>
+            {' · '}
+            <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>
+            {' · '}
+            <Link to="/pricing" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.pricing')}</Link>
+            {' · '}
+            <Link to="/why" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.why_carerview')}</Link>
           </div>
 
         </div>

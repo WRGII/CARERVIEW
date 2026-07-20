@@ -4,6 +4,7 @@ import { useLocale } from '../i18n/LocaleContext';
 import { useAuth } from '../hooks/useAuth';
 import { useOnboarding } from '../hooks/useOnboarding';
 import PageSEO from '../components/seo/PageSEO';
+import Breadcrumbs from '../components/common/Breadcrumbs';
 import { SITE_URL } from '../lib/siteConfig';
 
 type StepCard = {
@@ -108,6 +109,7 @@ export default function TutorialPage() {
       {/* Steps */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
+          <Breadcrumbs items={[{ label: t('nav.tutorial') }]} />
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">
               {t('tutorial.public_description')}

@@ -6,6 +6,7 @@ import { useLocale } from '../i18n/LocaleContext';
 import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
+import Breadcrumbs from '../components/common/Breadcrumbs';
 
 type Stage = {
   number: number;
@@ -278,6 +279,7 @@ export default function DementiaScalePage() {
       }
     >
       <div className="space-y-8">
+        <Breadcrumbs items={[{ label: t('dementia.page_title') }]} />
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-cyan-primary/10 flex items-center justify-center">
@@ -328,6 +330,15 @@ export default function DementiaScalePage() {
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
           <p className="text-xs text-slate-500 leading-relaxed">
             <strong className="text-slate-600">{t('dementia.disclaimer_label')}</strong> {t('dementia.disclaimer_body')}
+          </p>
+          <p className="mt-4 text-sm text-slate-600">
+            <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>
+            {' · '}
+            <Link to="/why" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.why_carerview')}</Link>
+            {' · '}
+            <Link to="/new-carer" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.new_carer')}</Link>
+            {' · '}
+            <Link to="/community" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_forum')}</Link>
           </p>
         </div>
       </div>

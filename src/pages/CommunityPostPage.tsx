@@ -14,6 +14,7 @@ import CommunityReplyList from '../components/community/CommunityReplyList'
 import AnonymousBadge from '../components/community/AnonymousBadge'
 import ReportModal from '../components/community/ReportModal'
 import UpgradeBridgeCard from '../components/community/UpgradeBridgeCard'
+import Breadcrumbs from '../components/common/Breadcrumbs'
 import type { CommunityReply } from '../lib/community'
 
 
@@ -85,19 +86,11 @@ export default function CommunityPostPage() {
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-sm text-slate-400" aria-label="Breadcrumb">
-            <Link to="/community" className="hover:text-slate-600 transition-colors">Community</Link>
-            <span>/</span>
-            {roomSlug && post?.room?.name ? (
-              <Link to={`/community/rooms/${roomSlug}`} className="hover:text-slate-600 transition-colors truncate max-w-[120px]">
-                {post.room.name}
-              </Link>
-            ) : <span>Room</span>}
-            <span>/</span>
-            <span className="text-slate-500 truncate max-w-[140px]">Post</span>
-          </nav>
+          <Breadcrumbs items={[
+            { label: 'Community', to: '/community' },
+            { label: post?.room?.name ?? 'Room', to: roomSlug ? `/community/rooms/${roomSlug}` : undefined },
+            { label: 'Post' },
+          ]} />
 
           {/* Back link */}
           {roomSlug && (

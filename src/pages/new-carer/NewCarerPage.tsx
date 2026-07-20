@@ -190,6 +190,19 @@ export default function NewCarerPage() {
               </Link>
             </div>
           </div>
+
+          {/* Cross-links to other CarerView pages */}
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center text-sm text-slate-600">
+            <Link to="/pricing" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.pricing')}</Link>
+            {' · '}
+            <Link to="/why" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.why_carerview')}</Link>
+            {' · '}
+            <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>
+            {' · '}
+            <Link to="/community" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_forum')}</Link>
+            {' · '}
+            <Link to="/memory-book" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.memory_book')}</Link>
+          </div>
         </section>
       </div>
     </>

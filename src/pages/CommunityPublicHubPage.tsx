@@ -10,6 +10,7 @@ import { SITE_URL } from '../lib/siteConfig'
 import type { CommunityRoom } from '../lib/community'
 import PublicRoomSection from '../components/community/PublicRoomSection'
 import PageSEO from '../components/seo/PageSEO'
+import Breadcrumbs from '../components/common/Breadcrumbs'
 import { useLocale } from '../i18n/LocaleContext'
 
 const RESOURCES_PAGE = '/caregiver-resources'
@@ -382,17 +383,11 @@ export default function CommunityTopicHubPage() {
       />
 
       {/* Breadcrumb nav */}
-      <nav aria-label="Breadcrumb" className="bg-white border-b border-slate-100">
+      <div className="bg-white border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-          <ol className="flex items-center gap-1.5 text-xs text-slate-400">
-            <li>
-              <Link to="/" className="hover:text-slate-600 transition-colors">Home</Link>
-            </li>
-            <li aria-hidden="true" className="text-slate-300">/</li>
-            <li className="text-slate-600 font-medium">Caregiver Community Forum</li>
-          </ol>
+          <Breadcrumbs items={[{ label: 'Caregiver Community Forum' }]} />
         </div>
-      </nav>
+      </div>
 
       {/* Slim hero */}
       <section className="bg-white border-b border-slate-100">

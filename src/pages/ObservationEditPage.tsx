@@ -57,10 +57,13 @@ export default function ObservationEditPage() {
         </Button>
       }
     >
-      <Breadcrumbs items={[
-        { label: t('caregiver.dashboard_title'), to: '/caregiver' },
-        { label: `${formLabel} ${t('obs_edit.observation_label')}` },
-      ]} />
+      <Breadcrumbs
+        homeTo="/caregiver"
+        homeLabel={t('caregiver.dashboard_title')}
+        items={[
+          { label: `${formLabel} ${t('obs_edit.observation_label')}` },
+        ]}
+      />
 
       {!isAuthor && (
         <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">

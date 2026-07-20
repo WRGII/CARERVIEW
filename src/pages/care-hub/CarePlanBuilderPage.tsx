@@ -1,7 +1,7 @@
 import { useState, lazy, Suspense, useEffect } from 'react'
 import { setLastModule } from '../../lib/lastModule'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, Users, MapPin, RefreshCw, FileText, Shield } from 'lucide-react'
+import { ClipboardList, CircleCheck as CheckCircle2, Circle, Clock, ChevronRight, Users, MapPin, RefreshCw, FileText, Shield } from 'lucide-react'
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useAuth } from '../../hooks/useAuth'
 import { useTeamRole, useTeamResident } from '../../hooks/useMemoryBook'
@@ -19,6 +19,7 @@ import {
 } from '../../hooks/useCarePlan'
 import { supabase } from '../../lib/supabaseClient'
 import PageSEO from '../../components/seo/PageSEO'
+import Breadcrumbs from '../../components/common/Breadcrumbs'
 import { useLocale } from '../../i18n/LocaleContext'
 
 const SectionFormModal = lazy(() => import('../../components/care-plan/SectionFormModal'))
@@ -188,15 +189,11 @@ export default function CarePlanBuilderPage() {
         {/* ── Header ── */}
         <div className="bg-white border-b border-slate-200">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm text-slate-400 mb-6">
-              <Link to="/care-hub" className="flex items-center gap-1.5 hover:text-slate-600 transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" />
-                {t('care_hub.title')}
-              </Link>
-              <span>/</span>
-              <span className="text-slate-600 font-medium">{t('care_plan.title')}</span>
-            </nav>
+            <Breadcrumbs
+              homeTo="/caregiver"
+              homeLabel={t('care_hub.title')}
+              items={[{ label: t('care_plan.title') }]}
+            />
 
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">

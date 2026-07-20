@@ -4,6 +4,7 @@ import { Card, CardContent } from "../components/ui/Card";
 import AuthForm from "../components/common/AuthForm";
 import { useLocale } from "../i18n/LocaleContext";
 import PageSEO from "../components/seo/PageSEO";
+import Breadcrumbs from "../components/common/Breadcrumbs";
 import { SITE_URL } from "../lib/siteConfig";
 
 export default function MemoryBookPage() {
@@ -217,6 +218,7 @@ export default function MemoryBookPage() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Breadcrumbs items={[{ label: t('nav.memory_book') }]} />
 
         {/* HERO */}
         <div className="pt-6 pb-8 text-center">
@@ -385,6 +387,21 @@ export default function MemoryBookPage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Contextual internal links */}
+        <section className="pb-12">
+          <div className="max-w-3xl mx-auto px-4 text-center text-sm text-slate-600">
+            <Link to="/why" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.why_carerview')}</Link>
+            {' · '}
+            <Link to="/about" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.about')}</Link>
+            {' · '}
+            <Link to="/resources" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_resources')}</Link>
+            {' · '}
+            <Link to="/new-carer" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.new_carer')}</Link>
+            {' · '}
+            <Link to="/community" className="text-cyan-700 hover:text-cyan-800 underline font-medium">{t('nav.caregiver_forum')}</Link>
           </div>
         </section>
 
