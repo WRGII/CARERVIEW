@@ -14,7 +14,7 @@ export default function CommunityBanner() {
     <div
       role="region"
       aria-label={t("community_banner.aria_label")}
-      className="sticky top-0 z-50 bg-cyan-700 border-b border-cyan-800"
+      className="bg-cyan-700 border-b border-cyan-800"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-0 sm:h-8 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3">
         <p className="hidden sm:block text-xs text-cyan-100 whitespace-nowrap">

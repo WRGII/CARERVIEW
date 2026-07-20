@@ -30,9 +30,11 @@ export default function MainLayout() {
       >
         Skip to main content
       </a>
-      <CommunityBanner />
-      {!isOnline && <OfflineBanner />}
-      <Header />
+      <div className="sticky top-0 z-50">
+        <CommunityBanner />
+        {!isOnline && <OfflineBanner />}
+        <Header />
+      </div>
       <main id="main-content" className="flex-1">
         <Outlet />
       </main>
