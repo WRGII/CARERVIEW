@@ -9,14 +9,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
 import LanguageSwitcher from '../common/LanguageSwitcher'
 import AccountMenu from '../caregiver/AccountMenu'
 import { supabase } from '../../lib/supabaseClient'
-
-const PUBLIC_NAV_LINKS = [
-  { key: 'nav.about', to: '/about' },
-  { key: 'nav.why_carerview', to: '/why' },
-  { key: 'nav.memory_book_short', to: '/memory-book' },
-  { key: 'nav.new_carer', to: '/new-carer' },
-  { key: 'nav.caregiver_resources', to: '/resources' },
-] as const
+import { PRIMARY_NAV, filterNav, isPathActive } from '../../lib/navigation'
 
 export function Header() {
   const location = useLocation()
@@ -29,7 +22,6 @@ export function Header() {
 
   useFocusTrap(drawerRef, mobileOpen)
 
-  // Close the drawer on Escape
   useEffect(() => {
     if (!mobileOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -39,7 +31,6 @@ export function Header() {
     return () => document.removeEventListener('keydown', onKey)
   }, [mobileOpen])
 
-  // Close the drawer when the route changes
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
@@ -66,9 +57,7 @@ export function Header() {
   const activeProduct = userPlan?.price_id ? getProductByPriceId(userPlan.price_id) : null
   const isActivePlan = hasActivePlan(userPlan)
 
-  function isCurrentPath(to: string) {
-    return location.pathname === to || location.pathname.startsWith(to + '/')
-  }
+  const navLinks = filterNav(PRIMARY_NAV, { authed: !!user, paid: isActivePlan })
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md">
@@ -93,19 +82,23 @@ export function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-          {PUBLIC_NAV_LINKS.map(({ key, to }) => (
-            <Link
-              key={key}
-              to={to}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                isCurrentPath(to)
-                  ? 'text-cyan-primary bg-cyan-primary/10'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              {t(key)}
-            </Link>
-          ))}
+          {navLinks.map(({ key, to, matchPrefix }) => {
+            const active = isPathActive(location.pathname, to, matchPrefix)
+            return (
+              <Link
+                key={key}
+                to={to}
+                aria-current={active ? 'page' : undefined}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                  active
+                    ? 'text-cyan-primary bg-cyan-primary/10'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                {t(key)}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Right-side actions */}
@@ -163,20 +156,33 @@ export function Header() {
           aria-modal="true"
           aria-label={t('nav.toggle_menu')}
           className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
-          {PUBLIC_NAV_LINKS.map(({ key, to }) => (
+          {user && (
             <Link
-              key={key}
-              to={to}
+              to="/caregiver"
               onClick={() => setMobileOpen(false)}
-              className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isCurrentPath(to)
-                  ? 'text-cyan-primary bg-cyan-primary/10'
-                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+              className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-cyan-primary bg-cyan-primary/10"
             >
-              {t(key)}
+              {t('nav.dashboard')}
             </Link>
-          ))}
+          )}
+          {navLinks.map(({ key, to, matchPrefix }) => {
+            const active = isPathActive(location.pathname, to, matchPrefix)
+            return (
+              <Link
+                key={key}
+                to={to}
+                onClick={() => setMobileOpen(false)}
+                aria-current={active ? 'page' : undefined}
+                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  active
+                    ? 'text-cyan-primary bg-cyan-primary/10'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                {t(key)}
+              </Link>
+            )
+          })}
           <Link
             to="/tutorial"
             onClick={() => setMobileOpen(false)}

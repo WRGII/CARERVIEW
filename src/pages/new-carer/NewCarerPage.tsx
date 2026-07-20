@@ -4,7 +4,7 @@ import { useLocale } from '../../i18n/LocaleContext'
 import PageSEO from '../../components/seo/PageSEO'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
 import ResourceCard from '../../components/new-carer/ResourceCard'
-import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import Breadcrumbs from '../../components/common/Breadcrumbs'
 import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { WORKSHEET_RESOURCES } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
@@ -84,7 +84,7 @@ export default function NewCarerPage() {
 
         {/* ── Breadcrumb (below hero) ── */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-5">
-          <NewCarerBreadcrumb />
+          <Breadcrumbs homeTo="/new-carer" homeLabel={t('nav.new_carer')} items={[]} />
         </div>
 
         {/* ── Summary blocks ── */}

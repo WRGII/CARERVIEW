@@ -4,6 +4,19 @@ import { supabase } from "../../lib/supabaseClient";
 import { useLocale } from "../../i18n/LocaleContext";
 import { useAuth } from "../../hooks/useAuth";
 import LanguageSwitcher from "../common/LanguageSwitcher";
+import { PRIMARY_NAV, type NavEntry } from "../../lib/navigation";
+
+const FOOTER_RESOURCES: NavEntry[] = [
+  { key: "nav.caregiver_resources", to: "/resources" },
+  { key: "nav.new_carer", to: "/new-carer" },
+  { key: "nav.caregiver_forum", to: "/community" },
+  { key: "nav.tutorial", to: "/tutorial" },
+];
+
+const FOOTER_POLICIES: NavEntry[] = [
+  { key: "footer.privacy_policy", to: "/privacy" },
+  { key: "footer.data_policy", to: "/data-policy" },
+];
 
 export function Footer() {
   const { t } = useLocale();
@@ -36,6 +49,13 @@ export function Footer() {
 
   const year = new Date().getFullYear();
 
+  const brandLinks: NavEntry[] = [
+    { key: "footer.about_link", to: "/about" },
+    { key: "nav.memory_book", to: "/memory-book" },
+    { key: "nav.why_carerview", to: "/why" },
+    { key: "footer.pricing_link", to: "/pricing" },
+  ];
+
   return (
     <footer className="w-full border-t border-slate-200 bg-white">
       <div className="max-w-6xl mx-auto px-4 py-12">
@@ -53,38 +73,16 @@ export function Footer() {
               {t('footer.tagline')}
             </p>
             <div className="mt-4 space-y-2">
-              <div>
-                <Link
-                  to="/about"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.about_link')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/memory-book"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.memory_book')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/why"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.why_carerview')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/pricing"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.pricing_link')}
-                </Link>
-              </div>
+              {brandLinks.map((entry) => (
+                <div key={entry.to}>
+                  <Link
+                    to={entry.to}
+                    className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                  >
+                    {t(entry.key)}
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -94,38 +92,16 @@ export function Footer() {
               {t('footer.resources_heading')}
             </h4>
             <div className="space-y-2">
-              <div>
-                <Link
-                  to="/resources"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.caregiver_resources')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/new-carer"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.new_carer')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/community"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('nav.caregiver_forum')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/tutorial"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.tutorial_link')}
-                </Link>
-              </div>
+              {FOOTER_RESOURCES.map((entry) => (
+                <div key={entry.to}>
+                  <Link
+                    to={entry.to}
+                    className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                  >
+                    {t(entry.key)}
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -174,22 +150,16 @@ export function Footer() {
                   </Link>
                 </div>
               )}
-              <div>
-                <Link
-                  to="/privacy"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.privacy_policy')}
-                </Link>
-              </div>
-              <div>
-                <Link
-                  to="/data-policy"
-                  className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
-                >
-                  {t('footer.data_policy')}
-                </Link>
-              </div>
+              {FOOTER_POLICIES.map((entry) => (
+                <div key={entry.to}>
+                  <Link
+                    to={entry.to}
+                    className="text-cyan-primary hover:text-cyan-hover font-medium underline text-sm"
+                  >
+                    {t(entry.key)}
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
         </div>

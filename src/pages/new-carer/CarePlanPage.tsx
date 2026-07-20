@@ -5,7 +5,7 @@ import SectionIntro from '../../components/new-carer/SectionIntro'
 import CalloutPanel from '../../components/new-carer/CalloutPanel'
 import PlanningPillarCard from '../../components/new-carer/PlanningPillarCard'
 import ModuleNavGrid from '../../components/new-carer/ModuleNavGrid'
-import NewCarerBreadcrumb from '../../components/new-carer/NewCarerBreadcrumb'
+import Breadcrumbs from '../../components/common/Breadcrumbs'
 import NewCarerCTA from '../../components/new-carer/NewCarerCTA'
 import { CARE_PLAN_PILLARS } from '../../content/newCarerContent'
 import { SITE_URL } from '../../lib/siteConfig'
@@ -57,7 +57,7 @@ export default function CarePlanPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <NewCarerBreadcrumb currentLabel={t('new_carer.cp_title')} />
+            <Breadcrumbs homeTo="/new-carer" homeLabel={t('nav.new_carer')} items={[{ label: t('new_carer.cp_title') }]} />
           </div>
 
           <SectionIntro
