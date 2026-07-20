@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { ErrorBoundary } from './components/util/ErrorBoundary';
+import { initGlobalErrorHandler } from './lib/globalErrorHandler';
+
+initGlobalErrorHandler();
 
 const rootFallback = (
   <div className="min-h-screen flex items-center justify-center bg-white px-4">

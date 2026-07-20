@@ -15,8 +15,12 @@ import Header from "./Header";
 import Footer from "./Footer";
 import CommunityBanner from "./CommunityBanner";
 import ScrollToTop from "../util/ScrollToTop";
+import OfflineBanner from "../common/OfflineBanner";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 
 export default function MainLayout() {
+  const isOnline = useOnlineStatus();
+
   return (
     <div className="min-h-dvh bg-white flex flex-col">
       <ScrollToTop />
@@ -27,6 +31,7 @@ export default function MainLayout() {
         Skip to main content
       </a>
       <CommunityBanner />
+      {!isOnline && <OfflineBanner />}
       <Header />
       <main id="main-content" className="flex-1">
         <Outlet />
