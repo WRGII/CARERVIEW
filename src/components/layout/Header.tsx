@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useUserPlan, hasActivePlan } from '../../hooks/useUserPlan'
 import { getProductByPriceId } from '../../stripe-config'
 import { useLocale } from '../../i18n/LocaleContext'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import LanguageSwitcher from '../common/LanguageSwitcher'
 import AccountMenu from '../caregiver/AccountMenu'
 import { supabase } from '../../lib/supabaseClient'
@@ -24,6 +25,24 @@ export function Header() {
   const { t } = useLocale()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string>('/CareView_logo_icon_only.png')
+  const drawerRef = useRef<HTMLDivElement>(null)
+
+  useFocusTrap(drawerRef, mobileOpen)
+
+  // Close the drawer on Escape
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [mobileOpen])
+
+  // Close the drawer when the route changes
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     let mounted = true
@@ -126,6 +145,7 @@ export function Header() {
             type="button"
             aria-label={t('nav.toggle_menu')}
             aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-drawer"
             onClick={() => setMobileOpen((v) => !v)}
             className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
@@ -136,7 +156,13 @@ export function Header() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
+        <div
+          ref={drawerRef}
+          id="mobile-nav-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('nav.toggle_menu')}
+          className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
           {PUBLIC_NAV_LINKS.map(({ key, to }) => (
             <Link
               key={key}
