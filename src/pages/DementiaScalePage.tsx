@@ -7,6 +7,8 @@ import { PageLayout } from '../components/layout/PageLayout';
 import { Loading } from '../components/ui/Loading';
 import { ErrorMessage } from '../components/ui/ErrorMessage';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import PageSEO from '../components/seo/PageSEO';
+import { SITE_URL } from '../lib/siteConfig';
 
 type Stage = {
   number: number;
@@ -263,6 +265,12 @@ export default function DementiaScalePage() {
   if (!profile) return <ErrorMessage message={t('common.profile_not_found')} />;
 
   return (
+    <>
+    <PageSEO
+      title="Dementia Scale — 7 Stages of the FAST Scale"
+      description="Understand the 7 stages of dementia using the Functional Assessment Staging Tool (FAST). A practical reference for caregivers."
+      canonical={`${SITE_URL}/dementia-scale`}
+    />
     <PageLayout
       title={t('dementia.page_title')}
       subtitle={t('dementia.subtitle')}
@@ -343,5 +351,6 @@ export default function DementiaScalePage() {
         </div>
       </div>
     </PageLayout>
+    </>
   );
 }

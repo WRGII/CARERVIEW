@@ -18,6 +18,7 @@ import {
 } from "../lib/cv";
 import { useLocale } from "../i18n/LocaleContext";
 import { useFormatDate } from "../hooks/useFormatDate";
+import Breadcrumbs from "../components/common/Breadcrumbs";
 import { Users, UserMinus, Send, Copy, Check, Clock, UserCheck, Crown, RefreshCw, CircleAlert as AlertCircle, Trash2 } from "lucide-react";
 
 type PageState = "loading" | "ready" | "error";
@@ -226,6 +227,7 @@ export default function TeamSettings() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <Breadcrumbs homeTo="/caregiver" homeLabel={t('caregiver.dashboard_title')} items={[{ label: t('team_settings.title') }]} />
 
       {/* Page header */}
       <div className="flex items-start justify-between">

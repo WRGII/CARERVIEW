@@ -5,6 +5,8 @@ import { useMyCommunityProfile } from '../hooks/useCommunityProfile'
 import CommunityGuidelinesModal from '../components/community/CommunityGuidelinesModal'
 import CommunityRoomSection from '../components/community/CommunityRoomSection'
 import Breadcrumbs from '../components/common/Breadcrumbs'
+import PageSEO from '../components/seo/PageSEO'
+import { SITE_URL } from '../lib/siteConfig'
 import { useLocale } from '../i18n/LocaleContext'
 
 const FORUM_URL = '/caregiver-forum'
@@ -91,6 +93,11 @@ export default function CommunityLandingPage() {
 
   return (
     <>
+      <PageSEO
+        title="Caregiver Community Forum — Peer Support"
+        description="Connect with fellow caregivers in a supportive community forum. Share experiences, ask questions, and find practical wisdom."
+        canonical={`${SITE_URL}/community`}
+      />
       {needsGuidelines && (
         <CommunityGuidelinesModal onAccepted={() => {}} />
       )}

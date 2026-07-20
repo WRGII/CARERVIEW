@@ -10,6 +10,7 @@ import { useActiveTeam } from '../context/ActiveTeam'
 import { useAuth } from '../hooks/useAuth'
 import { useTeamResident, useTeamRole, useUpsertResident } from '../hooks/useMemoryBook'
 import { useLocale } from '../i18n/LocaleContext'
+import Breadcrumbs from '../components/common/Breadcrumbs'
 
 const EMPTY_FORM = {
   full_name: '',
@@ -178,6 +179,7 @@ export default function ResidentProfilePage() {
       subtitle={t('resident_profile.subtitle')}
       hideSignOut
     >
+      <Breadcrumbs homeTo="/caregiver" homeLabel={t('caregiver.dashboard_title')} items={[{ label: t('resident_profile.title') }]} />
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (

@@ -8,6 +8,8 @@ import { useLocale } from '../i18n/LocaleContext';
 import { supabase } from '../lib/supabaseClient';
 import { getProductByPriceId } from '../stripe-config';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import PageSEO from '../components/seo/PageSEO';
+import { SITE_URL } from '../lib/siteConfig';
 
 export function PricingPage() {
   const { user } = useAuth();
@@ -50,6 +52,12 @@ export function PricingPage() {
   };
 
   return (
+    <>
+    <PageSEO
+      title="Pricing — Care Plans for Families"
+      description="Simple, transparent pricing for CarerView. All plans include trend reports and PDF summaries. Cancel anytime."
+      canonical={`${SITE_URL}/pricing`}
+    />
     <main className="min-h-screen pt-16">
       <section className="mx-auto max-w-6xl px-6 py-20">
         <Breadcrumbs items={[{ label: t('nav.pricing') }]} />
@@ -106,5 +114,6 @@ export function PricingPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }

@@ -22,6 +22,7 @@ import { exportToDOCX, exportToCSV } from '../lib/exports';
 import { localeToIntl } from '../lib/utils';
 import { ObservationList } from '../components/caregiver/ObservationList';
 import { ViewObservation } from '../components/caregiver/ViewObservation';
+import Breadcrumbs from '../components/common/Breadcrumbs';
 
 type FormType = 'ADL' | 'IADL' | 'COMPREHENSIVE';
 type ViewMode = 'list' | 'view';
@@ -279,6 +280,7 @@ export default function NewObservationPage() {
       hideSignOut={true}
       headerRight={<Button variant="outline" onClick={() => navigate('/caregiver')}>{t('common.back_dashboard')}</Button>}
     >
+      <Breadcrumbs homeTo="/caregiver" homeLabel={t('caregiver.dashboard_title')} items={[{ label: t('new_obs.page_title') }]} />
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-gray">{t('new_obs.create_title')}</h1>

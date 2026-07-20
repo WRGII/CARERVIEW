@@ -34,6 +34,7 @@ import DailyLivingTab from "../components/memory-book/DailyLivingTab";
 import ComingSoonTab from "../components/memory-book/ComingSoonTab";
 import ObservationsTab from "../components/memory-book/ObservationsTab";
 import PrintView from "../components/memory-book/PrintView";
+import Breadcrumbs from "../components/common/Breadcrumbs";
 
 export default function MemorySchedulePage() {
   useEffect(() => { setLastModule('memory_book'); }, []);
@@ -213,6 +214,7 @@ export default function MemorySchedulePage() {
       title={`Memory & Schedule — ${residentName}`}
       hideSignOut
     >
+      <Breadcrumbs homeTo="/caregiver" homeLabel={t('caregiver.dashboard_title')} items={[{ label: `Memory & Schedule — ${residentName}` }]} />
       <div className="space-y-6 print:hidden">
         <div className="flex items-center gap-3">
           <nav className="flex-1 flex flex-wrap gap-1.5 bg-white border border-slate-200 rounded-xl p-2 shadow-sm">

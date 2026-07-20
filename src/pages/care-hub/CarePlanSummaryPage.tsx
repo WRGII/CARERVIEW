@@ -15,6 +15,7 @@ import {
 } from '../../hooks/useCarePlan'
 import { detectGaps, type GapItem } from '../../lib/carePlanGaps'
 import PageSEO from '../../components/seo/PageSEO'
+import Breadcrumbs from '../../components/common/Breadcrumbs'
 import { useLocale } from '../../i18n/LocaleContext'
 
 // ── Section summary blocks ────────────────────────────────────────────────────
@@ -105,14 +106,14 @@ export default function CarePlanSummaryPage() {
         {/* ── Header (no-print) ── */}
         <div className="bg-white border-b border-slate-200 print:hidden">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <nav className="flex items-center gap-2 text-sm text-slate-400 mb-5">
-              <Link to="/care-hub/care-plan" className="flex items-center gap-1.5 hover:text-slate-600 transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" />
-                {t('care_plan.title')}
-              </Link>
-              <span>/</span>
-              <span className="text-slate-600 font-medium">{t('care_plan.summary_breadcrumb')}</span>
-            </nav>
+            <Breadcrumbs
+              homeTo="/caregiver"
+              homeLabel={t('caregiver.dashboard_title')}
+              items={[
+                { label: t('care_plan.title'), to: '/care-hub/care-plan' },
+                { label: t('care_plan.summary_breadcrumb') },
+              ]}
+            />
 
             <div className="flex items-center justify-between">
               <div>
