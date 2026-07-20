@@ -165,7 +165,7 @@ export default function WhyCarerView() {
                   <Icon className={`w-5 h-5 ${iconColor}`} />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-slate-gray mb-1">{t(labelKey)}</h4>
+                  <h3 className="font-semibold text-slate-gray mb-1">{t(labelKey)}</h3>
                   <p className="text-sm text-slate-gray/70 leading-relaxed">{t(descKey)}</p>
                 </div>
               </div>

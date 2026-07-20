@@ -48,9 +48,9 @@ export function PricingCard({ product, onSelectPlan, isPopular = false, isCurren
       )}
 
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-slate-gray mb-1">
+        <h2 className="text-xl font-bold text-slate-gray mb-1">
           {product.shortName}
-        </h3>
+        </h2>
         {product.tagline && (
           <p className="text-sm text-slate-gray/60 mb-3">{product.tagline}</p>
         )}

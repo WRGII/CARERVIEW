@@ -276,7 +276,7 @@ export default function GuestObservationPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-3">Thank you!</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-3">Observation submitted</h1>
           <p className="text-slate-600 leading-relaxed mb-2">
             Your <strong>{formLabel}</strong> observation for <strong>{tokenInfo?.resident_name}</strong> has been saved.
           </p>

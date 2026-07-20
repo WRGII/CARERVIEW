@@ -330,7 +330,7 @@ export default function MemoryBookPage() {
                 aria-label={p.title}
               >
                 <div className="p-6 h-full flex flex-col">
-                  <h4 className="text-lg font-semibold text-slate-800">{p.title}</h4>
+                  <h3 className="text-lg font-semibold text-slate-800">{p.title}</h3>
                   <p className="mt-3 text-slate-600 italic">{p.quote}</p>
                   <ul className="mt-4 space-y-2 text-slate-600 flex-1">
                     {p.bullets.map((b, i) => (

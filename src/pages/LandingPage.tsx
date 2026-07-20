@@ -161,17 +161,17 @@ export default function LandingPage() {
         {/* Hero */}
         <div className="bg-gradient-to-br from-slate-700 to-slate-600 rounded-3xl px-6 sm:px-12 py-10 sm:py-14 text-center">
           <div className="flex flex-col items-center justify-center mb-4">
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
+            <p className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight text-warm-white mb-4">
               {t('common.app_name')}
-            </h1>
+            </p>
             <p className="text-base font-semibold tracking-widest text-cyan-primary uppercase">
               {t('landing.hero_pillar_tagline')}
             </p>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 max-w-4xl mx-auto leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight text-warm-white mb-5 max-w-4xl mx-auto leading-tight">
             {heroTitleLine1}
-          </h2>
+          </h1>
 
           <div className="mt-4 max-w-3xl mx-auto space-y-4">
             <p className="text-base sm:text-lg text-slate-200 leading-relaxed">
@@ -254,7 +254,7 @@ export default function LandingPage() {
                     <Icon className={`w-5 h-5 ${s.iconColor}`} />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-slate-gray mb-1">{t(`landing.careplan_${s.key}_label`)}</h4>
+                    <h3 className="font-semibold text-slate-gray mb-1">{t(`landing.careplan_${s.key}_label`)}</h3>
                     <p className="text-sm text-slate-gray/70 leading-relaxed">{t(`landing.careplan_${s.key}_desc`)}</p>
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export default function LandingPage() {
             <div className="bg-red-50 border border-red-100 rounded-2xl p-7">
               <div className="flex items-center gap-3 mb-5">
                 <AlertCircle className="w-6 h-6 text-red-400" />
-                <h4 className="text-lg font-bold text-red-800">{t('landing.careplan_before_label')}</h4>
+                <h3 className="text-lg font-bold text-red-800">{t('landing.careplan_before_label')}</h3>
               </div>
               <ul className="space-y-3">
                 {['b1', 'b2', 'b3'].map((b) => (
@@ -317,7 +317,7 @@ export default function LandingPage() {
             <div className="bg-mint-green/10 border border-mint-green/30 rounded-2xl p-7">
               <div className="flex items-center gap-3 mb-5">
                 <CheckCircle className="w-6 h-6 text-slate-600" />
-                <h4 className="text-lg font-bold text-slate-700">{t('landing.careplan_after_label')}</h4>
+                <h3 className="text-lg font-bold text-slate-700">{t('landing.careplan_after_label')}</h3>
               </div>
               <ul className="space-y-3">
                 {['b1', 'b2', 'b3'].map((b) => (
@@ -387,7 +387,7 @@ export default function LandingPage() {
                       <Icon className={`w-6 h-6 ${ic}`} />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.mb_${key}_title`)}</h4>
+                      <h3 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.mb_${key}_title`)}</h3>
                       <p className="text-slate-gray/70 leading-relaxed">{t(`landing.mb_${key}_body`)}</p>
                     </div>
                   </div>
@@ -459,7 +459,7 @@ export default function LandingPage() {
                 <div className={`w-11 h-11 ${bg} rounded-xl flex items-center justify-center mb-4`}>
                   <Icon className={`w-5 h-5 ${ic}`} />
                 </div>
-                <h4 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.feat${k}_title`)}</h4>
+                <h3 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.feat${k}_title`)}</h3>
                 <p className="text-slate-gray/75 leading-relaxed text-sm">{t(`landing.feat${k}_body`)}</p>
               </div>
             ))}
@@ -480,7 +480,7 @@ export default function LandingPage() {
                 <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center mb-5`}>
                   <Icon className={`w-6 h-6 ${iconColor}`} />
                 </div>
-                <h4 className="text-lg font-bold text-slate-gray mb-3">{t(titleKey)}</h4>
+                <h3 className="text-lg font-bold text-slate-gray mb-3">{t(titleKey)}</h3>
                 <p className="text-slate-gray/70 leading-relaxed text-sm">{t(bodyKey)}</p>
               </div>
             ))}
@@ -532,7 +532,7 @@ export default function LandingPage() {
                   <div className={`w-16 h-16 ${bg} rounded-full flex items-center justify-center mx-auto mb-4`}>
                     <Icon className={`w-8 h-8 ${ic}`} />
                   </div>
-                  <h4 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.trust${k}_title`)}</h4>
+                  <h3 className="text-lg font-semibold text-slate-gray mb-2">{t(`landing.trust${k}_title`)}</h3>
                   <p className="text-slate-gray/80">{t(`landing.trust${k}_body`)}</p>
                 </div>
               ))}

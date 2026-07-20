@@ -48,7 +48,7 @@ export default function ObservationEditPage() {
 
   return (
     <PageLayout
-      title=""
+      title={`${formLabel} ${t('obs_edit.observation_label')}`}
       user={{ ...user, profile }}
       hideSignOut={true}
       headerRight={
