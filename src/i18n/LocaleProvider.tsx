@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient'
 import { LocaleContext } from './LocaleContext'
 import type { Locale, SupportedLocale } from './types'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
+import { isRTL } from '../lib/utils'
 
 const LS_TRANS_VERSION = 'v10'
 function lsTransKey(locale: Locale): string {
@@ -43,10 +44,21 @@ function getStoredLocale(): Locale {
 
 function interpolate(template: string, vars?: Record<string, string | number>): string {
   if (!vars) return template
-  return Object.entries(vars).reduce(
-    (str, [key, val]) => str.replace(new RegExp(`\\{${key}\\}`, 'g'), String(val)),
-    template
+  let result = template
+  // ICU-style plural: {count, plural, one {item} other {items}}
+  result = result.replace(
+    /\{(\w+),\s*plural,\s*one\s*\{([^}]+)\}\s*other\s*\{([^}]+)\}\}/g,
+    (_, key: string, one: string, other: string) => {
+      const val = vars[key]
+      return val === 1 ? one : other
+    },
   )
+  // Simple {var} interpolation
+  result = Object.entries(vars).reduce(
+    (str, [key, val]) => str.replace(new RegExp(`\\{${key}\\}`, 'g'), String(val)),
+    result
+  )
+  return result
 }
 
 async function fetchTranslations(locale: Locale): Promise<Record<string, string>> {
@@ -151,6 +163,14 @@ export default function LocaleProvider({ children, userId, preferredLocale }: Pr
     window.addEventListener('online', onOnline)
     return () => window.removeEventListener('online', onOnline)
   }, [translationsError, enError, handleRetry])
+
+  useEffect(() => {
+    const dir = isRTL(locale) ? 'rtl' : 'ltr'
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = locale
+      document.documentElement.dir = dir
+    }
+  }, [locale])
 
   const { data: supportedLocales = [] } = useQuery<SupportedLocale[]>({
     queryKey: ['supported_locales'],

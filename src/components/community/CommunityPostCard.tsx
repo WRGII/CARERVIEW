@@ -1,29 +1,19 @@
 import { memo } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageCircle, Heart, Users, Clock, EyeOff } from 'lucide-react'
+import { MessageCircle, Heart, Users, EyeOff } from 'lucide-react'
 import type { CommunityPost } from '../../lib/community'
 import { maskAuthor } from '../../lib/community'
 import { useAuth } from '../../hooks/useAuth'
+import { useFormat } from '../../hooks/useFormat'
 
 interface Props {
   post: CommunityPost
   showRoom?: boolean
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
 function CommunityPostCard({ post, showRoom = false }: Props) {
   const { user } = useAuth()
+  const { formatRelativeTime } = useFormat()
   const author = maskAuthor(post, user?.id)
   const isOwnPost = post.author_user_id === user?.id
   const isHidden = post.post_status === 'hidden'
@@ -79,7 +69,7 @@ function CommunityPostCard({ post, showRoom = false }: Props) {
 
         <div className="flex items-center gap-3 text-slate-400">
           <time dateTime={post.last_activity_at} title={new Date(post.last_activity_at).toLocaleString()}>
-            {timeAgo(post.last_activity_at)}
+            {formatRelativeTime(post.last_activity_at)}
           </time>
           <span className="flex items-center gap-1 text-xs">
             <MessageCircle className="w-3.5 h-3.5" />
