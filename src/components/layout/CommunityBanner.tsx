@@ -1,22 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useLocale } from "../../i18n/LocaleContext";
 
-const COMMUNITY_PATHS = ["/community", "/caregiver-forum"];
-
-function isCommunityPath(pathname: string): boolean {
-  return COMMUNITY_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-}
-
 export default function CommunityBanner() {
-  const location = useLocation();
   const { user, profile } = useAuth();
   const { t } = useLocale();
-
-  if (isCommunityPath(location.pathname)) return null;
 
   const isAuthed = !!user && !profile?.disabled;
   const ctaHref = isAuthed ? "/community" : "/caregiver-forum";

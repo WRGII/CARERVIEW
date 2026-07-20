@@ -29,7 +29,6 @@ export const PRIMARY_NAV: NavEntry[] = [
   { key: 'nav.memory_book_short', to: '/memory-book' },
   { key: 'nav.new_carer', to: '/new-carer' },
   { key: 'nav.caregiver_resources', to: '/resources' },
-  { key: 'nav.caregiver_forum', to: '/community' },
   { key: 'nav.pricing', to: '/pricing' },
 ]
 
