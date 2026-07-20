@@ -45,3 +45,23 @@
   from { stroke-dashoffset: 100; }
   to   { stroke-dashoffset: 0; }
 }
+
+/* Respect user motion preferences (WCAG 2.3.3 Animation from Interactions) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High-contrast preference support (WCAG 1.4.6 Contrast Enhanced) */
+@media (prefers-contrast: more) {
+  :focus-visible {
+    @apply ring-4 ring-cyan-700 ring-offset-2;
+  }
+  .text-slate-400 { color: #475569 !important; }
+  .text-slate-300 { color: #64748b !important; }
+  .border-slate-200 { border-color: #334155 !important; }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { X, CircleCheck as CheckCircle, CircleAlert as AlertCircle } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
@@ -17,35 +17,41 @@ interface ToastItemProps {
 }
 
 export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
+  const [paused, setPaused] = useState(false)
+
   useEffect(() => {
-    if (toast.duration) {
-      const timer = setTimeout(() => {
-        onDismiss(toast.id)
-      }, toast.duration)
-      return () => clearTimeout(timer)
-    }
-  }, [toast.id, toast.duration, onDismiss])
+    if (!toast.duration || paused) return
+    const timer = setTimeout(() => onDismiss(toast.id), toast.duration)
+    return () => clearTimeout(timer)
+  }, [toast.id, toast.duration, onDismiss, paused])
+
+  const isError = toast.type === 'error'
 
   return (
     <div
       className={cn(
         'flex items-start gap-3 p-4 rounded-lg shadow-lg border min-w-[320px] max-w-md animate-slide-in',
-        toast.type === 'success' && 'bg-green-50 border-green-200',
-        toast.type === 'error' && 'bg-red-50 border-red-200'
+        isError ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
       )}
-      role="alert"
-      aria-live="polite"
+      role={isError ? 'alert' : 'status'}
+      aria-live={isError ? 'assertive' : 'polite'}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
     >
-      <div className="flex-shrink-0 mt-0.5">
-        {toast.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
-        {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-red-600" />}
+      <div className="flex-shrink-0 mt-0.5" aria-hidden="true">
+        {isError ? (
+          <AlertCircle className="w-5 h-5 text-red-600" />
+        ) : (
+          <CheckCircle className="w-5 h-5 text-green-600" />
+        )}
       </div>
       <div className="flex-1 pt-0.5">
         <p
           className={cn(
             'text-sm font-medium',
-            toast.type === 'success' && 'text-green-800',
-            toast.type === 'error' && 'text-red-800'
+            isError ? 'text-red-800' : 'text-green-800'
           )}
         >
           {toast.message}
@@ -54,9 +60,8 @@ export const ToastItem: React.FC<ToastItemProps> = ({ toast, onDismiss }) => {
       <button
         onClick={() => onDismiss(toast.id)}
         className={cn(
-          'flex-shrink-0 rounded-md p-1 hover:bg-white/50 transition-colors',
-          toast.type === 'success' && 'text-green-600',
-          toast.type === 'error' && 'text-red-600'
+          'flex-shrink-0 rounded-md p-1 hover:bg-white/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
+          isError ? 'text-red-600 focus-visible:ring-red-400' : 'text-green-600 focus-visible:ring-green-400'
         )}
         aria-label="Dismiss notification"
       >

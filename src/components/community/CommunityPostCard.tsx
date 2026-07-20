@@ -78,10 +78,9 @@ function CommunityPostCard({ post, showRoom = false }: Props) {
         </div>
 
         <div className="flex items-center gap-3 text-slate-400">
-          <span className="flex items-center gap-1 text-xs">
-            <Clock className="w-3.5 h-3.5" />
+          <time dateTime={post.last_activity_at} title={new Date(post.last_activity_at).toLocaleString()}>
             {timeAgo(post.last_activity_at)}
-          </span>
+          </time>
           <span className="flex items-center gap-1 text-xs">
             <MessageCircle className="w-3.5 h-3.5" />
             {post.reply_count}

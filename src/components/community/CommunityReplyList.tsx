@@ -84,9 +84,9 @@ export default function CommunityReplyList({ replies, isLoading, currentUserId, 
                     {author.isAnonymous && (
                       <AnonymousBadge size="sm" isCurrentUser={author.isCurrentUser} />
                     )}
-                    <span className="text-xs text-slate-400">
+                    <time className="text-xs text-slate-400" dateTime={reply.created_at} title={new Date(reply.created_at).toLocaleString()}>
                       {timeAgo(reply.created_at)}
-                    </span>
+                    </time>
                     {index === 0 && !isRemoved && (
                       <span className="text-xs text-slate-300 font-medium">First reply</span>
                     )}
