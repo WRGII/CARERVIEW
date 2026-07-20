@@ -1,10 +1,11 @@
 // src/components/caregiver/GuestInviteModal.tsx
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, UserPlus, Copy, CheckCheck, Mail, ChevronDown } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../hooks/useAuth'
 import { useActiveTeam } from '../../context/ActiveTeam'
 import { useLocale } from '../../i18n/LocaleContext'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import type { ResidentOption } from '../../hooks/useMemoryBook'
 
 interface GuestInviteModalProps {
@@ -38,6 +39,17 @@ export default function GuestInviteModal({ residentOptions, onClose }: GuestInvi
   const [guestLink, setGuestLink] = useState<string | null>(null)
   const [emailSent, setEmailSent] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, true)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   const selectedResident = residentOptions.find(r => r.teamId === selectedTeamId) ?? defaultResident
   const residentName = selectedResident?.residentName ?? ''
@@ -132,7 +144,13 @@ export default function GuestInviteModal({ residentOptions, onClose }: GuestInvi
     : t('guest_invite.form_iadl')
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="guest-invite-title"
+    >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
 
         {/* Header */}
@@ -142,7 +160,7 @@ export default function GuestInviteModal({ residentOptions, onClose }: GuestInvi
               <UserPlus className="w-4.5 h-4.5 text-cyan-600" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">{t('guest_invite.title')}</h2>
+              <h2 id="guest-invite-title" className="text-base font-bold text-slate-900">{t('guest_invite.title')}</h2>
               <p className="text-xs text-slate-500">{t('guest_invite.subtitle')}</p>
             </div>
           </div>

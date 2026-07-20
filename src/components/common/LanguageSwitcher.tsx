@@ -33,9 +33,34 @@ export default function LanguageSwitcher({ className = '' }: Props) {
   useEffect(() => {
     if (!open) return
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+        return
+      }
+      const items = Array.from(
+        containerRef.current?.querySelectorAll<HTMLButtonElement>('[role="option"]:not([disabled])') ?? []
+      )
+      if (items.length === 0) return
+      const currentIndex = items.findIndex(el => el === document.activeElement)
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        items[(currentIndex + 1) % items.length].focus()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        items[(currentIndex - 1 + items.length) % items.length].focus()
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        items[0].focus()
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        items[items.length - 1].focus()
+      }
     }
     document.addEventListener('keydown', handleKey)
+    requestAnimationFrame(() => {
+      const current = containerRef.current?.querySelector<HTMLButtonElement>('[role="option"][aria-selected="true"]')
+      current?.focus()
+    })
     return () => document.removeEventListener('keydown', handleKey)
   }, [open])
 

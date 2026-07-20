@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { TriangleAlert as AlertTriangle, X } from 'lucide-react'
 import { Button } from './Button'
 import { cn } from '../../lib/utils'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -27,46 +28,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   variant = 'danger'
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null)
-  const cancelButtonRef = useRef<HTMLButtonElement>(null)
+  useFocusTrap(dialogRef, isOpen)
 
   useEffect(() => {
-    if (isOpen) {
-      cancelButtonRef.current?.focus()
-
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && !isLoading) {
-          onCancel()
-        }
-      }
-
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Tab') {
-          const focusableElements = dialogRef.current?.querySelectorAll(
-            'button:not([disabled])'
-          )
-          if (focusableElements && focusableElements.length > 0) {
-            const firstElement = focusableElements[0] as HTMLElement
-            const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-
-            if (e.shiftKey && document.activeElement === firstElement) {
-              e.preventDefault()
-              lastElement.focus()
-            } else if (!e.shiftKey && document.activeElement === lastElement) {
-              e.preventDefault()
-              firstElement.focus()
-            }
-          }
-        }
-      }
-
-      document.addEventListener('keydown', handleEscape)
-      document.addEventListener('keydown', handleKeyDown)
-
-      return () => {
-        document.removeEventListener('keydown', handleEscape)
-        document.removeEventListener('keydown', handleKeyDown)
+    if (!isOpen) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) {
+        onCancel()
       }
     }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onCancel, isLoading])
 
   if (!isOpen) return null
@@ -124,7 +96,6 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
         <div className="flex justify-end gap-3 mt-6">
           <Button
-            ref={cancelButtonRef}
             variant="ghost"
             onClick={onCancel}
             disabled={isLoading}

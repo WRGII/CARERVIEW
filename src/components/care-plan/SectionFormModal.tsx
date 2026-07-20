@@ -11,6 +11,7 @@ import {
   type CarePlanSection,
   type CompletionStatus,
 } from '../../hooks/useCarePlan'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import SituationForm from './forms/SituationForm'
 import AuthorityForm from './forms/AuthorityForm'
 import ResponsibilitiesForm from './forms/ResponsibilitiesForm'
@@ -54,6 +55,8 @@ export default function SectionFormModal({
   const { t } = useLocale()
   const upsert = useUpsertCarePlanSection()
   const overlayRef = useRef<HTMLDivElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(panelRef, true)
 
   const initialData = (section?.content_json ?? {}) as Record<string, unknown>
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
@@ -167,12 +170,15 @@ export default function SectionFormModal({
       onClick={(e) => {
         if (e.target === overlayRef.current) handleClose()
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="section-modal-title"
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" aria-hidden />
 
       {/* Panel */}
-      <div className="relative w-full sm:max-w-2xl sm:mx-4 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh]">
+      <div ref={panelRef} className="relative w-full sm:max-w-2xl sm:mx-4 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh]">
 
         {/* Header */}
         <div className="flex items-start gap-4 px-6 pt-6 pb-4 border-b border-slate-100 shrink-0">
@@ -182,7 +188,7 @@ export default function SectionFormModal({
                 {t('care_plan.section_counter', { current: currentIndex + 1, total: SECTION_KEYS.length })}
               </p>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900">
+            <h2 id="section-modal-title" className="text-xl font-extrabold text-slate-900">
               {sectionLabels[sectionKey]}
             </h2>
             <p className="text-sm text-slate-500 mt-0.5">{sectionSubtitles[sectionKey]}</p>

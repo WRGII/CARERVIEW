@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Flag, X, CircleCheck as CheckCircle } from 'lucide-react'
 import { useSubmitReport } from '../../hooks/useCommunityReports'
 import type { ReportReason } from '../../lib/community'
 import { Button } from '../ui/Button'
 import { useLocale } from '../../i18n/LocaleContext'
 import { supabase } from '../../lib/supabaseClient'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 function fireAdminReportAlert(contentType: 'post' | 'reply', reason: string, details: string): void {
   supabase.auth.getSession().then(({ data: { session } }) => {
@@ -34,6 +35,8 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
   const [details, setDetails] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const submit = useSubmitReport()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, true)
 
   const REASONS: { value: ReportReason; label: string; description: string }[] = [
     { value: 'harassment', label: t('community.report.reason.harassment'), description: t('community.report.reason.harassment_desc') },
@@ -65,6 +68,7 @@ export default function ReportModal({ postId, replyId, onClose }: Props) {
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
       role="dialog"

@@ -37,12 +37,38 @@ export const Dropdown: React.FC<DropdownProps> = ({
       }
     }
 
+    const handleArrowKeys = (event: KeyboardEvent) => {
+      const items = Array.from(
+        dropdownRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not([disabled])') ?? []
+      )
+      if (items.length === 0) return
+      const currentIndex = items.findIndex(el => el === document.activeElement)
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        items[(currentIndex + 1) % items.length].focus()
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        items[(currentIndex - 1 + items.length) % items.length].focus()
+      } else if (event.key === 'Home') {
+        event.preventDefault()
+        items[0].focus()
+      } else if (event.key === 'End') {
+        event.preventDefault()
+        items[items.length - 1].focus()
+      }
+    }
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       document.addEventListener('keydown', handleEscape)
+      document.addEventListener('keydown', handleArrowKeys)
+      requestAnimationFrame(() => {
+        dropdownRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not([disabled])')?.focus()
+      })
       return () => {
         document.removeEventListener('mousedown', handleClickOutside)
         document.removeEventListener('keydown', handleEscape)
+        document.removeEventListener('keydown', handleArrowKeys)
       }
     }
   }, [isOpen])

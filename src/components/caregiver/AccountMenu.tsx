@@ -49,15 +49,37 @@ export default function AccountMenu() {
   }, [open]);
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.stopPropagation();
         close();
         btnRef.current?.focus();
+        return;
+      }
+      const items = Array.from(
+        menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])') ?? []
+      )
+      if (items.length === 0) return
+      const currentIndex = items.findIndex(el => el === document.activeElement)
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        items[(currentIndex + 1) % items.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        items[(currentIndex - 1 + items.length) % items.length].focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        items[0].focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        items[items.length - 1].focus();
       }
     };
     document.addEventListener("keydown", onKey);
+    requestAnimationFrame(() => {
+      menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not([disabled])')?.focus();
+    });
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
