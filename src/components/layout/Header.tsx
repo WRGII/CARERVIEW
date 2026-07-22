@@ -56,6 +56,7 @@ export function Header() {
 
   const activeProduct = userPlan?.price_id ? getProductByPriceId(userPlan.price_id) : null
   const isActivePlan = hasActivePlan(userPlan)
+  const isPaidAuthed = !!user && isActivePlan
 
   const navLinks = filterNav(PRIMARY_NAV, { authed: !!user, paid: isActivePlan })
 
@@ -80,26 +81,28 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
-          {navLinks.map(({ key, to, matchPrefix }) => {
-            const active = isPathActive(location.pathname, to, matchPrefix)
-            return (
-              <Link
-                key={key}
-                to={to}
-                aria-current={active ? 'page' : undefined}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
-                  active
-                    ? 'text-cyan-primary bg-cyan-primary/10'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                {t(key)}
-              </Link>
-            )
-          })}
-        </nav>
+        {/* Desktop nav — hidden for paid authenticated users */}
+        {!isPaidAuthed && (
+          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+            {navLinks.map(({ key, to, matchPrefix }) => {
+              const active = isPathActive(location.pathname, to, matchPrefix)
+              return (
+                <Link
+                  key={key}
+                  to={to}
+                  aria-current={active ? 'page' : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+                    active
+                      ? 'text-cyan-primary bg-cyan-primary/10'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {t(key)}
+                </Link>
+              )
+            })}
+          </nav>
+        )}
 
         {/* Right-side actions */}
         <div className="flex items-center gap-2 shrink-0">
@@ -165,31 +168,35 @@ export function Header() {
               {t('nav.dashboard')}
             </Link>
           )}
-          {navLinks.map(({ key, to, matchPrefix }) => {
-            const active = isPathActive(location.pathname, to, matchPrefix)
-            return (
+          {!isPaidAuthed && (
+            <>
+              {navLinks.map(({ key, to, matchPrefix }) => {
+                const active = isPathActive(location.pathname, to, matchPrefix)
+                return (
+                  <Link
+                    key={key}
+                    to={to}
+                    onClick={() => setMobileOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      active
+                        ? 'text-cyan-primary bg-cyan-primary/10'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    {t(key)}
+                  </Link>
+                )
+              })}
               <Link
-                key={key}
-                to={to}
+                to="/tutorial"
                 onClick={() => setMobileOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                className={`block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'text-cyan-primary bg-cyan-primary/10'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                }`}
+                className="block px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                {t(key)}
+                {t('nav.tutorial_short')}
               </Link>
-            )
-          })}
-          <Link
-            to="/tutorial"
-            onClick={() => setMobileOpen(false)}
-            className="block px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            {t('nav.tutorial_short')}
-          </Link>
+            </>
+          )}
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
             {user ? (
               <AccountMenu />
