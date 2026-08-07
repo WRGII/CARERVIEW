@@ -86,6 +86,6 @@ Deno.serve(async (req) => {
     return resp({ customer_id: newCustomer.id, created: true }, 200, req)
   } catch (err: any) {
     console.error('[stripe-ensure-customer] error:', err?.message || err)
-    return resp({ error: err?.message || 'Unexpected error' }, 500, req)
+    return resp({ error: 'Unexpected error' }, 500, req)
   }
 })

@@ -35,6 +35,26 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Invalid JSON" }, 400, req);
   }
 
+  const contentType = body?.contentType === "reply" ? "reply" : "post";
+  const contentExcerpt = typeof body?.contentExcerpt === "string" ? body.contentExcerpt.slice(0, 500) : "";
+  const reason = typeof body?.reason === "string" ? body.reason.slice(0, 120) : "";
+  if (!reason) return json({ error: "Missing reason" }, 400, req);
+
+  // The caller must actually have filed a report just now: without this any signed-in
+  // user could mail moderators arbitrary text as often as they liked.
+  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data: recentReport } = await srv
+    .from("community_reports")
+    .select("id")
+    .eq("reporter_user_id", user.id)
+    .gte("created_at", since)
+    .limit(1)
+    .maybeSingle();
+
+  if (!recentReport) {
+    return json({ error: "No matching report", sent: 0 }, 403, req);
+  }
+
   const { data: reporterProfile } = await srv
     .from("profiles")
     .select("display_name")
@@ -55,12 +75,12 @@ Deno.serve(async (req: Request) => {
   const moderationLink = `${SITE_URL}/admin/community-moderation`;
   const html = buildAdminReportAlertEmail({
     reporterDisplayName,
-    contentType: body.contentType,
-    contentExcerpt: body.contentExcerpt,
-    reason: body.reason,
+    contentType,
+    contentExcerpt,
+    reason,
     moderationLink,
   });
-  const subject = `[CarerView] New community report: ${body.reason}`;
+  const subject = `[CarerView] New community report: ${reason}`;
 
   const results = await Promise.allSettled(
     admins

@@ -65,7 +65,8 @@ export default function ResetPassword() {
     submittingRef.current = false;
 
     if (error) {
-      setErr(error.message);
+      console.error('password update failed:', error);
+      setErr(t('errors.server_error'));
     } else {
       setMsg(t('reset_pw.success'));
       setTimeout(() => {

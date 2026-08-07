@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
   } catch (err: any) {
     console.error('[admin-delete-user] error:', err?.message || err)
     try { await insertAudit(srv, { ...audit, details: { ...(audit.details ?? {}), error: err?.message || String(err) }, success: false }) } catch { }
-    return json({ error: err?.message || 'Delete failed' }, 500)
+    return json({ error: 'Delete failed' }, 500)
   }
 })
 

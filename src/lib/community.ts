@@ -60,7 +60,8 @@ export interface CommunityProfile {
   bio: string
   avatar_color: string
   is_banned: boolean
-  ban_reason: string | null
+  /** Moderator-only: present only on records fetched through the admin path. */
+  ban_reason?: string | null
   post_count: number
   reply_count: number
   guidelines_accepted_at: string | null
@@ -164,13 +165,18 @@ export async function getRoomBySlug(slug: string): Promise<CommunityRoom | null>
 // COMMUNITY PROFILES
 // ============================================================
 
+// Every column except ban_reason, which is moderator-only and is fetched separately
+// through an admin-gated call.
+const PROFILE_COLUMNS =
+  'user_id, display_name, handle, avatar_url, avatar_color, bio, guidelines_accepted_at, handle_is_auto_generated, post_count, reply_count, created_at, updated_at, is_banned'
+
 export async function getMyProfile(): Promise<CommunityProfile | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
   const { data, error } = await supabase
     .from('community_profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .eq('user_id', user.id)
     .maybeSingle()
   if (error) throw error
@@ -180,7 +186,7 @@ export async function getMyProfile(): Promise<CommunityProfile | null> {
 export async function getProfileByUserId(userId: string): Promise<CommunityProfile | null> {
   const { data, error } = await supabase
     .from('community_profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw error
@@ -190,7 +196,7 @@ export async function getProfileByUserId(userId: string): Promise<CommunityProfi
 export async function getProfileByHandle(handle: string): Promise<CommunityProfile | null> {
   const { data, error } = await supabase
     .from('community_profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .ilike('handle', handle)
     .maybeSingle()
   if (error) throw error
@@ -225,7 +231,7 @@ export async function createCommunityProfile(params: {
       bio: params.bio?.trim() ?? '',
       avatar_color: params.avatar_color ?? '#00BCD4',
     })
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .single()
   if (error) throw error
   return data
@@ -252,7 +258,7 @@ export async function updateCommunityProfile(params: {
     .from('community_profiles')
     .update(updates)
     .eq('user_id', user.id)
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .single()
   if (error) throw error
   return data
@@ -688,7 +694,7 @@ export async function listAllCommunityMembers(params: {
 
   let query = supabase
     .from('community_profiles')
-    .select('*')
+    .select(PROFILE_COLUMNS)
     .order('created_at', { ascending: false })
 
   if (searchQuery) query = query.ilike('handle', `%${searchQuery}%`)
@@ -697,7 +703,19 @@ export async function listAllCommunityMembers(params: {
 
   const { data, error } = await query.range(offset, offset + limit - 1)
   if (error) throw error
-  return (data ?? []) as CommunityProfile[]
+
+  const rows = (data ?? []) as unknown as CommunityProfile[]
+  const bannedIds = rows.filter((r) => r.is_banned).map((r) => r.user_id)
+  if (bannedIds.length === 0) return rows
+
+  // Ban reasons are only readable by moderators, through a server-side check.
+  const { data: reasons } = await supabase.rpc('community_get_ban_reasons', {
+    p_user_ids: bannedIds,
+  })
+  const reasonById = new Map<string, string | null>(
+    ((reasons ?? []) as { user_id: string; ban_reason: string | null }[]).map((r) => [r.user_id, r.ban_reason])
+  )
+  return rows.map((r) => (reasonById.has(r.user_id) ? { ...r, ban_reason: reasonById.get(r.user_id) ?? null } : r))
 }
 
 export interface AuthMemberRow {

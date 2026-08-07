@@ -101,7 +101,7 @@ export default function AdminPage() {
               <div className="px-6 py-8 text-sm text-slate-500">Loading subscribers…</div>
             ) : subscribersQ.error ? (
               <div className="px-6 py-8 text-sm text-red-400">
-                {(subscribersQ.error as Error).message}
+                {'Could not load subscribers. Please try again.'}
               </div>
             ) : !subscribersQ.data?.length ? (
               <div className="px-6 py-8 text-sm text-slate-500">No paid subscribers yet.</div>

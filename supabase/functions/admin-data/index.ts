@@ -299,6 +299,6 @@ Deno.serve(async (req) => {
     }
   } catch (err: any) {
     console.error(`[admin-data] action=${action} error:`, err?.message || err)
-    return json({ error: err?.message || 'Operation failed' }, 500, req)
+    return json({ error: 'Operation failed' }, 500, req)
   }
 })

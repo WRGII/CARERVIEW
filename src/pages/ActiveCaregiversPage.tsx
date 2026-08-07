@@ -135,7 +135,7 @@ export default function ActiveCaregiversPage() {
             <div className="p-6 text-slate-gray/70">{t('active_cg.loading_list')}</div>
           ) : caregiversQ.error ? (
             <div className="p-6">
-              <ErrorMessage message={(caregiversQ.error as Error).message} />
+              <ErrorMessage message={t('errors.server_error')} />
             </div>
           ) : (caregiversQ.data?.length ?? 0) === 0 ? (
             <div className="p-6 text-slate-gray/70">{t('active_cg.empty')}</div>
@@ -264,7 +264,7 @@ function AddForm({
         <div className="md:col-span-3 rounded-lg bg-peach-blush/30 border border-peach-blush p-3 text-sm text-slate-gray">
           {error.message === "Sign-up email sent. The caregiver will appear after they confirm."
             ? signupSentMsg
-            : error.message}
+            : t('errors.server_error')}
         </div>
       )}
     </form>

@@ -51,7 +51,7 @@ export const ViewObservation: React.FC<ViewObservationProps> = ({
   }
 
   if (isLoading) return <Loading message={t('obs_list.loading')} />
-  if (error) return <ErrorMessage message={error.message || t('view_obs.load_error')} />
+  if (error) return <ErrorMessage message={t('view_obs.load_error')} />
   if (!observation) return <ErrorMessage message={t('caregiver.obs_not_found')} />
 
   // ---- Group responses by category -----------------------------------------

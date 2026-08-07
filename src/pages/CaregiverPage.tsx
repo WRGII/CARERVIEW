@@ -182,14 +182,14 @@ export default function CaregiverPage() {
         `)
         .eq('id', observationId)
         .single();
-      if (obsErr) throw new Error(`${t('caregiver.obs_load_failed')}: ${obsErr.message}`);
+      if (obsErr) { console.error('observation load failed:', obsErr); throw new Error(t('caregiver.obs_load_failed')); }
       if (!obs) throw new Error(t('caregiver.obs_not_found'));
 
       const { data: legend, error: legErr } = await supabase
         .from('legend')
         .select('*')
         .order('score', { ascending: true });
-      if (legErr) throw new Error(`${t('caregiver.legend_load_failed')}: ${legErr.message}`);
+      if (legErr) { console.error('legend load failed:', legErr); throw new Error(t('caregiver.legend_load_failed')); }
 
       const responses = (obs.responses ?? []).map((r: any) => {
         const q = Array.isArray(r.question) ? r.question[0] : r.question;

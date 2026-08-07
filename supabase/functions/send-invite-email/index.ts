@@ -6,6 +6,18 @@ import { json, preflight } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") ?? "https://carerview.com";
+
+function extractToken(rawLink: unknown): string | null {
+  if (typeof rawLink !== "string" || rawLink.length === 0) return null;
+  try {
+    const url = new URL(rawLink);
+    return url.searchParams.get("t");
+  } catch {
+    return null;
+  }
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return preflight(req, "GET, POST, PUT, DELETE, OPTIONS");
@@ -18,13 +30,37 @@ Deno.serve(async (req: Request) => {
     const { data: { user }, error: userErr } = await anonClient.auth.getUser();
     if (userErr || !user) return json({ error: "Not authenticated" }, 401, req);
 
-    const { email, invite_link, team_name, inviter_name } = await req.json();
-    if (!email || !invite_link) return json({ error: "Missing email or invite_link" }, 400, req);
+    const body = await req.json().catch(() => ({}));
+    const email = typeof body?.email === "string" ? body.email.trim() : "";
+    const token = typeof body?.token === "string" && body.token.length > 0
+      ? body.token
+      : extractToken(body?.invite_link);
 
-    const inviterName = inviter_name || "A CarerView team member";
-    const teamLabel = team_name || "a care team";
+    if (!email || !token) return json({ error: "Missing email or invite token" }, 400, req);
 
-    const html = buildTeamInviteEmail({ inviterName, teamName: teamLabel, inviteLink: invite_link });
+    // The recipient, the team name and the sender name are all decided server-side from
+    // the invite record: the caller only names the token it just created. This stops the
+    // function being used to mail a branded CarerView invite to an arbitrary address.
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: verification, error: verifyErr } = await admin.rpc(
+      "cv_verify_invite_for_sender",
+      { p_token: token, p_email: email, p_sender: user.id },
+    );
+    if (verifyErr) {
+      console.error("send-invite-email verification error:", verifyErr.message);
+      return json({ error: "Internal server error", sent: false }, 500, req);
+    }
+    if (!verification?.valid) {
+      return json({ error: "Invite not found for this recipient", sent: false }, 403, req);
+    }
+
+    const teamLabel: string = verification.team_name;
+    const inviterName: string = verification.inviter_name;
+    // Built here, never taken from the request: a caller cannot point the button at
+    // a site they control.
+    const inviteLink = `${PUBLIC_SITE_URL.replace(/\/$/, "")}/join?t=${encodeURIComponent(token)}`;
+
+    const html = buildTeamInviteEmail({ inviterName, teamName: teamLabel, inviteLink });
 
     const result = await sendEmail({
       to: email,

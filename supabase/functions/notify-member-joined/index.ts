@@ -33,6 +33,20 @@ Deno.serve(async (req: Request) => {
 
     if (teamErr || !team) return json({ error: "Team not found" }, 404, req);
 
+    // Only someone who actually joined this team can announce that they joined it,
+    // otherwise any signed-in caller could mail any team owner about any team.
+    const { data: membership } = await srv
+      .from("cv_team_members")
+      .select("user_id")
+      .eq("team_id", team_id)
+      .eq("user_id", user.id)
+      .eq("state", "active")
+      .maybeSingle();
+
+    if (!membership && team.owner_user_id !== user.id) {
+      return json({ error: "Not a member of this team", sent: false }, 403, req);
+    }
+
     const { data: ownerProfile } = await srv
       .from("profiles")
       .select("display_name, email")

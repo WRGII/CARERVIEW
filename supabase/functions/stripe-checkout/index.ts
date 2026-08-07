@@ -117,8 +117,24 @@ Deno.serve(async (req) => {
     const defaultSuccess = `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
     const defaultCancel = `${origin}/choose-plan?canceled=1`
 
-    const rawSuccess: string = body?.success_url || defaultSuccess
-    const rawCancel: string = body?.cancel_url || defaultCancel
+    // A caller-supplied redirect is only honoured when it points back at this site,
+    // so a payment link can never be used to bounce a payer to somebody else's page.
+    const sameSite = (candidate: unknown): string | null => {
+      if (typeof candidate !== 'string' || candidate.length === 0) return null
+      try {
+        const target = new URL(candidate)
+        const base = new URL(origin)
+        const bare = base.host.replace(/^www\./, '')
+        if (target.protocol !== 'https:' && target.protocol !== 'http:') return null
+        if (target.host !== bare && target.host !== `www.${bare}`) return null
+        return target.toString()
+      } catch {
+        return null
+      }
+    }
+
+    const rawSuccess: string = sameSite(body?.success_url) ?? defaultSuccess
+    const rawCancel: string = sameSite(body?.cancel_url) ?? defaultCancel
 
     const success_url = ensureSessionIdToken(rawSuccess)
     const cancel_url = rawCancel
@@ -227,6 +243,6 @@ Deno.serve(async (req) => {
     return resp({ url: session.url, id: session.id }, 200, req)
   } catch (err: any) {
     console.error('[stripe-checkout] error:', err?.message || err)
-    return resp({ error: err?.message || 'Failed to create checkout session' }, 500, req)
+    return resp({ error: 'Failed to create checkout session' }, 500, req)
   }
 })

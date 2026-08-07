@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
     } catch {
       // ignore audit failure
     }
-    return json({ error: err?.message || 'Account deletion failed' }, 500, req)
+    return json({ error: 'Account deletion failed' }, 500, req)
   }
 })
 

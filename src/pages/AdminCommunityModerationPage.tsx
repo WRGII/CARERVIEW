@@ -57,10 +57,10 @@ export default function AdminCommunityModerationPage() {
       const [postsRes, repliesRes, membersRes, authRes, reportsRes, bannedRes] = await Promise.all([
         supabase.from('community_posts').select('*', { count: 'exact', head: true }),
         supabase.from('community_replies').select('*', { count: 'exact', head: true }),
-        supabase.from('community_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('community_profiles').select('user_id', { count: 'exact', head: true }),
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
         supabase.from('community_reports').select('*', { count: 'exact', head: true }).eq('report_status', 'pending'),
-        supabase.from('community_profiles').select('*', { count: 'exact', head: true }).eq('is_banned', true),
+        supabase.from('community_profiles').select('user_id', { count: 'exact', head: true }).eq('is_banned', true),
       ])
       return {
         totalPosts: postsRes.count ?? 0,
