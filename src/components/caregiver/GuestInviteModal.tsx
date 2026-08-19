@@ -121,7 +121,12 @@ export default function GuestInviteModal({ residentOptions, onClose }: GuestInvi
       setEmailSent(result.sent === true)
       setStep('sent')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('guest_invite.err_generic'))
+      const message = err instanceof Error
+        ? err.message
+        : typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string'
+          ? err.message
+          : t('guest_invite.err_generic')
+      setError(message)
     } finally {
       setBusy(false)
     }

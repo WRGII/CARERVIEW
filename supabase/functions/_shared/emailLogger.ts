@@ -18,13 +18,15 @@ export async function logEmail(params: LogEmailParams): Promise<void> {
     const srv = createClient(supabaseUrl, serviceRoleKey);
 
     await srv.from("email_audit_log").insert({
-      recipient_hash: params.recipientHash,
+      recipient_email: params.recipientHash,
       template_name: params.templateName,
       subject: params.subject,
       status: params.status,
-      resend_message_id: params.resendMessageId ?? null,
       error_message: params.errorMessage ?? null,
-      edge_function: params.edgeFunction,
+      metadata: {
+        resend_message_id: params.resendMessageId ?? null,
+        edge_function: params.edgeFunction,
+      },
     });
   } catch (err: unknown) {
     // Never let logging failures propagate to callers
