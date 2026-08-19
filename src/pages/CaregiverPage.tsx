@@ -303,10 +303,18 @@ export default function CaregiverPage() {
                 <Activity className="w-4 h-4 text-amber-500" />
                 {t('caregiver.observations_title')}
               </h2>
-              <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5" />
-                {t('caregiver.new_obs_btn')}
-              </Button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowGuestInvite(true)}
+                  className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  {t('guest_invite.button_label')}
+                </button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" />
+                  {t('caregiver.new_obs_btn')}
+                </Button>
+              </div>
             </div>
             <ObservationList
               onViewObservation={handleViewObservation}
@@ -383,6 +391,34 @@ export default function CaregiverPage() {
         <div className="space-y-5">
           {/* Resident strip — minimal ID anchor at top */}
           <DashboardResidentPanel />
+
+          {/* Observations — fully functional */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-amber-500" />
+                {t('caregiver.observations_title')}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowGuestInvite(true)}
+                  className="text-xs font-semibold text-cyan-700 bg-cyan-50 border border-cyan-300 hover:bg-cyan-100 hover:border-cyan-400 rounded-lg px-3 py-1.5 transition-colors"
+                >
+                  {t('guest_invite.button_label')}
+                </button>
+                <Button variant="primary" size="sm" onClick={() => navigate('/caregiver/observations/new')} className="flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" />
+                  {t('caregiver.new_obs_btn')}
+                </Button>
+              </div>
+            </div>
+            <ObservationList
+              onViewObservation={handleViewObservation}
+              onExportObservation={handleExportObservation}
+              onDeleteObservation={handleDeleteObservation}
+              deletingId={deletingId}
+            />
+          </section>
 
           {/* Care Plan progress + Care Book explainer */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
