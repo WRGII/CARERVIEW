@@ -1,0 +1,9 @@
+{
+  "_snapshot_info": {
+    "locale": "es",
+    "status": "placeholder",
+    "note": "Run the export SQL from README.md to populate this file with live data.",
+    "export_sql": "SELECT get_translations_for_locale('es');",
+    "snapshot_date": "2026-06-29"
+  }
+}
