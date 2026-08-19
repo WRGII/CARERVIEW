@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
     );
     if (verifyErr) {
       console.error("send-guest-invite verification error:", verifyErr.message);
-      return json({ error: "Internal server error", sent: false }, 500, req);
+      return json({ error: `Verification failed: ${verifyErr.message}`, sent: false }, 500, req);
     }
     if (!verification?.valid) {
       return json({ error: "Guest invite not found for this recipient", sent: false }, 403, req);
@@ -87,6 +87,6 @@ Deno.serve(async (req: Request) => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("send-guest-invite error:", message);
-    return json({ error: "Internal server error", sent: false }, 500, req);
+    return json({ error: message, sent: false }, 500, req);
   }
 });

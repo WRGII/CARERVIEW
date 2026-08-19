@@ -6,7 +6,7 @@ import type { Locale, SupportedLocale } from './types'
 import { LOCALE_STORAGE_KEY } from './localeStorageKey'
 import { isRTL } from '../lib/utils'
 
-const LS_TRANS_VERSION = 'v10'
+const LS_TRANS_VERSION = 'v11'
 function lsTransKey(locale: Locale): string {
   return `cv_trans_${locale}_${LS_TRANS_VERSION}`
 }
