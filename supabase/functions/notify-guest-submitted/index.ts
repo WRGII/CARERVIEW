@@ -12,23 +12,34 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return preflight(req, "GET, POST, PUT, DELETE, OPTIONS");
 
   try {
-    const { token, guest_name, guest_email, observation_date } = await req.json();
-    if (!token) return json({ error: "Missing token" }, 400, req);
+    const body = await req.json();
+    const observationId = typeof body?.observation_id === "string" ? body.observation_id : null;
+    const guestName = typeof body?.guest_name === "string" ? body.guest_name.slice(0, 100) : "";
+    const guestEmail = typeof body?.guest_email === "string" ? body.guest_email.slice(0, 320) : "";
+    const observationDate = typeof body?.observation_date === "string" ? body.observation_date : null;
+
+    if (!observationId) return json({ error: "Missing observation_id" }, 400, req);
 
     const srv = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(token));
-    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-
+    // Look up the guest token by observation_id (set when the token was consumed)
     const { data: guestToken, error: tokenErr } = await srv
       .from("cv_guest_tokens")
-      .select("team_id, resident_name, form_type, consumed_at")
-      .eq("token_hash", tokenHash)
+      .select("id, team_id, resident_name, form_type, consumed_at, notification_sent")
+      .eq("observation_id", observationId)
       .maybeSingle();
 
-    if (tokenErr || !guestToken) return json({ error: "Token not found" }, 404, req);
+    if (tokenErr || !guestToken) return json({ error: "Token not found for this observation" }, 404, req);
     if (!guestToken.consumed_at) return json({ error: "Observation not yet submitted" }, 400, req);
+
+    // Deduplication: only send one notification per token
+    if (guestToken.notification_sent) return json({ sent: false, reason: "already_notified" }, 200, req);
+
+    // Mark as notified immediately to prevent races
+    await srv
+      .from("cv_guest_tokens")
+      .update({ notification_sent: true })
+      .eq("id", guestToken.id);
 
     const { data: team } = await srv
       .from("cv_team")
@@ -46,14 +57,14 @@ Deno.serve(async (req: Request) => {
 
     if (!ownerProfile?.email) return json({ sent: false, reason: "owner_email_unavailable" }, 200, req);
 
-    const formattedDate = observation_date
-      ? new Date(observation_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    const formattedDate = observationDate
+      ? new Date(observationDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
     const html = buildGuestObservationSubmittedEmail({
       ownerName: ownerProfile.display_name || "",
-      guestName: guest_name || "A guest observer",
-      guestEmail: guest_email || "",
+      guestName: guestName || "A guest observer",
+      guestEmail: guestEmail || "",
       residentName: guestToken.resident_name,
       formType: guestToken.form_type,
       observationDate: formattedDate,

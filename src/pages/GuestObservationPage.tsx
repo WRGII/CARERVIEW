@@ -33,6 +33,11 @@ type TokenError = {
 
 type PageState = 'loading' | 'error' | 'invalid' | 'intake' | 'form' | 'submitting' | 'done'
 
+const MAX_NAME_LEN = 100
+const MAX_EMAIL_LEN = 320
+const MAX_NOTES_LEN = 5000
+const MAX_CAT_NOTES_LEN = 2000
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type Category = {
@@ -58,6 +63,9 @@ export default function GuestObservationPage() {
   const [guestName, setGuestName] = useState('')
   const [guestEmail, setGuestEmail] = useState('')
   const [intakeError, setIntakeError] = useState<string | null>(null)
+
+  // Submitted observation ID (for notification)
+  const [observationId, setObservationId] = useState<string | null>(null)
 
   // Observation fields
   const [obsDate, setObsDate] = useState<string>(() => {
@@ -96,7 +104,7 @@ export default function GuestObservationPage() {
     })()
   }, [token])
 
-  // Load questions once tokenInfo is available
+  // Load questions once tokenInfo is available (defer until token validated)
   const formType = tokenInfo?.form_type ?? 'ADL'
   const { data: rawQuestions, isLoading: questionsLoading } = useCategoryQuestions(formType)
   const { data: legendRows } = useLegend()
@@ -141,7 +149,11 @@ export default function GuestObservationPage() {
     if (!re.test(d)) return false
     const [m, dy, y] = d.split('/').map(Number)
     const dt = new Date(y, m - 1, dy)
-    return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === dy
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== dy) return false
+    // Block future dates
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return dt <= today
   }
 
   const toDBDate = (d: string) => {
@@ -163,7 +175,7 @@ export default function GuestObservationPage() {
     e.preventDefault()
     setSubmitError(null)
 
-    if (!validateDate(obsDate)) { setDateError('Please enter a valid date (MM/DD/YYYY).'); return }
+    if (!validateDate(obsDate)) { setDateError('Please enter a valid date (MM/DD/YYYY). Future dates are not allowed.'); return }
     if (scoredCount === 0) { setSubmitError('Please rate at least one activity before submitting.'); return }
 
     setPageState('submitting')
@@ -181,19 +193,21 @@ export default function GuestObservationPage() {
     const combinedNotes = [notes.trim(), ...categoryNoteLines].filter(Boolean).join('\n\n') || null
 
     try {
-      const { error } = await supabase.rpc('cv_submit_guest_observation', {
+      const { data: obsId, error } = await supabase.rpc('cv_submit_guest_observation', {
         p_token: token,
-        p_guest_name: guestName.trim(),
-        p_guest_email: guestEmail.trim().toLowerCase(),
+        p_guest_name: guestName.trim().slice(0, MAX_NAME_LEN),
+        p_guest_email: guestEmail.trim().toLowerCase().slice(0, MAX_EMAIL_LEN),
         p_observation_date: toDBDate(obsDate),
         p_mode: mode,
-        p_notes: combinedNotes,
+        p_notes: combinedNotes?.slice(0, MAX_NOTES_LEN) ?? null,
         p_answers: answersPayload,
       })
 
       if (error) throw error
 
-      // Fire-and-forget: notify the team owner that a guest observation was submitted
+      setObservationId(obsId)
+
+      // Fire-and-forget: notify the team owner (uses observation_id, not raw token)
       fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-guest-submitted`, {
         method: 'POST',
         headers: {
@@ -201,8 +215,8 @@ export default function GuestObservationPage() {
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
         body: JSON.stringify({
-          token,
-          guest_name: guestName.trim(),
+          observation_id: obsId,
+          guest_name: guestName.trim().slice(0, MAX_NAME_LEN),
           guest_email: guestEmail.trim().toLowerCase(),
           observation_date: toDBDate(obsDate),
         }),
@@ -270,7 +284,13 @@ export default function GuestObservationPage() {
       : formType === 'ADL' ? 'ADL'
       : 'IADL'
 
+    const [downloadBusy, setDownloadBusy] = useState(false)
+    const [downloadError, setDownloadError] = useState<string | null>(null)
+
     const handleDownload = async () => {
+      setDownloadBusy(true)
+      setDownloadError(null)
+      try {
       const {
         Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         WidthType, BorderStyle, AlignmentType,
@@ -356,6 +376,11 @@ export default function GuestObservationPage() {
       const blob = await Packer.toBlob(doc)
       const safeName = (tokenInfo?.resident_name || 'guest').replace(/[^a-zA-Z0-9]/g, '_')
       saveAs(blob, `Guest_Observation_${safeName}_${obsDate.replace(/\//g, '-')}.docx`)
+      } catch {
+        setDownloadError('Could not generate the document. Please try again.')
+      } finally {
+        setDownloadBusy(false)
+      }
     }
 
     return (
@@ -375,13 +400,17 @@ export default function GuestObservationPage() {
           </p>
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm"
+            disabled={downloadBusy}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm disabled:opacity-50"
           >
             <svg className="w-4 h-4 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Download a copy
+            {downloadBusy ? 'Generating...' : 'Download a copy'}
           </button>
+          {downloadError && (
+            <p className="text-xs text-red-500 mt-2">{downloadError}</p>
+          )}
           <p className="text-xs text-slate-400 mt-3">
             Saves a Word document summary of your responses to your device.
           </p>
@@ -424,6 +453,7 @@ export default function GuestObservationPage() {
                   value={guestName}
                   onChange={e => setGuestName(e.target.value)}
                   placeholder="e.g. Jane Smith"
+                  maxLength={MAX_NAME_LEN}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-100 text-slate-800 text-sm placeholder:text-slate-400"
                   required
                   autoFocus
@@ -437,6 +467,7 @@ export default function GuestObservationPage() {
                   value={guestEmail}
                   onChange={e => setGuestEmail(e.target.value)}
                   placeholder="you@example.com"
+                  maxLength={MAX_EMAIL_LEN}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-100 text-slate-800 text-sm placeholder:text-slate-400"
                   required
                 />
@@ -552,6 +583,7 @@ export default function GuestObservationPage() {
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   rows={3}
+                  maxLength={MAX_NOTES_LEN}
                   placeholder="Any general observations about this visit..."
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-100 bg-white text-slate-800 text-sm resize-none placeholder:text-slate-400"
                 />
@@ -635,6 +667,7 @@ export default function GuestObservationPage() {
                         value={categoryNotes[category.id] || ''}
                         onChange={e => setCategoryNotes(prev => ({ ...prev, [category.id]: e.target.value }))}
                         rows={2}
+                        maxLength={MAX_CAT_NOTES_LEN}
                         placeholder={`Any observations about ${category.name}...`}
                         disabled={isSubmitting}
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-100 bg-white text-slate-700 text-sm resize-none placeholder:text-slate-400 disabled:opacity-60"
