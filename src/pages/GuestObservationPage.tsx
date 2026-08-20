@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient'
 import ScorePicker from '../components/ui/ScorePicker'
 import { useCategoryQuestions } from '../hooks/useCategoryQuestions'
 import { useLegend } from '../hooks/useLegend'
+import { saveAs } from 'file-saver'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -268,6 +269,95 @@ export default function GuestObservationPage() {
       formType === 'COMPREHENSIVE' ? 'ADL + IADL'
       : formType === 'ADL' ? 'ADL'
       : 'IADL'
+
+    const handleDownload = async () => {
+      const {
+        Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+        WidthType, BorderStyle, AlignmentType,
+      } = await import('docx')
+
+      const noBorder = {
+        top: { style: BorderStyle.NONE, size: 0 },
+        bottom: { style: BorderStyle.NONE, size: 0 },
+        left: { style: BorderStyle.NONE, size: 0 },
+        right: { style: BorderStyle.NONE, size: 0 },
+      }
+
+      const sectionChildren: any[] = []
+
+      // Title
+      sectionChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: 'Guest Observation Summary', bold: true, size: 32, color: '0e7490' })],
+          spacing: { after: 400 },
+        })
+      )
+
+      // Meta info
+      const metaLines = [
+        `Resident: ${tokenInfo?.resident_name || '—'}`,
+        `Form type: ${formLabel}`,
+        `Date of observation: ${obsDate}`,
+        `Mode: ${mode}`,
+        `Observed by: ${guestName} (${guestEmail})`,
+        `Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+      ]
+      metaLines.forEach(line => {
+        sectionChildren.push(new Paragraph({ children: [new TextRun({ text: line, size: 22 })], spacing: { after: 100 } }))
+      })
+      sectionChildren.push(new Paragraph({ spacing: { after: 300 }, children: [] }))
+
+      if (notes.trim()) {
+        sectionChildren.push(new Paragraph({ children: [new TextRun({ text: 'General Notes', bold: true, size: 24 })], spacing: { after: 120 } }))
+        sectionChildren.push(new Paragraph({ children: [new TextRun({ text: notes.trim(), size: 22 })], spacing: { after: 300 } }))
+      }
+
+      // Categories & scores
+      categories.forEach(cat => {
+        const catAnswered = cat.questions.filter(q => typeof answers[q.id] === 'number')
+        if (catAnswered.length === 0) return
+
+        sectionChildren.push(
+          new Paragraph({ children: [new TextRun({ text: `${cat.name} (${cat.type})`, bold: true, size: 24, color: '0e7490' })], spacing: { before: 300, after: 150 } })
+        )
+
+        const rows = catAnswered.map(q => {
+          const score = answers[q.id]!
+          return new TableRow({
+            children: [
+              new TableCell({
+                borders: noBorder,
+                width: { size: 75, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ children: [new TextRun({ text: q.text, size: 20 })] })],
+              }),
+              new TableCell({
+                borders: noBorder,
+                width: { size: 25, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  children: [new TextRun({ text: `${score} / 5`, bold: true, size: 20 })],
+                })],
+              }),
+            ],
+          })
+        })
+
+        sectionChildren.push(new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } }))
+
+        if (categoryNotes[cat.id]?.trim()) {
+          sectionChildren.push(
+            new Paragraph({ children: [new TextRun({ text: `Notes: ${categoryNotes[cat.id].trim()}`, italics: true, size: 20 })], spacing: { before: 100, after: 100 } })
+          )
+        }
+      })
+
+      const doc = new Document({ sections: [{ properties: {}, children: sectionChildren }] })
+      const blob = await Packer.toBlob(doc)
+      const safeName = (tokenInfo?.resident_name || 'guest').replace(/[^a-zA-Z0-9]/g, '_')
+      saveAs(blob, `Guest_Observation_${safeName}_${obsDate.replace(/\//g, '-')}.docx`)
+    }
+
     return (
       <Shell>
         <div className="max-w-lg mx-auto text-center py-12 px-4">
@@ -280,8 +370,20 @@ export default function GuestObservationPage() {
           <p className="text-slate-600 leading-relaxed mb-2">
             Your <strong>{formLabel}</strong> observation for <strong>{tokenInfo?.resident_name}</strong> has been saved.
           </p>
-          <p className="text-sm text-slate-500 leading-relaxed">
+          <p className="text-sm text-slate-500 leading-relaxed mb-6">
             The primary caregiver will be able to review your responses. You can safely close this page.
+          </p>
+          <button
+            onClick={handleDownload}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm"
+          >
+            <svg className="w-4 h-4 text-cyan-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download a copy
+          </button>
+          <p className="text-xs text-slate-400 mt-3">
+            Saves a Word document summary of your responses to your device.
           </p>
         </div>
       </Shell>
