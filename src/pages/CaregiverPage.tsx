@@ -231,9 +231,11 @@ export default function CaregiverPage() {
 
   // ── Observations section (free layout) ───────────────────────────────────
 
+  const displayName = profile.display_name || user.email?.split('@')[0] || '';
+
   return (
     <PageLayout
-      title={t('caregiver.dashboard_title')}
+      title={`Welcome, ${displayName}`}
       subtitle={getContextSubtitle()}
       user={{ ...user, profile }}
       hideSignOut={true}
