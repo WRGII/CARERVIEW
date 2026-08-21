@@ -4,12 +4,18 @@ import { Button } from '../ui/Button';
 import type { CaregiverVisit, VisitFormData, VisitType } from '../../types/visits';
 import { VISIT_TYPES, EDIT_WINDOW_HOURS } from '../../types/visits';
 
+export type TeamMemberOption = {
+  user_id: string;
+  display_name: string;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: VisitFormData) => void;
   visit?: CaregiverVisit | null;
   submitting?: boolean;
+  teamMembers?: TeamMemberOption[];
 };
 
 function formatDuration(timeIn: string, timeOut: string): string {
@@ -31,7 +37,7 @@ function hoursUntilExpiry(createdAt: string): number {
   return Math.max(0, (expiry - Date.now()) / (60 * 60 * 1000));
 }
 
-export default function VisitFormModal({ open, onClose, onSubmit, visit, submitting }: Props) {
+export default function VisitFormModal({ open, onClose, onSubmit, visit, submitting, teamMembers = [] }: Props) {
   const [form, setForm] = useState<VisitFormData>({
     date: '',
     time_in: '',
@@ -42,13 +48,18 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
     hourly_rate: null,
   });
   const [error, setError] = useState('');
+  const [useOtherName, setUseOtherName] = useState(false);
 
   const isEdit = !!visit;
   const editExpired = isEdit && visit ? hoursUntilExpiry(visit.created_at) <= 0 : false;
   const expiryWarning = isEdit && visit ? hoursUntilExpiry(visit.created_at) <= 2 && hoursUntilExpiry(visit.created_at) > 0 : false;
 
+  const hasTeamMembers = teamMembers.length > 0;
+
   useEffect(() => {
     if (visit) {
+      const matchesMember = teamMembers.some((m) => m.display_name === visit.caregiver_name);
+      setUseOtherName(!matchesMember && hasTeamMembers);
       setForm({
         date: visit.date,
         time_in: visit.time_in.slice(0, 5),
@@ -59,6 +70,7 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
         hourly_rate: visit.hourly_rate,
       });
     } else {
+      setUseOtherName(false);
       setForm({
         date: new Date().toISOString().slice(0, 10),
         time_in: '',
@@ -73,6 +85,16 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
   }, [visit, open]);
 
   const duration = useMemo(() => formatDuration(form.time_in, form.time_out), [form.time_in, form.time_out]);
+
+  function handleMemberSelect(value: string) {
+    if (value === '__other__') {
+      setUseOtherName(true);
+      setForm({ ...form, caregiver_name: '' });
+    } else {
+      setUseOtherName(false);
+      setForm({ ...form, caregiver_name: value });
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,7 +118,7 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-semibold text-slate-900">
-            {isEdit ? (editExpired ? 'View Visit' : 'Edit Visit') : 'Log Visit'}
+            {isEdit ? (editExpired ? 'View Visit' : 'Edit Visit') : 'Schedule Visit'}
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
             <X className="w-5 h-5 text-slate-500" />
@@ -177,17 +199,56 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
             )}
           </div>
 
+          {/* Caregiver selection */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Caregiver Name *</label>
-            <input
-              type="text"
-              value={form.caregiver_name}
-              onChange={(e) => setForm({ ...form, caregiver_name: e.target.value })}
-              disabled={editExpired}
-              maxLength={200}
-              placeholder="e.g. Jane Smith"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
-            />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Caregiver *</label>
+            {hasTeamMembers && !useOtherName ? (
+              <div className="space-y-2">
+                <select
+                  value={form.caregiver_name || ''}
+                  onChange={(e) => handleMemberSelect(e.target.value)}
+                  disabled={editExpired}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
+                >
+                  <option value="">Select a caregiver...</option>
+                  {teamMembers.map((m) => (
+                    <option key={m.user_id} value={m.display_name}>
+                      {m.display_name}
+                    </option>
+                  ))}
+                  <option value="__other__">Other (external caregiver)</option>
+                </select>
+              </div>
+            ) : hasTeamMembers && useOtherName ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={form.caregiver_name}
+                  onChange={(e) => setForm({ ...form, caregiver_name: e.target.value })}
+                  disabled={editExpired}
+                  maxLength={200}
+                  placeholder="e.g. Jane Smith"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setUseOtherName(false); setForm({ ...form, caregiver_name: '' }); }}
+                  className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                >
+                  Choose from family circle instead
+                </button>
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={form.caregiver_name}
+                onChange={(e) => setForm({ ...form, caregiver_name: e.target.value })}
+                disabled={editExpired}
+                maxLength={200}
+                placeholder="e.g. Jane Smith"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-50 disabled:text-slate-500"
+              />
+            )}
           </div>
 
           <div>
@@ -230,7 +291,7 @@ export default function VisitFormModal({ open, onClose, onSubmit, visit, submitt
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? 'Saving...' : (isEdit ? 'Update Visit' : 'Log Visit')}
+                {submitting ? 'Saving...' : (isEdit ? 'Update Visit' : 'Schedule Visit')}
               </Button>
             </div>
           )}

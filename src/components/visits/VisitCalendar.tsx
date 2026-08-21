@@ -102,7 +102,7 @@ export default function VisitCalendar({ visits, onDateClick, onVisitClick, onAdd
             className="flex items-center gap-1.5 px-3 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Log Visit</span>
+            <span className="hidden sm:inline">Schedule Visit</span>
           </button>
         </div>
       </div>

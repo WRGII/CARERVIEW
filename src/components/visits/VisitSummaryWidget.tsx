@@ -1,11 +1,17 @@
 import { useMemo } from 'react';
-import { Clock, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Clock, DollarSign, Users, TrendingUp, User } from 'lucide-react';
 import type { CaregiverVisit } from '../../types/visits';
+
+export type MemberInfo = {
+  user_id: string;
+  display_name: string;
+};
 
 type Props = {
   visits: CaregiverVisit[];
   userId?: string | null;
   showTeamSummary?: boolean;
+  teamMembers?: MemberInfo[];
 };
 
 function calcHours(timeIn: string, timeOut: string): number {
@@ -21,12 +27,22 @@ function getWeekKey(dateStr: string): string {
   return `W${week}`;
 }
 
-export default function VisitSummaryWidget({ visits, userId, showTeamSummary }: Props) {
-  const stats = useMemo(() => {
-    const now = new Date();
-    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const thisWeek = getWeekKey(now.toISOString().slice(0, 10));
+type MemberStats = {
+  display_name: string;
+  weekHours: number;
+  monthHours: number;
+  totalVisits: number;
+  totalCost: number;
+};
 
+export default function VisitSummaryWidget({ visits, userId, showTeamSummary, teamMembers = [] }: Props) {
+  const thisMonth = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+  const thisWeek = useMemo(() => getWeekKey(new Date().toISOString().slice(0, 10)), []);
+
+  const stats = useMemo(() => {
     const personalVisits = userId ? visits.filter((v) => v.created_by === userId) : visits;
     const teamVisits = visits;
 
@@ -56,13 +72,42 @@ export default function VisitSummaryWidget({ visits, userId, showTeamSummary }: 
       personal: computeStats(personalVisits),
       team: showTeamSummary ? computeStats(teamVisits) : null,
     };
-  }, [visits, userId, showTeamSummary]);
+  }, [visits, userId, showTeamSummary, thisMonth, thisWeek]);
 
   const topCaregivers = useMemo(() => {
     const entries = Object.entries(stats.personal.caregiverHours);
     entries.sort((a, b) => b[1] - a[1]);
     return entries.slice(0, 5);
   }, [stats.personal.caregiverHours]);
+
+  const memberBreakdown = useMemo((): MemberStats[] => {
+    if (!showTeamSummary || teamMembers.length === 0) return [];
+
+    const byCreator: Record<string, { weekH: number; monthH: number; visits: number; cost: number }> = {};
+
+    for (const v of visits) {
+      if (!byCreator[v.created_by]) {
+        byCreator[v.created_by] = { weekH: 0, monthH: 0, visits: 0, cost: 0 };
+      }
+      const h = calcHours(v.time_in, v.time_out);
+      const rate = v.hourly_rate ?? 0;
+      byCreator[v.created_by].visits++;
+      byCreator[v.created_by].cost += h * rate;
+      if (v.date.startsWith(thisMonth)) byCreator[v.created_by].monthH += h;
+      if (getWeekKey(v.date) === thisWeek) byCreator[v.created_by].weekH += h;
+    }
+
+    return teamMembers.map((m) => {
+      const s = byCreator[m.user_id];
+      return {
+        display_name: m.display_name,
+        weekHours: s?.weekH ?? 0,
+        monthHours: s?.monthH ?? 0,
+        totalVisits: s?.visits ?? 0,
+        totalCost: s?.cost ?? 0,
+      };
+    }).filter((m) => m.totalVisits > 0 || m.weekHours > 0);
+  }, [visits, teamMembers, showTeamSummary, thisMonth, thisWeek]);
 
   return (
     <div className="space-y-4">
@@ -137,6 +182,29 @@ export default function VisitSummaryWidget({ visits, userId, showTeamSummary }: 
               value={`$${stats.team.totalCost.toFixed(0)}`}
             />
           </div>
+
+          {/* Per-member breakdown */}
+          {memberBreakdown.length > 0 && (
+            <div className="mt-4 bg-slate-50 rounded-xl p-4">
+              <p className="text-xs font-medium text-slate-500 mb-3">Hours by Team Member</p>
+              <div className="space-y-3">
+                {memberBreakdown.map((m) => (
+                  <div key={m.display_name} className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
+                      <User className="w-3.5 h-3.5 text-teal-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-800 truncate">{m.display_name}</p>
+                      <p className="text-xs text-slate-500">
+                        {m.weekHours.toFixed(1)}h this week &middot; {m.monthHours.toFixed(1)}h this month &middot; {m.totalVisits} visits
+                        {m.totalCost > 0 && <> &middot; ${m.totalCost.toFixed(0)}</>}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

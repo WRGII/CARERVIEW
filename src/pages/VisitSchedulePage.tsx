@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { CalendarDays, Upload } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
 import { useActiveTeam } from '../context/ActiveTeam';
 import { useVisits, useCreateVisit, useUpdateVisit, useDeleteVisit, useBulkCreateVisits } from '../hooks/useVisits';
 import { useUserPlan, hasActivePlan } from '../hooks/useUserPlan';
+import { cvListMembersWithProfile } from '../lib/cv';
 import VisitCalendar from '../components/visits/VisitCalendar';
 import VisitFormModal from '../components/visits/VisitFormModal';
 import VisitSummaryWidget from '../components/visits/VisitSummaryWidget';
@@ -26,6 +28,19 @@ export default function VisitSchedulePage() {
 
   const { data: visits = [], isLoading, error } = useVisits(currentMonth);
 
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['team-members', teamId],
+    enabled: !!teamId,
+    queryFn: async () => {
+      const members = await cvListMembersWithProfile(teamId!);
+      return members.map((m) => ({
+        user_id: m.user_id,
+        display_name: m.display_name || m.email,
+      }));
+    },
+    staleTime: 5 * 60_000,
+  });
+
   const createVisit = useCreateVisit();
   const updateVisit = useUpdateVisit();
   const deleteVisit = useDeleteVisit();
@@ -36,7 +51,6 @@ export default function VisitSchedulePage() {
   const [csvOpen, setCsvOpen] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Check if user is team owner
   const isOwner = !!teamId;
 
   function handleAddClick() {
@@ -85,9 +99,9 @@ export default function VisitSchedulePage() {
       <PageLayout>
         <div className="max-w-lg mx-auto text-center py-16">
           <CalendarDays className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h1 className="text-xl font-semibold text-slate-900 mb-2">Visit Schedule</h1>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Care Schedule</h1>
           <p className="text-sm text-slate-500">
-            Upgrade to a paid plan to access the caregiver visit scheduling feature.
+            Upgrade to a paid plan to access the care scheduling feature.
           </p>
         </div>
       </PageLayout>
@@ -100,9 +114,9 @@ export default function VisitSchedulePage() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Visit Schedule</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Care Schedule</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Track and schedule caregiver visits for your resident.
+              Schedule and track caregiver visits for your resident.
             </p>
           </div>
           <button
@@ -119,6 +133,7 @@ export default function VisitSchedulePage() {
           visits={visits}
           userId={user.id}
           showTeamSummary={isOwner}
+          teamMembers={teamMembers}
         />
 
         {/* Calendar */}
@@ -144,6 +159,7 @@ export default function VisitSchedulePage() {
           onSubmit={handleFormSubmit}
           visit={editingVisit}
           submitting={createVisit.isPending || updateVisit.isPending}
+          teamMembers={teamMembers}
         />
 
         {/* CSV upload modal */}
