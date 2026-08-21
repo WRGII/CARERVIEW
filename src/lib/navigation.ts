@@ -5,6 +5,7 @@ import {
   BookOpen,
   ClipboardList,
   GraduationCap,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -37,6 +38,7 @@ export const AUTHED_NAV: NavEntry[] = [
   { key: 'nav.observations', to: '/caregiver/observations/new', matchPrefix: '/caregiver/observations', icon: Activity, paidOnly: true },
   { key: 'nav.resident', to: '/caregiver/resident', matchPrefix: '/caregiver/resident', icon: CircleUser, paidOnly: true },
   { key: 'nav.memory_schedule', to: '/caregiver/memory-schedule', matchPrefix: '/caregiver/memory-schedule', icon: BookOpen, paidOnly: true },
+  { key: 'nav.visit_schedule', to: '/caregiver/visit-schedule', matchPrefix: '/caregiver/visit-schedule', icon: CalendarDays, paidOnly: true },
   { key: 'nav.care_plan', to: '/care-hub/care-plan', matchPrefix: '/care-hub/care-plan', icon: ClipboardList, paidOnly: true },
   { key: 'nav.new_carer', to: '/new-carer', matchPrefix: '/new-carer', icon: GraduationCap, paidOnly: true },
 ]

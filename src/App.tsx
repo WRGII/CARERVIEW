@@ -38,6 +38,7 @@ import MemoryBookPage from './pages/MemoryBookPage';
 import CaregiverResourcesPage from './pages/CaregiverResourcesPage';
 import TeamSettings from './pages/TeamSettings';
 
+import VisitSchedulePage from './pages/VisitSchedulePage';
 import CarePlanBuilderPage from './pages/care-hub/CarePlanBuilderPage';
 import CarePlanSummaryPage from './pages/care-hub/CarePlanSummaryPage';
 
@@ -111,6 +112,7 @@ export default function App() {
                 <Route path="/caregiver/observations/new" element={<ErrorBoundary><CaregiverGuard><NewObservationPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/observations/:id/edit" element={<ErrorBoundary><CaregiverGuard><ObservationEditPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/memory-schedule" element={<ErrorBoundary><CaregiverGuard><MemorySchedulePage /></CaregiverGuard></ErrorBoundary>} />
+                <Route path="/caregiver/visit-schedule" element={<ErrorBoundary><CaregiverGuard><VisitSchedulePage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/memory-book" element={<ErrorBoundary><CaregiverGuard><MemoryBookPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/resources" element={<ErrorBoundary><CaregiverGuard><CaregiverResourcesPage /></CaregiverGuard></ErrorBoundary>} />
                 <Route path="/caregiver/team-settings" element={<ErrorBoundary><CaregiverGuard><TeamSettings /></CaregiverGuard></ErrorBoundary>} />
